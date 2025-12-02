@@ -1,5 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="black">#FF000000</color>
-    <color name="white">#FFFFFFFF</color>
+    <color name="white">#FFFFFF</color>
+
+    <color name="background_start">#B3ABC3</color>
+    <color name="background_end">#FFFFFF</color>
+
+    <color name="text_gradient_start">#8A2BE2</color>
+    <color name="text_gradient_middle">#9932CC</color>
+    <color name="text_gradient_end">#FF1493</color>
+
+    <color name="button_start">#7B2CBF</color>
+    <color name="button_end">#E91E63</color>
+
+    <!-- REMOVED: <color name="button_text">#FFFFFF</color> to fix duplicate error -->
 </resources>

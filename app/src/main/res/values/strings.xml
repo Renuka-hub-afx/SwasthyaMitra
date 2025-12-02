@@ -1,3 +1,5 @@
 <resources>
-    <string name="app_name">SwasthyaMitra</string>
+    <string name="app_name">trial</string>
+    <string name="swasthyamitra">SWASTHYAMITRA</string>
+    <string name="get_started">GET STARTED</string>
 </resources>

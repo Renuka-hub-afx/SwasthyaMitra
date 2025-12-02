@@ -3,6 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <application
+        android:name="com.example.swasthyamitra.UserApplication"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
@@ -10,9 +11,25 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.SwasthyaMitra">
+        android:theme="@style/Theme.Trial">
         <activity
-            android:name=".MainActivity"
+            android:name="com.example.swasthyamitra.homepage"
+            android:exported="false"
+            tools:ignore="DuplicateActivity,MissingClass" />
+        <activity
+            android:name="com.example.swasthyamitra.InsertGoalActivity"
+            android:exported="false" />
+        <activity
+            android:name="com.example.swasthyamitra.UserInfoActivity"
+            android:exported="false" /> <!-- Sign Up Activity -->
+        <activity
+            android:name="com.example.swasthyamitra.SignupActivity"
+            android:exported="false" /> <!-- Login Activity -->
+        <activity
+            android:name="com.example.swasthyamitra.LoginActivity"
+            android:exported="false" /> <!-- Main Entry Activity -->
+        <activity
+            android:name="com.example.swasthyamitra.MainActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
