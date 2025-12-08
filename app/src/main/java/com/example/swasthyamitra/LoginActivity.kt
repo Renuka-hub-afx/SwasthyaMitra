@@ -8,12 +8,11 @@ import android.util.Patterns
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.lifecycle.ViewModelProvider
-import com.example.swasthyamitra.R
+import androidx.lifecycle.lifecycleScope
+import com.example.swasthyamitra.auth.FirebaseAuthHelper
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.textfield.TextInputEditText
-//import com.example.swasthyamitra.UserApplication.UserViewModel
-import com.example.swasthyamitra.UserViewModel.UserViewModelFactory
+import kotlinx.coroutines.launch
 
 class LoginActivity : AppCompatActivity() {
 
@@ -24,18 +23,17 @@ class LoginActivity : AppCompatActivity() {
     private lateinit var signupLink: TextView
     private lateinit var forgotPasswordLink: TextView
 
-    // ViewModel
-    private lateinit var userViewModel: UserViewModel
+    // Firebase Auth Helper
+    private lateinit var authHelper: FirebaseAuthHelper
 
     @SuppressLint("MissingInflatedId")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_login)
 
-        // Initialize ViewModel
+        // Initialize Firebase Auth Helper
         val application = application as UserApplication
-        val factory = UserViewModelFactory(application.repository)
-        userViewModel = ViewModelProvider(this, factory).get(UserViewModel::class.java)
+        authHelper = application.authHelper
 
         // Initialize Views
         emailInput = findViewById(R.id.email_input)
@@ -65,55 +63,55 @@ class LoginActivity : AppCompatActivity() {
         val password = passwordInput.text.toString()
 
         if (validateInputs(email, password)) {
-            userViewModel.getUserByEmail(email).observe(this) { user ->
-                if (user != null) {
-                    if (user.password == password) {
-                        Toast.makeText(this, "Login Successful!", Toast.LENGTH_SHORT).show()
-                        saveUserId(user.id)
-
-                        // --- BULLETPROOF LOGIC START ---
-                        // 1. Get the values safely. If they are null, treat them as 0f.
-                        val currentBmi = user.bmi ?: 0f
-                        val currentHeight = user.height ?: 0f
-
-                        // 2. Check if EITHER is 0. If so, profile is incomplete.
-                        if (currentBmi == 0f || currentHeight == 0f) {
-                            Log.d("FlowCheck", "Incomplete Profile. Going to UserInfo.")
-                            navigateToUserInfo(user.id, user.birthDate)
-                        } else {
-                            Log.d("FlowCheck", "Complete Profile. Going to Homepage.")
-                            navigateToHomePage(user.id)
-                        }
-                        // --- BULLETPROOF LOGIC END ---
-
-                    } else {
-                        Toast.makeText(this, "Incorrect password!", Toast.LENGTH_SHORT).show()
-                    }
-                } else {
-                    Toast.makeText(this, "User not found! Please sign up.", Toast.LENGTH_SHORT)
-                        .show()
+            lifecycleScope.launch {
+                val result = authHelper.signInWithEmail(email, password)
+                result.onSuccess { user ->
+                    Toast.makeText(this@LoginActivity, "Login Successful!", Toast.LENGTH_SHORT).show()
+                    saveUserId(user.uid)
+                    checkUserProfileAndNavigate(user.uid)
+                }.onFailure { e ->
+                    Toast.makeText(this@LoginActivity, "Login failed: ${e.message}", Toast.LENGTH_SHORT).show()
                 }
             }
         }
     }
 
-    private fun saveUserId(userId: Long) {
+    private fun checkUserProfileAndNavigate(userId: String) {
+        lifecycleScope.launch {
+            val result = authHelper.getUserData(userId)
+            result.onSuccess { userData ->
+                val height = userData["height"] as? Double ?: 0.0
+                val weight = userData["weight"] as? Double ?: 0.0
+                
+                if (height == 0.0 || weight == 0.0) {
+                    Log.d("FlowCheck", "Incomplete Profile. Going to UserInfo.")
+                    navigateToUserInfo(userId)
+                } else {
+                    Log.d("FlowCheck", "Complete Profile. Going to Homepage.")
+                    navigateToHomePage(userId)
+                }
+            }.onFailure {
+                navigateToUserInfo(userId)
+            }
+        }
+    }
+
+    private fun saveUserId(userId: String) {
         val sharedPreferences = getSharedPreferences("UserPreferences", MODE_PRIVATE)
-        sharedPreferences.edit().putLong("USER_ID", userId).apply()
+        sharedPreferences.edit().putString("USER_ID", userId).apply()
         Log.d("LoginActivity", "USER_ID saved: $userId")
     }
 
-    private fun navigateToHomePage(userId: Long) {
+    private fun navigateToHomePage(userId: String) {
         val intent = Intent(this, homepage::class.java)
         intent.putExtra("USER_ID", userId)
         startActivity(intent)
         finish()
     }
 
-    private fun navigateToUserInfo(userId: Long, dob: String?) {
+    private fun navigateToUserInfo(userId: String) {
         val intent = Intent(this, UserInfoActivity::class.java)
         intent.putExtra("USER_ID", userId)
-        intent.putExtra("USER_DOB", dob)
         startActivity(intent)
         finish()
     }

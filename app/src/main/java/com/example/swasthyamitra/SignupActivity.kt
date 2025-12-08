@@ -7,23 +7,18 @@ import android.util.Patterns
 import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
 import com.example.swasthyamitra.databinding.ActivitySignupBinding
-import com.example.swasthyamitra.data.User
-import com.example.swasthyamitra.UserViewModel
-import com.example.swasthyamitra.UserViewModel.UserViewModelFactory
+import com.example.swasthyamitra.auth.FirebaseAuthHelper
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
-import kotlin.jvm.java
-import kotlin.text.isEmpty
-import kotlin.text.trim
-import kotlin.toString
 
 class SignupActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivitySignupBinding
-    private lateinit var userViewModel: UserViewModel
+    private lateinit var authHelper: FirebaseAuthHelper
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -32,10 +27,9 @@ class SignupActivity : AppCompatActivity() {
         binding = ActivitySignupBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // Setup ViewModel
+        // Initialize Firebase Auth Helper
         val application = application as UserApplication
-        val factory = UserViewModelFactory(application.repository)
-        userViewModel = ViewModelProvider(this, factory).get(UserViewModel::class.java)
+        authHelper = application.authHelper
 
         // Hide inline DatePicker if present (optional cleanup)
         binding.datePicker1?.visibility = View.GONE
@@ -98,22 +92,50 @@ class SignupActivity : AppCompatActivity() {
             }
         }
 
-        val user = User(
-            userName = name,
-            email = email,
-            password = pass,
-            birthDate = dob
-        )
+        // Calculate age from DOB
+        val age = calculateAge(dob)
 
-        userViewModel.insertUser(user) { id ->
-            runOnUiThread {
-                Toast.makeText(this, "Signup Successful! Please log in.", Toast.LENGTH_LONG).show()
-
-                // CORRECTED FLOW: Navigate back to LoginActivity
-                val intent = Intent(this, LoginActivity::class.java)
-                startActivity(intent)
-                finish()
+        lifecycleScope.launch {
+            val result = authHelper.signUpWithEmail(
+                email = email,
+                password = pass,
+                name = name,
+                phoneNumber = "", // Can add phone number field if needed
+                age = age
+            )
+            
+            result.onSuccess {
+                runOnUiThread {
+                    Toast.makeText(this@SignupActivity, "Signup Successful! Please log in.", Toast.LENGTH_LONG).show()
+                    
+                    // Navigate back to LoginActivity
+                    val intent = Intent(this@SignupActivity, LoginActivity::class.java)
+                    startActivity(intent)
+                    finish()
+                }
+            }.onFailure { e ->
+                runOnUiThread {
+                    Toast.makeText(this@SignupActivity, "Signup failed: ${e.message}", Toast.LENGTH_LONG).show()
+                }
             }
+        }
+    }
+
+    private fun calculateAge(dob: String): Int {
+        return try {
+            val sdf = SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
+            val birthDate = sdf.parse(dob)
+            val today = Calendar.getInstance()
+            val birth = Calendar.getInstance()
+            birth.time = birthDate
+            
+            var age = today.get(Calendar.YEAR) - birth.get(Calendar.YEAR)
+            if (today.get(Calendar.DAY_OF_YEAR) < birth.get(Calendar.DAY_OF_YEAR)) {
+                age--
+            }
+            age
+        } catch (e: Exception) {
+            0
         }
     }
 }

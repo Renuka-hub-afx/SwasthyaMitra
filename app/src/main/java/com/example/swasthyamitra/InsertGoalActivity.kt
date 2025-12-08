@@ -5,17 +5,11 @@ import android.graphics.Color
 import android.os.Bundle
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
-import com.example.swasthyamitra.data.Goal
-// IMPORTANT: This import MUST match your XML file name.
-// If your XML is activity_insert_goal.xml, this is correct.
 import com.example.swasthyamitra.databinding.ActivityInsertGoalBinding
-import com.example.swasthyamitra.UserViewModel
-import com.example.swasthyamitra.UserViewModel.UserViewModelFactory
+import com.example.swasthyamitra.auth.FirebaseAuthHelper
 import com.google.android.material.card.MaterialCardView
 import kotlinx.coroutines.launch
-import kotlin.jvm.java
 import kotlin.text.isEmpty
 
 class InsertGoalActivity : AppCompatActivity() {
@@ -23,35 +17,34 @@ class InsertGoalActivity : AppCompatActivity() {
     // Binding variable to access XML views
     private lateinit var binding: ActivityInsertGoalBinding
 
-    // ViewModel to save data
-    private lateinit var userViewModel: UserViewModel
+    // Firebase Auth Helper
+    private lateinit var authHelper: FirebaseAuthHelper
 
     // Data variables
-    private var userId: Long = -1L
+    private var userId: String = ""
     private var selectedGoalType: String = ""
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // 1. Inflate Layout
+        // Inflate Layout
         binding = ActivityInsertGoalBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // 2. Setup ViewModel
+        // Initialize Firebase Auth Helper
         val application = application as UserApplication
-        val factory = UserViewModelFactory(application.repository)
-        userViewModel = ViewModelProvider(this, factory).get(UserViewModel::class.java)
+        authHelper = application.authHelper
 
-        // 3. Get User ID passed from previous screen
-        userId = intent.getLongExtra("USER_ID", -1L)
+        // Get User ID passed from previous screen
+        userId = intent.getStringExtra("USER_ID") ?: ""
 
-        // 4. Setup Click Listeners for Cards
+        // Setup Click Listeners for Cards
         binding.cardWeightLoss.setOnClickListener { highlightCard(binding.cardWeightLoss, "Lose Weight") }
         binding.cardMaintain.setOnClickListener { highlightCard(binding.cardMaintain, "Maintain Weight") }
         binding.cardWeightGain.setOnClickListener { highlightCard(binding.cardWeightGain, "Gain Muscle") }
         binding.cardNoGoal.setOnClickListener { highlightCard(binding.cardNoGoal, "General Health") }
 
-        // 5. "Start My Journey" Button Logic
+        // "Start My Journey" Button Logic
         binding.btnNext.setOnClickListener {
             if (selectedGoalType.isEmpty()) {
                 Toast.makeText(this, "Please select a mission!", Toast.LENGTH_SHORT).show()
@@ -70,7 +63,7 @@ class InsertGoalActivity : AppCompatActivity() {
         val activeStroke = Color.parseColor("#E91E63") // Dark Pink Border
         val inactiveColor = Color.WHITE
 
-        // 1. Reset ALL cards to default look
+        // Reset ALL cards to default look
         val cards = listOf(
             binding.cardWeightLoss,
             binding.cardMaintain,
@@ -84,7 +77,7 @@ class InsertGoalActivity : AppCompatActivity() {
             card.elevation = 4f
         }
 
-        // 2. Highlight ONLY the selected card
+        // Highlight ONLY the selected card
         selectedCard.setCardBackgroundColor(activeColor)
         selectedCard.strokeColor = activeStroke
         selectedCard.strokeWidth = 6 // Thickness of border
@@ -94,26 +87,27 @@ class InsertGoalActivity : AppCompatActivity() {
     // Function to save data and go to Home
     private fun saveGoalAndFinish() {
         lifecycleScope.launch {
-            // Create the Goal object
-            val goal = Goal(
+            // Save goal to Firestore
+            val result = authHelper.insertGoal(
                 userId = userId,
                 goalType = selectedGoalType,
-                dailyCalorieTarget = 2000, // You can refine this logic later based on BMR
-                waterGoalMl = 2500
+                targetValue = 2000.0, // Can be refined based on user data
+                currentValue = 0.0
             )
 
-            // Save to Database
-            userViewModel.insertGoal(goal)
+            result.onSuccess {
+                Toast.makeText(this@InsertGoalActivity, "Mission Set: $selectedGoalType", Toast.LENGTH_SHORT).show()
 
-            Toast.makeText(this@InsertGoalActivity, "Mission Set: $selectedGoalType", Toast.LENGTH_SHORT).show()
+                // Navigate to Homepage
+                val intent = Intent(this@InsertGoalActivity, homepage::class.java)
+                intent.putExtra("USER_ID", userId)
+                startActivity(intent)
 
-            // Navigate to Homepage
-            val intent = Intent(this@InsertGoalActivity, homepage::class.java)
-            intent.putExtra("USER_ID", userId)
-            startActivity(intent)
-
-            // Clear back stack so user cannot go back to setup screens
-            finishAffinity()
+                // Clear back stack so user cannot go back to setup screens
+                finishAffinity()
+            }.onFailure { e ->
+                Toast.makeText(this@InsertGoalActivity, "Failed to set goal: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
         }
     }
 }

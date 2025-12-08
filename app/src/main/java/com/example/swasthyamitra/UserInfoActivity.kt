@@ -5,31 +5,21 @@ import android.graphics.Color
 import android.os.Bundle
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
-import com.example.swasthyamitra.data.Goal
 import com.example.swasthyamitra.databinding.ActivityUserInfoBinding
-import com.example.swasthyamitra.UserViewModel
-import com.example.swasthyamitra.UserViewModel.UserViewModelFactory
+import com.example.swasthyamitra.auth.FirebaseAuthHelper
 import kotlinx.coroutines.launch
-import java.text.SimpleDateFormat
-import java.util.Calendar
-import java.util.Locale
-import kotlin.apply
-import kotlin.jvm.java
 import kotlin.text.isEmpty
-import kotlin.text.isNotEmpty
-import kotlin.text.toFloat
-import kotlin.toString
+import kotlin.text.toDouble
 
 class UserInfoActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityUserInfoBinding
-    private lateinit var userViewModel: UserViewModel
+    private lateinit var authHelper: FirebaseAuthHelper
 
     // Variables to store data
     private var selectedGender: String = ""
-    private var userId: Long = -1L
+    private var userId: String = ""
     private var userAge: Int = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -37,28 +27,31 @@ class UserInfoActivity : AppCompatActivity() {
         binding = ActivityUserInfoBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // 1. Setup ViewModel
+        // Initialize Firebase Auth Helper
         val application = application as UserApplication
-        val factory = UserViewModelFactory(application.repository)
-        userViewModel = ViewModelProvider(this, factory).get(UserViewModel::class.java)
+        authHelper = application.authHelper
 
-        // 2. Get Data passed from Login/Signup Activity
-        userId = intent.getLongExtra("USER_ID", -1L)
-        val dobString = intent.getStringExtra("USER_DOB") ?: ""
+        // Get Data passed from Login/Signup Activity
+        userId = intent.getStringExtra("USER_ID") ?: ""
 
-        // 3. Calculate Age automatically and display it
-        if (dobString.isNotEmpty()) {
-            userAge = calculateAge(dobString)
-            binding.tvAgeDisplay.text = "Age: $userAge"
-        } else {
-            binding.tvAgeDisplay.text = "Age: --"
+        // Get user data to calculate age if available
+        lifecycleScope.launch {
+            val result = authHelper.getUserData(userId)
+            result.onSuccess { userData ->
+                userAge = (userData["age"] as? Long)?.toInt() ?: 0
+                if (userAge > 0) {
+                    binding.tvAgeDisplay.text = "Age: $userAge"
+                } else {
+                    binding.tvAgeDisplay.text = "Age: --"
+                }
+            }
         }
 
-        // 4. Handle Gender Card Clicks (Modern Selection)
+        // Handle Gender Card Clicks
         binding.cardMale.setOnClickListener { selectGender("Male") }
         binding.cardFemale.setOnClickListener { selectGender("Female") }
 
-        // 5. "Proceed" Button Click
+        // "Proceed" Button Click
         binding.btnContinue.setOnClickListener { validateAndGeneratePlan() }
     }
 
@@ -99,56 +92,24 @@ class UserInfoActivity : AppCompatActivity() {
             return
         }
 
-        val height = heightStr.toFloat()
-        val weight = weightStr.toFloat()
+        val height = heightStr.toDouble()
+        val weight = weightStr.toDouble()
 
-        // --- MATH ---
-        val heightMeters = height / 100
-        val bmi = weight / (heightMeters * heightMeters)
-        val baseBmr = (10 * weight) + (6.25 * height) - (5 * userAge)
-        val bmr = if (selectedGender == "Male") (baseBmr + 5) else (baseBmr - 161)
-        val maintenanceCalories = (bmr * 1.55).toInt()
-        val waterGoal = (weight * 35).toInt()
-
-        // --- DATABASE SAVE ---
         lifecycleScope.launch {
-            // A. Update User Physical Stats
-            userViewModel.updateUserPhysicalStats(userId, height, weight, selectedGender, bmi)
-
-            // B. Create Goal Object
-            val newGoal = Goal(
-                userId = userId,
-                goalType = "General Health",
-                dailyCalorieTarget = maintenanceCalories,
-                waterGoalMl = waterGoal,
-                status = "Active"
-            )
-
-            // C. Insert Goal
-            userViewModel.insertGoal(newGoal)
-
-            // --- NAVIGATION ---
-            Toast.makeText(this@UserInfoActivity, "Plan Generated!", Toast.LENGTH_SHORT).show()
-
-            // *** FIXED: Navigate to homepage instead of InsertGoalActivity ***
-            val intent = Intent(this@UserInfoActivity, InsertGoalActivity::class.java)
-            intent.putExtra("USER_ID", userId) // Pass ID so homepage knows who is logged in
-            startActivity(intent)
-            finish()
-        }
-    }
-
-    private fun calculateAge(dobString: String): Int {
-        return try {
-            val sdf = SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
-            val dobDate = sdf.parse(dobString) ?: return 0
-            val dobCal = Calendar.getInstance().apply { time = dobDate }
-            val today = Calendar.getInstance()
-            var age = today.get(Calendar.YEAR) - dobCal.get(Calendar.YEAR)
-            if (today.get(Calendar.DAY_OF_YEAR) < dobCal.get(Calendar.DAY_OF_YEAR)) {
-                age--
+            // Update user physical stats in Firestore
+            val result = authHelper.updateUserPhysicalStats(userId, height, weight, selectedGender, userAge)
+            
+            result.onSuccess {
+                Toast.makeText(this@UserInfoActivity, "Profile Updated!", Toast.LENGTH_SHORT).show()
+                
+                // Navigate to InsertGoalActivity
+                val intent = Intent(this@UserInfoActivity, InsertGoalActivity::class.java)
+                intent.putExtra("USER_ID", userId)
+                startActivity(intent)
+                finish()
+            }.onFailure { e ->
+                Toast.makeText(this@UserInfoActivity, "Failed to update profile: ${e.message}", Toast.LENGTH_SHORT).show()
             }
-            age
-        } catch (e: Exception) { 0 }
+        }
     }
 }

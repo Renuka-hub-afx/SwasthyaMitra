@@ -1,22 +1,22 @@
 package com.example.swasthyamitra
 
 import android.app.Application
-import com.example.swasthyamitra.data.AppDatabase
-import com.example.swasthyamitra.data.UserRepository
+import com.example.swasthyamitra.auth.FirebaseAuthHelper
+import com.google.firebase.FirebaseApp
 
 class UserApplication : Application() {
 
-    // We keep the repository accessible to the Activities
-    lateinit var repository: UserRepository
+    // Firebase Auth Helper
+    lateinit var authHelper: FirebaseAuthHelper
         private set
 
     override fun onCreate() {
         super.onCreate()
 
-        // 1. Get the Database Instance (AppDatabase)
-        val database = AppDatabase.getDatabase(this)
+        // Initialize Firebase
+        FirebaseApp.initializeApp(this)
 
-        // 2. Initialize Repository with BOTH DAOs
-        repository = UserRepository(database.userDao(), database.goalDao())
+        // Initialize Firebase Auth Helper
+        authHelper = FirebaseAuthHelper(this)
     }
 }
