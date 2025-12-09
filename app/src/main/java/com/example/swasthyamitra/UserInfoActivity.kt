@@ -9,15 +9,11 @@ import androidx.lifecycle.lifecycleScope
 import com.example.swasthyamitra.databinding.ActivityUserInfoBinding
 import com.example.swasthyamitra.auth.FirebaseAuthHelper
 import kotlinx.coroutines.launch
-import kotlin.text.isEmpty
-import kotlin.text.toDouble
 
 class UserInfoActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityUserInfoBinding
     private lateinit var authHelper: FirebaseAuthHelper
-
-    // Variables to store data
     private var selectedGender: String = ""
     private var userId: String = ""
     private var userAge: Int = 0
@@ -27,89 +23,66 @@ class UserInfoActivity : AppCompatActivity() {
         binding = ActivityUserInfoBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // Initialize Firebase Auth Helper
         val application = application as UserApplication
         authHelper = application.authHelper
 
-        // Get Data passed from Login/Signup Activity
+        // Retrieve User ID passed from LoginActivity
         userId = intent.getStringExtra("USER_ID") ?: ""
 
-        // Get user data to calculate age if available
+        // Fetch existing age if available
         lifecycleScope.launch {
             val result = authHelper.getUserData(userId)
             result.onSuccess { userData ->
-                userAge = (userData["age"] as? Long)?.toInt() ?: 0
-                if (userAge > 0) {
-                    binding.tvAgeDisplay.text = "Age: $userAge"
-                } else {
-                    binding.tvAgeDisplay.text = "Age: --"
-                }
+                userAge = (userData["age"] as? Number)?.toInt() ?: 0
+                binding.tvAgeDisplay.text = if (userAge > 0) "Age: $userAge" else "Age: --"
             }
         }
 
-        // Handle Gender Card Clicks
+        // Gender Selection Listeners
         binding.cardMale.setOnClickListener { selectGender("Male") }
         binding.cardFemale.setOnClickListener { selectGender("Female") }
 
-        // "Proceed" Button Click
+        // "Proceed" / "Continue" Button Listener
         binding.btnContinue.setOnClickListener { validateAndGeneratePlan() }
     }
 
     private fun selectGender(gender: String) {
         selectedGender = gender
+        val activeColor = Color.parseColor("#FCE4EC")
+        val activeStroke = Color.parseColor("#E91E63")
 
-        val activeStrokeColor = Color.parseColor("#E91E63")
-        val activeBackgroundColor = Color.parseColor("#FCE4EC")
-        val inactiveBackgroundColor = Color.WHITE
+        binding.cardMale.setCardBackgroundColor(if (gender == "Male") activeColor else Color.WHITE)
+        binding.cardMale.strokeColor = if (gender == "Male") activeStroke else Color.TRANSPARENT
+        binding.cardMale.strokeWidth = if (gender == "Male") 4 else 0
 
-        if (gender == "Male") {
-            binding.cardMale.setCardBackgroundColor(activeBackgroundColor)
-            binding.cardMale.strokeColor = activeStrokeColor
-            binding.cardMale.strokeWidth = 4
-            binding.cardFemale.setCardBackgroundColor(inactiveBackgroundColor)
-            binding.cardFemale.strokeColor = Color.TRANSPARENT
-            binding.cardFemale.strokeWidth = 0
-        } else {
-            binding.cardFemale.setCardBackgroundColor(activeBackgroundColor)
-            binding.cardFemale.strokeColor = activeStrokeColor
-            binding.cardFemale.strokeWidth = 4
-            binding.cardMale.setCardBackgroundColor(inactiveBackgroundColor)
-            binding.cardMale.strokeColor = Color.TRANSPARENT
-            binding.cardMale.strokeWidth = 0
-        }
+        binding.cardFemale.setCardBackgroundColor(if (gender == "Female") activeColor else Color.WHITE)
+        binding.cardFemale.strokeColor = if (gender == "Female") activeStroke else Color.TRANSPARENT
+        binding.cardFemale.strokeWidth = if (gender == "Female") 4 else 0
     }
 
     private fun validateAndGeneratePlan() {
         val heightStr = binding.etHeight.text.toString()
         val weightStr = binding.etWeight.text.toString()
 
-        if (selectedGender.isEmpty()) {
-            Toast.makeText(this, "Please select your gender", Toast.LENGTH_SHORT).show()
-            return
-        }
-        if (heightStr.isEmpty() || weightStr.isEmpty()) {
-            Toast.makeText(this, "Please enter height and weight", Toast.LENGTH_SHORT).show()
+        // Validation
+        if (selectedGender.isEmpty() || heightStr.isEmpty() || weightStr.isEmpty()) {
+            Toast.makeText(this, "Please fill all details", Toast.LENGTH_SHORT).show()
             return
         }
 
         val height = heightStr.toDouble()
         val weight = weightStr.toDouble()
 
+        // Save data in background and navigate immediately
         lifecycleScope.launch {
-            // Update user physical stats in Firestore
-            val result = authHelper.updateUserPhysicalStats(userId, height, weight, selectedGender, userAge)
-            
-            result.onSuccess {
-                Toast.makeText(this@UserInfoActivity, "Profile Updated!", Toast.LENGTH_SHORT).show()
-                
-                // Navigate to InsertGoalActivity
-                val intent = Intent(this@UserInfoActivity, InsertGoalActivity::class.java)
-                intent.putExtra("USER_ID", userId)
-                startActivity(intent)
-                finish()
-            }.onFailure { e ->
-                Toast.makeText(this@UserInfoActivity, "Failed to update profile: ${e.message}", Toast.LENGTH_SHORT).show()
-            }
+            authHelper.updateUserPhysicalStats(userId, height, weight, selectedGender, userAge)
         }
+
+        // Navigate immediately without waiting for database
+        Toast.makeText(this, "Profile Updated!", Toast.LENGTH_SHORT).show()
+        val intent = Intent(this, InsertGoalActivity::class.java)
+        intent.putExtra("USER_ID", userId)
+        startActivity(intent)
+        finish()
     }
 }

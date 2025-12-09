@@ -1,14 +1,8 @@
 package com.example.swasthyamitra.auth
 
-import android.app.Activity
 import android.content.Context
-import com.google.android.gms.auth.api.signin.GoogleSignIn
-import com.google.android.gms.auth.api.signin.GoogleSignInAccount
-import com.google.android.gms.auth.api.signin.GoogleSignInClient
-import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
-import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
 
@@ -16,19 +10,6 @@ class FirebaseAuthHelper(private val context: Context) {
 
     private val auth: FirebaseAuth = FirebaseAuth.getInstance()
     private val firestore: FirebaseFirestore = FirebaseFirestore.getInstance()
-    private var googleSignInClient: GoogleSignInClient? = null
-
-    // Initialize Google Sign-In
-    fun initializeGoogleSignIn(webClientId: String) {
-        val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-            .requestIdToken(webClientId)
-            .requestEmail()
-            .build()
-        googleSignInClient = GoogleSignIn.getClient(context, gso)
-    }
-
-    // Get Google Sign-In Client
-    fun getGoogleSignInClient(): GoogleSignInClient? = googleSignInClient
 
     // Get current user
     fun getCurrentUser(): FirebaseUser? = auth.currentUser
@@ -92,85 +73,9 @@ class FirebaseAuthHelper(private val context: Context) {
         }
     }
 
-    // Sign in with Google
-    suspend fun signInWithGoogle(account: GoogleSignInAccount): Result<FirebaseUser> {
-        return try {
-            val credential = GoogleAuthProvider.getCredential(account.idToken, null)
-            val result = auth.signInWithCredential(credential).await()
-            val user = result.user
-            
-            if (user != null) {
-                // Check if user data exists in Firestore
-                val userDoc = firestore.collection("users").document(user.uid).get().await()
-                
-                if (!userDoc.exists()) {
-                    // Create user data if it doesn't exist
-                    val userData = hashMapOf(
-                        "userId" to user.uid,
-                        "name" to (user.displayName ?: ""),
-                        "email" to (user.email ?: ""),
-                        "phoneNumber" to (user.phoneNumber ?: ""),
-                        "age" to 0,
-                        "height" to 0.0,
-                        "weight" to 0.0,
-                        "gender" to "",
-                        "createdAt" to System.currentTimeMillis()
-                    )
-                    
-                    firestore.collection("users")
-                        .document(user.uid)
-                        .set(userData)
-                        .await()
-                }
-                
-                Result.success(user)
-            } else {
-                Result.failure(Exception("Google sign in failed"))
-            }
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
-
-    // Sign in anonymously
-    suspend fun signInAnonymously(): Result<FirebaseUser> {
-        return try {
-            val result = auth.signInAnonymously().await()
-            val user = result.user
-            
-            if (user != null) {
-                // Create anonymous user data
-                val userData = hashMapOf(
-                    "userId" to user.uid,
-                    "name" to "Guest User",
-                    "email" to "",
-                    "phoneNumber" to "",
-                    "age" to 0,
-                    "height" to 0.0,
-                    "weight" to 0.0,
-                    "gender" to "",
-                    "isAnonymous" to true,
-                    "createdAt" to System.currentTimeMillis()
-                )
-                
-                firestore.collection("users")
-                    .document(user.uid)
-                    .set(userData)
-                    .await()
-                
-                Result.success(user)
-            } else {
-                Result.failure(Exception("Anonymous sign in failed"))
-            }
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
-
     // Sign out
     fun signOut() {
         auth.signOut()
-        googleSignInClient?.signOut()
     }
 
     // Update user physical stats
@@ -187,6 +92,28 @@ class FirebaseAuthHelper(private val context: Context) {
                 "weight" to weight,
                 "gender" to gender,
                 "age" to age,
+                "updatedAt" to System.currentTimeMillis()
+            )
+            
+            firestore.collection("users")
+                .document(userId)
+                .update(updates)
+                .await()
+            
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    // Update eating preference
+    suspend fun updateEatingPreference(
+        userId: String,
+        eatingPreference: String
+    ): Result<Unit> {
+        return try {
+            val updates = hashMapOf<String, Any>(
+                "eatingPreference" to eatingPreference,
                 "updatedAt" to System.currentTimeMillis()
             )
             
@@ -243,6 +170,21 @@ class FirebaseAuthHelper(private val context: Context) {
             } else {
                 Result.failure(Exception("User not found"))
             }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    // Check if user has a goal
+    suspend fun hasUserGoal(userId: String): Result<Boolean> {
+        return try {
+            val querySnapshot = firestore.collection("goals")
+                .whereEqualTo("userId", userId)
+                .limit(1)
+                .get()
+                .await()
+            
+            Result.success(!querySnapshot.isEmpty)
         } catch (e: Exception) {
             Result.failure(e)
         }

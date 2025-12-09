@@ -8,10 +8,7 @@
     android:background="@drawable/background_main"
     tools:context="com.example.swasthyamitra.SignupActivity">
 
-    <!-- Title -->
-
-    <!-- Full Name Input -->
-
+    <!-- Title (ConstraintLayout centered) -->
     <TextView
         android:id="@+id/signup_title"
         android:layout_width="wrap_content"
@@ -22,11 +19,11 @@
         android:textColor="#333333"
         android:textSize="36sp"
         android:textStyle="bold"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.498"
+        app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintEnd_toEndOf="parent" />
 
+    <!-- Full Name Input -->
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/nameInputLayout"
         style="@style/Widget.MaterialComponents.TextInputLayout.FilledBox"
@@ -36,19 +33,17 @@
         android:layout_marginTop="32dp"
         android:layout_marginEnd="32dp"
         app:boxBackgroundColor="@android:color/white"
-        app:boxStrokeWidth="0dp"
-        app:boxStrokeWidthFocused="0dp"
-        app:endIconMode="custom"
-        app:endIconDrawable="@drawable/ic_person_black_24dp"
-        app:endIconTint="#555555"
         app:boxCornerRadiusTopStart="16dp"
         app:boxCornerRadiusTopEnd="16dp"
         app:boxCornerRadiusBottomStart="16dp"
         app:boxCornerRadiusBottomEnd="16dp"
+        app:endIconMode="custom"
+        app:endIconDrawable="@drawable/ic_person_black_24dp"
+        app:endIconTint="#555555"
         app:hintEnabled="false"
+        app:layout_constraintTop_toBottomOf="@id/signup_title"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/signup_title">
+        app:layout_constraintEnd_toEndOf="parent">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/name_input"
@@ -60,7 +55,6 @@
             android:inputType="textPersonName"/>
     </com.google.android.material.textfield.TextInputLayout>
 
-
     <!-- Email Input -->
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/emailInputLayout"
@@ -71,15 +65,13 @@
         android:layout_marginTop="16dp"
         android:layout_marginEnd="32dp"
         app:boxBackgroundColor="@android:color/white"
-        app:boxStrokeWidth="0dp"
-        app:boxStrokeWidthFocused="0dp"
-        app:endIconMode="custom"
-        app:endIconDrawable="@drawable/ic_mail_outline_black_24dp"
-        app:endIconTint="#555555"
         app:boxCornerRadiusTopStart="16dp"
         app:boxCornerRadiusTopEnd="16dp"
         app:boxCornerRadiusBottomStart="16dp"
         app:boxCornerRadiusBottomEnd="16dp"
+        app:endIconDrawable="@drawable/ic_mail_outline_black_24dp"
+        app:endIconMode="custom"
+        app:endIconTint="#555555"
         app:hintEnabled="false"
         app:layout_constraintTop_toBottomOf="@id/nameInputLayout"
         app:layout_constraintStart_toStartOf="parent"
@@ -95,33 +87,60 @@
             android:inputType="textEmailAddress"/>
     </com.google.android.material.textfield.TextInputLayout>
 
-    <!-- Birthdate Label -->
-    <TextView
-        android:id="@+id/textView8"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="BirthDate"
-        android:textColor="@color/black"
-        android:textSize="16sp"
-        android:layout_marginTop="16dp"
-        android:layout_marginStart="32dp"
-        app:layout_constraintTop_toBottomOf="@id/emailInputLayout"
-        app:layout_constraintStart_toStartOf="parent"/>
-
-    <!-- Date Picker -->
-    <DatePicker
-        android:id="@+id/datePicker1"
-        android:layout_width="279dp"
-        android:layout_height="126dp"
-        android:layout_marginStart="32dp"
-        android:layout_marginEnd="32dp"
-        android:calendarViewShown="false"
-        android:datePickerMode="spinner"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/textView8" />
+    <!-- Birthdate Clickable Box -->
 
     <!-- Password Input -->
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/birthdateCard"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="32dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="32dp"
+        app:cardBackgroundColor="@android:color/white"
+        app:cardCornerRadius="16dp"
+        app:cardUseCompatPadding="true"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/emailInputLayout">
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:paddingTop="16dp"
+            android:paddingBottom="16dp">
+
+            <TextView
+                android:id="@+id/textView8"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="?attr/selectableItemBackground"
+                android:clickable="true"
+                android:focusable="true"
+                android:paddingStart="0dp"
+                android:paddingTop="0dp"
+                android:paddingEnd="48dp"
+                android:paddingBottom="0dp"
+                android:text="Birthdate"
+                android:textColor="#555555"
+                android:textSize="16sp" />
+
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_alignParentEnd="true"
+                android:layout_centerVertical="true"
+                android:layout_marginEnd="0dp"
+                android:src="@android:drawable/ic_menu_my_calendar"
+                android:tint="#555555" />
+
+        </RelativeLayout>
+
+    </com.google.android.material.card.MaterialCardView>
+
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/passwordInputLayout"
         style="@style/Widget.MaterialComponents.TextInputLayout.FilledBox"
@@ -131,16 +150,14 @@
         android:layout_marginTop="16dp"
         android:layout_marginEnd="32dp"
         app:boxBackgroundColor="@android:color/white"
-        app:boxStrokeWidth="0dp"
-        app:boxStrokeWidthFocused="0dp"
-        app:passwordToggleEnabled="true"
-        app:passwordToggleTint="#555555"
         app:boxCornerRadiusTopStart="16dp"
         app:boxCornerRadiusTopEnd="16dp"
         app:boxCornerRadiusBottomStart="16dp"
         app:boxCornerRadiusBottomEnd="16dp"
+        app:passwordToggleEnabled="true"
+        app:passwordToggleTint="#555555"
         app:hintEnabled="false"
-        app:layout_constraintTop_toBottomOf="@id/datePicker1"
+        app:layout_constraintTop_toBottomOf="@id/birthdateCard"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
@@ -164,14 +181,12 @@
         android:layout_marginTop="16dp"
         android:layout_marginEnd="32dp"
         app:boxBackgroundColor="@android:color/white"
-        app:boxStrokeWidth="0dp"
-        app:boxStrokeWidthFocused="0dp"
-        app:passwordToggleEnabled="true"
-        app:passwordToggleTint="#555555"
         app:boxCornerRadiusTopStart="16dp"
         app:boxCornerRadiusTopEnd="16dp"
         app:boxCornerRadiusBottomStart="16dp"
         app:boxCornerRadiusBottomEnd="16dp"
+        app:passwordToggleEnabled="true"
+        app:passwordToggleTint="#555555"
         app:hintEnabled="false"
         app:layout_constraintTop_toBottomOf="@id/passwordInputLayout"
         app:layout_constraintStart_toStartOf="parent"
@@ -206,8 +221,17 @@
         app:cornerRadius="24dp"
         app:elevation="8dp"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.39"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <DatePicker
+        android:id="@+id/datePicker1"
+        android:layout_width="wrap_content"
+        android:layout_height="115dp"
+        android:calendarViewShown="false"
+        android:datePickerMode="spinner"
+        android:visibility="gone"
+        tools:layout_editor_absoluteX="22dp"
+        tools:layout_editor_absoluteY="285dp" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

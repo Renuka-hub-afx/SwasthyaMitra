@@ -2,8 +2,11 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
     <application
-        android:name="com.example.swasthyamitra.UserApplication"
+        android:name=".UserApplication"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
@@ -12,31 +15,36 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.Trial">
+
         <activity
-            android:name="com.example.swasthyamitra.homepage"
-            android:exported="false"
-            tools:ignore="DuplicateActivity,MissingClass" />
-        <activity
-            android:name="com.example.swasthyamitra.InsertGoalActivity"
+            android:name=".homepage"
             android:exported="false" />
+
         <activity
-            android:name="com.example.swasthyamitra.UserInfoActivity"
-            android:exported="false" /> <!-- Sign Up Activity -->
+            android:name=".InsertGoalActivity"
+            android:exported="false" />
+
         <activity
-            android:name="com.example.swasthyamitra.SignupActivity"
-            android:exported="false" /> <!-- Login Activity -->
+            android:name=".UserInfoActivity"
+            android:exported="false" />
+
         <activity
-            android:name="com.example.swasthyamitra.LoginActivity"
-            android:exported="false" /> <!-- Main Entry Activity -->
+            android:name=".SignupActivity"
+            android:exported="false" />
+
         <activity
-            android:name="com.example.swasthyamitra.MainActivity"
+            android:name=".LoginActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".MainActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
     </application>
 
 </manifest>

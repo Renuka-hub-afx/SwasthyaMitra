@@ -22,43 +22,29 @@ class SignupActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        // ViewBinding
         binding = ActivitySignupBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // Initialize Firebase Auth Helper
         val application = application as UserApplication
         authHelper = application.authHelper
 
-        // Hide inline DatePicker if present (optional cleanup)
         binding.datePicker1?.visibility = View.GONE
-
-        // Open popup DatePicker
         binding.textView8.setOnClickListener { showDatePicker() }
-
-        // Signup button
         binding.signupButton.setOnClickListener { validateAndSave() }
     }
 
     private fun showDatePicker() {
         val cal = Calendar.getInstance()
-
         DatePickerDialog(
             this,
             { _, year, month, day ->
                 val selected = Calendar.getInstance()
                 selected.set(year, month, day)
-
-                val dob = SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
-                    .format(selected.time)
-
+                val dob = SimpleDateFormat("dd MMM yyyy", Locale.getDefault()).format(selected.time)
                 binding.textView8.text = "BirthDate: $dob"
                 binding.textView8.tag = dob
             },
-            cal.get(Calendar.YEAR),
-            cal.get(Calendar.MONTH),
-            cal.get(Calendar.DAY_OF_MONTH)
+            cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH)
         ).show()
     }
 
@@ -69,54 +55,25 @@ class SignupActivity : AppCompatActivity() {
         val pass = binding.passwordInput.text.toString()
         val confirm = binding.confirmPasswordInput.text.toString()
 
-        when {
-            name.isEmpty() -> {
-                binding.nameInput.error = "Enter your name"
-                return
-            }
-            !Patterns.EMAIL_ADDRESS.matcher(email).matches() -> {
-                binding.emailInput.error = "Enter valid email"
-                return
-            }
-            dob.isEmpty() -> {
-                Toast.makeText(this, "Select birth date", Toast.LENGTH_SHORT).show()
-                return
-            }
-            pass.length < 6 -> {
-                binding.passwordInput.error = "Minimum 6 characters"
-                return
-            }
-            pass != confirm -> {
-                binding.confirmPasswordInput.error = "Passwords do not match"
-                return
-            }
-        }
+        if (name.isEmpty()) { binding.nameInput.error = "Enter name"; return }
+        if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) { binding.emailInput.error = "Valid email required"; return }
+        if (dob.isEmpty()) { Toast.makeText(this, "Select birth date", Toast.LENGTH_SHORT).show(); return }
+        if (pass.length < 6) { binding.passwordInput.error = "Min 6 chars"; return }
+        if (pass != confirm) { binding.confirmPasswordInput.error = "Mismatch"; return }
 
-        // Calculate age from DOB
         val age = calculateAge(dob)
 
         lifecycleScope.launch {
-            val result = authHelper.signUpWithEmail(
-                email = email,
-                password = pass,
-                name = name,
-                phoneNumber = "", // Can add phone number field if needed
-                age = age
-            )
-            
+            val result = authHelper.signUpWithEmail(email, pass, name, "", age)
             result.onSuccess {
                 runOnUiThread {
                     Toast.makeText(this@SignupActivity, "Signup Successful! Please log in.", Toast.LENGTH_LONG).show()
-                    
-                    // Navigate back to LoginActivity
-                    val intent = Intent(this@SignupActivity, LoginActivity::class.java)
-                    startActivity(intent)
+                    // NAVIGATE BACK TO LOGIN
+                    startActivity(Intent(this@SignupActivity, LoginActivity::class.java))
                     finish()
                 }
             }.onFailure { e ->
-                runOnUiThread {
-                    Toast.makeText(this@SignupActivity, "Signup failed: ${e.message}", Toast.LENGTH_LONG).show()
-                }
+                runOnUiThread { Toast.makeText(this@SignupActivity, "Error: ${e.message}", Toast.LENGTH_LONG).show() }
             }
         }
     }
@@ -128,14 +85,9 @@ class SignupActivity : AppCompatActivity() {
             val today = Calendar.getInstance()
             val birth = Calendar.getInstance()
             birth.time = birthDate
-            
             var age = today.get(Calendar.YEAR) - birth.get(Calendar.YEAR)
-            if (today.get(Calendar.DAY_OF_YEAR) < birth.get(Calendar.DAY_OF_YEAR)) {
-                age--
-            }
+            if (today.get(Calendar.DAY_OF_YEAR) < birth.get(Calendar.DAY_OF_YEAR)) age--
             age
-        } catch (e: Exception) {
-            0
-        }
+        } catch (e: Exception) { 0 }
     }
 }
