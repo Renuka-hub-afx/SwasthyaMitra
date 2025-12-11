@@ -73,16 +73,39 @@ class UserInfoActivity : AppCompatActivity() {
         val height = heightStr.toDouble()
         val weight = weightStr.toDouble()
 
-        // Save data in background and navigate immediately
+        // Save data and wait for completion before navigating
         lifecycleScope.launch {
-            authHelper.updateUserPhysicalStats(userId, height, weight, selectedGender, userAge)
+            val result = authHelper.updateUserPhysicalStats(userId, height, weight, selectedGender, userAge)
+            result.onSuccess {
+                // Check if user already has a goal before navigating
+                val hasGoalResult = authHelper.hasUserGoal(userId)
+                hasGoalResult.onSuccess { hasGoal ->
+                    if (hasGoal) {
+                        // User already has a goal, go directly to homepage
+                        Toast.makeText(this@UserInfoActivity, "Profile Updated!", Toast.LENGTH_SHORT).show()
+                        val intent = Intent(this@UserInfoActivity, homepage::class.java)
+                        intent.putExtra("USER_ID", userId)
+                        startActivity(intent)
+                        finish()
+                    } else {
+                        // User has no goal, go to InsertGoalActivity
+                        Toast.makeText(this@UserInfoActivity, "Profile Updated!", Toast.LENGTH_SHORT).show()
+                        val intent = Intent(this@UserInfoActivity, InsertGoalActivity::class.java)
+                        intent.putExtra("USER_ID", userId)
+                        startActivity(intent)
+                        finish()
+                    }
+                }.onFailure {
+                    // If check fails, assume no goal and go to InsertGoalActivity
+                    Toast.makeText(this@UserInfoActivity, "Profile Updated!", Toast.LENGTH_SHORT).show()
+                    val intent = Intent(this@UserInfoActivity, InsertGoalActivity::class.java)
+                    intent.putExtra("USER_ID", userId)
+                    startActivity(intent)
+                    finish()
+                }
+            }.onFailure { e ->
+                Toast.makeText(this@UserInfoActivity, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
         }
-
-        // Navigate immediately without waiting for database
-        Toast.makeText(this, "Profile Updated!", Toast.LENGTH_SHORT).show()
-        val intent = Intent(this, InsertGoalActivity::class.java)
-        intent.putExtra("USER_ID", userId)
-        startActivity(intent)
-        finish()
     }
 }

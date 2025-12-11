@@ -59,11 +59,53 @@ class LoginActivity : AppCompatActivity() {
                 result.onSuccess { user ->
                     Toast.makeText(this@LoginActivity, "Login Successful!", Toast.LENGTH_SHORT).show()
                     saveUserId(user.uid)
-                    // Navigate directly to UserInfo for new user onboarding flow
-                    navigateToUserInfo(user.uid)
+                    // Check user onboarding status before navigation
+                    checkUserProfileAndNavigate(user.uid)
                 }.onFailure { e ->
                     Toast.makeText(this@LoginActivity, "Login failed: ${e.message}", Toast.LENGTH_SHORT).show()
                 }
+            }
+        }
+    }
+
+    private fun checkUserProfileAndNavigate(userId: String) {
+        lifecycleScope.launch {
+            try {
+                // Check if user has completed profile (height, weight, gender)
+                val userDataResult = authHelper.getUserData(userId)
+                userDataResult.onSuccess { userData ->
+                    val height = (userData["height"] as? Number)?.toDouble() ?: 0.0
+                    val weight = (userData["weight"] as? Number)?.toDouble() ?: 0.0
+                    val gender = userData["gender"] as? String ?: ""
+
+                    // Check if user has set a goal
+                    val hasGoalResult = authHelper.hasUserGoal(userId)
+                    hasGoalResult.onSuccess { hasGoal ->
+                        when {
+                            // User has completed everything - go to homepage
+                            height > 0 && weight > 0 && gender.isNotEmpty() && hasGoal -> {
+                                navigateToHomePage(userId)
+                            }
+                            // User has profile but no goal - go to InsertGoal
+                            height > 0 && weight > 0 && gender.isNotEmpty() && !hasGoal -> {
+                                navigateToInsertGoal(userId)
+                            }
+                            // User has no profile - go to UserInfo
+                            else -> {
+                                navigateToUserInfo(userId)
+                            }
+                        }
+                    }.onFailure {
+                        // If goal check fails, assume no goal and redirect to UserInfo
+                        navigateToUserInfo(userId)
+                    }
+                }.onFailure {
+                    // If user data fetch fails, start from beginning
+                    navigateToUserInfo(userId)
+                }
+            } catch (e: Exception) {
+                Log.e("LoginActivity", "Error checking profile: ${e.message}")
+                navigateToUserInfo(userId)
             }
         }
     }

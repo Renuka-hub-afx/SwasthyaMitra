@@ -56,16 +56,33 @@ class InsertGoalActivity : AppCompatActivity() {
     }
 
     private fun saveGoalAndFinish() {
-        // Save goal in background
+        // Check if user already has a goal
         lifecycleScope.launch {
-            authHelper.insertGoal(userId, selectedGoalType, 2000.0, 0.0)
+            val hasGoalResult = authHelper.hasUserGoal(userId)
+            hasGoalResult.onSuccess { hasGoal ->
+                if (hasGoal) {
+                    // User already has a goal, don't create another one
+                    Toast.makeText(this@InsertGoalActivity, "Goal already exists!", Toast.LENGTH_SHORT).show()
+                    val intent = Intent(this@InsertGoalActivity, homepage::class.java)
+                    intent.putExtra("USER_ID", userId)
+                    startActivity(intent)
+                    finishAffinity()
+                } else {
+                    // User has no goal, create one
+                    val result = authHelper.insertGoal(userId, selectedGoalType, 2000.0, 0.0)
+                    result.onSuccess {
+                        Toast.makeText(this@InsertGoalActivity, "Goal Set!", Toast.LENGTH_SHORT).show()
+                        val intent = Intent(this@InsertGoalActivity, homepage::class.java)
+                        intent.putExtra("USER_ID", userId)
+                        startActivity(intent)
+                        finishAffinity()
+                    }.onFailure { e ->
+                        Toast.makeText(this@InsertGoalActivity, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }.onFailure { e ->
+                Toast.makeText(this@InsertGoalActivity, "Error checking goal: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
         }
-
-        // Navigate immediately without waiting
-        Toast.makeText(this, "Goal Set!", Toast.LENGTH_SHORT).show()
-        val intent = Intent(this, homepage::class.java)
-        intent.putExtra("USER_ID", userId)
-        startActivity(intent)
-        finishAffinity()
     }
 }
