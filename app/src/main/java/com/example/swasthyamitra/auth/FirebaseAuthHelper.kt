@@ -189,4 +189,23 @@ class FirebaseAuthHelper(private val context: Context) {
             Result.failure(e)
         }
     }
+
+    // Get user goal data
+    suspend fun getUserGoal(userId: String): Result<Map<String, Any>> {
+        return try {
+            val querySnapshot = firestore.collection("goals")
+                .whereEqualTo("userId", userId)
+                .limit(1)
+                .get()
+                .await()
+            
+            if (!querySnapshot.isEmpty) {
+                Result.success(querySnapshot.documents[0].data ?: emptyMap())
+            } else {
+                Result.failure(Exception("No goal found"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 }
