@@ -21,6 +21,10 @@
             android:exported="false" />
 
         <activity
+            android:name=".LifestyleActivity"
+            android:exported="false" />
+
+        <activity
             android:name=".InsertGoalActivity"
             android:exported="false" />
 

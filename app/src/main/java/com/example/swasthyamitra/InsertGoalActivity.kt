@@ -61,27 +61,53 @@ class InsertGoalActivity : AppCompatActivity() {
             val hasGoalResult = authHelper.hasUserGoal(userId)
             hasGoalResult.onSuccess { hasGoal ->
                 if (hasGoal) {
-                    // User already has a goal, don't create another one
-                    Toast.makeText(this@InsertGoalActivity, "Goal already exists!", Toast.LENGTH_SHORT).show()
-                    val intent = Intent(this@InsertGoalActivity, homepage::class.java)
-                    intent.putExtra("USER_ID", userId)
-                    startActivity(intent)
-                    finishAffinity()
+                    // User already has a goal, check if lifestyle data exists
+                    checkLifestyleAndNavigate()
                 } else {
                     // User has no goal, create one
                     val result = authHelper.insertGoal(userId, selectedGoalType, 2000.0, 0.0)
                     result.onSuccess {
                         Toast.makeText(this@InsertGoalActivity, "Goal Set!", Toast.LENGTH_SHORT).show()
-                        val intent = Intent(this@InsertGoalActivity, homepage::class.java)
+                        // Navigate to LifestyleActivity for additional profile data
+                        val intent = Intent(this@InsertGoalActivity, LifestyleActivity::class.java)
                         intent.putExtra("USER_ID", userId)
                         startActivity(intent)
-                        finishAffinity()
+                        finish()
                     }.onFailure { e ->
                         Toast.makeText(this@InsertGoalActivity, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
                     }
                 }
             }.onFailure { e ->
                 Toast.makeText(this@InsertGoalActivity, "Error checking goal: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    private fun checkLifestyleAndNavigate() {
+        lifecycleScope.launch {
+            val hasLifestyleResult = authHelper.hasLifestyleData(userId)
+            hasLifestyleResult.onSuccess { hasLifestyle ->
+                if (hasLifestyle) {
+                    // User has both goal and lifestyle data, go to homepage
+                    Toast.makeText(this@InsertGoalActivity, "Welcome back!", Toast.LENGTH_SHORT).show()
+                    val intent = Intent(this@InsertGoalActivity, homepage::class.java)
+                    intent.putExtra("USER_ID", userId)
+                    startActivity(intent)
+                    finishAffinity()
+                } else {
+                    // User has goal but no lifestyle data, go to LifestyleActivity
+                    Toast.makeText(this@InsertGoalActivity, "Complete your profile!", Toast.LENGTH_SHORT).show()
+                    val intent = Intent(this@InsertGoalActivity, LifestyleActivity::class.java)
+                    intent.putExtra("USER_ID", userId)
+                    startActivity(intent)
+                    finish()
+                }
+            }.onFailure {
+                // If check fails, go to LifestyleActivity to be safe
+                val intent = Intent(this@InsertGoalActivity, LifestyleActivity::class.java)
+                intent.putExtra("USER_ID", userId)
+                startActivity(intent)
+                finish()
             }
         }
     }

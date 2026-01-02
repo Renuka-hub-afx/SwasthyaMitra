@@ -208,4 +208,72 @@ class FirebaseAuthHelper(private val context: Context) {
             Result.failure(e)
         }
     }
+
+    // Update lifestyle data (activity level, diet preference, target weight) in goal document
+    suspend fun updateGoalLifestyleData(
+        userId: String,
+        activityLevel: String,
+        dietPreference: String,
+        targetWeight: Double
+    ): Result<Unit> {
+        return try {
+            // First, find the user's goal document
+            val querySnapshot = firestore.collection("goals")
+                .whereEqualTo("userId", userId)
+                .limit(1)
+                .get()
+                .await()
+            
+            if (!querySnapshot.isEmpty) {
+                val goalDocId = querySnapshot.documents[0].id
+                
+                val updates = hashMapOf<String, Any>(
+                    "activityLevel" to activityLevel,
+                    "dietPreference" to dietPreference,
+                    "targetWeight" to targetWeight,
+                    "updatedAt" to System.currentTimeMillis()
+                )
+                
+                firestore.collection("goals")
+                    .document(goalDocId)
+                    .update(updates)
+                    .await()
+                
+                Result.success(Unit)
+            } else {
+                Result.failure(Exception("No goal found for user"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    // Check if user has completed lifestyle data in goal document
+    suspend fun hasLifestyleData(userId: String): Result<Boolean> {
+        return try {
+            val querySnapshot = firestore.collection("goals")
+                .whereEqualTo("userId", userId)
+                .limit(1)
+                .get()
+                .await()
+            
+            if (!querySnapshot.isEmpty) {
+                val goalDoc = querySnapshot.documents[0]
+                val activityLevel = goalDoc.getString("activityLevel")
+                val dietPreference = goalDoc.getString("dietPreference")
+                val targetWeight = goalDoc.getDouble("targetWeight")
+                
+                // Check if all lifestyle fields are filled
+                val hasData = !activityLevel.isNullOrEmpty() && 
+                              !dietPreference.isNullOrEmpty() && 
+                              targetWeight != null && targetWeight > 0
+                
+                Result.success(hasData)
+            } else {
+                Result.success(false)
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 }
