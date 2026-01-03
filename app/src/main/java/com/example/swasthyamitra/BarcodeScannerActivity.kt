@@ -193,13 +193,22 @@ class BarcodeScannerActivity : AppCompatActivity() {
 
     private fun saveFoodLog(barcode: String, product: Product) {
         val authHelper = (application as UserApplication).authHelper
-        val userId = authHelper.getCurrentUser()?.uid ?: return
-        val today = java.time.LocalDate.now().toString()
+        val userId = authHelper.getCurrentUser()?.uid
+        
+        if (userId == null) {
+            Toast.makeText(this, "Error: User not logged in", Toast.LENGTH_SHORT).show()
+            return
+        }
+        
+        val dateFormat = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
+        val today = dateFormat.format(java.util.Date())
         
         val foodLog = FoodLog(
+            logId = "",
             userId = userId,
             foodName = product.product_name ?: "Unknown",
             barcode = barcode,
+            photoUrl = null,
             calories = (product.nutriments?.`energy-kcal_100g` ?: 0.0).toInt(),
             protein = product.nutriments?.proteins_100g ?: 0.0,
             carbs = product.nutriments?.carbohydrates_100g ?: 0.0,
@@ -211,12 +220,23 @@ class BarcodeScannerActivity : AppCompatActivity() {
         )
         
         lifecycleScope.launch {
-            val result = authHelper.logFood(foodLog)
-            result.onSuccess {
-                Toast.makeText(this@BarcodeScannerActivity, "Food logged successfully!", Toast.LENGTH_SHORT).show()
-            }
-            result.onFailure {
-                Toast.makeText(this@BarcodeScannerActivity, "Failed to log food", Toast.LENGTH_SHORT).show()
+            try {
+                val result = authHelper.logFood(foodLog)
+                runOnUiThread {
+                    result.onSuccess {
+                        Toast.makeText(this@BarcodeScannerActivity, "✅ Food logged successfully!", Toast.LENGTH_SHORT).show()
+                        finish() // Return to previous screen
+                    }
+                    result.onFailure { e ->
+                        Toast.makeText(this@BarcodeScannerActivity, "❌ Failed: ${e.message}", Toast.LENGTH_LONG).show()
+                        Log.e(TAG, "Failed to log food", e)
+                    }
+                }
+            } catch (e: Exception) {
+                runOnUiThread {
+                    Toast.makeText(this@BarcodeScannerActivity, "❌ Error: ${e.message}", Toast.LENGTH_LONG).show()
+                    Log.e(TAG, "Exception logging food", e)
+                }
             }
         }
     }
