@@ -1,6 +1,7 @@
 package com.example.swasthyamitra.auth
 
 import android.content.Context
+import com.example.swasthyamitra.models.FoodLog
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.FirebaseFirestore
@@ -272,6 +273,86 @@ class FirebaseAuthHelper(private val context: Context) {
             } else {
                 Result.success(false)
             }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+    
+    // ==================== FOOD LOGGING METHODS ====================
+    
+    // Log food entry
+    suspend fun logFood(foodLog: FoodLog): Result<String> {
+        return try {
+            val foodData = hashMapOf(
+                "userId" to foodLog.userId,
+                "foodName" to foodLog.foodName,
+                "barcode" to foodLog.barcode,
+                "photoUrl" to foodLog.photoUrl,
+                "calories" to foodLog.calories,
+                "protein" to foodLog.protein,
+                "carbs" to foodLog.carbs,
+                "fat" to foodLog.fat,
+                "servingSize" to foodLog.servingSize,
+                "mealType" to foodLog.mealType,
+                "date" to foodLog.date,
+                "timestamp" to foodLog.timestamp
+            )
+            
+            val docRef = firestore.collection("foodLogs")
+                .add(foodData)
+                .await()
+            
+            Result.success(docRef.id)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+    
+    // Get today's food logs
+    suspend fun getTodayFoodLogs(userId: String): Result<List<FoodLog>> {
+        return try {
+            val dateFormat = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
+            val today = dateFormat.format(java.util.Date())
+            
+            val querySnapshot = firestore.collection("foodLogs")
+                .whereEqualTo("userId", userId)
+                .whereEqualTo("date", today)
+                .get()
+                .await()
+            
+            val logs = querySnapshot.documents.mapNotNull { doc ->
+                FoodLog(
+                    logId = doc.id,
+                    userId = doc.getString("userId") ?: "",
+                    foodName = doc.getString("foodName") ?: "",
+                    barcode = doc.getString("barcode"),
+                    photoUrl = doc.getString("photoUrl"),
+                    calories = (doc.getLong("calories") ?: 0).toInt(),
+                    protein = doc.getDouble("protein") ?: 0.0,
+                    carbs = doc.getDouble("carbs") ?: 0.0,
+                    fat = doc.getDouble("fat") ?: 0.0,
+                    servingSize = doc.getString("servingSize") ?: "",
+                    mealType = doc.getString("mealType") ?: "",
+                    timestamp = doc.getLong("timestamp") ?: 0L,
+                    date = doc.getString("date") ?: ""
+                )
+            }
+            
+            Result.success(logs)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+    
+    // Get total calories for today
+    suspend fun getTodayCalories(userId: String): Result<Int> {
+        return try {
+            val logsResult = getTodayFoodLogs(userId)
+            logsResult.onSuccess { logs ->
+                val totalCalories = logs.sumOf { it.calories }
+                return Result.success(totalCalories)
+            }
+            Result.failure(Exception("Failed to calculate calories"))
         } catch (e: Exception) {
             Result.failure(e)
         }

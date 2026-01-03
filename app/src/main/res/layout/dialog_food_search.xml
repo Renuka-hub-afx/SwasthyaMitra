@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:background="@drawable/background_main">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Search Indian Food"
+        android:textSize="24sp"
+        android:fontFamily="@font/source_serif_pro_bold"
+        android:textColor="#7B2CBF"
+        android:layout_marginBottom="16dp" />
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+        app:boxStrokeColor="#7B2CBF"
+        app:hintTextColor="#7B2CBF">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/et_search_food"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Search for food (e.g., 'rice', 'dal')"
+            android:fontFamily="@font/source_serif_pro_regular"
+            android:textSize="16sp"
+            android:maxLines="1"
+            android:imeOptions="actionSearch"
+            android:inputType="text" />
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <TextView
+        android:id="@+id/tv_search_hint"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="💡 Start typing to search from 1000+ Indian foods"
+        android:textSize="12sp"
+        android:fontFamily="@font/source_serif_pro_regular"
+        android:textColor="#666666"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="16dp" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rv_food_results"
+        android:layout_width="match_parent"
+        android:layout_height="300dp"
+        android:visibility="gone" />
+
+    <TextView
+        android:id="@+id/tv_no_results"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="No results found. Try different keywords."
+        android:textSize="14sp"
+        android:fontFamily="@font/source_serif_pro_regular"
+        android:textColor="#999999"
+        android:gravity="center"
+        android:padding="32dp"
+        android:visibility="gone" />
+
+    <ProgressBar
+        android:id="@+id/pb_loading"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:visibility="gone"
+        android:indeterminateTint="#E91E63" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="end"
+        android:layout_marginTop="16dp">
+
+        <Button
+            android:id="@+id/btn_manual_entry"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Manual Entry"
+            android:fontFamily="@font/source_serif_pro_bold"
+            android:textColor="#FFFFFF"
+            android:background="@drawable/button_background"
+            android:padding="12dp"
+            android:layout_marginEnd="8dp" />
+
+        <Button
+            android:id="@+id/btn_cancel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Cancel"
+            android:fontFamily="@font/source_serif_pro_bold"
+            android:textColor="#7B2CBF"
+            android:background="@android:color/transparent"
+            android:padding="12dp" />
+    </LinearLayout>
+
+</LinearLayout>

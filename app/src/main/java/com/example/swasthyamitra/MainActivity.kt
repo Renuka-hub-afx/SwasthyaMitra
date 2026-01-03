@@ -8,13 +8,40 @@ import android.widget.Button
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.lifecycleScope
+import com.example.swasthyamitra.auth.FirebaseAuthHelper
+import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity() {
 
+    private lateinit var authHelper: FirebaseAuthHelper
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+        
+        val application = application as UserApplication
+        authHelper = application.authHelper
 
+        // Check if user is already logged in
+        checkAutoLogin()
+    }
+
+    private fun checkAutoLogin() {
+        if (authHelper.isUserLoggedIn()) {
+            // User is logged in, get user ID and navigate to homepage
+            val userId = authHelper.getCurrentUser()?.uid
+            if (userId != null) {
+                navigateToHomePage(userId)
+            } else {
+                showWelcomeScreen()
+            }
+        } else {
+            showWelcomeScreen()
+        }
+    }
+
+    private fun showWelcomeScreen() {
+        setContentView(R.layout.activity_main)
         applyGradientToText()
 
         val startButton = findViewById<Button>(R.id.button_start)
@@ -24,6 +51,13 @@ class MainActivity : AppCompatActivity() {
             val intent = Intent(this, LoginActivity::class.java)
             startActivity(intent)
         }
+    }
+
+    private fun navigateToHomePage(userId: String) {
+        val intent = Intent(this, homepage::class.java)
+        intent.putExtra("USER_ID", userId)
+        startActivity(intent)
+        finish()
     }
 
     private fun applyGradientToText() {
