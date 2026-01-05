@@ -2,6 +2,7 @@ package com.example.swasthyamitra
 
 import android.content.Intent
 import android.os.Bundle
+import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -10,7 +11,6 @@ import com.example.swasthyamitra.auth.FirebaseAuthHelper
 import com.google.android.material.button.MaterialButton
 import kotlinx.coroutines.launch
 import java.util.Calendar
-import java.time.LocalDate
 
 class homepage : AppCompatActivity() {
 
@@ -24,7 +24,12 @@ class homepage : AppCompatActivity() {
     private lateinit var tvSteps: TextView
     private lateinit var tvWorkouts: TextView
     private lateinit var tvCoachMessage: TextView
-    private lateinit var tvNutritionBreakdown: TextView
+    private lateinit var tvProteinValue: TextView
+    private lateinit var tvCarbsValue: TextView
+    private lateinit var tvFatsValue: TextView
+    private lateinit var pbProtein: ProgressBar
+    private lateinit var pbCarbs: ProgressBar
+    private lateinit var pbFats: ProgressBar
     private lateinit var menuHome: TextView
     private lateinit var menuProgress: TextView
     private lateinit var menuProfile: TextView
@@ -51,7 +56,12 @@ class homepage : AppCompatActivity() {
         tvSteps = findViewById(R.id.tv_steps)
         tvWorkouts = findViewById(R.id.tv_workouts)
         tvCoachMessage = findViewById(R.id.tv_coach_message)
-        tvNutritionBreakdown = findViewById(R.id.tv_nutrition_breakdown)
+        tvProteinValue = findViewById(R.id.tv_protein_value)
+        tvCarbsValue = findViewById(R.id.tv_carbs_value)
+        tvFatsValue = findViewById(R.id.tv_fats_value)
+        pbProtein = findViewById(R.id.pb_protein)
+        pbCarbs = findViewById(R.id.pb_carbs)
+        pbFats = findViewById(R.id.pb_fats)
         menuHome = findViewById(R.id.menu_home)
         menuProgress = findViewById(R.id.menu_progress)
         menuProfile = findViewById(R.id.menu_profile)
@@ -157,19 +167,46 @@ class homepage : AppCompatActivity() {
                         val totalCarbs = logs.sumOf { it.carbs }
                         val totalFat = logs.sumOf { it.fat }
                         
-                        tvNutritionBreakdown.text = """
-                            🥩 Protein: ${totalProtein.toInt()}g
-                            🍞 Carbs: ${totalCarbs.toInt()}g
-                            🥑 Fat: ${totalFat.toInt()}g
-                        """.trimIndent()
+                        // Set target values (you can adjust these based on user goals)
+                        val proteinTarget = 120
+                        val carbsTarget = 200
+                        val fatsTarget = 65
+                        
+                        // Update TextViews
+                        tvProteinValue.text = "${totalProtein.toInt()}g / ${proteinTarget}g"
+                        tvCarbsValue.text = "${totalCarbs.toInt()}g / ${carbsTarget}g"
+                        tvFatsValue.text = "${totalFat.toInt()}g / ${fatsTarget}g"
+                        
+                        // Update ProgressBars
+                        pbProtein.progress = ((totalProtein / proteinTarget) * 100).toInt().coerceIn(0, 100)
+                        pbCarbs.progress = ((totalCarbs / carbsTarget) * 100).toInt().coerceIn(0, 100)
+                        pbFats.progress = ((totalFat / fatsTarget) * 100).toInt().coerceIn(0, 100)
                     } else {
-                        tvNutritionBreakdown.text = "No food logged yet today\nStart tracking your meals! 🍽️"
+                        // Reset to default values when no food logged
+                        tvProteinValue.text = "0g / 120g"
+                        tvCarbsValue.text = "0g / 200g"
+                        tvFatsValue.text = "0g / 65g"
+                        pbProtein.progress = 0
+                        pbCarbs.progress = 0
+                        pbFats.progress = 0
                     }
                 }.onFailure {
-                    tvNutritionBreakdown.text = "Track your nutrition here"
+                    // Reset on failure
+                    tvProteinValue.text = "0g / 120g"
+                    tvCarbsValue.text = "0g / 200g"
+                    tvFatsValue.text = "0g / 65g"
+                    pbProtein.progress = 0
+                    pbCarbs.progress = 0
+                    pbFats.progress = 0
                 }
             } catch (e: Exception) {
-                tvNutritionBreakdown.text = "Track your nutrition here"
+                // Reset on exception
+                tvProteinValue.text = "0g / 120g"
+                tvCarbsValue.text = "0g / 200g"
+                tvFatsValue.text = "0g / 65g"
+                pbProtein.progress = 0
+                pbCarbs.progress = 0
+                pbFats.progress = 0
             }
         }
     }

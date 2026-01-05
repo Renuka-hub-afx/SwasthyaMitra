@@ -357,4 +357,21 @@ class FirebaseAuthHelper(private val context: Context) {
             Result.failure(e)
         }
     }
+    
+    // Get total calories for a specific date
+    suspend fun getDailyCalories(userId: String, date: String): Int {
+        return try {
+            val logs = firestore.collection("foodLogs")
+                .whereEqualTo("userId", userId)
+                .whereEqualTo("date", date)
+                .get()
+                .await()
+            
+            logs.documents.sumOf { doc ->
+                (doc.getLong("calories") ?: 0).toInt()
+            }
+        } catch (e: Exception) {
+            0
+        }
+    }
 }

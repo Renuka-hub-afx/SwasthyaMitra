@@ -25,6 +25,16 @@
             android:exported="false" />
 
         <activity
+            android:name=".ProgressActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name=".ProfileActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+
+        <activity
             android:name=".FoodLogActivity"
             android:exported="false"
             android:screenOrientation="portrait" />
