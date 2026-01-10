@@ -4,8 +4,10 @@ import android.content.Intent
 import android.graphics.LinearGradient
 import android.graphics.Shader
 import android.os.Bundle
+import android.util.Log
 import android.widget.Button
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
@@ -18,43 +20,143 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        
-        val application = application as UserApplication
-        authHelper = application.authHelper
+        setContentView(R.layout.activity_main)
 
-        // Check if user is already logged in
-        checkAutoLogin()
-    }
-
-    private fun checkAutoLogin() {
-        if (authHelper.isUserLoggedIn()) {
-            // User is logged in, get user ID and navigate to homepage
-            val userId = authHelper.getCurrentUser()?.uid
-            if (userId != null) {
-                navigateToHomePage(userId)
+        try {
+            val application = application as? UserApplication
+            if (application != null) {
+                authHelper = application.authHelper
+                // Check if user is already logged in
+                checkAutoLogin()
             } else {
+                // UserApplication not initialized, show welcome screen
                 showWelcomeScreen()
             }
-        } else {
+        } catch (e: Exception) {
+            e.printStackTrace()
+            // If Firebase fails, still show welcome screen
             showWelcomeScreen()
         }
     }
 
+    private fun checkAutoLogin() {
+        try {
+            if (::authHelper.isInitialized && authHelper.isUserLoggedIn()) {
+                // User is logged in, check profile completion before navigating
+                val userId = authHelper.getCurrentUser()?.uid
+                if (userId != null) {
+                    checkProfileAndNavigate(userId)
+                } else {
+                    showWelcomeScreen()
+                }
+            } else {
+                showWelcomeScreen()
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            showWelcomeScreen()
+        }
+    }
+
+    private fun checkProfileAndNavigate(userId: String) {
+        lifecycleScope.launch {
+            try {
+                // Check if user has completed profile (height, weight, gender)
+                val userDataResult = authHelper.getUserData(userId)
+                userDataResult.onSuccess { userData ->
+                    val height = (userData["height"] as? Number)?.toDouble() ?: 0.0
+                    val weight = (userData["weight"] as? Number)?.toDouble() ?: 0.0
+                    val gender = userData["gender"] as? String ?: ""
+
+                    // Check if user has set a goal
+                    val hasGoalResult = authHelper.hasUserGoal(userId)
+                    hasGoalResult.onSuccess { hasGoal ->
+                        // Check if user has lifestyle data
+                        val hasLifestyleResult = authHelper.hasLifestyleData(userId)
+                        hasLifestyleResult.onSuccess { hasLifestyle ->
+                            when {
+                                // Profile complete: has height, weight, gender, goal, and lifestyle
+                                height > 0 && weight > 0 && gender.isNotEmpty() && hasGoal && hasLifestyle -> {
+                                    Log.d("MainActivity", "Profile complete, going to homepage")
+                                    navigateToHomePage(userId)
+                                }
+                                // Has profile and goal but no lifestyle
+                                height > 0 && weight > 0 && gender.isNotEmpty() && hasGoal && !hasLifestyle -> {
+                                    Log.d("MainActivity", "Missing lifestyle, going to LifestyleActivity")
+                                    navigateToLifestyle(userId)
+                                }
+                                // Has profile but no goal
+                                height > 0 && weight > 0 && gender.isNotEmpty() && !hasGoal -> {
+                                    Log.d("MainActivity", "Missing goal, going to InsertGoalActivity")
+                                    navigateToInsertGoal(userId)
+                                }
+                                // No profile data - start from beginning
+                                else -> {
+                                    Log.d("MainActivity", "No profile, going to UserInfoActivity")
+                                    navigateToUserInfo(userId)
+                                }
+                            }
+                        }.onFailure {
+                            // If lifestyle check fails, assume no lifestyle and go to UserInfo
+                            navigateToUserInfo(userId)
+                        }
+                    }.onFailure {
+                        // If goal check fails, assume no goal and go to UserInfo
+                        navigateToUserInfo(userId)
+                    }
+                }.onFailure {
+                    // If user data fetch fails, start from beginning
+                    navigateToUserInfo(userId)
+                }
+            } catch (e: Exception) {
+                Log.e("MainActivity", "Error checking profile: ${e.message}")
+                navigateToUserInfo(userId)
+            }
+        }
+    }
+
     private fun showWelcomeScreen() {
-        setContentView(R.layout.activity_main)
         applyGradientToText()
 
         val startButton = findViewById<Button>(R.id.button_start)
 
         // NAVIGATE TO LOGIN
         startButton.setOnClickListener {
-            val intent = Intent(this, LoginActivity::class.java)
-            startActivity(intent)
+            try {
+                Log.d("MainActivity", "Start button clicked, navigating to LoginActivity")
+                val intent = Intent(this, LoginActivity::class.java)
+                startActivity(intent)
+                Log.d("MainActivity", "LoginActivity started successfully")
+            } catch (e: Exception) {
+                Log.e("MainActivity", "Error starting LoginActivity: ${e.message}", e)
+                Toast.makeText(this, "Error: ${e.message}", Toast.LENGTH_LONG).show()
+            }
         }
     }
 
     private fun navigateToHomePage(userId: String) {
         val intent = Intent(this, homepage::class.java)
+        intent.putExtra("USER_ID", userId)
+        startActivity(intent)
+        finish()
+    }
+
+    private fun navigateToUserInfo(userId: String) {
+        val intent = Intent(this, UserInfoActivity::class.java)
+        intent.putExtra("USER_ID", userId)
+        startActivity(intent)
+        finish()
+    }
+
+    private fun navigateToInsertGoal(userId: String) {
+        val intent = Intent(this, InsertGoalActivity::class.java)
+        intent.putExtra("USER_ID", userId)
+        startActivity(intent)
+        finish()
+    }
+
+    private fun navigateToLifestyle(userId: String) {
+        val intent = Intent(this, LifestyleActivity::class.java)
         intent.putExtra("USER_ID", userId)
         startActivity(intent)
         finish()

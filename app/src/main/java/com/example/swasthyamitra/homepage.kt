@@ -2,6 +2,7 @@ package com.example.swasthyamitra
 
 import android.content.Intent
 import android.os.Bundle
+import android.widget.LinearLayout // Added this import
 import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
@@ -30,12 +31,15 @@ class homepage : AppCompatActivity() {
     private lateinit var pbProtein: ProgressBar
     private lateinit var pbCarbs: ProgressBar
     private lateinit var pbFats: ProgressBar
-    private lateinit var menuHome: TextView
-    private lateinit var menuProgress: TextView
-    private lateinit var menuProfile: TextView
+
+    // CHANGED: These are LinearLayouts in your XML, not TextViews
+    private lateinit var menuHome: LinearLayout
+    private lateinit var menuProgress: LinearLayout
+    private lateinit var menuProfile: LinearLayout
+
     private lateinit var cardFood: MaterialButton
     private lateinit var cardWorkout: MaterialButton
-    
+
     private var goalType: String = ""
     private var userName: String = ""
 
@@ -43,11 +47,23 @@ class homepage : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_homepage)
 
-        val application = application as UserApplication
+        // Validate UserApplication
+        val application = application as? UserApplication
+        if (application == null) {
+            Toast.makeText(this, "App initialization error", Toast.LENGTH_LONG).show()
+            navigateToLogin()
+            return
+        }
         authHelper = application.authHelper
 
-        // Get User ID from Intent
+        // Get and validate User ID from Intent
         userId = intent.getStringExtra("USER_ID") ?: ""
+
+        if (userId.isEmpty()) {
+            Toast.makeText(this, "User ID missing. Please log in again.", Toast.LENGTH_LONG).show()
+            navigateToLogin()
+            return
+        }
 
         // Initialize UI Elements
         tvUserName = findViewById(R.id.tv_user_name)
@@ -62,9 +78,12 @@ class homepage : AppCompatActivity() {
         pbProtein = findViewById(R.id.pb_protein)
         pbCarbs = findViewById(R.id.pb_carbs)
         pbFats = findViewById(R.id.pb_fats)
+
+        // These will now work correctly because the variable types match the XML types
         menuHome = findViewById(R.id.menu_home)
         menuProgress = findViewById(R.id.menu_progress)
         menuProfile = findViewById(R.id.menu_profile)
+
         cardFood = findViewById(R.id.card_food)
         cardWorkout = findViewById(R.id.card_workout)
 
@@ -117,7 +136,7 @@ class homepage : AppCompatActivity() {
                 // Load today's calories and nutrition
                 displayTodayCalories()
                 displayNutritionBreakdown()
-                
+
                 // Show AI coach message
                 tvCoachMessage.text = generateSmartCoachMessage()
 
@@ -138,7 +157,7 @@ class homepage : AppCompatActivity() {
             in 17..20 -> "Good evening"
             else -> "Hello"
         }
-        
+
         return "$greeting $userName! 🌟\nStay consistent with your logging to reach your $goalType goal!"
     }
 
@@ -166,17 +185,17 @@ class homepage : AppCompatActivity() {
                         val totalProtein = logs.sumOf { it.protein }
                         val totalCarbs = logs.sumOf { it.carbs }
                         val totalFat = logs.sumOf { it.fat }
-                        
+
                         // Set target values (you can adjust these based on user goals)
                         val proteinTarget = 120
                         val carbsTarget = 200
                         val fatsTarget = 65
-                        
+
                         // Update TextViews
                         tvProteinValue.text = "${totalProtein.toInt()}g / ${proteinTarget}g"
                         tvCarbsValue.text = "${totalCarbs.toInt()}g / ${carbsTarget}g"
                         tvFatsValue.text = "${totalFat.toInt()}g / ${fatsTarget}g"
-                        
+
                         // Update ProgressBars
                         pbProtein.progress = ((totalProtein / proteinTarget) * 100).toInt().coerceIn(0, 100)
                         pbCarbs.progress = ((totalCarbs / carbsTarget) * 100).toInt().coerceIn(0, 100)
@@ -213,11 +232,15 @@ class homepage : AppCompatActivity() {
 
     private fun handleLogout() {
         authHelper.signOut()
-        
+
         // Clear SharedPreferences
         val sharedPreferences = getSharedPreferences("UserPreferences", MODE_PRIVATE)
         sharedPreferences.edit().clear().apply()
 
+        navigateToLogin()
+    }
+
+    private fun navigateToLogin() {
         // Navigate to Login
         val intent = Intent(this, LoginActivity::class.java)
         intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK

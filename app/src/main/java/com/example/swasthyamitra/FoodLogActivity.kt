@@ -46,7 +46,12 @@ class FoodLogActivity : AppCompatActivity() {
         binding = ActivityFoodLogBinding.inflate(layoutInflater)
         setContentView(binding.root)
         
-        val application = application as UserApplication
+        val application = application as? UserApplication
+        if (application == null) {
+            Toast.makeText(this, "App initialization error. Restarting...", Toast.LENGTH_LONG).show()
+            finish()
+            return
+        }
         authHelper = application.authHelper
         
         // Initialize food repository

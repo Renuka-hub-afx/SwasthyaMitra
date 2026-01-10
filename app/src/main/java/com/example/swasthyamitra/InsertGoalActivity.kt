@@ -23,10 +23,21 @@ class InsertGoalActivity : AppCompatActivity() {
         binding = ActivityInsertGoalBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        val application = application as UserApplication
-        authHelper = application.authHelper
+        val application = application as? UserApplication
+        val helper = application?.authHelper
+        if (helper == null) {
+            Toast.makeText(this, "Error: App not initialized properly", Toast.LENGTH_LONG).show()
+            finish()
+            return
+        }
+        authHelper = helper
 
         userId = intent.getStringExtra("USER_ID") ?: ""
+        if (userId.isEmpty()) {
+            Toast.makeText(this, "Error: User ID missing", Toast.LENGTH_SHORT).show()
+            finish()
+            return
+        }
 
         binding.cardWeightLoss.setOnClickListener { highlightCard(binding.cardWeightLoss, "Lose Weight") }
         binding.cardMaintain.setOnClickListener { highlightCard(binding.cardMaintain, "Maintain Weight") }
@@ -34,8 +45,11 @@ class InsertGoalActivity : AppCompatActivity() {
         binding.cardNoGoal.setOnClickListener { highlightCard(binding.cardNoGoal, "General Health") }
 
         binding.btnNext.setOnClickListener {
-            if (selectedGoalType.isEmpty()) Toast.makeText(this, "Select a mission!", Toast.LENGTH_SHORT).show()
-            else saveGoalAndFinish()
+            if (selectedGoalType.isEmpty()) {
+                Toast.makeText(this, "Please select a mission!", Toast.LENGTH_SHORT).show()
+            } else {
+                saveGoalAndFinish()
+            }
         }
     }
 

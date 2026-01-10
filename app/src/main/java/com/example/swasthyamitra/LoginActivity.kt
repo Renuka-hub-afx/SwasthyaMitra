@@ -26,27 +26,69 @@ class LoginActivity : AppCompatActivity() {
     @SuppressLint("MissingInflatedId")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_login)
+        
+        Log.d("LoginActivity", "onCreate started")
+        
+        try {
+            setContentView(R.layout.activity_login)
+            Log.d("LoginActivity", "Layout inflated successfully")
+        } catch (e: Exception) {
+            Log.e("LoginActivity", "Error inflating layout: ${e.message}", e)
+            Toast.makeText(this, "Error loading login screen: ${e.message}", Toast.LENGTH_LONG).show()
+            finish()
+            return
+        }
 
-        val application = application as UserApplication
-        authHelper = application.authHelper
+        try {
+            val application = application as? UserApplication
+            if (application == null) {
+                Log.e("LoginActivity", "UserApplication is null")
+                Toast.makeText(this, "App initialization error. Please restart app.", Toast.LENGTH_LONG).show()
+                finish()
+                return
+            }
+            Log.d("LoginActivity", "UserApplication retrieved successfully")
+            
+            authHelper = application.authHelper
+            Log.d("LoginActivity", "AuthHelper retrieved successfully")
+        } catch (e: Exception) {
+            Log.e("LoginActivity", "Error getting authHelper: ${e.message}", e)
+            Toast.makeText(this, "Authentication error: ${e.message}", Toast.LENGTH_LONG).show()
+            finish()
+            return
+        }
 
-        emailInput = findViewById(R.id.email_input)
-        passwordInput = findViewById(R.id.password_input)
-        loginButton = findViewById(R.id.login_button)
-        signupLink = findViewById(R.id.signup_link)
-        forgotPasswordLink = findViewById(R.id.forgot_password_link)
+        try {
+            emailInput = findViewById(R.id.email_input)
+            passwordInput = findViewById(R.id.password_input)
+            loginButton = findViewById(R.id.login_button)
+            signupLink = findViewById(R.id.signup_link)
+            forgotPasswordLink = findViewById(R.id.forgot_password_link)
+            Log.d("LoginActivity", "All views found successfully")
+        } catch (e: Exception) {
+            Log.e("LoginActivity", "Error finding views: ${e.message}", e)
+            Toast.makeText(this, "UI error: ${e.message}", Toast.LENGTH_LONG).show()
+            finish()
+            return
+        }
 
         loginButton.setOnClickListener { handleLogin() }
 
         // Go to Signup
         signupLink.setOnClickListener {
-            startActivity(Intent(this, SignupActivity::class.java))
+            try {
+                startActivity(Intent(this, SignupActivity::class.java))
+            } catch (e: Exception) {
+                Log.e("LoginActivity", "Error opening signup: ${e.message}", e)
+                Toast.makeText(this, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
         }
 
         forgotPasswordLink.setOnClickListener {
             Toast.makeText(this, "Coming soon!", Toast.LENGTH_SHORT).show()
         }
+        
+        Log.d("LoginActivity", "onCreate completed successfully")
     }
 
     private fun handleLogin() {
@@ -81,19 +123,34 @@ class LoginActivity : AppCompatActivity() {
                     // Check if user has set a goal
                     val hasGoalResult = authHelper.hasUserGoal(userId)
                     hasGoalResult.onSuccess { hasGoal ->
-                        when {
-                            // User has completed everything - go to homepage
-                            height > 0 && weight > 0 && gender.isNotEmpty() && hasGoal -> {
-                                navigateToHomePage(userId)
+                        // Check if user has lifestyle data
+                        val hasLifestyleResult = authHelper.hasLifestyleData(userId)
+                        hasLifestyleResult.onSuccess { hasLifestyle ->
+                            when {
+                                // Profile complete: has height, weight, gender, goal, and lifestyle
+                                height > 0 && weight > 0 && gender.isNotEmpty() && hasGoal && hasLifestyle -> {
+                                    Log.d("LoginActivity", "Profile complete, going to homepage")
+                                    navigateToHomePage(userId)
+                                }
+                                // Has profile and goal but no lifestyle
+                                height > 0 && weight > 0 && gender.isNotEmpty() && hasGoal && !hasLifestyle -> {
+                                    Log.d("LoginActivity", "Missing lifestyle, going to LifestyleActivity")
+                                    navigateToLifestyle(userId)
+                                }
+                                // Has profile but no goal
+                                height > 0 && weight > 0 && gender.isNotEmpty() && !hasGoal -> {
+                                    Log.d("LoginActivity", "Missing goal, going to InsertGoalActivity")
+                                    navigateToInsertGoal(userId)
+                                }
+                                // No profile data - start from beginning
+                                else -> {
+                                    Log.d("LoginActivity", "No profile, going to UserInfoActivity")
+                                    navigateToUserInfo(userId)
+                                }
                             }
-                            // User has profile but no goal - go to InsertGoal
-                            height > 0 && weight > 0 && gender.isNotEmpty() && !hasGoal -> {
-                                navigateToInsertGoal(userId)
-                            }
-                            // User has no profile - go to UserInfo
-                            else -> {
-                                navigateToUserInfo(userId)
-                            }
+                        }.onFailure {
+                            // If lifestyle check fails, assume no lifestyle and go to UserInfo
+                            navigateToUserInfo(userId)
                         }
                     }.onFailure {
                         // If goal check fails, assume no goal and redirect to UserInfo
@@ -131,6 +188,13 @@ class LoginActivity : AppCompatActivity() {
 
     private fun navigateToInsertGoal(userId: String) {
         val intent = Intent(this, InsertGoalActivity::class.java)
+        intent.putExtra("USER_ID", userId)
+        startActivity(intent)
+        finish()
+    }
+
+    private fun navigateToLifestyle(userId: String) {
+        val intent = Intent(this, LifestyleActivity::class.java)
         intent.putExtra("USER_ID", userId)
         startActivity(intent)
         finish()

@@ -88,7 +88,7 @@ class BarcodeScannerActivity : AppCompatActivity() {
     private fun startCamera() {
         val cameraProviderFuture = ProcessCameraProvider.getInstance(this)
 
-        cameraProviderFuture.addListener({
+        cameraProviderFuture.addListener(Runnable {
             val cameraProvider = cameraProviderFuture.get()
 
             // Preview
@@ -117,7 +117,7 @@ class BarcodeScannerActivity : AppCompatActivity() {
 
                 // Bind use cases to camera
                 camera = cameraProvider.bindToLifecycle(
-                    this,
+                    this@BarcodeScannerActivity,
                     cameraSelector,
                     preview,
                     imageAnalyzer

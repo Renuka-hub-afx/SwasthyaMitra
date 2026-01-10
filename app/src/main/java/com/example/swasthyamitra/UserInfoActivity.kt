@@ -28,11 +28,21 @@ class UserInfoActivity : AppCompatActivity() {
         binding = ActivityUserInfoBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        val application = application as UserApplication
+        val application = application as? UserApplication
+        if (application == null) {
+            Toast.makeText(this, "App initialization error. Restarting...", Toast.LENGTH_LONG).show()
+            finish()
+            return
+        }
         authHelper = application.authHelper
 
         // Retrieve User ID passed from LoginActivity
         userId = intent.getStringExtra("USER_ID") ?: ""
+        if (userId.isEmpty()) {
+            Toast.makeText(this, "User ID missing. Please login again.", Toast.LENGTH_LONG).show()
+            finish()
+            return
+        }
 
         // Fetch existing age if available
         lifecycleScope.launch {
