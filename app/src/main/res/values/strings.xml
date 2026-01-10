@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">SWASTHYAMITRA</string>
-    <string name="swasthyamitra">SWASTHYAMITRA</string>
-    <string name="get_started">GET STARTED</string>
+    <string name="app_name" translatable="false">SWASTHYAMITRA</string>
+    <string name="swasthyamitra" translatable="false">SWASTHYAMITRA</string>
+    <string name="get_started" translatable="false">GET STARTED</string>
 </resources>

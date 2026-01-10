@@ -47,7 +47,7 @@
         <activity
             android:name=".FoodPhotoCaptureActivity"
             android:exported="false"
-            android:screenOrientation="portrait" />
+            android:screenOrientation="fullSensor" />
 
         <activity
             android:name=".LifestyleActivity"
