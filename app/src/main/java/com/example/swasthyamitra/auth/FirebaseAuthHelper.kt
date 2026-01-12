@@ -249,6 +249,51 @@ class FirebaseAuthHelper(private val context: Context) {
         }
     }
 
+    // Update goal with calculated BMR, TDEE, and daily calories
+    suspend fun updateGoalWithCalories(
+        userId: String,
+        activityLevel: String,
+        dietPreference: String,
+        targetWeight: Double,
+        dailyCalories: Double,
+        bmr: Double,
+        tdee: Double
+    ): Result<Unit> {
+        return try {
+            // First, find the user's goal document
+            val querySnapshot = firestore.collection("goals")
+                .whereEqualTo("userId", userId)
+                .limit(1)
+                .get()
+                .await()
+            
+            if (!querySnapshot.isEmpty) {
+                val goalDocId = querySnapshot.documents[0].id
+                
+                val updates = hashMapOf<String, Any>(
+                    "activityLevel" to activityLevel,
+                    "dietPreference" to dietPreference,
+                    "targetWeight" to targetWeight,
+                    "dailyCalories" to dailyCalories,
+                    "bmr" to bmr,
+                    "tdee" to tdee,
+                    "updatedAt" to System.currentTimeMillis()
+                )
+                
+                firestore.collection("goals")
+                    .document(goalDocId)
+                    .update(updates)
+                    .await()
+                
+                Result.success(Unit)
+            } else {
+                Result.failure(Exception("No goal found for user"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
     // Check if user has completed lifestyle data in goal document
     suspend fun hasLifestyleData(userId: String): Result<Boolean> {
         return try {

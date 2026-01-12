@@ -6,7 +6,6 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.example.swasthyamitra.auth.FirebaseAuthHelper
-import com.google.android.material.tabs.TabLayout
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
@@ -16,7 +15,6 @@ class ProgressActivity : AppCompatActivity() {
     private lateinit var authHelper: FirebaseAuthHelper
     private var userId: String = ""
     
-    private lateinit var tabLayout: TabLayout
     private lateinit var weeklyCaloriesText: TextView
     private lateinit var weeklyWorkoutsText: TextView
     private lateinit var currentStreakText: TextView
@@ -36,12 +34,10 @@ class ProgressActivity : AppCompatActivity() {
         }
 
         initializeViews()
-        setupTabLayout()
         loadProgressData()
     }
 
     private fun initializeViews() {
-        tabLayout = findViewById(R.id.tabLayout)
         weeklyCaloriesText = findViewById(R.id.weeklyCaloriesText)
         weeklyWorkoutsText = findViewById(R.id.weeklyWorkoutsText)
         currentStreakText = findViewById(R.id.currentStreakText)
@@ -52,24 +48,7 @@ class ProgressActivity : AppCompatActivity() {
         }
     }
 
-    private fun setupTabLayout() {
-        tabLayout.addTab(tabLayout.newTab().setText("Charts"))
-        tabLayout.addTab(tabLayout.newTab().setText("History"))
-        tabLayout.addTab(tabLayout.newTab().setText("Achievements"))
 
-        tabLayout.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
-            override fun onTabSelected(tab: TabLayout.Tab?) {
-                when (tab?.position) {
-                    0 -> showChartsView()
-                    1 -> showHistoryView()
-                    2 -> showAchievementsView()
-                }
-            }
-
-            override fun onTabUnselected(tab: TabLayout.Tab?) {}
-            override fun onTabReselected(tab: TabLayout.Tab?) {}
-        })
-    }
 
     private fun loadProgressData() {
         lifecycleScope.launch {

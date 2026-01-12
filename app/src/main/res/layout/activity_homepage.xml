@@ -479,6 +479,21 @@
 
         </LinearLayout>
 
+        <!-- Meal Plan Button -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/card_meal_plan"
+            style="@style/Widget.MaterialComponents.Button.UnelevatedButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="20dp"
+            android:background="@drawable/button_background"
+            android:text="📋 MY PERSONALIZED MEAL PLAN"
+            android:textColor="#FFFFFF"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            app:backgroundTint="@null"
+            app:cornerRadius="4dp" />
+
     </LinearLayout>
 
     </ScrollView>

@@ -2,8 +2,11 @@ package com.example.swasthyamitra
 
 import android.content.Intent
 import android.os.Bundle
+import android.widget.EditText
+import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.example.swasthyamitra.auth.FirebaseAuthHelper
@@ -16,7 +19,8 @@ class ProfileActivity : AppCompatActivity() {
 
     private lateinit var authHelper: FirebaseAuthHelper
     private var userId: String = ""
-    
+
+    // Views
     private lateinit var userNameText: TextView
     private lateinit var userEmailText: TextView
     private lateinit var userAgeText: TextView
@@ -24,11 +28,16 @@ class ProfileActivity : AppCompatActivity() {
     private lateinit var userHeightText: TextView
     private lateinit var userWeightText: TextView
     private lateinit var userBmiText: TextView
+    private lateinit var bmrText: TextView
+    private lateinit var tdeeText: TextView
     private lateinit var goalWeightText: TextView
     private lateinit var goalCaloriesText: TextView
     private lateinit var activityLevelText: TextView
     private lateinit var editProfileButton: MaterialButton
     private lateinit var logoutButton: MaterialButton
+    private lateinit var editGoalWeightButton: ImageView
+    private lateinit var btnBack: ImageView
+    private lateinit var btnSettings: ImageView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -55,23 +64,36 @@ class ProfileActivity : AppCompatActivity() {
         userHeightText = findViewById(R.id.userHeightText)
         userWeightText = findViewById(R.id.userWeightText)
         userBmiText = findViewById(R.id.userBmiText)
+        bmrText = findViewById(R.id.bmrText)
+        tdeeText = findViewById(R.id.tdeeText)
         goalWeightText = findViewById(R.id.goalWeightText)
         goalCaloriesText = findViewById(R.id.goalCaloriesText)
         activityLevelText = findViewById(R.id.activityLevelText)
         editProfileButton = findViewById(R.id.editProfileButton)
         logoutButton = findViewById(R.id.logoutButton)
+        editGoalWeightButton = findViewById(R.id.editGoalWeightButton)
+        btnBack = findViewById(R.id.btnBack)
+        btnSettings = findViewById(R.id.btnSettings)
 
-        findViewById<androidx.appcompat.widget.Toolbar>(R.id.toolbar).apply {
-            setNavigationOnClickListener { finish() }
+        // Set up click listeners
+        btnBack.setOnClickListener {
+            finish()
+        }
+
+        btnSettings.setOnClickListener {
+            Toast.makeText(this, "Settings clicked", Toast.LENGTH_SHORT).show()
         }
 
         editProfileButton.setOnClickListener {
             Toast.makeText(this, "Edit profile - Coming in Week 2", Toast.LENGTH_SHORT).show()
-            // TODO: Navigate to edit profile screen
         }
 
         logoutButton.setOnClickListener {
             handleLogout()
+        }
+
+        editGoalWeightButton.setOnClickListener {
+            showEditGoalWeightDialog()
         }
     }
 
@@ -81,7 +103,7 @@ class ProfileActivity : AppCompatActivity() {
                 val currentUser = authHelper.getCurrentUser()
                 if (currentUser != null) {
                     userEmailText.text = currentUser.email ?: "No email"
-                    
+
                     // Load user data from Firestore
                     FirebaseFirestore.getInstance().collection("users")
                         .document(userId)
@@ -89,19 +111,18 @@ class ProfileActivity : AppCompatActivity() {
                         .addOnSuccessListener { document ->
                             if (document.exists()) {
                                 val name = document.getString("name") ?: "User"
-                                val age = document.getLong("age")?.toString() ?: "N/A"
+                                // Handle numbers stored as strings or numbers safely
+                                val age = document.get("age").toString()
                                 val gender = document.getString("gender") ?: "N/A"
-                                val height = document.getDouble("height")?.toString() ?: "N/A"
-                                val weight = document.getDouble("weight")?.toString() ?: "N/A"
-                                val activityLevel = document.getString("activityLevel") ?: "N/A"
-                                
+                                val height = document.get("height").toString()
+                                val weight = document.get("weight").toString()
+
                                 userNameText.text = name
                                 userAgeText.text = "$age years"
                                 userGenderText.text = gender
                                 userHeightText.text = "$height cm"
                                 userWeightText.text = "$weight kg"
-                                activityLevelText.text = activityLevel
-                                
+
                                 // Calculate BMI
                                 val heightValue = height.toDoubleOrNull()
                                 val weightValue = weight.toDoubleOrNull()
@@ -119,22 +140,30 @@ class ProfileActivity : AppCompatActivity() {
 
                     // Load goals from Firestore
                     FirebaseFirestore.getInstance().collection("goals")
-                        .document(userId)
+                        .whereEqualTo("userId", userId)
+                        .limit(1)
                         .get()
-                        .addOnSuccessListener { document ->
-                            if (document.exists()) {
-                                val goalWeight = document.getDouble("goalWeight")?.toString() ?: "N/A"
-                                val goalCalories = document.getLong("goalCalories")?.toString() ?: "N/A"
-                                
-                                goalWeightText.text = "$goalWeight kg"
-                                goalCaloriesText.text = "$goalCalories kcal/day"
+                        .addOnSuccessListener { querySnapshot ->
+                            if (!querySnapshot.isEmpty) {
+                                val document = querySnapshot.documents[0]
+                                val targetWeight = document.getDouble("targetWeight")
+                                val dailyCalories = document.getDouble("dailyCalories")
+                                val activityLevel = document.getString("activityLevel") ?: "N/A"
+                                val bmr = document.getDouble("bmr")
+                                val tdee = document.getDouble("tdee")
+
+                                goalWeightText.text = if (targetWeight != null) "${targetWeight.toInt()} kg" else "Not set"
+                                goalCaloriesText.text = if (dailyCalories != null) "${dailyCalories.toInt()} kcal" else "Not set"
+                                activityLevelText.text = activityLevel
+                                bmrText.text = if (bmr != null) "${bmr.toInt()} kcal" else "N/A"
+                                tdeeText.text = if (tdee != null) "${tdee.toInt()} kcal" else "N/A"
                             } else {
                                 goalWeightText.text = "Not set"
                                 goalCaloriesText.text = "Not set"
+                                activityLevelText.text = "N/A"
+                                bmrText.text = "N/A"
+                                tdeeText.text = "N/A"
                             }
-                        }
-                        .addOnFailureListener { e ->
-                            Toast.makeText(this@ProfileActivity, "Error loading goals: ${e.message}", Toast.LENGTH_SHORT).show()
                         }
                 }
             } catch (e: Exception) {
@@ -146,11 +175,53 @@ class ProfileActivity : AppCompatActivity() {
     private fun handleLogout() {
         FirebaseAuth.getInstance().signOut()
         Toast.makeText(this, "Logged out successfully", Toast.LENGTH_SHORT).show()
-        
+
         // Navigate back to login screen
         val intent = Intent(this, LoginActivity::class.java)
         intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         startActivity(intent)
         finish()
+    }
+
+    private fun showEditGoalWeightDialog() {
+        val dialogView = layoutInflater.inflate(R.layout.dialog_edit_goal_weight, null)
+        val editTextGoalWeight = dialogView.findViewById<EditText>(R.id.editGoalWeight)
+
+        AlertDialog.Builder(this)
+            .setTitle("Update Goal Weight")
+            .setView(dialogView)
+            .setPositiveButton("Save") { _, _ ->
+                val newGoalWeight = editTextGoalWeight.text.toString().toDoubleOrNull()
+                if (newGoalWeight != null && newGoalWeight > 0) {
+                    updateGoalWeight(newGoalWeight)
+                } else {
+                    Toast.makeText(this, "Please enter a valid weight", Toast.LENGTH_SHORT).show()
+                }
+            }
+            .setNegativeButton("Cancel", null)
+            .create()
+            .show()
+    }
+
+    private fun updateGoalWeight(newGoalWeight: Double) {
+        FirebaseFirestore.getInstance().collection("goals")
+            .whereEqualTo("userId", userId)
+            .limit(1)
+            .get()
+            .addOnSuccessListener { querySnapshot ->
+                if (!querySnapshot.isEmpty) {
+                    val goalDocId = querySnapshot.documents[0].id
+                    FirebaseFirestore.getInstance().collection("goals")
+                        .document(goalDocId)
+                        .update("targetWeight", newGoalWeight)
+                        .addOnSuccessListener {
+                            Toast.makeText(this@ProfileActivity, "Goal weight updated!", Toast.LENGTH_SHORT).show()
+                            loadUserProfile()
+                        }
+                }
+            }
+            .addOnFailureListener { e ->
+                Toast.makeText(this@ProfileActivity, "Error updating goal weight: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
     }
 }

@@ -94,11 +94,64 @@ class LifestyleActivity : AppCompatActivity() {
     private fun selectActivityLevel(selectedCard: MaterialCardView, activityLevel: String) {
         selectedActivityLevel = activityLevel
         highlightCard(selectedCard, activityCards)
+        
+        // Calculate and display BMR/TDEE when activity level is selected
+        calculateAndDisplayMetrics()
     }
 
     private fun selectDietPreference(selectedCard: MaterialCardView, dietPreference: String) {
         selectedDietPreference = dietPreference
         highlightCard(selectedCard, dietCards)
+    }
+    
+    private fun calculateAndDisplayMetrics() {
+        // Only calculate if activity level is selected
+        if (selectedActivityLevel.isEmpty()) {
+            return
+        }
+        
+        lifecycleScope.launch {
+            try {
+                // Get user physical stats
+                val userDataResult = authHelper.getUserData(userId)
+                val goalResult = authHelper.getUserGoal(userId)
+                
+                userDataResult.onSuccess { userData ->
+                    goalResult.onSuccess { goal ->
+                        val weight = (userData["weight"] as? Number)?.toDouble() ?: 70.0
+                        val height = (userData["height"] as? Number)?.toDouble() ?: 170.0
+                        val age = (userData["age"] as? Number)?.toInt() ?: 25
+                        val gender = userData["gender"] as? String ?: "Male"
+                        val goalType = goal["goalType"] as? String ?: "Maintain Weight"
+                        
+                        // Calculate BMR
+                        val bmr = calculateBMR(weight, height, age, gender)
+                        
+                        // Calculate TDEE
+                        val tdee = calculateTDEE(bmr, selectedActivityLevel)
+                        
+                        // Adjust for goal
+                        val dailyTarget = adjustCaloriesForGoal(tdee, goalType)
+                        
+                        // Update UI
+                        binding.cardMetabolicInfo.visibility = android.view.View.VISIBLE
+                        binding.tvBmrValue.text = bmr.toInt().toString()
+                        binding.tvTdeeValue.text = tdee.toInt().toString()
+                        binding.tvDailyTargetValue.text = dailyTarget.toInt().toString()
+                        
+                        // Update goal description
+                        val goalDesc = when (goalType) {
+                            "Lose Weight" -> "Weight Loss (-500 kcal)"
+                            "Gain Muscle" -> "Muscle Gain (+400 kcal)"
+                            else -> "Weight Maintenance"
+                        }
+                        binding.tvGoalDescription.text = goalDesc
+                    }
+                }
+            } catch (e: Exception) {
+                Toast.makeText(this@LifestyleActivity, "Unable to calculate metrics", Toast.LENGTH_SHORT).show()
+            }
+        }
     }
 
     private fun highlightCard(selectedCard: MaterialCardView, cardList: List<MaterialCardView>) {
@@ -145,26 +198,106 @@ class LifestyleActivity : AppCompatActivity() {
             return
         }
 
-        // Save to Firebase Goal document
+        // Get user data and calculate BMR/TDEE
         lifecycleScope.launch {
-            val result = authHelper.updateGoalLifestyleData(
-                userId = userId,
-                activityLevel = selectedActivityLevel,
-                dietPreference = selectedDietPreference,
-                targetWeight = targetWeight
-            )
-
-            result.onSuccess {
-                Toast.makeText(this@LifestyleActivity, "Profile Complete! 🎉", Toast.LENGTH_SHORT).show()
+            try {
+                // Get user physical stats
+                val userDataResult = authHelper.getUserData(userId)
+                val goalResult = authHelper.getUserGoal(userId)
                 
-                // Navigate to Homepage
-                val intent = Intent(this@LifestyleActivity, homepage::class.java)
-                intent.putExtra("USER_ID", userId)
-                startActivity(intent)
-                finishAffinity()
-            }.onFailure { e ->
-                Toast.makeText(this@LifestyleActivity, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
+                userDataResult.onSuccess { userData ->
+                    goalResult.onSuccess { goal ->
+                        val weight = (userData["weight"] as? Number)?.toDouble() ?: 70.0
+                        val height = (userData["height"] as? Number)?.toDouble() ?: 170.0
+                        val age = (userData["age"] as? Number)?.toInt() ?: 25
+                        val gender = userData["gender"] as? String ?: "Male"
+                        val goalType = goal["goalType"] as? String ?: "Maintain Weight"
+                        
+                        // Calculate BMR using Mifflin-St Jeor Equation
+                        val bmr = calculateBMR(weight, height, age, gender)
+                        
+                        // Calculate TDEE (Total Daily Energy Expenditure)
+                        val tdee = calculateTDEE(bmr, selectedActivityLevel)
+                        
+                        // Adjust calories based on goal
+                        val dailyCalories = adjustCaloriesForGoal(tdee, goalType)
+                        
+                        // Save to Firebase with calculated calories
+                        val result = authHelper.updateGoalWithCalories(
+                            userId = userId,
+                            activityLevel = selectedActivityLevel,
+                            dietPreference = selectedDietPreference,
+                            targetWeight = targetWeight,
+                            dailyCalories = dailyCalories,
+                            bmr = bmr,
+                            tdee = tdee
+                        )
+
+                        result.onSuccess {
+                            Toast.makeText(
+                                this@LifestyleActivity, 
+                                "Profile Complete! Daily Target: ${dailyCalories.toInt()} kcal 🎉", 
+                                Toast.LENGTH_LONG
+                            ).show()
+                            
+                            // Navigate to Homepage
+                            val intent = Intent(this@LifestyleActivity, homepage::class.java)
+                            intent.putExtra("USER_ID", userId)
+                            startActivity(intent)
+                            finishAffinity()
+                        }.onFailure { e ->
+                            Toast.makeText(this@LifestyleActivity, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                Toast.makeText(this@LifestyleActivity, "Error calculating calories: ${e.message}", Toast.LENGTH_SHORT).show()
             }
+        }
+    }
+    
+    /**
+     * Calculate BMR (Basal Metabolic Rate) using Mifflin-St Jeor Equation
+     * Men: BMR = (10 × weight_kg) + (6.25 × height_cm) - (5 × age) + 5
+     * Women: BMR = (10 × weight_kg) + (6.25 × height_cm) - (5 × age) - 161
+     */
+    private fun calculateBMR(weight: Double, height: Double, age: Int, gender: String): Double {
+        val baseBMR = (10 * weight) + (6.25 * height) - (5 * age)
+        return if (gender.equals("Male", ignoreCase = true)) {
+            baseBMR + 5
+        } else {
+            baseBMR - 161
+        }
+    }
+    
+    /**
+     * Calculate TDEE (Total Daily Energy Expenditure)
+     * Multiply BMR by activity factor
+     */
+    private fun calculateTDEE(bmr: Double, activityLevel: String): Double {
+        val activityFactor = when (activityLevel) {
+            "Sedentary" -> 1.2
+            "Lightly Active" -> 1.375
+            "Moderately Active" -> 1.55
+            "Very Active" -> 1.725
+            else -> 1.2
+        }
+        return bmr * activityFactor
+    }
+    
+    /**
+     * Adjust calories based on weight goal
+     * Weight Loss: -500 kcal/day (0.5kg loss per week)
+     * Weight Gain: +300-500 kcal/day
+     * Maintenance: Keep TDEE as is
+     */
+    private fun adjustCaloriesForGoal(tdee: Double, goalType: String): Double {
+        return when (goalType) {
+            "Lose Weight" -> tdee - 500
+            "Gain Muscle" -> tdee + 400
+            "Maintain Weight" -> tdee
+            "General Health" -> tdee
+            else -> tdee
         }
     }
 }
