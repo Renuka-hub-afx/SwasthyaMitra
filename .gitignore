@@ -13,3 +13,49 @@
 .externalNativeBuild
 .cxx
 local.properties
+
+# Firebase and Sensitive Configuration Files
+**/google-services.json
+**/google-services-debug.json
+**/*.keystore
+**/*.jks
+
+# Environment and API Keys
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+
+# IDE and Editor Files
+.vscode/settings.json
+.vscode/launch.json
+.vscode/extensions.json
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Build and Runtime Files
+.kotlin/
+.gradle/
+build/
+*.apk
+*.aab
+*.class
+*.jar
+
+# Gradle files
+.gradle
+*.gradle
+
+# OS Files
+.DS_Store
+Thumbs.db
+ehthumbs.db
+
+# Misc
+*.log
+*.stacktrace
+**/gradlew.bat~
+**/gradlew~
