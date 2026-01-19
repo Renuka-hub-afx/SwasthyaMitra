@@ -2,7 +2,7 @@ package com.example.swasthyamitra
 
 import android.content.Intent
 import android.os.Bundle
-import android.widget.LinearLayout // Added this import
+import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast

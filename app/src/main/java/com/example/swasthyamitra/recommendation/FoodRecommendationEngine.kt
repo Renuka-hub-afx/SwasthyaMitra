@@ -124,7 +124,7 @@ class FoodRecommendationEngine {
     }
 
     /**
-     * Generate full day meal plan
+     * Generate full day meal plan with variety
      */
     fun generateMealPlan(
         profile: UserProfile,
@@ -132,14 +132,34 @@ class FoodRecommendationEngine {
     ): MealPlan {
         val target = generateNutritionTarget(profile)
         
+        // Define non-vegetarian categories/foods
+        val nonVegCategories = listOf("meat", "seafood", "eggs")
+        val nonVegKeywords = listOf("chicken", "mutton", "fish", "egg", "prawn", "lamb", "beef", "pork")
+        
         // Filter by diet preference
         val filteredFoods = availableFoods.filter { food ->
-            when (profile.dietPreference) {
-                "Vegetarian" -> food.category.equals("vegetarian", ignoreCase = true)
-                "Vegan" -> food.category.equals("vegan", ignoreCase = true)
+            when (profile.dietPreference.lowercase()) {
+                "vegetarian", "veg" -> {
+                    val categoryOk = !nonVegCategories.any { food.category.equals(it, ignoreCase = true) }
+                    val nameOk = !nonVegKeywords.any { food.foodName.contains(it, ignoreCase = true) }
+                    categoryOk && nameOk
+                }
+                "vegan" -> {
+                    val dairyKeywords = listOf("paneer", "curd", "dahi", "milk", "lassi", "butter", "ghee", "cheese", "cream", "kheer")
+                    val categoryOk = !nonVegCategories.any { food.category.equals(it, ignoreCase = true) }
+                    val notDairy = !food.category.equals("dairy", ignoreCase = true)
+                    val nameOk = !nonVegKeywords.any { food.foodName.contains(it, ignoreCase = true) }
+                    val dairyNameOk = !dairyKeywords.any { food.foodName.contains(it, ignoreCase = true) }
+                    categoryOk && notDairy && nameOk && dairyNameOk
+                }
                 else -> true
             }
         }
+        
+        val foodsToUse = if (filteredFoods.isEmpty()) availableFoods else filteredFoods
+        
+        // Track used foods to ensure variety
+        val usedFoods = mutableSetOf<String>()
 
         // Distribute calories: Breakfast 25%, Lunch 30%, Dinner 25%, Snacks 20%
         val breakfastCals = (target.calories * 0.25).roundToInt()
@@ -148,11 +168,12 @@ class FoodRecommendationEngine {
         val eveningSnackCals = (target.calories * 0.10).roundToInt()
         val dinnerCals = (target.calories * 0.25).roundToInt()
 
-        val breakfast = selectFoodsForMeal(filteredFoods, breakfastCals, "Breakfast", profile.goalType)
-        val morningSnack = selectFoodsForMeal(filteredFoods, morningSnackCals, "Snack", profile.goalType)
-        val lunch = selectFoodsForMeal(filteredFoods, lunchCals, "Lunch", profile.goalType)
-        val eveningSnack = selectFoodsForMeal(filteredFoods, eveningSnackCals, "Snack", profile.goalType)
-        val dinner = selectFoodsForMeal(filteredFoods, dinnerCals, "Dinner", profile.goalType)
+        // Generate each meal, passing usedFoods to avoid repetition
+        val breakfast = selectFoodsForMealWithVariety(foodsToUse, breakfastCals, "Breakfast", profile.goalType, usedFoods)
+        val morningSnack = selectFoodsForMealWithVariety(foodsToUse, morningSnackCals, "MorningSnack", profile.goalType, usedFoods)
+        val lunch = selectFoodsForMealWithVariety(foodsToUse, lunchCals, "Lunch", profile.goalType, usedFoods)
+        val eveningSnack = selectFoodsForMealWithVariety(foodsToUse, eveningSnackCals, "EveningSnack", profile.goalType, usedFoods)
+        val dinner = selectFoodsForMealWithVariety(foodsToUse, dinnerCals, "Dinner", profile.goalType, usedFoods)
 
         val allMeals = breakfast + morningSnack + lunch + eveningSnack + dinner
         
@@ -168,78 +189,127 @@ class FoodRecommendationEngine {
             totalFat = allMeals.sumOf { it.fat }.roundToInt()
         )
     }
-
+    
     /**
-     * Select foods for specific meal
+     * Select foods for specific meal with variety (no repetition)
      */
-    private fun selectFoodsForMeal(
+    private fun selectFoodsForMealWithVariety(
         foods: List<IndianFood>,
         targetCalories: Int,
         mealType: String,
-        goalType: String
+        goalType: String,
+        usedFoods: MutableSet<String>
     ): List<FoodRecommendation> {
         val recommendations = mutableListOf<FoodRecommendation>()
         var remainingCalories = targetCalories
 
-        // Filter foods by meal type
+        // Filter foods by meal type using category and keywords
         val mealFoods = when (mealType) {
-            "Breakfast" -> foods.filter { 
-                it.foodName.contains(Regex("idli|dosa|poha|upma|paratha|egg|bread|oats", RegexOption.IGNORE_CASE))
+            "Breakfast" -> foods.filter { food ->
+                food.category.equals("Breakfast", ignoreCase = true) ||
+                food.foodName.contains(Regex("idli|dosa|poha|upma|paratha|bread|oats|uttapam|vada|puri|chilla|porridge|besan", RegexOption.IGNORE_CASE))
             }
-            "Lunch", "Dinner" -> foods.filter {
-                it.foodName.contains(Regex("rice|roti|dal|curry|sabzi|chicken|fish|paneer", RegexOption.IGNORE_CASE))
+            "Lunch" -> foods.filter { food ->
+                food.category.lowercase() in listOf("grains", "legumes", "vegetables", "curry", "meat", "seafood", "rice dishes", "bread") ||
+                food.foodName.contains(Regex("rice|roti|chapati|dal|curry|sabzi|chicken|fish|rajma|chole|biryani|pulao|masala|gobi|palak|bhindi|matar|sambar", RegexOption.IGNORE_CASE))
             }
-            "Snack" -> foods.filter {
-                it.foodName.contains(Regex("fruit|nuts|salad|sprouts", RegexOption.IGNORE_CASE)) || 
-                it.calories in 50..200
+            "Dinner" -> foods.filter { food ->
+                food.category.lowercase() in listOf("grains", "legumes", "vegetables", "curry", "meat", "seafood", "bread") ||
+                food.foodName.contains(Regex("roti|chapati|dal|curry|sabzi|chicken|fish|khichdi|soup|salad|paneer|palak|gobi", RegexOption.IGNORE_CASE))
+            }
+            "MorningSnack" -> foods.filter { food ->
+                food.category.lowercase() in listOf("fruits", "dairy", "beverages", "snacks") ||
+                food.foodName.contains(Regex("fruit|banana|apple|orange|lassi|buttermilk|sprouts|chaat|dhokla|idli", RegexOption.IGNORE_CASE)) ||
+                food.calories in 80..200
+            }
+            "EveningSnack" -> foods.filter { food ->
+                food.category.lowercase() in listOf("snacks", "nuts", "fruits", "beverages") ||
+                food.foodName.contains(Regex("nuts|almonds|walnuts|makhana|pakora|samosa|chaat|tea|coffee|biscuit|roasted", RegexOption.IGNORE_CASE)) ||
+                food.calories in 80..250
             }
             else -> foods
         }
+        
+        // Exclude already used foods for variety
+        val availableMealFoods = mealFoods.filter { it.foodName !in usedFoods }
+            .ifEmpty { foods.filter { it.foodName !in usedFoods } }
+            .ifEmpty { foods } // Last resort: allow repeats if everything is used
 
-        // Sort by goal
+        // Sort and randomize based on goal
         val sortedFoods = when (goalType) {
-            "Lose Weight" -> mealFoods.sortedByDescending { it.protein / (it.calories + 1) }
-            "Gain Muscle" -> mealFoods.sortedByDescending { it.protein }
-            else -> mealFoods.shuffled()
-        }.take(20)
+            "Lose Weight" -> {
+                // Prioritize high protein, low calorie foods with some randomization
+                availableMealFoods
+                    .sortedByDescending { (it.protein * 2) / (it.calories + 1).toDouble() + kotlin.random.Random.nextDouble(0.0, 0.3) }
+            }
+            "Gain Muscle" -> {
+                // Prioritize protein and carbs with some randomization
+                availableMealFoods
+                    .sortedByDescending { it.protein + (it.carbs * 0.3) + kotlin.random.Random.nextDouble(0.0, 5.0) }
+            }
+            else -> availableMealFoods.shuffled()
+        }
 
         // Select 2-3 foods per meal
-        sortedFoods.take(3).forEach { food ->
-            if (remainingCalories > 0) {
-                val portion = (remainingCalories.toDouble() / food.calories).coerceAtMost(2.0)
+        val foodsToSelect = sortedFoods.take(10).shuffled().take(3)
+        
+        foodsToSelect.forEach { food ->
+            if (remainingCalories > 50) {
+                val portion = (remainingCalories.toDouble() / food.calories).coerceIn(0.5, 2.0)
                 val adjustedCalories = (food.calories * portion).roundToInt()
 
                 recommendations.add(
                     FoodRecommendation(
                         foodName = food.foodName,
-                        servingSize = if (portion >= 1) "${portion.roundToInt()} serving" else "½ serving",
+                        servingSize = when {
+                            portion >= 1.5 -> "2 servings"
+                            portion >= 0.9 -> "1 serving"
+                            else -> "½ serving"
+                        },
                         calories = adjustedCalories,
                         protein = food.protein * portion,
                         carbs = food.carbs * portion,
                         fat = food.fat * portion,
-                        reason = generateReason(food, goalType)
+                        reason = generateReasonDetailed(food, goalType, mealType)
                     )
                 )
+                
+                // Mark as used
+                usedFoods.add(food.foodName)
                 remainingCalories -= adjustedCalories
             }
         }
 
         return recommendations
     }
-
-    private fun generateReason(food: IndianFood, goalType: String): String {
+    
+    private fun generateReasonDetailed(food: IndianFood, goalType: String, mealType: String): String {
+        val mealContext = when (mealType) {
+            "Breakfast" -> "Great way to start your day"
+            "Lunch" -> "Perfect for sustained energy"
+            "Dinner" -> "Light yet satisfying"
+            "MorningSnack" -> "Keeps hunger at bay"
+            "EveningSnack" -> "Healthy evening option"
+            else -> "Nutritious choice"
+        }
+        
         return when (goalType) {
             "Lose Weight" -> when {
-                food.protein > 15 -> "High protein keeps you full"
-                food.calories < 200 -> "Low calorie option"
-                else -> "Nutritious choice"
+                food.protein > 12 -> "High protein keeps you full longer"
+                food.calories < 150 -> "Low calorie, guilt-free choice"
+                food.fiber > 3 -> "High fiber aids digestion"
+                else -> mealContext
             }
             "Gain Muscle" -> when {
-                food.protein > 20 -> "Excellent protein for muscle"
-                food.carbs > 40 -> "Energy for workouts"
-                else -> "Good for muscle growth"
+                food.protein > 15 -> "Excellent protein source for muscle building"
+                food.carbs > 30 -> "Complex carbs fuel your workouts"
+                food.calories > 250 -> "Calorie-dense for muscle gain"
+                else -> mealContext
             }
-            else -> "Balanced nutrition"
+            else -> when {
+                food.protein > 10 && food.carbs > 20 -> "Balanced macros for overall health"
+                else -> mealContext
+            }
         }
     }
 
