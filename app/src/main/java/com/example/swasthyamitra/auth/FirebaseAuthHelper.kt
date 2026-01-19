@@ -1,10 +1,17 @@
 package com.example.swasthyamitra.auth
 
 import android.content.Context
+import com.example.swasthyamitra.models.ExerciseLog
+import com.example.swasthyamitra.models.FestivalEntry
 import com.example.swasthyamitra.models.FoodLog
+import com.example.swasthyamitra.models.MealHistory
+import com.example.swasthyamitra.models.UserGoalData
+import com.example.swasthyamitra.models.UserProfileData
+import com.example.swasthyamitra.models.WeightLog
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.Query
 import kotlinx.coroutines.tasks.await
 
 class FirebaseAuthHelper(private val context: Context) {
@@ -41,6 +48,12 @@ class FirebaseAuthHelper(private val context: Context) {
                     "height" to 0.0,
                     "weight" to 0.0,
                     "gender" to "",
+                    "bmi" to 0.0,
+                    "bmr" to 0.0,
+                    "tdee" to 0.0,
+                    "activityLevel" to "",
+                    "preference" to "",
+                    "allergies" to emptyList<String>(),
                     "createdAt" to System.currentTimeMillis()
                 )
                 
@@ -417,6 +430,352 @@ class FirebaseAuthHelper(private val context: Context) {
             }
         } catch (e: Exception) {
             0
+        }
+    }
+
+    // ==================== EXERCISE LOGS ====================
+
+    suspend fun logExercise(exerciseLog: ExerciseLog): Result<String> {
+        val timestamp = if (exerciseLog.timestamp == 0L) System.currentTimeMillis() else exerciseLog.timestamp
+        val dateFormat = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
+        val dateValue = if (exerciseLog.date.isBlank()) dateFormat.format(java.util.Date(timestamp)) else exerciseLog.date
+
+        return try {
+            val data = hashMapOf(
+                "userId" to exerciseLog.userId,
+                "exerciseType" to exerciseLog.exerciseType,
+                "durationMinutes" to exerciseLog.durationMinutes,
+                "intensity" to exerciseLog.intensity,
+                "caloriesBurned" to exerciseLog.caloriesBurned,
+                "timestamp" to timestamp,
+                "date" to dateValue
+            )
+
+            val docRef = firestore.collection("exerciseLogs")
+                .add(data)
+                .await()
+
+            Result.success(docRef.id)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun getRecentExerciseLogs(userId: String, limit: Int = 30): Result<List<ExerciseLog>> {
+        return try {
+            val snapshot = firestore.collection("exerciseLogs")
+                .whereEqualTo("userId", userId)
+                .orderBy("timestamp", Query.Direction.DESCENDING)
+                .limit(limit.toLong())
+                .get()
+                .await()
+
+            val logs = snapshot.documents.map { doc ->
+                ExerciseLog(
+                    logId = doc.id,
+                    userId = doc.getString("userId") ?: "",
+                    exerciseType = doc.getString("exerciseType") ?: "",
+                    durationMinutes = (doc.getLong("durationMinutes") ?: 0L).toInt(),
+                    intensity = doc.getString("intensity") ?: "",
+                    caloriesBurned = (doc.getLong("caloriesBurned") ?: 0L).toInt(),
+                    timestamp = doc.getLong("timestamp") ?: 0L,
+                    date = doc.getString("date") ?: ""
+                )
+            }
+
+            Result.success(logs)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    // ==================== WEIGHT LOGS ====================
+
+    suspend fun logWeight(weightLog: WeightLog): Result<String> {
+        val timestamp = if (weightLog.timestamp == 0L) System.currentTimeMillis() else weightLog.timestamp
+        val dateFormat = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
+        val dateValue = if (weightLog.date.isBlank()) dateFormat.format(java.util.Date(timestamp)) else weightLog.date
+
+        return try {
+            val data = hashMapOf(
+                "userId" to weightLog.userId,
+                "weight" to weightLog.weight,
+                "timestamp" to timestamp,
+                "date" to dateValue
+            )
+
+            val docRef = firestore.collection("weightLogs")
+                .add(data)
+                .await()
+
+            Result.success(docRef.id)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun getWeightHistory(userId: String, limit: Int = 30): Result<List<WeightLog>> {
+        return try {
+            val snapshot = firestore.collection("weightLogs")
+                .whereEqualTo("userId", userId)
+                .orderBy("timestamp", Query.Direction.DESCENDING)
+                .limit(limit.toLong())
+                .get()
+                .await()
+
+            val logs = snapshot.documents.map { doc ->
+                WeightLog(
+                    logId = doc.id,
+                    userId = doc.getString("userId") ?: "",
+                    weight = doc.getDouble("weight") ?: 0.0,
+                    timestamp = doc.getLong("timestamp") ?: 0L,
+                    date = doc.getString("date") ?: ""
+                )
+            }
+
+            Result.success(logs)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun getLatestWeight(userId: String): Result<WeightLog?> {
+        return try {
+            val snapshot = firestore.collection("weightLogs")
+                .whereEqualTo("userId", userId)
+                .orderBy("timestamp", Query.Direction.DESCENDING)
+                .limit(1)
+                .get()
+                .await()
+
+            if (!snapshot.isEmpty) {
+                val doc = snapshot.documents[0]
+                Result.success(
+                    WeightLog(
+                        logId = doc.id,
+                        userId = doc.getString("userId") ?: "",
+                        weight = doc.getDouble("weight") ?: 0.0,
+                        timestamp = doc.getLong("timestamp") ?: 0L,
+                        date = doc.getString("date") ?: ""
+                    )
+                )
+            } else {
+                Result.success(null)
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    // ==================== MEAL HISTORY ====================
+
+    suspend fun saveMealHistory(mealHistory: MealHistory): Result<String> {
+        val timestamp = if (mealHistory.timestamp == 0L) System.currentTimeMillis() else mealHistory.timestamp
+        val docId = "${mealHistory.userId}_${mealHistory.date}"
+
+        return try {
+            val data = hashMapOf(
+                "userId" to mealHistory.userId,
+                "date" to mealHistory.date,
+                "breakfast" to mealHistory.breakfast,
+                "lunch" to mealHistory.lunch,
+                "snack" to mealHistory.snack,
+                "dinner" to mealHistory.dinner,
+                "postWorkout" to mealHistory.postWorkout,
+                "hydrationTips" to mealHistory.hydrationTips,
+                "festivalSpecial" to mealHistory.festivalSpecial,
+                "totalCalories" to mealHistory.totalCalories,
+                "protein" to mealHistory.protein,
+                "carbs" to mealHistory.carbs,
+                "fats" to mealHistory.fats,
+                "timestamp" to timestamp
+            )
+
+            firestore.collection("mealHistory")
+                .document(docId)
+                .set(data)
+                .await()
+
+            Result.success(docId)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun getRecentMealHistory(userId: String, days: Int = 5): Result<List<MealHistory>> {
+        return try {
+            val snapshot = firestore.collection("mealHistory")
+                .whereEqualTo("userId", userId)
+                .orderBy("timestamp", Query.Direction.DESCENDING)
+                .limit(days.toLong())
+                .get()
+                .await()
+
+            val meals = snapshot.documents.map { doc ->
+                MealHistory(
+                    userId = doc.getString("userId") ?: "",
+                    date = doc.getString("date") ?: "",
+                    breakfast = doc.get("breakfast") as? List<String> ?: emptyList(),
+                    lunch = doc.get("lunch") as? List<String> ?: emptyList(),
+                    snack = doc.get("snack") as? List<String> ?: emptyList(),
+                    dinner = doc.get("dinner") as? List<String> ?: emptyList(),
+                    postWorkout = doc.get("postWorkout") as? List<String> ?: emptyList(),
+                    hydrationTips = doc.get("hydrationTips") as? List<String> ?: emptyList(),
+                    festivalSpecial = doc.getString("festivalSpecial"),
+                    totalCalories = (doc.getLong("totalCalories") ?: 0L).toInt(),
+                    protein = doc.getDouble("protein") ?: 0.0,
+                    carbs = doc.getDouble("carbs") ?: 0.0,
+                    fats = doc.getDouble("fats") ?: 0.0,
+                    timestamp = doc.getLong("timestamp") ?: 0L
+                )
+            }
+
+            Result.success(meals)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    // ==================== FESTIVAL CALENDAR ====================
+
+    suspend fun upsertFestivalEntry(entry: FestivalEntry): Result<Unit> {
+        return try {
+            val data = hashMapOf(
+                "date" to entry.date,
+                "name" to entry.name,
+                "region" to entry.region
+            )
+
+            firestore.collection("festivalCalendar")
+                .document(entry.date)
+                .set(data)
+                .await()
+
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun getFestivalForDate(date: String): Result<FestivalEntry?> {
+        return try {
+            val doc = firestore.collection("festivalCalendar")
+                .document(date)
+                .get()
+                .await()
+
+            if (doc.exists()) {
+                Result.success(
+                    FestivalEntry(
+                        date = doc.getString("date") ?: date,
+                        name = doc.getString("name") ?: "",
+                        region = doc.getString("region")
+                    )
+                )
+            } else {
+                Result.success(null)
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    // ==================== USER & GOAL MODELS ====================
+
+    suspend fun getUserProfileData(userId: String): Result<UserProfileData> {
+        return try {
+            val document = firestore.collection("users")
+                .document(userId)
+                .get()
+                .await()
+
+            if (!document.exists()) return Result.failure(Exception("User not found"))
+
+            val data = UserProfileData(
+                userId = userId,
+                name = document.getString("name") ?: "",
+                email = document.getString("email") ?: "",
+                phoneNumber = document.getString("phoneNumber") ?: "",
+                age = (document.getLong("age") ?: 0L).toInt(),
+                height = document.getDouble("height") ?: 0.0,
+                weight = document.getDouble("weight") ?: 0.0,
+                gender = document.getString("gender") ?: "",
+                bmi = document.getDouble("bmi") ?: 0.0,
+                bmr = document.getDouble("bmr") ?: 0.0,
+                tdee = document.getDouble("tdee") ?: 0.0,
+                activityLevel = document.getString("activityLevel") ?: "",
+                preference = document.getString("preference") ?: document.getString("eatingPreference") ?: "",
+                allergies = document.get("allergies") as? List<String> ?: emptyList()
+            )
+
+            Result.success(data)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun updateUserMetrics(
+        userId: String,
+        bmi: Double,
+        bmr: Double,
+        tdee: Double,
+        activityLevel: String,
+        preference: String,
+        allergies: List<String> = emptyList()
+    ): Result<Unit> {
+        return try {
+            val updates = hashMapOf<String, Any>(
+                "bmi" to bmi,
+                "bmr" to bmr,
+                "tdee" to tdee,
+                "activityLevel" to activityLevel,
+                "preference" to preference,
+                "allergies" to allergies,
+                "updatedAt" to System.currentTimeMillis()
+            )
+
+            firestore.collection("users")
+                .document(userId)
+                .update(updates)
+                .await()
+
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun getUserGoalData(userId: String): Result<UserGoalData> {
+        return try {
+            val snapshot = firestore.collection("goals")
+                .whereEqualTo("userId", userId)
+                .limit(1)
+                .get()
+                .await()
+
+            if (snapshot.isEmpty) return Result.failure(Exception("No goal found"))
+
+            val doc = snapshot.documents[0]
+            val goalData = UserGoalData(
+                documentId = doc.id,
+                userId = doc.getString("userId") ?: userId,
+                goalType = doc.getString("goalType") ?: "",
+                targetValue = doc.getDouble("targetValue") ?: 0.0,
+                currentValue = doc.getDouble("currentValue") ?: 0.0,
+                targetWeight = doc.getDouble("targetWeight") ?: 0.0,
+                targetCalories = doc.getDouble("targetCalories") ?: 0.0,
+                dailyCalories = doc.getDouble("dailyCalories") ?: 0.0,
+                activityLevel = doc.getString("activityLevel") ?: "",
+                dietPreference = doc.getString("dietPreference") ?: "",
+                bmr = doc.getDouble("bmr") ?: 0.0,
+                tdee = doc.getDouble("tdee") ?: 0.0,
+                createdAt = doc.getLong("createdAt") ?: 0L,
+                updatedAt = doc.getLong("updatedAt") ?: 0L
+            )
+
+            Result.success(goalData)
+        } catch (e: Exception) {
+            Result.failure(e)
         }
     }
 }
