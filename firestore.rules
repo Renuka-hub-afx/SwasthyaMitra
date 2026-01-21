@@ -1,0 +1,61 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Users collection - each user can only access their own document
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Goals collection - users access goals via query (whereEqualTo userId)
+    // Documents have auto-generated IDs with userId as a field inside
+    match /goals/{goalId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if request.auth != null && resource.data.userId == request.auth.uid;
+    }
+    
+    // Food Logs collection - users access via query (whereEqualTo userId)
+    match /foodLogs/{logId} {
+      // Allow read for any authenticated user (queries filter by userId)
+      allow read: if request.auth != null;
+      // Allow write only if userId matches authenticated user
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if request.auth != null && resource.data.userId == request.auth.uid;
+    }
+    
+    // Exercise Logs collection - users can only access their own logs
+    match /exerciseLogs/{logId} {
+      allow read, write, delete: if request.auth != null && 
+        (resource == null || resource.data.userId == request.auth.uid) &&
+        (request.resource == null || request.resource.data.userId == request.auth.uid);
+    }
+    
+    // Weight Logs collection
+    match /weightLogs/{logId} {
+      allow read, write, delete: if request.auth != null && 
+        (resource == null || resource.data.userId == request.auth.uid) &&
+        (request.resource == null || request.resource.data.userId == request.auth.uid);
+    }
+    
+    // Meal History collection
+    match /mealHistory/{mealId} {
+      allow read, write, delete: if request.auth != null && 
+        (resource == null || resource.data.userId == request.auth.uid) &&
+        (request.resource == null || request.resource.data.userId == request.auth.uid);
+    }
+    
+    // Festival Calendar - read only for authenticated users
+    match /festivalCalendar/{festivalId} {
+      allow read: if request.auth != null;
+    }
+    
+    // Recommendations collection - users can read their own, only Cloud Functions can write
+    match /recommendations/{recId} {
+      allow read: if request.auth != null && resource.data.userId == request.auth.uid;
+      allow update: if request.auth != null && resource.data.userId == request.auth.uid;
+      // Cloud Functions run with admin SDK, so they bypass rules and can write
+      // Regular clients cannot create/delete recommendations
+      allow create, delete: if false;
+    }
+  }
+}
