@@ -445,5 +445,84 @@ class MealPlanActivity : AppCompatActivity() {
             
             🎯 You're on track to meet your daily nutrition goals!
         """.trimIndent()
+
+        // --- Quick Log Button Click Handlers ---
+        
+        // Breakfast '+' button
+        findViewById<ImageView>(R.id.btn_add_breakfast).setOnClickListener {
+            mealPlan.breakfast.firstOrNull()?.let { food ->
+                quickLogFood(food, "Breakfast")
+            }
+        }
+
+        // Morning Snack '+' button
+        findViewById<ImageView>(R.id.btn_add_morning_snack).setOnClickListener {
+            mealPlan.morningSnack.firstOrNull()?.let { food ->
+                quickLogFood(food, "Snack")
+            }
+        }
+
+        // Lunch '+' button
+        findViewById<ImageView>(R.id.btn_add_lunch).setOnClickListener {
+            mealPlan.lunch.firstOrNull()?.let { food ->
+                quickLogFood(food, "Lunch")
+            }
+        }
+
+        // Evening Snack '+' button
+        findViewById<ImageView>(R.id.btn_add_evening_snack).setOnClickListener {
+            mealPlan.eveningSnack.firstOrNull()?.let { food ->
+                quickLogFood(food, "Snack")
+            }
+        }
+
+        // Dinner '+' button
+        findViewById<ImageView>(R.id.btn_add_dinner).setOnClickListener {
+            mealPlan.dinner.firstOrNull()?.let { food ->
+                quickLogFood(food, "Dinner")
+            }
+        }
+    }
+
+    private fun quickLogFood(food: FoodRecommendationEngine.FoodRecommendation, mealType: String) {
+        if (userId.isEmpty()) {
+            Toast.makeText(this, "Please log in first", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        progressBar.visibility = View.VISIBLE
+        
+        lifecycleScope.launch {
+            try {
+                val dateFormat = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
+                val foodLog = com.example.swasthyamitra.models.FoodLog(
+                    logId = "",
+                    userId = userId,
+                    foodName = food.foodName,
+                    calories = food.calories,
+                    protein = food.protein,
+                    carbs = food.carbs,
+                    fat = food.fat,
+                    servingSize = food.servingSize,
+                    mealType = mealType,
+                    timestamp = System.currentTimeMillis(),
+                    date = dateFormat.format(java.util.Date())
+                )
+
+                val result = authHelper.logFood(foodLog)
+                
+                result.onSuccess {
+                    Toast.makeText(this@MealPlanActivity, "✅ Added ${food.foodName} to $mealType!", Toast.LENGTH_SHORT).show()
+                }
+                result.onFailure { e ->
+                    Toast.makeText(this@MealPlanActivity, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
+                }
+
+                progressBar.visibility = View.GONE
+            } catch (e: Exception) {
+                progressBar.visibility = View.GONE
+                Toast.makeText(this@MealPlanActivity, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+        }
     }
 }

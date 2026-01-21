@@ -389,7 +389,22 @@
                                 android:text="320 kcal"
                                 android:textColor="#9C27B0"
                                 android:textStyle="bold"
-                                android:textSize="12sp"/>
+                                android:textSize="12sp"
+                                android:layout_marginEnd="8dp"/>
+                            
+                            <!-- Add to Food Log Button -->
+                            <ImageView
+                                android:id="@+id/btn_add_breakfast"
+                                android:layout_width="36dp"
+                                android:layout_height="36dp"
+                                android:src="@android:drawable/ic_input_add"
+                                android:background="@drawable/button_background"
+                                android:backgroundTint="#4CAF50"
+                                android:padding="6dp"
+                                app:tint="#FFFFFF"
+                                android:clickable="true"
+                                android:focusable="true"
+                                android:contentDescription="Add to Food Log"/>
                         </LinearLayout>
 
                         <!-- Food Name -->
@@ -465,7 +480,8 @@
                                 <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Morning Snack" android:textStyle="bold" android:textSize="16sp" android:textColor="#1A1A1A"/>
                                 <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="11:00 AM" android:textSize="12sp" android:textColor="#9E9E9E"/>
                             </LinearLayout>
-                            <TextView android:id="@+id/tv_morning_snack_title" android:layout_width="wrap_content" android:layout_height="wrap_content" android:background="@drawable/button_background" android:backgroundTint="#F3E5F5" android:paddingHorizontal="12dp" android:paddingVertical="6dp" android:text="150 kcal" android:textColor="#9C27B0" android:textStyle="bold" android:textSize="12sp"/>
+                            <TextView android:id="@+id/tv_morning_snack_title" android:layout_width="wrap_content" android:layout_height="wrap_content" android:background="@drawable/button_background" android:backgroundTint="#F3E5F5" android:paddingHorizontal="12dp" android:paddingVertical="6dp" android:text="150 kcal" android:textColor="#9C27B0" android:textStyle="bold" android:textSize="12sp" android:layout_marginEnd="8dp"/>
+                            <ImageView android:id="@+id/btn_add_morning_snack" android:layout_width="36dp" android:layout_height="36dp" android:src="@android:drawable/ic_input_add" android:background="@drawable/button_background" android:backgroundTint="#4CAF50" android:padding="6dp" app:tint="#FFFFFF" android:clickable="true" android:focusable="true" android:contentDescription="Add to Food Log"/>
                         </LinearLayout>
 
                         <TextView android:id="@+id/tv_snack1_food_name" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="16dp" android:text="Snack Name" android:textSize="16sp" android:textStyle="bold" android:textColor="#333333"/>
@@ -508,7 +524,8 @@
                                 <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Lunch" android:textStyle="bold" android:textSize="16sp" android:textColor="#1A1A1A"/>
                                 <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="01:00 PM" android:textSize="12sp" android:textColor="#9E9E9E"/>
                             </LinearLayout>
-                            <TextView android:id="@+id/tv_lunch_title" android:layout_width="wrap_content" android:layout_height="wrap_content" android:background="@drawable/button_background" android:backgroundTint="#F3E5F5" android:paddingHorizontal="12dp" android:paddingVertical="6dp" android:text="450 kcal" android:textColor="#9C27B0" android:textStyle="bold" android:textSize="12sp"/>
+                            <TextView android:id="@+id/tv_lunch_title" android:layout_width="wrap_content" android:layout_height="wrap_content" android:background="@drawable/button_background" android:backgroundTint="#F3E5F5" android:paddingHorizontal="12dp" android:paddingVertical="6dp" android:text="450 kcal" android:textColor="#9C27B0" android:textStyle="bold" android:textSize="12sp" android:layout_marginEnd="8dp"/>
+                            <ImageView android:id="@+id/btn_add_lunch" android:layout_width="36dp" android:layout_height="36dp" android:src="@android:drawable/ic_input_add" android:background="@drawable/button_background" android:backgroundTint="#4CAF50" android:padding="6dp" app:tint="#FFFFFF" android:clickable="true" android:focusable="true" android:contentDescription="Add to Food Log"/>
                         </LinearLayout>
 
                         <TextView android:id="@+id/tv_lunch_food_name" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="16dp" android:text="Lunch Name" android:textSize="16sp" android:textStyle="bold" android:textColor="#333333"/>
@@ -551,7 +568,8 @@
                                 <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Eve. Snack" android:textStyle="bold" android:textSize="16sp" android:textColor="#1A1A1A"/>
                                 <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="05:00 PM" android:textSize="12sp" android:textColor="#9E9E9E"/>
                             </LinearLayout>
-                            <TextView android:id="@+id/tv_evening_snack_title" android:layout_width="wrap_content" android:layout_height="wrap_content" android:background="@drawable/button_background" android:backgroundTint="#F3E5F5" android:paddingHorizontal="12dp" android:paddingVertical="6dp" android:text="150 kcal" android:textColor="#9C27B0" android:textStyle="bold" android:textSize="12sp"/>
+                            <TextView android:id="@+id/tv_evening_snack_title" android:layout_width="wrap_content" android:layout_height="wrap_content" android:background="@drawable/button_background" android:backgroundTint="#F3E5F5" android:paddingHorizontal="12dp" android:paddingVertical="6dp" android:text="150 kcal" android:textColor="#9C27B0" android:textStyle="bold" android:textSize="12sp" android:layout_marginEnd="8dp"/>
+                            <ImageView android:id="@+id/btn_add_evening_snack" android:layout_width="36dp" android:layout_height="36dp" android:src="@android:drawable/ic_input_add" android:background="@drawable/button_background" android:backgroundTint="#4CAF50" android:padding="6dp" app:tint="#FFFFFF" android:clickable="true" android:focusable="true" android:contentDescription="Add to Food Log"/>
                         </LinearLayout>
 
                         <TextView android:id="@+id/tv_snack2_food_name" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="16dp" android:text="Snack Name" android:textSize="16sp" android:textStyle="bold" android:textColor="#333333"/>
@@ -594,7 +612,8 @@
                                 <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Dinner" android:textStyle="bold" android:textSize="16sp" android:textColor="#1A1A1A"/>
                                 <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="08:00 PM" android:textSize="12sp" android:textColor="#9E9E9E"/>
                             </LinearLayout>
-                            <TextView android:id="@+id/tv_dinner_title" android:layout_width="wrap_content" android:layout_height="wrap_content" android:background="@drawable/button_background" android:backgroundTint="#F3E5F5" android:paddingHorizontal="12dp" android:paddingVertical="6dp" android:text="450 kcal" android:textColor="#9C27B0" android:textStyle="bold" android:textSize="12sp"/>
+                            <TextView android:id="@+id/tv_dinner_title" android:layout_width="wrap_content" android:layout_height="wrap_content" android:background="@drawable/button_background" android:backgroundTint="#F3E5F5" android:paddingHorizontal="12dp" android:paddingVertical="6dp" android:text="450 kcal" android:textColor="#9C27B0" android:textStyle="bold" android:textSize="12sp" android:layout_marginEnd="8dp"/>
+                            <ImageView android:id="@+id/btn_add_dinner" android:layout_width="36dp" android:layout_height="36dp" android:src="@android:drawable/ic_input_add" android:background="@drawable/button_background" android:backgroundTint="#4CAF50" android:padding="6dp" app:tint="#FFFFFF" android:clickable="true" android:focusable="true" android:contentDescription="Add to Food Log"/>
                         </LinearLayout>
 
                         <TextView android:id="@+id/tv_dinner_food_name" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="16dp" android:text="Dinner Name" android:textSize="16sp" android:textStyle="bold" android:textColor="#333333"/>
