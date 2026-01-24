@@ -33,6 +33,7 @@ android {
 
     buildFeatures {
         viewBinding true
+        buildConfig true
     }
 
     // ✅ CORRECT way to reduce size & fix native libs
@@ -70,54 +71,56 @@ android {
     kotlinOptions {
         jvmTarget = '17'
     }
-    buildToolsVersion '35.0.0'
 }
-
 dependencies {
+    // AndroidX Core & UI
+    implementation 'androidx.core:core-ktx:1.17.0' // Latest stable Core KTX
+    implementation 'androidx.appcompat:appcompat:1.7.1' // Latest stable AppCompat
+    implementation 'com.google.android.material:material:1.13.0' // Latest Material Design 3
+    implementation 'androidx.activity:activity-ktx:1.12.2' // Compatible Activity KTX
+    implementation 'androidx.constraintlayout:constraintlayout:2.2.1' // Stable ConstraintLayout
 
-    // AndroidX
-    implementation 'androidx.core:core-ktx:1.17.0'
-    implementation 'androidx.appcompat:appcompat:1.7.1'
-    implementation 'com.google.android.material:material:1.13.0'
-    implementation 'androidx.activity:activity-ktx:1.12.2'
-    implementation 'androidx.constraintlayout:constraintlayout:2.2.1'
+    // Firebase platform - ensuring all libraries are compatible
+    // Updated BoM to v34.8.0 (January 2026)
+    implementation platform('com.google.firebase:firebase-bom:34.8.0')
 
-    // Firebase BOM - ensures all Firebase libraries use compatible versions
-    implementation platform('com.google.firebase:firebase-bom:33.7.0')
-    
-    // Firebase - using BOM, no version numbers needed
-    implementation 'com.google.firebase:firebase-auth-ktx'
-    implementation 'com.google.firebase:firebase-firestore-ktx'
+    // Firebase Auth & Firestore (versions managed by BoM)
+    implementation 'com.google.firebase:firebase-auth'
+    implementation 'com.google.firebase:firebase-firestore'
 
-    // ✅ UPDATED ML Kit (IMPORTANT)
+    // ✅ Vertex AI for Firebase (Gemini)
+    implementation libs.firebase.vertexai
+
+    // Firebase App Check
+    implementation libs.firebase.appcheck.playintegrity
+    implementation libs.firebase.appcheck.debug
+
+    // Explicit Ktor for AI stability (Fixes HttpTimeout resolution error)
+    implementation "io.ktor:ktor-client-android:2.3.12"
+
+    // ML Kit Barcode Scanning
     implementation 'com.google.mlkit:barcode-scanning:17.3.0'
 
-    // CameraX
+    // CameraX (Stable versions for early 2026)
     implementation 'androidx.camera:camera-core:1.5.2'
     implementation 'androidx.camera:camera-camera2:1.5.2'
     implementation 'androidx.camera:camera-lifecycle:1.5.2'
     implementation 'androidx.camera:camera-view:1.5.2'
-    
-    // Guava for ListenableFuture (required by CameraX)
-    implementation 'com.google.guava:guava:33.0.0-android'
 
-    // Coroutines
+    // Guava (Required by CameraX)
+    implementation 'com.google.guava:guava:33.3.0-android'
+
+    // Coroutines & Lifecycle
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2'
+    implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.10.0' // Latest stable
+    implementation 'androidx.lifecycle:lifecycle-livedata-ktx:2.10.0' // Latest stable
 
-    // Lifecycle
-    implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.10.0'
-    implementation 'androidx.lifecycle:lifecycle-livedata-ktx:2.10.0'
-
-    // Networking
+    // Networking (Retrofit 3.0.0 released May 2025)
     implementation 'com.squareup.retrofit2:retrofit:3.0.0'
     implementation 'com.squareup.retrofit2:converter-gson:3.0.0'
 
-    // Glide
+    // Image Loading
     implementation 'com.github.bumptech.glide:glide:5.0.5'
-
-    // Excel
-    implementation 'org.apache.poi:poi:5.5.1'
-    implementation 'org.apache.poi:poi-ooxml:5.5.1'
 
     // Testing
     testImplementation 'junit:junit:4.13.2'

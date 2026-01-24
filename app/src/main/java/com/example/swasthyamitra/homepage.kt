@@ -122,6 +122,13 @@ class homepage : AppCompatActivity() {
             val intent = Intent(this, MealPlanActivity::class.java)
             startActivity(intent)
         }
+
+        // Setup AI Diet Button
+        val cardAiDiet: MaterialButton = findViewById(R.id.card_ai_diet)
+        cardAiDiet.setOnClickListener {
+            val intent = Intent(this, AISmartDietActivity::class.java)
+            startActivity(intent)
+        }
     }
 
     private fun loadUserData() {

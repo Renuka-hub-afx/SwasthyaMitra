@@ -25,6 +25,11 @@
             android:exported="false" />
 
         <activity
+            android:name=".AISmartDietActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+
+        <activity
             android:name=".DietRecommendationActivity"
             android:exported="false"
             android:screenOrientation="portrait" />
