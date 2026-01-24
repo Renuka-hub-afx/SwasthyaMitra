@@ -1,0 +1,75 @@
+﻿#include "pch-c.h"
+
+
+#include "codegen/il2cpp-codegen-metadata.h"
+
+
+
+
+
+extern void UnitySourceGeneratedAssemblyMonoScriptTypes_v1_Get_m5A749B993F50EE0D8B0B0F0D3181BF0C39E675BF (void);
+extern void UnitySourceGeneratedAssemblyMonoScriptTypes_v1__ctor_mE0236F50D263E85F4661C5284420D6A29292D457 (void);
+extern void FastSpringBoneService_get_BufferCombiner_m78B38C889804E574BE5A66177B22496E52AE1C65 (void);
+extern void FastSpringBoneService_set_BufferCombiner_mEF883A5FC9075F99DF5B713718E450951BD52A0D (void);
+extern void FastSpringBoneService_get_Instance_mC6B746EB480D43917021C267E7B68BDED6792B6C (void);
+extern void FastSpringBoneService_Free_m3056F42087C4A9668196258EF544291277C8C763 (void);
+extern void FastSpringBoneService_OnEnable_mDE9A085798B6A8C17129F7027DBE313022F8D4F6 (void);
+extern void FastSpringBoneService_OnDisable_m60B1C794A556B1CC5A2879D0356CD65187DD443E (void);
+extern void FastSpringBoneService_LateUpdate_m0ABC7594810C42AC4590C4713AFD26694615F217 (void);
+extern void FastSpringBoneService_ManualUpdate_m959CD80888192F99776F5BC55699FB7679B33B95 (void);
+extern void FastSpringBoneService_ManualUpdate_m3F9979A02A4E698E42798884E221D98F3639C07E (void);
+extern void FastSpringBoneService_OnDrawGizmosSelected_m6293644E3CC0DA2ABF02642F9909AF84F5FA47C0 (void);
+extern void FastSpringBoneService__ctor_m5CE95DF996DB3E20505C853602EEA780AC37E12C (void);
+static Il2CppMethodPointer s_methodPointers[13] = 
+{
+	UnitySourceGeneratedAssemblyMonoScriptTypes_v1_Get_m5A749B993F50EE0D8B0B0F0D3181BF0C39E675BF,
+	UnitySourceGeneratedAssemblyMonoScriptTypes_v1__ctor_mE0236F50D263E85F4661C5284420D6A29292D457,
+	FastSpringBoneService_get_BufferCombiner_m78B38C889804E574BE5A66177B22496E52AE1C65,
+	FastSpringBoneService_set_BufferCombiner_mEF883A5FC9075F99DF5B713718E450951BD52A0D,
+	FastSpringBoneService_get_Instance_mC6B746EB480D43917021C267E7B68BDED6792B6C,
+	FastSpringBoneService_Free_m3056F42087C4A9668196258EF544291277C8C763,
+	FastSpringBoneService_OnEnable_mDE9A085798B6A8C17129F7027DBE313022F8D4F6,
+	FastSpringBoneService_OnDisable_m60B1C794A556B1CC5A2879D0356CD65187DD443E,
+	FastSpringBoneService_LateUpdate_m0ABC7594810C42AC4590C4713AFD26694615F217,
+	FastSpringBoneService_ManualUpdate_m959CD80888192F99776F5BC55699FB7679B33B95,
+	FastSpringBoneService_ManualUpdate_m3F9979A02A4E698E42798884E221D98F3639C07E,
+	FastSpringBoneService_OnDrawGizmosSelected_m6293644E3CC0DA2ABF02642F9909AF84F5FA47C0,
+	FastSpringBoneService__ctor_m5CE95DF996DB3E20505C853602EEA780AC37E12C,
+};
+static const int32_t s_InvokerIndices[13] = 
+{
+	27454,
+	16078,
+	15858,
+	12261,
+	27323,
+	27426,
+	16078,
+	16078,
+	16078,
+	12359,
+	4478,
+	16078,
+	16078,
+};
+IL2CPP_EXTERN_C const Il2CppCodeGenModule g_FastSpringBone10_CodeGenModule;
+const Il2CppCodeGenModule g_FastSpringBone10_CodeGenModule = 
+{
+	"FastSpringBone10.dll",
+	13,
+	s_methodPointers,
+	0,
+	NULL,
+	s_InvokerIndices,
+	0,
+	NULL,
+	0,
+	NULL,
+	0,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+};
