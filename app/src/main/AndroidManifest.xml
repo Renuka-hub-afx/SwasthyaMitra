@@ -29,10 +29,7 @@
             android:exported="false"
             android:screenOrientation="portrait" />
 
-        <activity
-            android:name=".DietRecommendationActivity"
-            android:exported="false"
-            android:screenOrientation="portrait" />
+
 
         <activity
             android:name=".ProgressActivity"
@@ -49,10 +46,7 @@
             android:exported="false"
             android:screenOrientation="portrait" />
 
-        <activity
-            android:name=".MealPlanActivity"
-            android:exported="false"
-            android:screenOrientation="portrait" />
+
 
         <activity
             android:name=".BarcodeScannerActivity"

@@ -8,6 +8,7 @@ import android.text.TextWatcher
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
@@ -192,35 +193,42 @@ class FoodLogActivity : AppCompatActivity() {
         )
         chipGroup.check(chipIds[suggestedMealType] ?: R.id.chip_snack)
         
-        AlertDialog.Builder(this)
+        val dialog = AlertDialog.Builder(this)
             .setTitle("Manual Food Entry")
             .setView(dialogView)
-            .setPositiveButton("Save") { _, _ ->
-                val foodName = etFoodName.text.toString().trim()
-                val calories = etCalories.text.toString().toDoubleOrNull() ?: 0.0
-                val protein = etProtein.text.toString().toDoubleOrNull() ?: 0.0
-                val carbs = etCarbs.text.toString().toDoubleOrNull() ?: 0.0
-                val fat = etFat.text.toString().toDoubleOrNull() ?: 0.0
-                val servingSize = etServingSize.text.toString().trim().ifEmpty { "1 serving" }
-                
-                val selectedChipId = chipGroup.checkedChipId
-                val mealType = when (selectedChipId) {
-                    R.id.chip_breakfast -> "Breakfast"
-                    R.id.chip_lunch -> "Lunch"
-                    R.id.chip_dinner -> "Dinner"
-                    R.id.chip_snack -> "Snack"
-                    else -> suggestedMealType
-                }
-                
-                if (foodName.isEmpty() || calories == 0.0) {
-                    Toast.makeText(this, "Please enter food name and calories", Toast.LENGTH_SHORT).show()
-                    return@setPositiveButton
-                }
-                
-                saveManualFoodLog(foodName, calories, protein, carbs, fat, servingSize, mealType)
+            .create()
+
+        dialogView.findViewById<Button>(R.id.btn_save_manual).setOnClickListener {
+            val foodName = etFoodName.text.toString().trim()
+            val calories = etCalories.text.toString().toDoubleOrNull() ?: 0.0
+            val protein = etProtein.text.toString().toDoubleOrNull() ?: 0.0
+            val carbs = etCarbs.text.toString().toDoubleOrNull() ?: 0.0
+            val fat = etFat.text.toString().toDoubleOrNull() ?: 0.0
+            val servingSize = etServingSize.text.toString().trim().ifEmpty { "1 serving" }
+            
+            val selectedChipId = chipGroup.checkedChipId
+            val mealType = when (selectedChipId) {
+                R.id.chip_breakfast -> "Breakfast"
+                R.id.chip_lunch -> "Lunch"
+                R.id.chip_dinner -> "Dinner"
+                R.id.chip_snack -> "Snack"
+                else -> suggestedMealType
             }
-            .setNegativeButton("Cancel", null)
-            .show()
+            
+            if (foodName.isEmpty() || calories == 0.0) {
+                Toast.makeText(this, "Please enter food name and calories", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+            
+            saveManualFoodLog(foodName, calories, protein, carbs, fat, servingSize, mealType)
+            dialog.dismiss()
+        }
+
+        dialogView.findViewById<Button>(R.id.btn_cancel_manual).setOnClickListener {
+            dialog.dismiss()
+        }
+
+        dialog.show()
     }
     
     private fun suggestMealType(): String {
@@ -472,34 +480,41 @@ class FoodLogActivity : AppCompatActivity() {
         )
         chipGroup.check(chipIds[suggestedMealType] ?: R.id.chip_snack)
         
-        AlertDialog.Builder(this)
+        val dialog = AlertDialog.Builder(this)
             .setTitle("Confirm Food Details")
             .setView(dialogView)
-            .setPositiveButton("Save") { _, _ ->
-                val foodName = etFoodName.text.toString().trim()
-                val finalCalories = etCalories.text.toString().toDoubleOrNull() ?: 0.0
-                val finalProtein = etProtein.text.toString().toDoubleOrNull() ?: 0.0
-                val finalCarbs = etCarbs.text.toString().toDoubleOrNull() ?: 0.0
-                val finalFat = etFat.text.toString().toDoubleOrNull() ?: 0.0
-                val servingSize = etServingSize.text.toString().trim()
-                
-                val selectedChipId = chipGroup.checkedChipId
-                val mealType = when (selectedChipId) {
-                    R.id.chip_breakfast -> "Breakfast"
-                    R.id.chip_lunch -> "Lunch"
-                    R.id.chip_dinner -> "Dinner"
-                    R.id.chip_snack -> "Snack"
-                    else -> "Snack"
-                }
-                
-                if (foodName.isNotEmpty() && finalCalories > 0) {
-                    saveManualFoodLog(foodName, finalCalories, finalProtein, finalCarbs, finalFat, servingSize, mealType)
-                } else {
-                    Toast.makeText(this, "Please enter food name and calories", Toast.LENGTH_SHORT).show()
-                }
+            .create()
+
+        dialogView.findViewById<Button>(R.id.btn_save_manual).setOnClickListener {
+            val foodName = etFoodName.text.toString().trim()
+            val finalCalories = etCalories.text.toString().toDoubleOrNull() ?: 0.0
+            val finalProtein = etProtein.text.toString().toDoubleOrNull() ?: 0.0
+            val finalCarbs = etCarbs.text.toString().toDoubleOrNull() ?: 0.0
+            val finalFat = etFat.text.toString().toDoubleOrNull() ?: 0.0
+            val servingSize = etServingSize.text.toString().trim()
+            
+            val selectedChipId = chipGroup.checkedChipId
+            val mealType = when (selectedChipId) {
+                R.id.chip_breakfast -> "Breakfast"
+                R.id.chip_lunch -> "Lunch"
+                R.id.chip_dinner -> "Dinner"
+                R.id.chip_snack -> "Snack"
+                else -> "Snack"
             }
-            .setNegativeButton("Cancel", null)
-            .show()
+            
+            if (foodName.isNotEmpty() && finalCalories > 0) {
+                saveManualFoodLog(foodName, finalCalories, finalProtein, finalCarbs, finalFat, servingSize, mealType)
+                dialog.dismiss()
+            } else {
+                Toast.makeText(this, "Please enter food name and calories", Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        dialogView.findViewById<Button>(R.id.btn_cancel_manual).setOnClickListener {
+            dialog.dismiss()
+        }
+
+        dialog.show()
     }
     
     private fun showFoodConfirmationDialog(food: IndianFood) {
@@ -530,34 +545,41 @@ class FoodLogActivity : AppCompatActivity() {
         )
         chipGroup.check(chipIds[suggestedMealType] ?: R.id.chip_snack)
         
-        AlertDialog.Builder(this)
+        val dialog = AlertDialog.Builder(this)
             .setTitle("Confirm Food Details")
             .setView(dialogView)
-            .setPositiveButton("Save") { _, _ ->
-                val foodName = etFoodName.text.toString().trim()
-                val calories = etCalories.text.toString().toDoubleOrNull() ?: 0.0
-                val protein = etProtein.text.toString().toDoubleOrNull() ?: 0.0
-                val carbs = etCarbs.text.toString().toDoubleOrNull() ?: 0.0
-                val fat = etFat.text.toString().toDoubleOrNull() ?: 0.0
-                val servingSize = etServingSize.text.toString().trim()
-                
-                val selectedChipId = chipGroup.checkedChipId
-                val mealType = when (selectedChipId) {
-                    R.id.chip_breakfast -> "Breakfast"
-                    R.id.chip_lunch -> "Lunch"
-                    R.id.chip_dinner -> "Dinner"
-                    R.id.chip_snack -> "Snack"
-                    else -> "Snack"
-                }
-                
-                if (foodName.isNotEmpty() && calories > 0) {
-                    saveManualFoodLog(foodName, calories, protein, carbs, fat, servingSize, mealType)
-                } else {
-                    Toast.makeText(this, "Please enter food name and calories", Toast.LENGTH_SHORT).show()
-                }
+            .create()
+
+        dialogView.findViewById<Button>(R.id.btn_save_manual).setOnClickListener {
+            val foodName = etFoodName.text.toString().trim()
+            val calories = etCalories.text.toString().toDoubleOrNull() ?: 0.0
+            val protein = etProtein.text.toString().toDoubleOrNull() ?: 0.0
+            val carbs = etCarbs.text.toString().toDoubleOrNull() ?: 0.0
+            val fat = etFat.text.toString().toDoubleOrNull() ?: 0.0
+            val servingSize = etServingSize.text.toString().trim()
+            
+            val selectedChipId = chipGroup.checkedChipId
+            val mealType = when (selectedChipId) {
+                R.id.chip_breakfast -> "Breakfast"
+                R.id.chip_lunch -> "Lunch"
+                R.id.chip_dinner -> "Dinner"
+                R.id.chip_snack -> "Snack"
+                else -> "Snack"
             }
-            .setNegativeButton("Cancel", null)
-            .show()
+            
+            if (foodName.isNotEmpty() && calories > 0) {
+                saveManualFoodLog(foodName, calories, protein, carbs, fat, servingSize, mealType)
+                dialog.dismiss()
+            } else {
+                Toast.makeText(this, "Please enter food name and calories", Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        dialogView.findViewById<Button>(R.id.btn_cancel_manual).setOnClickListener {
+            dialog.dismiss()
+        }
+
+        dialog.show()
     }
     
     private fun deleteFoodLog(foodLog: FoodLog) {

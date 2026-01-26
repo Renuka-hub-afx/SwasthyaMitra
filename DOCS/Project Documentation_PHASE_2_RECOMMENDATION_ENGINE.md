@@ -1,175 +1,269 @@
-# **Phase 2: Intelligent Recommendation Engine Documentation**
+# SwasthyaMitra Smart Recommendation Engine Architecture
 
-Date: January 19, 2026  
-Project Name: SwasthyaMitra  
-Focus: Backend Architecture, Machine Learning Integration, and Data Logic
+## Implementation Status: ✅ PHASE 2 COMPLETE
 
-## **1\. Executive Summary**
+**Last Updated:** January 26, 2026  
+**Status:** Core engine implemented and tested. Interactive features in progress.
 
-The primary objective of Phase 2 is to evolve SwasthyaMitra from a passive data recording tool into an active, intelligent health assistant. While Phase 1 focused on data ingestion (logging foods, setting goals), Phase 2 focuses on data utility—using the stored information to guide user behavior.
+### What's Working:
+- ✅ Two-Tier BMR/TDEE + AI generation
+- ✅ CSV grounding with 1000+ Indian foods
+- ✅ Activity & weight plateau detection
+- ✅ Festival-aware recommendations
+- ✅ Singleton service architecture
+- ✅ Firebase security rules configured
 
-By leveraging **Firebase Cloud Functions** for server-side logic and **Google Vertex AI** for predictive modeling, the system will analyze user habits to provide proactive value. This includes personalized meal suggestions based on dietary preferences, real-time nutritional warnings when a user deviates from their goals, and insightful daily summaries. The ultimate goal is to reduce the cognitive load of dieting by answering the question, *"What should I eat next?"* before the user even asks.
+### In Progress:
+- 🔄 Meal regeneration with exclusions
+- 🔄 Ate/Skipped feedback tracking
+- 🔄 User preference learning
 
-## **2\. System Architecture**
+---
 
-The recommendation engine operates on a robust "Push-Pull" architecture designed to handle both real-time user actions and scheduled background processing:
+## Overview
+SwasthyaMitra employs a **"Two-Tier Hybrid" strategy**, leveraging a specific technology stack to balance deterministic safety with probabilistic AI intelligence.
 
-1. **Data Layer (Firestore):**  
-   * Acts as the single source of truth, storing raw input data (User Profile, Goals, Logs).  
-   * Leverages Firestore's real-time capabilities to ensure that any update (e.g., logging a snack) is immediately available for processing.  
-2. **Trigger Layer (Cloud Functions):**  
-   * **Reactive Triggers:** Functions that execute immediately in response to database events (e.g., onWrite to foodLogs triggers a macro calculation).  
-   * **Proactive Triggers:** Functions scheduled via Cloud Scheduler (e.g., running every morning at 7:00 AM to generate a daily meal plan).  
-3. **Intelligence Layer (Vertex AI / Logic):**  
-   * **Deterministic Logic:** Code-based rules for immediate math (e.g., "If calories \< 0, send alert").  
-   * **Probabilistic Logic (ML):** Vertex AI models that infer preferences and predict future needs based on historical patterns.  
-4. **Presentation Layer (Android App):**  
-   * The Android client observes the recommendations collection. When the backend generates a new suggestion, the UI updates automatically without requiring a manual refresh.
+## 1. Technology Stack
+The architecture is built on five core pillars:
 
-### **High-Level Data Flow Diagram**
+| Component | Technology | Role |
+| :--- | :--- | :--- |
+| **App Logic** | **Kotlin** (`AIDietPlanService.kt`) | Orchestrates data fetching, logic flow, and AI execution. |
+| **Data Engineering** | **Python** (`convert_food_data.py`) | Pre-processes complex Excel nutrition data into optimized CSVs. |
+| **Intelligence** | **Vertex AI (Gemini 2.0 Flash)** | The "Brain" that performs complex reasoning and menu generation. |
+| **Backend** | **Firebase (Firestore & Auth)** | Stores user profiles, logs, and manages secure identity. |
+| **Integration** | **JSON** | The standardized language for data exchange between AI and UI. |
 
-\[Android App\] \--(Write Action)--\> \[Firestore (foodLogs)\] \--(Event Trigger)--\> \[Cloud Function\] \--(API Request)--\> \[Vertex AI Endpoint\] \--(Inference)--\> \[Predictions/Suggestions\] \--(Write Result)--\> \[Firestore (recommendations)\] \--(Real-time Listener)--\> \[Android App UI\]
+---
 
-## **3\. Data Inputs & Schema Analysis**
+## 2. Tier 1: The "Macro Balancer" (Deterministic Logic)
+* **Managed By:** Kotlin (`FoodRecommendationEngine.kt` / `AIDietPlanService.kt`)
+* **Function:** Operates on absolute mathematical rules.
+* **Logic:** If `calories_consumed > daily_limit`, the system immediately filters the local CSV database for "Low Calorie" tags.
+* **Why:** Ensures nutritional safety and adherence to hard limits without needing AI "guesses."
 
-The recommendation engine relies on three core collections already defined in Phase 1\. Below is a detailed analysis of how specific fields dictate the engine's logic.
+---
 
-### **A. Users Collection (users)**
+## 3. Tier 2: The "Pattern Recognizer" (GenAI)
+* **Managed By:** Vertex AI (**Gemini 2.0 Flash**) via Kotlin SDK
+* **Function:** Handles complex, human-centric variables:
+    * **Context Awareness:** "It is Diwali today, suggests a healthy treat."
+    * **Activity Adaptation:** "User ran 5k, increase carbohydrates."
+* **Grounding:** The AI is strictly "grounded" in the Indian Food CSV processed by your Python pipeline. It allows the AI to be creative but forces it to choose *real* foods with *accurate* macros.
 
-This collection establishes the biological constraints and lifestyle context for every recommendation.
+---
 
-* **allergies (List):** *Hard Constraint.* This is a safety-critical field. Any food item identified by the recommendation engine must be cross-referenced against this list. If a user is allergic to "Peanuts," any generated suggestion containing peanuts is strictly discarded.  
-* **preference (String \- Veg/Non-Veg):** *Hard Constraint.* Determines the eligible pool of foods. For a vegetarian user, the system filters the IndianFoodRepository dataset to exclude meat-based proteins immediately, optimizing search performance.  
-* **bmr / tdee (Double):** Used to calculate the "Base Baseline." These figures allow the system to understand the user's metabolic floor, ensuring recommendations never suggest dangerously low calorie intakes.  
-* **activityLevel (String):** Used to adjust the "Calorie Buffer." A "Very Active" user might get snack suggestions of 300-400 calories, whereas a "Sedentary" user might get suggestions capped at 150 calories.
+## 4. Data Engineering Pipeline
+* **Input:** Raw government/public nutrition datasets (Excel).
+* **Process:** The `convert_food_data.py` script cleans the data, calculates missing macros, and normalizes food names.
+* **Output:** A lightweight `food_data.csv` (formerly `Indian_Food.csv`) bundled into the Android `assets` folder, ensuring the app works fast even with poor internet.
 
-### **B. Goals Collection (goals)**
+---
 
-This collection provides the dynamic targets that change as the user progresses.
+## 5. The Feedback Loop (Interactive Features)
+* **Mechanism:** User actions (Ate/Skipped/Regenerated) are saved to Firestore.
+* **Learning:** `AIDietPlanService.kt` fetches these "Past Meals" before requesting a new plan, ensuring the AI learns from previous rejections and avoids repetition.
+* **New Collections:**
+  - `meal_feedback`: Tracks every user interaction with recommendations
+  - `ai_generated_plans`: Stores complete daily plans for history
+  - `user_preferences`: Learns long-term food likes/dislikes
 
-* **targetCalories (Double):** The daily "Budget." Recommendations are essentially financial advice for this calorie budget—helping the user spend their calories wisely.  
-* **dietPreference (String \- Keto/Low Carb/Balanced):** *Soft Constraint.* This adjusts the ranking weights of food items.  
-  * *Example:* If dietPreference \== "Keto", a High-Fat/Low-Carb food like "Butter Chicken" is ranked higher than "Dal Rice," even if both fit the calorie budget.  
-* **dailyCalories (Double \- Current Intake):**  
-  * **Logic:** Remaining Budget \= targetCalories \- dailyCalories.  
-  * **Trigger:** If Remaining \< 200 (Low Budget) and Time \< 2:00 PM (Early in the day), the system triggers "Volume Eating" strategies, suggesting foods with low caloric density (e.g., salads, soups) to keep the user full.
+---
 
-### **C. Food Logs Collection (foodLogs)**
+# AI Implementation Guide (Kotlin + Vertex AI)
 
-This collection is the historical record used for training ML models.
+## Technical Setup
 
-* **timestamp / date:** Crucial for Temporal Pattern Recognition. The engine learns that "User A usually drinks Chai at 4:30 PM" and can preemptively suggest it or a healthier alternative.  
-* **foodName:** Used for **Content-Based Filtering**.  
-  * *Logic:* "User eats 'Paneer' 4 times a week." \-\> The system tags 'Paneer' as a 'Preferred Ingredient' and prioritizes recipes containing it.  
-* **Macros (protein, carbs, fat):** Used to calculate real-time deficiencies. The accumulation of these values triggers the "Macro Balancer" logic (e.g., "You are low on protein today").
+### 1. The Orchestrator: `AIDietPlanService.kt`
+This Kotlin service is the heart of the system. It follows this execution flow:
+1.  **Fetch Profile:** Retrieves User metadata (Weight, Goal, Allergies) from Firestore.
+2.  **Fetch Context:** Pulls recent `ExerciseLogs` and `WeightLogs` to calculate the "Intensity Score."
+3.  **Load Database:** Reads the local `food_data.csv` (prepared by Python).
+4.  **Construct Prompt:** Combines User Data + Context + Food List into a structured prompt.
+5.  **Execute AI:** Calls **Gemini 2.0 Flash** via the `com.google.firebase.vertexai` SDK.
+6.  **Parse & Return:** Deserializes the JSON response into UI objects.
 
-## **4\. The Output: Recommendations Schema**
+### 2. The Model: Gemini 2.0 Flash
+* **Why Flash?** Chosen for its low latency and high cost-efficiency, which is critical for a consumer mobile app.
+* **Configuration:**
+    * `temperature`: 0.4 (Low creativity to ensure factual nutrition data).
+    * `responseMimeType`: "application/json" (Forces structured output).
 
-To decouple the logic from the UI, we introduce a dedicated recommendations collection. The App simply displays what it finds here.
+## The Smart Prompt Template
+The Kotlin service dynamically injects variables into this template:
 
-### **New Collection: recommendations**
+```text
+You are SwasthyaMitra, an expert Indian Nutritionist.
 
-Document ID: Auto-generated  
-Fields:
+**USER CONTEXT:**
+- Profile: {age}yrs, {gender}, {weight}kg
+- Goal: {goal} (Target: {target_weight})
+- Restrictions: {allergies}
+- Season/Festival: {current_season} / {festival_name}
 
-* userId: String (Foreign Key linking to users)  
-* type: String (Enum)  
-  * "Meal\_Suggestion": Specific food items to eat.  
-  * "Macro\_Alert": Warning about nutritional imbalance.  
-  * "Daily\_Plan": A full day's eating itinerary.  
-* mealTime: String ("Breakfast", "Lunch", "Dinner", "Snack", "Anytime") \- Context for when this should be shown.  
-* suggestedFoods: Array of Maps (The core payload)  
-  * name: String  
-  * calories: Int  
-  * servingSize: String  
-  * reason: String (Explainable AI: e.g., "Suggested because it is high in protein and fits your 300 kcal remaining budget.")  
-  * macros: Map (Protein, Carbs, Fat)  
-* createdAt: Timestamp (TTL: Recommendations typically expire after 12-24 hours).  
-* status: String ("Pending", "Accepted", "Dismissed", "Consumed")  
-  * *Purpose:* This field is the feedback loop for Reinforcement Learning. If a user constantly "Dismisses" salads, the model learns to stop suggesting them.
+**ACTIVITY STATUS:**
+- Recent Workout: {last_workout_type}
+- Intensity: {intensity_level} (Adjust macros accordingly)
 
-## **5\. Recommendation Logic Levels**
+**AVAILABLE FOODS (Select ONLY from here):**
+{csv_sample_string}
 
-We will implement this intelligence in two distinct tiers, starting with deterministic rules and moving to probabilistic AI.
+**TASK:**
+Generate a daily meal plan in JSON format.
+Rules:
+1. If "High Intensity", add post-workout protein.
+2. Do not repeat meals from {past_meals_list}.
+3. Calculate exact calories based on the provided food list.
 
-### **Tier 1: Rule-Based Engine (Cloud Functions)**
+**OUTPUT JSON:**
+{
+  "breakfast": { "item": "Name", "calories": 000, "protein": "0g", "reason": "..." },
+  "lunch": { ... },
+  ...
+}
+```
 
-*Immediate, deterministic implementation using standard conditional logic.*
+---
 
-1. **The "Macro Balancer" (Deficiency Corrector):**  
-   * **Trigger:** onWrite event to the foodLogs collection.  
-   * **Logic:**  
-     1. Sum user's total protein/carbs/fat for the current date.  
-     2. Compare against goals.targetProtein etc.  
-     3. **Condition:** If CurrentProtein \< (TargetProtein \* 0.4) AND Time \> 6:00 PM (User is behind on protein and day is ending).  
-     4. **Action:** Query IndianFoodRepository for foods tagged High\_Protein and Dinner\_Appropriate.  
-     5. **Output:** Suggest "Grilled Chicken Breast" or "Rajma Masala" specifically to close the gap.  
-2. **The "Calorie Smart-Fill" (Budget Optimizer):**  
-   * **Scenario:** User searches for a snack. Remaining Calories \= 150\.  
-   * **Logic:** A standard search might return a 300-calorie Samosa. The Smart-Fill logic filters the database: SELECT \* FROM foods WHERE calories \<= 150 AND preference \== user.preference.  
-   * **Output:** Returns a curated list: "Masala Papad (120 cal)", "Buttermilk (80 cal)", "Apple (95 cal)".
+# Adaptive Logic Rules
 
-### **Tier 2: AI-Based Engine (Vertex AI / ML)**
+These rules are encoded into the **Kotlin Logic (`AIDietPlanService.kt`)** and passed to the AI to ensure dynamic adaptation.
 
-*Advanced, probabilistic implementation leveraging Google Cloud's ML capabilities.*
+## 1. Activity-Based Adaptation
+The Kotlin service analyzes Firestore `exercise_logs` to determine the flag sent to Gemini.
 
-1. **Collaborative Filtering (Similar User Clustering):**  
-   * **Concept:** "Lookalike Audiences."  
-   * **Logic:** The model identifies users with similar vectors (BMI 28, Sedentary, Goal: Weight Loss). It looks at what the *successful* users in this cluster (those who met their goals) ate.  
-   * **Prediction:** "Users like you found success eating 'Oats Upma' for breakfast."  
-2. **Predictive Meal Planning (Context Awareness):**  
-   * **Concept:** Sequence Prediction.  
-   * **Input Features:** Time of day, Day of week (Weekend vs Weekday), Previous meal, User History.  
-   * **Inference:** It's Monday, 8:00 AM. History shows user usually logs 'Eggs'.  
-   * **Output:** Pre-populate the "Add Breakfast" screen with 'Eggs' and 'Toast' as "Quick Add" suggestions, reducing clicks and friction.
+| User Log Data | System Flag Sent to AI | AI Response Behavior |
+| :--- | :--- | :--- |
+| **HIIT / Heavy Lifting** | `INTENSITY_HIGH` | **Adds "Post-Workout" meal.** Increases protein targets by 15%. Suggests electrolytes. |
+| **Yoga / Walking** | `INTENSITY_MODERATE` | Maintains standard deficit/maintenance calories. |
+| **No Logs (3+ Days)** | `INTENSITY_SEDENTARY` | **Reduces Carbohydrates.** Suggests high-fiber/low-cal volume foods to manage hunger without calories. |
 
-## **6\. Implementation Roadmap**
+## 2. Weight Trend Logic
+The service calculates the slope of `weight_logs` (last 14 days).
 
-### **Phase 2.1: The Foundation (Weeks 1-2)**
+* **Plateau Detected:** (Weight change < 0.2kg in 14 days)
+    * *Kotlin Action:* Injects instruction: *"User is hitting a plateau. Suggest a 'Zig-Zag' calorie day (Higher calories today to boost metabolism)."*
+* **Rapid Loss:** (Loss > 1.5kg/week)
+    * *Kotlin Action:* Injects instruction: *"CRITICAL: User losing weight too fast. Add healthy fats (Nuts/Ghee) to stabilize."*
 
-*Focus: Infrastructure and Rule-Based Logic.*
+## 3. The "Festival Engine"
+* **Logic:** The app checks the device date against a hardcoded Indian Festival Calendar.
+* **Trigger:** If `Date == Festival`:
+    * The prompt instructs Gemini: *"It is Diwali. Allow ONE healthy festive treat (e.g., Baked Chakli) but balance the rest of the day with lighter meals."*
 
-1. **Environment Setup:** Initialize Firebase Cloud Functions and set up the local emulator for testing triggers.  
-2. **Backend Logic:** Develop the "Macro Calculator" function. This triggers on every log entry, recalculates daily totals, and updates the goals document.  
-3. **UI Development:** Create a RecommendationAdapter and RecyclerView in the Android app to render cards from the recommendations collection.  
-4. **Rule Implementation:** Write the first Cloud Function to generate a "Dinner Suggestion" if calories remain \> 500 at 7 PM.
+---
 
-### **Phase 2.2: The Intelligence (Weeks 3-4)**
+# User Guide: Smart Plan & Interactions
 
-*Focus: Machine Learning Pipeline.*
+## The "Today's Plan" Dashboard
+This UI is powered by the `AIDietPlanService` and updates dynamically.
 
-1. **Data Engineering:** Write a Firestore export script to dump foodLogs into Cloud Storage as CSV/JSON for training.  
-2. **Model Training (AutoML):** Use Vertex AI AutoML Tabular training.  
-   * *Target:* Predict foodName.  
-   * *Features:* time\_of\_day, day\_of\_week, user\_preference, remaining\_calories.  
-3. **Deployment:** Deploy the trained model to a Vertex AI Endpoint.  
-4. **Integration:** Update Cloud Functions to call this Vertex AI Endpoint for complex queries instead of using simple if/else logic.
+### 1. Interactive Elements
+* **🍳 Breakfast - Dinner:** Cards display the meal, exact calories, and a "Why?" tag (e.g., "High Protein for your Morning Run").
+* **🔁 Regenerate Button:**
+    * *Function:* If you don't like a suggestion, click this.
+    * *Under the Hood:* The Kotlin service calls Gemini 2.0 Flash again with a specific "Exclude: [Previous Dish]" parameter to ensure you get a fresh option immediately.
+* **✔ Ate / ❌ Skipped:**
+    * *Function:* Tracks adherence.
+    * *Impact:* "Skipped" meals are analyzed. If you skip "Oats" 3 times, the AI stops suggesting it.
 
-## **7\. Example Workflow Scenarios**
+## 2. Notifications (Future: Cloud Functions)
+* **Cloud Functions Triggers:** While the AI generation happens in the app, the **Firebase Backend** will monitor your logs.
+    * *Scenario:* You haven't logged lunch by 3 PM.
+    * *Action:* Cloud Function sends a push notification: *"Don't skip meals! Check your personalized lunch plan now."*
+    * *Status:* Planned for Phase 3 (requires Firebase Cloud Functions deployment)
 
-**Scenario A: The Lunchtime Nudge (Proactive)**
+---
 
-1. **Trigger (1:00 PM):** Cloud Scheduler triggers a "Lunch Check" cron job.  
-2. **Validation:** The function checks Firestore: *Has userId: 123 logged a meal with type 'Lunch' today?* \-\> **No.**  
-3. **Analysis:** Function reads User Profile.  
-   * *Calories Remaining:* 400\.  
-   * *Preference:* Vegetarian.  
-   * *Goal:* Weight Loss.  
-4. **Selection:** The engine searches for meals fitting: Vegetarian \+ 350-400 cal \+ High Satiety.  
-5. **Action:** A document is created in recommendations collection.  
-   * *Message:* "How about **Palak Paneer and 1 Roti** (380 cal) for lunch? It fits your budget perfectly."  
-6. **Notification:** A Firebase Cloud Messaging (FCM) push notification is sent to the device.
+# Firestore Data Collections
 
-**Scenario B: The Protein Alert (Reactive)**
+## Core Collections (Existing)
 
-1. **User Action:** User logs "Butter Naan" and "Butter Chicken" for lunch.  
-2. **Trigger:** onWrite triggers the calculateMacros Cloud Function.  
-3. **Computation:**  
-   * *Fat:* High (User used 60% of daily fat limit).  
-   * *Carbs:* High.  
-   * *Protein:* Moderate.  
-4. **Logic Evaluation:** The system detects that the user only has 15g of fat left for the entire day (Dinner \+ Snacks).  
-5. **Recommendation Generation:** The system proactively generates a suggestion for **Dinner**.  
-   * *Constraint:* Must be Low Fat (\<5g).  
-   * *Suggestion:* "Light Dinner Suggestion: **Moong Dal Khichdi** or **Lentil Soup**."  
-   * *Reason:* "You had a heavy lunch. A low-fat dinner will keep you on track."
+### `users`
+- `userId`, `name`, `email`, `age`, `weight`, `height`, `gender`, `eatingPreference`, `allergies`
+
+### `goals`
+- `userId`, `goalType`, `targetWeight`, `dailyCalories`, `activityLevel`, `bmr`, `tdee`
+
+### `foodLogs`
+- `userId`, `foodName`, `calories`, `protein`, `carbs`, `fat`, `mealType`, `timestamp`, `date`
+
+### `exercise_logs`
+- `userId`, `type`, `intensity`, `duration`, `timestamp`
+
+### `weight_logs`
+- `userId`, `weight`, `timestamp`
+
+---
+
+## New Collections (Phase 2 Interactive Features)
+
+### `meal_feedback`
+**Purpose:** Track user reactions to improve AI recommendations
+
+**Attributes:**
+- `feedbackId` (auto-generated)
+- `userId` (string)
+- `mealName` (string) - e.g., "Poha", "Dal Tadka"
+- `mealType` (string) - "Breakfast", "Lunch", "Dinner", "Snack"
+- `action` (string) - "Ate", "Skipped", "Regenerated"
+- `timestamp` (number)
+- `date` (string) - "YYYY-MM-DD"
+- `reason` (string, optional) - User-provided skip reason
+
+**Required Index:** `userId` (Ascending) + `timestamp` (Descending)
+
+---
+
+### `ai_generated_plans`
+**Purpose:** Store complete daily plans for history and regeneration
+
+**Attributes:**
+- `planId` (auto-generated)
+- `userId` (string)
+- `generatedAt` (number)
+- `date` (string) - "YYYY-MM-DD"
+- `breakfast`, `lunch`, `snack`, `dinner`, `postWorkout` (objects with: item, calories, protein, reason)
+- `dailyTip` (string)
+- `totalCalories` (number)
+- `status` (string) - "Active", "Completed", "Abandoned"
+
+**Required Index:** `userId` (Ascending) + `date` (Descending)
+
+---
+
+### `user_preferences`
+**Purpose:** Learn long-term food preferences
+
+**Attributes:**
+- `userId` (document ID, not a field)
+- `dislikedFoods` (array of strings)
+- `favoriteFoods` (array of strings)
+- `allergyTags` (array of strings)
+- `lastUpdated` (number)
+
+**Note:** Single document per user (use userId as document ID)
+
+---
+
+# Implementation Roadmap
+
+## Phase 2.1: Core Engine ✅ COMPLETE
+- [x] `AIDietPlanService.kt` with Singleton pattern
+- [x] BMR/TDEE calculations
+- [x] CSV grounding mechanism
+- [x] Gemini 2.0 Flash integration
+- [x] Activity & plateau detection
+- [x] Festival awareness
+- [x] Firebase security rules
+
+## Phase 2.2: Interactive Features 🔄 IN PROGRESS
+- [ ] Meal regeneration API
+- [ ] Feedback tracking system
+- [ ] User preference learning
+- [ ] Enhanced UI with action buttons
+
+## Phase 2.3: Cloud Functions (Future)
+- [ ] Scheduled meal reminders
+- [ ] Weekly progress reports
+- [ ] Automated plateau detection alerts
