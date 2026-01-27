@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@drawable/background_main">
+
+    <!-- Header -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/button_background"
+        android:elevation="4dp"
+        android:padding="16dp"
+        android:gravity="center_vertical">
+        
+        <ImageButton
+            android:id="@+id/btnBack"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@drawable/ic_back_arrow"
+            app:tint="#FFFFFF"/>
+            
+        <TextView
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:text="Create Challenge"
+            android:textColor="#FFFFFF"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:gravity="center"/>
+            
+        <View android:layout_width="40dp" android:layout_height="40dp"/>
+    </LinearLayout>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:padding="24dp">
+        
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <TextView
+                 android:layout_width="wrap_content"
+                 android:layout_height="wrap_content"
+                 android:text="Challenge Name"
+                 android:textColor="#333333"
+                 android:textStyle="bold"
+                 android:layout_marginBottom="8dp"/>
+
+            <EditText
+                android:id="@+id/etChallengeName"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="e.g. Weekend Warrior"
+                android:background="@drawable/shape_edit_text_bg"
+                android:padding="16dp"
+                android:layout_marginBottom="24dp"/>
+
+            <TextView
+                 android:layout_width="wrap_content"
+                 android:layout_height="wrap_content"
+                 android:text="Duration (Days)"
+                 android:textColor="#333333"
+                 android:textStyle="bold"
+                 android:layout_marginBottom="8dp"/>
+
+            <EditText
+                android:id="@+id/etDuration"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="7"
+                android:inputType="number"
+                android:background="@drawable/shape_edit_text_bg"
+                android:padding="16dp"
+                android:layout_marginBottom="24dp"/>
+
+            <TextView
+                 android:layout_width="wrap_content"
+                 android:layout_height="wrap_content"
+                 android:text="Wager (XP)"
+                 android:textColor="#333333"
+                 android:textStyle="bold"
+                 android:layout_marginBottom="8dp"/>
+
+            <EditText
+                android:id="@+id/etWager"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="100"
+                android:inputType="number"
+                android:background="@drawable/shape_edit_text_bg"
+                android:padding="16dp"
+                android:layout_marginBottom="32dp"/>
+
+            <Button
+                android:id="@+id/btnCreateChallenge"
+                android:layout_width="match_parent"
+                android:layout_height="60dp"
+                android:text="Create &amp; Get Code"
+                android:backgroundTint="#9C27B0"
+                android:textColor="#FFFFFF"
+                android:textStyle="bold"
+                app:cornerRadius="12dp"/>
+                
+             <TextView
+                android:id="@+id/tvCodeDisplay"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Code: ----"
+                android:textSize="24sp"
+                android:textStyle="bold"
+                android:gravity="center"
+                android:layout_marginTop="24dp"
+                android:textColor="#333333"
+                android:visibility="gone"/>
+
+        </LinearLayout>
+    </ScrollView>
+</LinearLayout>
