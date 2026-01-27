@@ -41,6 +41,8 @@ class homepage : AppCompatActivity() {
     private lateinit var cardFood: MaterialButton
     private lateinit var cardWorkout: MaterialButton
 
+    private lateinit var tvDate: TextView
+
     private var goalType: String = ""
     private var userName: String = ""
 
@@ -58,6 +60,7 @@ class homepage : AppCompatActivity() {
         userId = intent.getStringExtra("USER_ID") ?: ""
 
         // Initialize UI Elements
+        tvDate = findViewById(R.id.tv_date)
         tvUserName = findViewById(R.id.tv_user_name)
         tvGoalType = findViewById(R.id.tv_goal_type)
         tvCalories = findViewById(R.id.tv_calories)
@@ -78,6 +81,7 @@ class homepage : AppCompatActivity() {
         cardFood = findViewById(R.id.card_food)
         cardWorkout = findViewById(R.id.card_workout)
 
+        updateDateDisplay()
         loadUserData()
 
         // Initialize Step Tracking
@@ -117,6 +121,12 @@ class homepage : AppCompatActivity() {
         }
     }
 
+    private fun updateDateDisplay() {
+        val calendar = Calendar.getInstance()
+        val dateFormat = java.text.SimpleDateFormat("EEEE, MMM dd", java.util.Locale.getDefault())
+        tvDate.text = dateFormat.format(calendar.time)
+    }
+
     override fun onResume() {
         super.onResume()
         if (userId.isNotEmpty()) {
@@ -132,18 +142,38 @@ class homepage : AppCompatActivity() {
                 val userDataResult = authHelper.getUserData(userId)
                 userDataResult.onSuccess { userData ->
                     userName = userData["name"] as? String ?: "User"
-                    tvUserName.text = userName
+                    tvUserName.text = "${getGreeting()}, $userName!"
                 }
 
                 val goalsResult = authHelper.getUserGoal(userId)
                 goalsResult.onSuccess { goal ->
-                    goalType = goal["goalType"] as? String ?: "No Goal Set"
+                    goalType = goal["goalType"] as? String ?: "Stay Healthy"
                     tvGoalType.text = "Your Goal: $goalType"
+                    tvCoachMessage.text = getCoachMessage(goalType)
                 }
-                
-                tvCoachMessage.text = "Check the Workout tab for your activity recommendations! 🔥"
 
             } catch (e: Exception) { }
+        }
+    }
+
+    private fun getGreeting(): String {
+        val hour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
+        return when (hour) {
+            in 0..11 -> "Good Morning"
+            in 12..16 -> "Good Afternoon"
+            else -> "Good Evening"
+        }
+    }
+
+    private fun getCoachMessage(goal: String): String {
+        return when {
+            goal.contains("Weight Loss", ignoreCase = true) -> 
+                "Keep going! Small steps lead to big changes. 💪"
+            goal.contains("Muscle", ignoreCase = true) || goal.contains("Gain", ignoreCase = true) -> 
+                "Focus on your protein intake today for better recovery! 🥩"
+            goal.contains("Maintenance", ignoreCase = true) || goal.contains("Healthy", ignoreCase = true) -> 
+                "Consistency is the key to a healthy lifestyle. Stay active! 🏃‍♂️"
+            else -> "Ready for another day of progress? Let's crush your goals! 🚀"
         }
     }
 
