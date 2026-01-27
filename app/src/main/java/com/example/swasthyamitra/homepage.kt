@@ -39,7 +39,6 @@ class homepage : AppCompatActivity() {
 
     private lateinit var cardFood: MaterialButton
     private lateinit var cardWorkout: MaterialButton
-    private lateinit var cardMealPlan: MaterialButton
 
     private var goalType: String = ""
     private var userName: String = ""
@@ -87,7 +86,6 @@ class homepage : AppCompatActivity() {
 
         cardFood = findViewById(R.id.card_food)
         cardWorkout = findViewById(R.id.card_workout)
-        cardMealPlan = findViewById(R.id.card_meal_plan)
 
         // Load User Data
         loadUserData()
@@ -117,9 +115,12 @@ class homepage : AppCompatActivity() {
             Toast.makeText(this, "Workout - Coming Soon!", Toast.LENGTH_SHORT).show()
         }
 
-        cardMealPlan.setOnClickListener {
-            // Navigate to Meal Plan Activity
-            val intent = Intent(this, MealPlanActivity::class.java)
+
+
+        // Setup AI Diet Button
+        val cardAiDiet: MaterialButton = findViewById(R.id.card_ai_diet)
+        cardAiDiet.setOnClickListener {
+            val intent = Intent(this, AISmartDietActivity::class.java)
             startActivity(intent)
         }
     }

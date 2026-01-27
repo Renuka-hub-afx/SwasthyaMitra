@@ -419,4 +419,72 @@ class FirebaseAuthHelper(private val context: Context) {
             0
         }
     }
+
+    // ==================== METRIC LOGGING METHODS ====================
+
+    // Get recent exercise logs for intensity detection
+    suspend fun getRecentExerciseLogs(userId: String, days: Int = 3): List<Map<String, Any>> {
+        return try {
+            val cutoff = System.currentTimeMillis() - (days * 24 * 60 * 60 * 1000L)
+            val querySnapshot = firestore.collection("exerciseLogs")
+                .whereEqualTo("userId", userId)
+                .whereGreaterThanOrEqualTo("timestamp", cutoff)
+                .get()
+                .await()
+            
+            querySnapshot.documents.map { it.data ?: emptyMap() }
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
+
+    // Get recent weight logs for plateau detection
+    suspend fun getRecentWeightLogs(userId: String, days: Int = 14): List<Map<String, Any>> {
+        return try {
+            val cutoff = System.currentTimeMillis() - (days * 24 * 60 * 60 * 1000L)
+            val querySnapshot = firestore.collection("weightLogs")
+                .whereEqualTo("userId", userId)
+                .whereGreaterThanOrEqualTo("timestamp", cutoff)
+                .get()
+                .await()
+            
+            querySnapshot.documents.map { it.data ?: emptyMap() }
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
+
+    /**
+     * Get food logs for the last X days
+     */
+    suspend fun getRecentFoodLogs(userId: String, days: Int = 3): List<FoodLog> {
+        return try {
+            val cutoff = System.currentTimeMillis() - (days * 24 * 60 * 60 * 1000L)
+            val querySnapshot = firestore.collection("foodLogs")
+                .whereEqualTo("userId", userId)
+                .whereGreaterThanOrEqualTo("timestamp", cutoff)
+                .get()
+                .await()
+            
+            querySnapshot.documents.mapNotNull { doc ->
+                FoodLog(
+                    logId = doc.id,
+                    userId = doc.getString("userId") ?: "",
+                    foodName = doc.getString("foodName") ?: "",
+                    barcode = doc.getString("barcode"),
+                    photoUrl = doc.getString("photoUrl"),
+                    calories = (doc.getLong("calories") ?: 0).toInt(),
+                    protein = doc.getDouble("protein") ?: 0.0,
+                    carbs = doc.getDouble("carbs") ?: 0.0,
+                    fat = doc.getDouble("fat") ?: 0.0,
+                    servingSize = doc.getString("servingSize") ?: "",
+                    mealType = doc.getString("mealType") ?: "",
+                    timestamp = doc.getLong("timestamp") ?: 0L,
+                    date = doc.getString("date") ?: ""
+                )
+            }
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
 }

@@ -145,40 +145,41 @@
             android:id="@+id/chip_group_meal_type"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            app:singleSelection="true"
-            app:chipSpacingHorizontal="8dp">
+            app:chipSpacingHorizontal="8dp"
+            app:singleSelection="true">
 
             <com.google.android.material.chip.Chip
                 android:id="@+id/chip_breakfast"
+                style="@style/Widget.MaterialComponents.Chip.Choice"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="🌅 Breakfast"
-                style="@style/Widget.MaterialComponents.Chip.Choice"
-                app:chipBackgroundColor="@color/chip_background_color" />
+                app:chipBackgroundColor="@color/chip_background_color"/>
 
             <com.google.android.material.chip.Chip
                 android:id="@+id/chip_lunch"
+                style="@style/Widget.MaterialComponents.Chip.Choice"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="☀️ Lunch"
-                style="@style/Widget.MaterialComponents.Chip.Choice"
-                app:chipBackgroundColor="@color/chip_background_color" />
+                app:chipBackgroundColor="@color/chip_background_color"/>
 
             <com.google.android.material.chip.Chip
                 android:id="@+id/chip_dinner"
+                style="@style/Widget.MaterialComponents.Chip.Choice"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="🌙 Dinner"
-                style="@style/Widget.MaterialComponents.Chip.Choice"
-                app:chipBackgroundColor="@color/chip_background_color" />
+                app:chipBackgroundColor="@color/chip_background_color"/>
 
             <com.google.android.material.chip.Chip
                 android:id="@+id/chip_snack"
+                style="@style/Widget.MaterialComponents.Chip.Choice"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="🍪 Snack"
-                style="@style/Widget.MaterialComponents.Chip.Choice"
-                app:chipBackgroundColor="@color/chip_background_color" />
+                app:chipBackgroundColor="@color/chip_background_color"/>
+
 
         </com.google.android.material.chip.ChipGroup>
 
@@ -190,6 +191,36 @@
             android:fontFamily="@font/source_serif_pro_regular"
             android:textColor="#999999"
             android:layout_marginTop="12dp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="end"
+            android:layout_marginTop="24dp">
+
+            <Button
+                android:id="@+id/btn_cancel_manual"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Cancel"
+                android:fontFamily="@font/source_serif_pro_bold"
+                android:textColor="#7B2CBF"
+                android:background="@android:color/transparent"
+                android:padding="12dp"
+                android:layout_marginEnd="8dp" />
+
+            <Button
+                android:id="@+id/btn_save_manual"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Save"
+                android:fontFamily="@font/source_serif_pro_bold"
+                android:textColor="#FFFFFF"
+                android:background="@drawable/button_background"
+                app:backgroundTint="@null"
+                android:padding="12dp" />
+        </LinearLayout>
 
     </LinearLayout>
 
