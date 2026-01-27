@@ -168,12 +168,12 @@ class homepage : AppCompatActivity() {
     private fun getCoachMessage(goal: String): String {
         return when {
             goal.contains("Weight Loss", ignoreCase = true) -> 
-                "Keep going! Small steps lead to big changes. 💪"
+                "\"Great start to the week! Remember to hydrate and stay active. You're doing amazing!\""
             goal.contains("Muscle", ignoreCase = true) || goal.contains("Gain", ignoreCase = true) -> 
-                "Focus on your protein intake today for better recovery! 🥩"
+                "\"Focus on your protein intake today for better recovery! Consistent effort pays off.\""
             goal.contains("Maintenance", ignoreCase = true) || goal.contains("Healthy", ignoreCase = true) -> 
-                "Consistency is the key to a healthy lifestyle. Stay active! 🏃‍♂️"
-            else -> "Ready for another day of progress? Let's crush your goals! 🚀"
+                "\"Consistency is the key to a healthy lifestyle. Stay active and keep moving!\""
+            else -> "\"Ready for another day of progress? Let's crush your goals together!\""
         }
     }
 
