@@ -142,14 +142,22 @@ class homepage : AppCompatActivity() {
                 val userDataResult = authHelper.getUserData(userId)
                 userDataResult.onSuccess { userData ->
                     userName = userData["name"] as? String ?: "User"
-                    tvUserName.text = "${getGreeting()}, $userName!"
+                    tvUserName.text = "Hello, $userName!"
                 }
 
                 val goalsResult = authHelper.getUserGoal(userId)
                 goalsResult.onSuccess { goal ->
                     goalType = goal["goalType"] as? String ?: "Stay Healthy"
                     tvGoalType.text = "Your Goal: $goalType"
-                    tvCoachMessage.text = getCoachMessage(goalType)
+                    
+                    val greeting = getGreeting()
+                    val emoji = when(greeting) {
+                        "Good Morning" -> "☀️"
+                        "Good Afternoon" -> "🌟"
+                        else -> "🌙"
+                    }
+                    
+                    tvCoachMessage.text = "${greeting.lowercase()} $userName! $emoji\nStay consistent with your logging to reach your $goalType goal!"
                 }
 
             } catch (e: Exception) { }
@@ -165,17 +173,6 @@ class homepage : AppCompatActivity() {
         }
     }
 
-    private fun getCoachMessage(goal: String): String {
-        return when {
-            goal.contains("Weight Loss", ignoreCase = true) -> 
-                "\"Great start to the week! Remember to hydrate and stay active. You're doing amazing!\""
-            goal.contains("Muscle", ignoreCase = true) || goal.contains("Gain", ignoreCase = true) -> 
-                "\"Focus on your protein intake today for better recovery! Consistent effort pays off.\""
-            goal.contains("Maintenance", ignoreCase = true) || goal.contains("Healthy", ignoreCase = true) -> 
-                "\"Consistency is the key to a healthy lifestyle. Stay active and keep moving!\""
-            else -> "\"Ready for another day of progress? Let's crush your goals together!\""
-        }
-    }
 
     private fun displayWorkoutStatus() {
         val db = com.google.firebase.database.FirebaseDatabase.getInstance("https://swasthyamitra-c0899-default-rtdb.asia-southeast1.firebasedatabase.app").reference
