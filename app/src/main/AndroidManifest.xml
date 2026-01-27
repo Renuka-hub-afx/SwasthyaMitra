@@ -8,10 +8,7 @@
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-<<<<<<< HEAD
-=======
     <uses-permission android:name="android.permission.ACTIVITY_RECOGNITION" />
->>>>>>> shruti
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
@@ -36,7 +33,6 @@
             android:exported="false" />
 
         <activity
-<<<<<<< HEAD
             android:name=".AISmartDietActivity"
             android:exported="false"
             android:screenOrientation="portrait" />
@@ -70,23 +66,8 @@
 
         <activity
             android:name=".JoinChallengeActivity"
-=======
-            android:name=".WorkoutDashboardActivity"
->>>>>>> shruti
             android:exported="false"
-            android:hardwareAccelerated="true" />
-
-        <activity
-            android:name=".GamificationActivity"
-            android:exported="false" />
-
-        <activity
-            android:name=".InsightsActivity"
-            android:exported="false" />
-
-        <activity
-            android:name=".SafetyActivity"
-            android:exported="false" />
+            android:screenOrientation="portrait" />
 
         <activity
             android:name=".CoachActivity"
@@ -111,11 +92,6 @@
             android:exported="false"
             android:screenOrientation="portrait" />
 
-<<<<<<< HEAD
-
-
-=======
->>>>>>> shruti
         <activity
             android:name=".BarcodeScannerActivity"
             android:exported="false"
@@ -147,22 +123,12 @@
             android:exported="false" />
 
         <activity
-            android:name=".StreakDetailsActivity"
-            android:exported="false"
-            android:screenOrientation="portrait" />
-
-        <activity
-            android:name=".ChallengeSetupActivity"
-            android:exported="false"
-            android:screenOrientation="portrait" />
-
-        <activity
             android:name=".ActiveDuelActivity"
             android:exported="false"
             android:screenOrientation="portrait" />
-            
+
         <activity
-            android:name=".JoinChallengeActivity"
+            android:name=".MealPlanActivity"
             android:exported="false"
             android:screenOrientation="portrait" />
 
@@ -175,8 +141,6 @@
             </intent-filter>
         </activity>
 
-<<<<<<< HEAD
-=======
         <activity
             android:name=".ChallengeAcceptActivity"
             android:exported="true"
@@ -201,7 +165,6 @@
             </intent-filter>
         </activity>
 
->>>>>>> shruti
         <service
             android:name=".services.SafetyMonitorService"
             android:enabled="true"

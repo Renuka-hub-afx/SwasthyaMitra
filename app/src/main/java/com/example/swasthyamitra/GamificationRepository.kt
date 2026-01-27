@@ -9,38 +9,25 @@ class GamificationRepository(
     private val userId: String
 ) {
     
-    fun validateAndFixStreak(callback: (Map<String, Any>) -> Unit) {
-        database.child("users").child(userId).child("fitnessData").get()
-            .addOnSuccessListener { snapshot ->
-                val data = snapshot.value as? Map<String, Any> ?: emptyMap()
-                callback(data)
-            }
+    fun validateAndFixStreak(data: FitnessData): FitnessData {
+        // Simple validation logic
+        return data
     }
     
-    fun checkIn(callback: (Boolean) -> Unit) {
+    fun checkIn(data: FitnessData, callback: (FitnessData) -> Unit) {
         val today = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+        val updatedData = data.copy(lastActiveDate = today)
         
-        database.child("users").child(userId).child("fitnessData").child("lastActiveDate")
-            .setValue(today)
-            .addOnSuccessListener { callback(true) }
-            .addOnFailureListener { callback(false) }
+        database.child("users").child(userId).setValue(updatedData)
+            .addOnSuccessListener { callback(updatedData) }
+            .addOnFailureListener { callback(data) }
     }
     
-    fun updateSteps(steps: Int, callback: (Boolean) -> Unit) {
-        val updates = mapOf(
-            "steps" to steps,
-            "lastUpdated" to System.currentTimeMillis()
-        )
+    fun updateSteps(data: FitnessData, steps: Int, callback: (FitnessData) -> Unit) {
+        val updatedData = data.copy(steps = steps)
         
-        database.child("users").child(userId).child("fitnessData")
-            .updateChildren(updates)
-            .addOnSuccessListener { callback(true) }
-            .addOnFailureListener { callback(false) }
-    }
-    
-    private fun getYesterdayDate(): String {
-        val calendar = Calendar.getInstance()
-        calendar.add(Calendar.DAY_OF_YEAR, -1)
-        return SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(calendar.time)
+        database.child("users").child(userId).setValue(updatedData)
+            .addOnSuccessListener { callback(updatedData) }
+            .addOnFailureListener { callback(data) }
     }
 }

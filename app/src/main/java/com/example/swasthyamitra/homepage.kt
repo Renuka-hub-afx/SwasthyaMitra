@@ -2,10 +2,7 @@ package com.example.swasthyamitra
 
 import android.content.Intent
 import android.os.Bundle
-<<<<<<< HEAD
-=======
 import android.view.View
->>>>>>> shruti
 import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.TextView
@@ -111,34 +108,21 @@ class homepage : AppCompatActivity() {
         menuProfile.setOnClickListener {
             startActivity(Intent(this, ProfileActivity::class.java))
         }
-    }
-
-<<<<<<< HEAD
-        cardFood.setOnClickListener {
-            // Navigate to Food Log Activity
-            val intent = Intent(this, FoodLogActivity::class.java)
-            startActivity(intent)
-        }
-
-        cardWorkout.setOnClickListener {
-            Toast.makeText(this, "Workout - Coming Soon!", Toast.LENGTH_SHORT).show()
-        }
-
-
 
         // Setup AI Diet Button
         val cardAiDiet: MaterialButton = findViewById(R.id.card_ai_diet)
         cardAiDiet.setOnClickListener {
             val intent = Intent(this, AISmartDietActivity::class.java)
             startActivity(intent)
-=======
+        }
+    }
+
     override fun onResume() {
         super.onResume()
         if (userId.isNotEmpty()) {
             displayTodayCalories()
             displayNutritionBreakdown()
             displayWorkoutStatus()
->>>>>>> shruti
         }
     }
 
