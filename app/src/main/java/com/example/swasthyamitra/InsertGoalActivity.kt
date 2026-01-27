@@ -42,7 +42,10 @@ class InsertGoalActivity : AppCompatActivity() {
         binding.cardWeightLoss.setOnClickListener { highlightCard(binding.cardWeightLoss, "Lose Weight") }
         binding.cardMaintain.setOnClickListener { highlightCard(binding.cardMaintain, "Maintain Weight") }
         binding.cardWeightGain.setOnClickListener { highlightCard(binding.cardWeightGain, "Gain Muscle") }
-        binding.cardNoGoal.setOnClickListener { highlightCard(binding.cardNoGoal, "General Health") }
+        binding.cardNoGoal.setOnClickListener {
+            val intent = Intent(this, MitraPlayActivity::class.java)
+            startActivity(intent)
+        }
 
         binding.btnNext.setOnClickListener {
             if (selectedGoalType.isEmpty()) {
@@ -55,7 +58,7 @@ class InsertGoalActivity : AppCompatActivity() {
 
     private fun highlightCard(selectedCard: MaterialCardView, goalType: String) {
         selectedGoalType = goalType
-        val cards = listOf(binding.cardWeightLoss, binding.cardMaintain, binding.cardWeightGain, binding.cardNoGoal)
+        val cards = listOf(binding.cardWeightLoss, binding.cardMaintain, binding.cardWeightGain)
 
         for (card in cards) {
             card.setCardBackgroundColor(Color.WHITE)
