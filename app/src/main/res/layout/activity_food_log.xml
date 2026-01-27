@@ -38,7 +38,7 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:fontFamily="@font/source_serif_pro_bold"
+
                     android:gravity="center"
                     android:text="Food Diary"
                     android:textColor="#FFFFFF"
@@ -57,7 +57,7 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
                 android:layout_marginTop="8dp"
-                android:fontFamily="@font/source_serif_pro_regular"
+
                 android:text="Today"
                 android:textColor="#FFFFFF"
                 android:textSize="14sp" />
@@ -82,7 +82,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:fontFamily="@font/source_serif_pro_bold"
+
                     android:text="Today's Nutrition"
                     android:textColor="#333333"
                     android:textSize="16sp"
@@ -106,7 +106,7 @@
                             android:id="@+id/tv_total_calories"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:fontFamily="@font/source_serif_pro_bold"
+
                             android:text="0"
                             android:textColor="#E91E63"
                             android:textSize="24sp"
@@ -115,7 +115,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:fontFamily="@font/source_serif_pro_regular"
+
                             android:text="Calories"
                             android:textColor="#666666"
                             android:textSize="11sp" />
@@ -133,7 +133,7 @@
                             android:id="@+id/tv_total_protein"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:fontFamily="@font/source_serif_pro_bold"
+
                             android:text="0g"
                             android:textColor="#FF5722"
                             android:textSize="20sp"
@@ -142,7 +142,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:fontFamily="@font/source_serif_pro_regular"
+
                             android:text="Protein"
                             android:textColor="#666666"
                             android:textSize="11sp" />
@@ -160,7 +160,7 @@
                             android:id="@+id/tv_total_carbs"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:fontFamily="@font/source_serif_pro_bold"
+
                             android:text="0g"
                             android:textColor="#2196F3"
                             android:textSize="20sp"
@@ -169,7 +169,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:fontFamily="@font/source_serif_pro_regular"
+
                             android:text="Carbs"
                             android:textColor="#666666"
                             android:textSize="11sp" />
@@ -187,7 +187,7 @@
                             android:id="@+id/tv_total_fat"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:fontFamily="@font/source_serif_pro_bold"
+
                             android:text="0g"
                             android:textColor="#FFC107"
                             android:textSize="20sp"
@@ -196,7 +196,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:fontFamily="@font/source_serif_pro_regular"
+
                             android:text="Fat"
                             android:textColor="#666666"
                             android:textSize="11sp" />
@@ -216,7 +216,7 @@
             android:layout_marginStart="16dp"
             android:layout_marginTop="8dp"
             android:layout_marginBottom="8dp"
-            android:fontFamily="@font/source_serif_pro_bold"
+
             android:text="Food History"
             android:textColor="#333333"
             android:textSize="16sp"
@@ -241,7 +241,7 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
                 android:drawablePadding="16dp"
-                android:fontFamily="@font/source_serif_pro_regular"
+
                 android:gravity="center"
                 android:text="No food logged today\n\nTap + to add your first meal"
                 android:textColor="#999999"

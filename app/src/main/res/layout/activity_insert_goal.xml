@@ -19,7 +19,7 @@
             android:text="Choose Your Mission"
             android:textColor="#333333"
             android:textSize="28sp"
-            android:fontFamily="@font/source_serif_pro_bold"
+
             android:textStyle="bold"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
@@ -32,7 +32,7 @@
             android:text="Select a goal to personalize your plan."
             android:textColor="#333333"
             android:textSize="16sp"
-            android:fontFamily="@font/source_serif_pro_bold"
+
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/tv_title" />
 
@@ -75,7 +75,7 @@
                         android:text="Lose Weight"
                         android:textColor="#333333"
                         android:textSize="18sp"
-                        android:fontFamily="@font/source_serif_pro_bold"
+
                         android:textStyle="bold" />
 
                     <TextView
@@ -83,7 +83,7 @@
                         android:layout_height="wrap_content"
                         android:text="Burn fat &amp; get lean"
                         android:textColor="#757575"
-                        android:fontFamily="@font/source_serif_pro_bold"
+
                         android:textSize="14sp" />
                 </LinearLayout>
             </LinearLayout>
@@ -128,7 +128,7 @@
                         android:text="Maintain Weight"
                         android:textColor="#333333"
                         android:textSize="18sp"
-                        android:fontFamily="@font/source_serif_pro_bold"
+
                         android:textStyle="bold" />
 
                     <TextView
@@ -136,7 +136,7 @@
                         android:layout_height="wrap_content"
                         android:text="Stay fit &amp; healthy"
                         android:textColor="#757575"
-                        android:fontFamily="@font/source_serif_pro_bold"
+
                         android:textSize="14sp" />
                 </LinearLayout>
             </LinearLayout>
@@ -181,7 +181,7 @@
                         android:text="Gain Muscle"
                         android:textColor="#333333"
                         android:textSize="18sp"
-                        android:fontFamily="@font/source_serif_pro_bold"
+
                         android:textStyle="bold" />
 
                     <TextView
@@ -189,7 +189,7 @@
                         android:layout_height="wrap_content"
                         android:text="Build strength &amp; mass"
                         android:textColor="#757575"
-                        android:fontFamily="@font/source_serif_pro_bold"
+
                         android:textSize="14sp" />
                 </LinearLayout>
             </LinearLayout>
@@ -234,7 +234,7 @@
                         android:text="No Specific Goal"
                         android:textColor="#333333"
                         android:textSize="18sp"
-                        android:fontFamily="@font/source_serif_pro_bold"
+
                         android:textStyle="bold" />
 
                     <TextView
@@ -242,7 +242,7 @@
                         android:layout_height="wrap_content"
                         android:text="Just play &amp; explore"
                         android:textColor="#757575"
-                        android:fontFamily="@font/source_serif_pro_bold"
+
                         android:textSize="14sp" />
                 </LinearLayout>
             </LinearLayout>
@@ -254,7 +254,7 @@
             android:layout_height="60dp"
             android:layout_marginTop="40dp"
             android:background="@drawable/button_background"
-            android:fontFamily="@font/source_serif_pro_bold"
+
             android:text="START MY JOURNEY"
             android:textAllCaps="false"
             android:textColor="@android:color/white"

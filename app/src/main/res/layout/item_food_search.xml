@@ -20,7 +20,7 @@
             android:layout_height="wrap_content"
             android:text="Food Name"
             android:textSize="18sp"
-            android:fontFamily="@font/source_serif_pro_bold"
+
             android:textColor="#7B2CBF"
             android:maxLines="2"
             android:ellipsize="end" />
@@ -31,7 +31,7 @@
             android:layout_height="wrap_content"
             android:text="Category"
             android:textSize="12sp"
-            android:fontFamily="@font/source_serif_pro_regular"
+
             android:textColor="#999999"
             android:layout_marginTop="4dp" />
 
@@ -54,7 +54,7 @@
                     android:layout_height="wrap_content"
                     android:text="0"
                     android:textSize="16sp"
-                    android:fontFamily="@font/source_serif_pro_bold"
+
                     android:textColor="#E91E63" />
 
                 <TextView
@@ -62,7 +62,7 @@
                     android:layout_height="wrap_content"
                     android:text="Calories"
                     android:textSize="10sp"
-                    android:fontFamily="@font/source_serif_pro_regular"
+
                     android:textColor="#666666" />
             </LinearLayout>
 
@@ -79,7 +79,7 @@
                     android:layout_height="wrap_content"
                     android:text="0"
                     android:textSize="16sp"
-                    android:fontFamily="@font/source_serif_pro_bold"
+
                     android:textColor="#FF0000" />
 
                 <TextView
@@ -87,7 +87,7 @@
                     android:layout_height="wrap_content"
                     android:text="Protein"
                     android:textSize="10sp"
-                    android:fontFamily="@font/source_serif_pro_regular"
+
                     android:textColor="#666666" />
             </LinearLayout>
 
@@ -104,7 +104,7 @@
                     android:layout_height="wrap_content"
                     android:text="0"
                     android:textSize="16sp"
-                    android:fontFamily="@font/source_serif_pro_bold"
+
                     android:textColor="#0000FF" />
 
                 <TextView
@@ -112,7 +112,7 @@
                     android:layout_height="wrap_content"
                     android:text="Carbs"
                     android:textSize="10sp"
-                    android:fontFamily="@font/source_serif_pro_regular"
+
                     android:textColor="#666666" />
             </LinearLayout>
 
@@ -129,7 +129,7 @@
                     android:layout_height="wrap_content"
                     android:text="0"
                     android:textSize="16sp"
-                    android:fontFamily="@font/source_serif_pro_bold"
+
                     android:textColor="#FFA500" />
 
                 <TextView
@@ -137,7 +137,7 @@
                     android:layout_height="wrap_content"
                     android:text="Fat"
                     android:textSize="10sp"
-                    android:fontFamily="@font/source_serif_pro_regular"
+
                     android:textColor="#666666" />
             </LinearLayout>
         </LinearLayout>
@@ -148,7 +148,7 @@
             android:layout_height="wrap_content"
             android:text="Serving: 100g"
             android:textSize="12sp"
-            android:fontFamily="@font/source_serif_pro_regular"
+
             android:textColor="#666666"
             android:layout_marginTop="8dp" />
 

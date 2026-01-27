@@ -479,6 +479,7 @@
 
         </LinearLayout>
 
+<<<<<<< HEAD
 
 
         <!-- AI Smart Diet Button -->
@@ -496,6 +497,9 @@
             android:textStyle="bold"
             app:backgroundTint="@null"
             app:cornerRadius="4dp" />
+=======
+        <!-- Meal Plan Button -->
+>>>>>>> shruti
 
     </LinearLayout>
 

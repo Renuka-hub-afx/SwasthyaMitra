@@ -403,7 +403,40 @@ class FirebaseAuthHelper(private val context: Context) {
         }
     }
     
-    // Get total calories for a specific date
+    // Get food logs for a list of dates
+    suspend fun getFoodLogsForDates(userId: String, dates: List<String>): Result<List<FoodLog>> {
+        return try {
+            val querySnapshot = firestore.collection("foodLogs")
+                .whereEqualTo("userId", userId)
+                .whereIn("date", dates)
+                .get()
+                .await()
+            
+            val logs = querySnapshot.documents.mapNotNull { doc ->
+                FoodLog(
+                    logId = doc.id,
+                    userId = doc.getString("userId") ?: "",
+                    foodName = doc.getString("foodName") ?: "",
+                    barcode = doc.getString("barcode"),
+                    photoUrl = doc.getString("photoUrl"),
+                    calories = (doc.getLong("calories") ?: 0).toInt(),
+                    protein = doc.getDouble("protein") ?: 0.0,
+                    carbs = doc.getDouble("carbs") ?: 0.0,
+                    fat = doc.getDouble("fat") ?: 0.0,
+                    servingSize = doc.getString("servingSize") ?: "",
+                    mealType = doc.getString("mealType") ?: "",
+                    timestamp = doc.getLong("timestamp") ?: 0L,
+                    date = doc.getString("date") ?: ""
+                )
+            }
+            
+            Result.success(logs)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    // Get total calories for a specific date (Legacy - used by ProgressActivity)
     suspend fun getDailyCalories(userId: String, date: String): Int {
         return try {
             val logs = firestore.collection("foodLogs")
