@@ -8,6 +8,12 @@
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.SEND_SMS" />
 
     <application
         android:name=".UserApplication"
@@ -29,7 +35,37 @@
             android:exported="false"
             android:screenOrientation="portrait" />
 
+        <activity
+            android:name=".WorkoutDashboardActivity"
+            android:exported="false"
+            android:hardwareAccelerated="true" />
 
+        <activity
+            android:name=".GamificationActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".InsightsActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".SafetyActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".StreakDetailsActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name=".ChallengeSetupActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name=".JoinChallengeActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
 
         <activity
             android:name=".ProgressActivity"
@@ -86,6 +122,12 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <service
+            android:name=".services.SafetyMonitorService"
+            android:enabled="true"
+            android:exported="false"
+            android:foregroundServiceType="location" />
 
     </application>
 

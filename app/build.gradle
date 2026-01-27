@@ -87,6 +87,7 @@ dependencies {
     // Firebase Auth & Firestore (versions managed by BoM)
     implementation 'com.google.firebase:firebase-auth'
     implementation 'com.google.firebase:firebase-firestore'
+    implementation 'com.google.firebase:firebase-database' // Realtime Database
 
     // ✅ Vertex AI for Firebase (Gemini)
     implementation libs.firebase.vertexai
@@ -109,6 +110,9 @@ dependencies {
 
     // Guava (Required by CameraX)
     implementation 'com.google.guava:guava:33.3.0-android'
+
+    // Google Play Services Location (for SafetyMonitorService)
+    implementation 'com.google.android.gms:play-services-location:21.3.0'
 
     // Coroutines & Lifecycle
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2'
