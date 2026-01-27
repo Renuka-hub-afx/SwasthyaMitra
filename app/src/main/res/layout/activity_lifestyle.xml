@@ -20,7 +20,7 @@
             android:text="Almost There!"
             android:textColor="#333333"
             android:textSize="28sp"
-            android:fontFamily="@font/source_serif_pro_bold"
+
             android:textStyle="bold"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
@@ -33,7 +33,7 @@
             android:text="Tell us about your lifestyle"
             android:textColor="#333333"
             android:textSize="16sp"
-            android:fontFamily="@font/source_serif_pro_bold"
+
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/tv_title" />
 
@@ -46,7 +46,7 @@
             android:text="Activity Level"
             android:textColor="#333333"
             android:textSize="18sp"
-            android:fontFamily="@font/source_serif_pro_bold"
+
             android:textStyle="bold"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/tv_subtitle" />
@@ -224,7 +224,7 @@
             android:text="Dietary Preference"
             android:textColor="#333333"
             android:textSize="18sp"
-            android:fontFamily="@font/source_serif_pro_bold"
+
             android:textStyle="bold"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/layout_activity_row2" />
@@ -402,7 +402,7 @@
             android:text="Target Weight (kg)"
             android:textColor="#333333"
             android:textSize="18sp"
-            android:fontFamily="@font/source_serif_pro_bold"
+
             android:textStyle="bold"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/layout_diet_row2" />
@@ -456,7 +456,7 @@
                     android:text="📊 Your Metabolic Profile"
                     android:textColor="#6A1B9A"
                     android:textSize="18sp"
-                    android:fontFamily="@font/source_serif_pro_bold"
+
                     android:textStyle="bold"
                     android:layout_marginBottom="16dp" />
 
@@ -499,7 +499,7 @@
                         android:textColor="#4A148C"
                         android:textSize="24sp"
                         android:textStyle="bold"
-                        android:fontFamily="@font/source_serif_pro_bold" />
+/>
 
                     <TextView
                         android:layout_width="wrap_content"
@@ -556,7 +556,7 @@
                         android:textColor="#4A148C"
                         android:textSize="24sp"
                         android:textStyle="bold"
-                        android:fontFamily="@font/source_serif_pro_bold" />
+/>
 
                     <TextView
                         android:layout_width="wrap_content"
@@ -613,7 +613,7 @@
                         android:textColor="#E91E63"
                         android:textSize="28sp"
                         android:textStyle="bold"
-                        android:fontFamily="@font/source_serif_pro_bold" />
+/>
 
                     <TextView
                         android:layout_width="wrap_content"
@@ -640,7 +640,7 @@
             android:textAllCaps="false"
             android:textColor="@android:color/white"
             android:textSize="20sp"
-            android:fontFamily="@font/source_serif_pro_bold"
+
             android:textStyle="bold"
             app:backgroundTint="@null"
             app:cornerRadius="24dp"

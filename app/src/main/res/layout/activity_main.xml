@@ -23,7 +23,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="28dp"
-        android:fontFamily="@font/source_serif_pro_bold"
+
         android:text="WELCOME\nTO"
         android:textAlignment="center"
         android:textAllCaps="true"
@@ -40,7 +40,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="12dp"
-        android:fontFamily="@font/source_serif_pro_bold"
+
         android:text="SWASTHYAMITRA"
         android:textAllCaps="true"
         android:textColor="@color/text_gradient_end"

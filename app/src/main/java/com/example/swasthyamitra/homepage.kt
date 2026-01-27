@@ -40,7 +40,6 @@ class homepage : AppCompatActivity() {
 
     private lateinit var cardFood: MaterialButton
     private lateinit var cardWorkout: MaterialButton
-    private lateinit var cardMealPlan: MaterialButton
 
     private var goalType: String = ""
     private var userName: String = ""
@@ -78,7 +77,6 @@ class homepage : AppCompatActivity() {
 
         cardFood = findViewById(R.id.card_food)
         cardWorkout = findViewById(R.id.card_workout)
-        cardMealPlan = findViewById(R.id.card_meal_plan)
 
         loadUserData()
 
@@ -97,10 +95,6 @@ class homepage : AppCompatActivity() {
 
         cardFood.setOnClickListener {
             startActivity(Intent(this, FoodLogActivity::class.java))
-        }
-
-        cardMealPlan.setOnClickListener {
-            startActivity(Intent(this, MealPlanActivity::class.java))
         }
         
         menuHome.setOnClickListener {
