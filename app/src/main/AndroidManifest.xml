@@ -8,20 +8,54 @@
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.ACTIVITY_RECOGNITION" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.SEND_SMS" />
 
     <application
         android:name=".UserApplication"
         android:allowBackup="true"
+        android:extractNativeLibs="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.Trial">
+        android:theme="@style/Theme.Trial"
+        android:usesCleartextTraffic="true">
 
         <activity
             android:name=".homepage"
+            android:exported="false" />
+
+        <activity
+            android:name=".WorkoutDashboardActivity"
+            android:exported="false"
+            android:hardwareAccelerated="true" />
+
+        <activity
+            android:name=".GamificationActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".InsightsActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".SafetyActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".CoachActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".ChallengeFriendActivity"
             android:exported="false" />
 
         <activity
@@ -80,6 +114,26 @@
             android:exported="false" />
 
         <activity
+            android:name=".StreakDetailsActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name=".ChallengeSetupActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name=".ActiveDuelActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+            
+        <activity
+            android:name=".JoinChallengeActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+
+        <activity
             android:name=".MainActivity"
             android:exported="true">
             <intent-filter>
@@ -87,6 +141,36 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <activity
+            android:name=".ChallengeAcceptActivity"
+            android:exported="true"
+            android:screenOrientation="portrait">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data
+                    android:host="challenge"
+                    android:pathPrefix="/join"
+                    android:scheme="swasthyamitra" />
+            </intent-filter>
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data
+                    android:host="swasthyamitra.app"
+                    android:pathPrefix="/challenge/join"
+                    android:scheme="https" />
+            </intent-filter>
+        </activity>
+
+        <service
+            android:name=".services.SafetyMonitorService"
+            android:enabled="true"
+            android:exported="false"
+            android:foregroundServiceType="location" />
 
     </application>
 

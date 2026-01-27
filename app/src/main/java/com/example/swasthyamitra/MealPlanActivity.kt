@@ -15,6 +15,9 @@ import com.example.swasthyamitra.recommendation.FoodRecommendationEngine
 import com.example.swasthyamitra.repository.IndianFoodRepository
 import com.google.android.material.card.MaterialCardView
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Locale
 
 class MealPlanActivity : AppCompatActivity() {
 
@@ -62,6 +65,7 @@ class MealPlanActivity : AppCompatActivity() {
 
         initViews()
         setupListeners()
+        setupCalendar()
         loadUserDataAndShowSummary()
     }
 
@@ -92,6 +96,28 @@ class MealPlanActivity : AppCompatActivity() {
             }
         }
         btnGeneratePlan.setOnClickListener { generateMealPlan() }
+    }
+
+    private fun setupCalendar() {
+        val calendar = Calendar.getInstance()
+        // Friday, 23 Jan 2025 as "Today" for this context if needed, 
+        // but normally we use actual today. The user says today is Jan 23, Friday.
+        
+        val dayFormat = SimpleDateFormat("EEE", Locale.getDefault())
+        val dateFormat = SimpleDateFormat("d", Locale.getDefault())
+
+        // We want today to be in the middle (index 3 out of 1-5)
+        calendar.add(Calendar.DAY_OF_YEAR, -2)
+
+        for (i in 1..5) {
+            val dayTvId = resources.getIdentifier("tv_day_$i", "id", packageName)
+            val dateTvId = resources.getIdentifier("tv_date_$i", "id", packageName)
+            
+            findViewById<TextView>(dayTvId)?.text = dayFormat.format(calendar.time).uppercase()
+            findViewById<TextView>(dateTvId)?.text = dateFormat.format(calendar.time)
+            
+            calendar.add(Calendar.DAY_OF_YEAR, 1)
+        }
     }
 
     private fun loadUserDataAndShowSummary() {

@@ -2,7 +2,8 @@ package com.example.swasthyamitra
 
 import android.content.Intent
 import android.os.Bundle
-import android.widget.LinearLayout // Added this import
+import android.view.View
+import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
@@ -16,6 +17,7 @@ import java.util.Calendar
 class homepage : AppCompatActivity() {
 
     private lateinit var authHelper: FirebaseAuthHelper
+    private lateinit var stepManager: StepManager
     private var userId: String = ""
 
     // UI Elements
@@ -32,7 +34,6 @@ class homepage : AppCompatActivity() {
     private lateinit var pbCarbs: ProgressBar
     private lateinit var pbFats: ProgressBar
 
-    // CHANGED: These are LinearLayouts in your XML, not TextViews
     private lateinit var menuHome: LinearLayout
     private lateinit var menuProgress: LinearLayout
     private lateinit var menuProfile: LinearLayout
@@ -48,23 +49,14 @@ class homepage : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_homepage)
 
-        // Validate UserApplication
         val application = application as? UserApplication
         if (application == null) {
-            Toast.makeText(this, "App initialization error", Toast.LENGTH_LONG).show()
             navigateToLogin()
             return
         }
         authHelper = application.authHelper
 
-        // Get and validate User ID from Intent
         userId = intent.getStringExtra("USER_ID") ?: ""
-
-        if (userId.isEmpty()) {
-            Toast.makeText(this, "User ID missing. Please log in again.", Toast.LENGTH_LONG).show()
-            navigateToLogin()
-            return
-        }
 
         // Initialize UI Elements
         tvUserName = findViewById(R.id.tv_user_name)
@@ -80,7 +72,6 @@ class homepage : AppCompatActivity() {
         pbCarbs = findViewById(R.id.pb_carbs)
         pbFats = findViewById(R.id.pb_fats)
 
-        // These will now work correctly because the variable types match the XML types
         menuHome = findViewById(R.id.menu_home)
         menuProgress = findViewById(R.id.menu_progress)
         menuProfile = findViewById(R.id.menu_profile)
@@ -89,169 +80,125 @@ class homepage : AppCompatActivity() {
         cardWorkout = findViewById(R.id.card_workout)
         cardMealPlan = findViewById(R.id.card_meal_plan)
 
-        // Load User Data
         loadUserData()
 
-        // Set Click Listeners for Menu
+        // Initialize Step Tracking
+        stepManager = StepManager(this) { steps, _ ->
+            runOnUiThread {
+                tvSteps.text = steps.toString()
+            }
+        }
+        stepManager.start()
+
+        cardWorkout.setOnClickListener {
+            val intent = Intent(this, WorkoutDashboardActivity::class.java)
+            startActivity(intent)
+        }
+
+        cardFood.setOnClickListener {
+            startActivity(Intent(this, FoodLogActivity::class.java))
+        }
+
+        cardMealPlan.setOnClickListener {
+            startActivity(Intent(this, MealPlanActivity::class.java))
+        }
+        
         menuHome.setOnClickListener {
             Toast.makeText(this, "You are on Home", Toast.LENGTH_SHORT).show()
         }
 
         menuProgress.setOnClickListener {
-            val intent = Intent(this, ProgressActivity::class.java)
-            startActivity(intent)
+            startActivity(Intent(this, ProgressActivity::class.java))
         }
 
         menuProfile.setOnClickListener {
-            val intent = Intent(this, ProfileActivity::class.java)
-            startActivity(intent)
+            startActivity(Intent(this, ProfileActivity::class.java))
         }
+    }
 
-        cardFood.setOnClickListener {
-            // Navigate to Food Log Activity
-            val intent = Intent(this, FoodLogActivity::class.java)
-            startActivity(intent)
-        }
-
-        cardWorkout.setOnClickListener {
-            Toast.makeText(this, "Workout - Coming Soon!", Toast.LENGTH_SHORT).show()
-        }
-
-        cardMealPlan.setOnClickListener {
-            // Navigate to Meal Plan Activity
-            val intent = Intent(this, MealPlanActivity::class.java)
-            startActivity(intent)
+    override fun onResume() {
+        super.onResume()
+        if (userId.isNotEmpty()) {
+            displayTodayCalories()
+            displayNutritionBreakdown()
+            displayWorkoutStatus()
         }
     }
 
     private fun loadUserData() {
         lifecycleScope.launch {
             try {
-                // Fetch user data
                 val userDataResult = authHelper.getUserData(userId)
                 userDataResult.onSuccess { userData ->
                     userName = userData["name"] as? String ?: "User"
                     tvUserName.text = userName
                 }
 
-                // Fetch user goal
                 val goalsResult = authHelper.getUserGoal(userId)
                 goalsResult.onSuccess { goal ->
                     goalType = goal["goalType"] as? String ?: "No Goal Set"
                     tvGoalType.text = "Your Goal: $goalType"
-                }.onFailure {
-                    tvGoalType.text = "Your Goal: --"
                 }
+                
+                tvCoachMessage.text = "Check the Workout tab for your activity recommendations! 🔥"
 
-                // Load today's calories and nutrition
-                displayTodayCalories()
-                displayNutritionBreakdown()
-
-                // Show AI coach message
-                tvCoachMessage.text = generateSmartCoachMessage()
-
-                tvSteps.text = "0"
-                tvWorkouts.text = "0"
-
-            } catch (e: Exception) {
-                Toast.makeText(this@homepage, "Error loading data: ${e.message}", Toast.LENGTH_SHORT).show()
-            }
+            } catch (e: Exception) { }
         }
     }
 
-    private fun generateSmartCoachMessage(): String {
-        val hour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
-        val greeting = when (hour) {
-            in 5..11 -> "Good morning"
-            in 12..16 -> "Good afternoon"
-            in 17..20 -> "Good evening"
-            else -> "Hello"
-        }
-
-        return "$greeting $userName! 🌟\nStay consistent with your logging to reach your $goalType goal!"
+    private fun displayWorkoutStatus() {
+        val db = com.google.firebase.database.FirebaseDatabase.getInstance("https://swasthyamitra-c0899-default-rtdb.asia-southeast1.firebasedatabase.app").reference
+        val today = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault()).format(java.util.Date())
+        
+        db.child("users").child(userId).child("completionHistory").child(today).get()
+            .addOnSuccessListener { snapshot ->
+                if (snapshot.exists() && snapshot.value == true) {
+                    tvWorkouts.text = "1"
+                } else {
+                    tvWorkouts.text = "0"
+                }
+            }
+            .addOnFailureListener {
+                tvWorkouts.text = "0" 
+            }
     }
 
     private fun displayTodayCalories() {
         lifecycleScope.launch {
-            try {
-                val result = authHelper.getTodayCalories(userId)
-                result.onSuccess { calories ->
-                    tvCalories.text = calories.toString()
-                }.onFailure {
-                    tvCalories.text = "0"
-                }
-            } catch (e: Exception) {
-                tvCalories.text = "0"
+            authHelper.getTodayCalories(userId).onSuccess { calories ->
+                tvCalories.text = calories.toString()
             }
         }
     }
 
     private fun displayNutritionBreakdown() {
         lifecycleScope.launch {
-            try {
-                val result = authHelper.getTodayFoodLogs(userId)
-                result.onSuccess { logs ->
-                    if (logs.isNotEmpty()) {
-                        val totalProtein = logs.sumOf { it.protein }
-                        val totalCarbs = logs.sumOf { it.carbs }
-                        val totalFat = logs.sumOf { it.fat }
-
-                        // Set target values (you can adjust these based on user goals)
-                        val proteinTarget = 120
-                        val carbsTarget = 200
-                        val fatsTarget = 65
-
-                        // Update TextViews
-                        tvProteinValue.text = "${totalProtein.toInt()}g / ${proteinTarget}g"
-                        tvCarbsValue.text = "${totalCarbs.toInt()}g / ${carbsTarget}g"
-                        tvFatsValue.text = "${totalFat.toInt()}g / ${fatsTarget}g"
-
-                        // Update ProgressBars
-                        pbProtein.progress = ((totalProtein / proteinTarget) * 100).toInt().coerceIn(0, 100)
-                        pbCarbs.progress = ((totalCarbs / carbsTarget) * 100).toInt().coerceIn(0, 100)
-                        pbFats.progress = ((totalFat / fatsTarget) * 100).toInt().coerceIn(0, 100)
-                    } else {
-                        // Reset to default values when no food logged
-                        tvProteinValue.text = "0g / 120g"
-                        tvCarbsValue.text = "0g / 200g"
-                        tvFatsValue.text = "0g / 65g"
-                        pbProtein.progress = 0
-                        pbCarbs.progress = 0
-                        pbFats.progress = 0
-                    }
-                }.onFailure {
-                    // Reset on failure
-                    tvProteinValue.text = "0g / 120g"
-                    tvCarbsValue.text = "0g / 200g"
-                    tvFatsValue.text = "0g / 65g"
-                    pbProtein.progress = 0
-                    pbCarbs.progress = 0
-                    pbFats.progress = 0
+            authHelper.getTodayFoodLogs(userId).onSuccess { logs ->
+                if (logs.isNotEmpty()) {
+                    val totalProtein = logs.sumOf { it.protein }
+                    val totalCarbs = logs.sumOf { it.carbs }
+                    val totalFat = logs.sumOf { it.fat }
+                    
+                    tvProteinValue.text = "${totalProtein.toInt()}g / 120g"
+                    tvCarbsValue.text = "${totalCarbs.toInt()}g / 200g"
+                    tvFatsValue.text = "${totalFat.toInt()}g / 65g"
+                    
+                    pbProtein.progress = ((totalProtein / 120) * 100).toInt().coerceIn(0, 100)
+                    pbCarbs.progress = ((totalCarbs / 200) * 100).toInt().coerceIn(0, 100)
+                    pbFats.progress = ((totalFat / 65) * 100).toInt().coerceIn(0, 100)
                 }
-            } catch (e: Exception) {
-                // Reset on exception
-                tvProteinValue.text = "0g / 120g"
-                tvCarbsValue.text = "0g / 200g"
-                tvFatsValue.text = "0g / 65g"
-                pbProtein.progress = 0
-                pbCarbs.progress = 0
-                pbFats.progress = 0
             }
         }
     }
 
-    private fun handleLogout() {
-        authHelper.signOut()
-
-        // Clear SharedPreferences
-        val sharedPreferences = getSharedPreferences("UserPreferences", MODE_PRIVATE)
-        sharedPreferences.edit().clear().apply()
-
-        navigateToLogin()
+    override fun onDestroy() {
+        super.onDestroy()
+        if (::stepManager.isInitialized) {
+            stepManager.stop()
+        }
     }
 
     private fun navigateToLogin() {
-        // Navigate to Login
         val intent = Intent(this, LoginActivity::class.java)
         intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         startActivity(intent)

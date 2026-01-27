@@ -1,0 +1,300 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@drawable/background_main">
+
+    <!-- Standard Gradient Header -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/button_background"
+        android:elevation="4dp"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <ImageButton
+                android:id="@+id/btnBack"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:src="@drawable/ic_back_arrow"
+                app:tint="#FFFFFF"
+                android:scaleType="centerInside"
+                android:padding="8dp"/>
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:text="Leaderboard &amp; Levels"
+                android:textColor="#FFFFFF"
+                android:textSize="20sp"
+                android:textStyle="bold" />
+
+            <View
+                android:layout_width="40dp"
+                android:layout_height="40dp" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/tvLevelName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginTop="8dp"
+            android:text="Level 1 Explorer"
+            android:textColor="#EFEFEF"
+            android:textSize="14sp" 
+            android:textStyle="bold"/>
+            
+        <ProgressBar
+            android:id="@+id/xpProgress"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="160dp"
+            android:layout_height="4dp"
+            android:layout_marginTop="8dp"
+            android:layout_gravity="center"
+            android:progress="30"
+            android:progressTint="#FFFFFF"
+            android:progressBackgroundTint="#80FFFFFF"/>
+
+    </LinearLayout>
+    
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scrollbars="none">
+
+        <!-- Main Content -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <!-- Comeback Bonus Animation Placeholder -->
+             <FrameLayout
+                android:id="@+id/comebackBonusContainer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:visibility="gone"
+                android:layout_marginBottom="16dp">
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="🔥 Comeback Bonus Active!"
+                    android:textColor="#FF9800"
+                    android:gravity="center"
+                    android:padding="12dp"
+                    android:background="@drawable/shape_edit_text_bg"
+                    android:backgroundTint="#FFF3E0"
+                    android:textStyle="bold"/>
+            </FrameLayout>
+
+            <!-- Steps Card (Hero) -->
+            <androidx.cardview.widget.CardView
+                android:id="@+id/cvLevel"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardCornerRadius="20dp"
+                app:cardElevation="4dp"
+                android:layout_marginBottom="20dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="24dp"
+                    android:gravity="center"
+                    android:background="@android:color/white">
+
+                    <TextView
+                        android:id="@+id/tvStepMain"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="0"
+                        android:textColor="#7B2CBF"
+                        android:textSize="56sp"
+                        android:textStyle="bold"/>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="STEPS TODAY"
+                        android:textColor="#666666"
+                        android:textSize="12sp"
+                        android:letterSpacing="0.2"/>
+
+                    <ProgressBar
+                        android:id="@+id/stepProgressBar"
+                        style="?android:attr/progressBarStyleHorizontal"
+                        android:layout_width="match_parent"
+                        android:layout_height="8dp"
+                        android:layout_marginTop="20dp"
+                        android:max="5000"
+                        android:progress="0"
+                        android:progressTint="#7B2CBF"
+                        android:progressBackgroundTint="#E0E0E0"/>
+
+                    <TextView
+                         android:id="@+id/tvSteps"
+                         android:layout_width="wrap_content"
+                         android:layout_height="wrap_content"
+                         android:text="0/5000" 
+                         android:textSize="12sp"
+                         android:textColor="#999999"
+                         android:layout_marginTop="4dp"/>
+
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <!-- Streak Calendar Container (Now White Card) -->
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="2dp"
+                android:layout_marginBottom="20dp">
+                
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:background="@android:color/white"
+                    android:padding="16dp">
+                    
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Activity History"
+                        android:textSize="14sp"
+                        android:textColor="#333333"
+                        android:textStyle="bold"
+                        android:layout_marginBottom="12dp"/>
+
+                    <LinearLayout
+                        android:id="@+id/streakCalendarContainer"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center"
+                        android:weightSum="7">
+                        <!-- Day views will be added dynamically -->
+                    </LinearLayout>
+                    
+                     <TextView
+                        android:id="@+id/tvStreakMessage"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Keep the fire burning! 🔥"
+                        android:textColor="#FF9800"
+                        android:gravity="center"
+                        android:layout_marginTop="12dp"
+                        android:textSize="14sp"
+                        android:textStyle="bold"/>
+                        
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <!-- Stats Grid -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginBottom="24dp"
+                android:weightSum="2">
+
+                <!-- Streak Card -->
+                <androidx.cardview.widget.CardView
+                    android:id="@+id/cvStreak"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginEnd="8dp"
+                    app:cardCornerRadius="16dp"
+                    app:cardElevation="2dp">
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="20dp"
+                        android:gravity="center"
+                        android:background="@android:color/white">
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="🔥 Streak"
+                            android:textColor="#FF9800"
+                            android:textStyle="bold"/>
+                        <TextView
+                            android:id="@+id/tvStreakValue"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="0 days"
+                            android:textSize="20sp"
+                            android:textColor="#333333"
+                            android:textStyle="bold"
+                            android:layout_marginTop="4dp"/>
+                    </LinearLayout>
+                </androidx.cardview.widget.CardView>
+
+                <!-- Shield Card -->
+                <androidx.cardview.widget.CardView
+                    android:id="@+id/cvShield"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginStart="8dp"
+                    app:cardCornerRadius="16dp"
+                    app:cardElevation="2dp">
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="20dp"
+                        android:gravity="center"
+                        android:background="@android:color/white">
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="🛡️ Shields"
+                            android:textColor="#9C27B0"
+                            android:textStyle="bold"/>
+                        <TextView
+                            android:id="@+id/tvShieldValue"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="0"
+                            android:textSize="20sp"
+                            android:textColor="#333333"
+                            android:textStyle="bold"
+                            android:layout_marginTop="4dp"/>
+                    </LinearLayout>
+                </androidx.cardview.widget.CardView>
+            </LinearLayout>
+
+            <Button
+                android:id="@+id/navProgress"
+                android:layout_width="match_parent"
+                android:layout_height="60dp"
+                android:layout_marginTop="24dp"
+                android:text="⚔️ Challenge a Friend"
+                android:textColor="#FFFFFF"
+                android:backgroundTint="#9C27B0"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                app:cornerRadius="12dp"/>
+
+        </LinearLayout>
+    </ScrollView>
+</LinearLayout>

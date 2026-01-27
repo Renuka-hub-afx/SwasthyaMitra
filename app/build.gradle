@@ -35,19 +35,11 @@ android {
         viewBinding true
     }
 
-    // ✅ CORRECT way to reduce size & fix native libs
-    splits {
-        abi {
-            enable true
-            reset()
-            include "armeabi-v7a", "arm64-v8a"
-            universalApk false
-        }
-    }
-
+    // ✅ Removed splits to let AGP handle universal APK naturally
+    
     packaging {
         jniLibs {
-            useLegacyPackaging = false
+            useLegacyPackaging = true
         }
         resources {
             excludes += [
@@ -74,6 +66,11 @@ android {
 }
 
 dependencies {
+    implementation libs.firebase.database
+    implementation libs.mp.android.chart
+    implementation libs.play.services.location
+
+
 
     // AndroidX
     implementation 'androidx.core:core-ktx:1.17.0'
@@ -103,6 +100,7 @@ dependencies {
 
     // Coroutines
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2'
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.10.2'
 
     // Lifecycle
     implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.10.0'

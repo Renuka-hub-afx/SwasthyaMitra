@@ -67,12 +67,14 @@
                 android:layout_marginBottom="20dp">
 
                 <LinearLayout
+                    android:id="@+id/calendar_container"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal">
 
                     <!-- Date 1 -->
                     <LinearLayout
+                        android:id="@+id/day_container_1"
                         android:layout_width="60dp"
                         android:layout_height="80dp"
                         android:orientation="vertical"
@@ -83,6 +85,7 @@
                         android:padding="8dp">
 
                         <TextView
+                            android:id="@+id/tv_day_1"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="SAT"
@@ -90,6 +93,7 @@
                             android:textColor="#999999" />
 
                         <TextView
+                            android:id="@+id/tv_date_1"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="22"
@@ -101,6 +105,7 @@
 
                     <!-- Date 2 -->
                     <LinearLayout
+                        android:id="@+id/day_container_2"
                         android:layout_width="60dp"
                         android:layout_height="80dp"
                         android:orientation="vertical"
@@ -111,6 +116,7 @@
                         android:padding="8dp">
 
                         <TextView
+                            android:id="@+id/tv_day_2"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="SUN"
@@ -118,6 +124,7 @@
                             android:textColor="#999999" />
 
                         <TextView
+                            android:id="@+id/tv_date_2"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="23"
@@ -129,7 +136,7 @@
 
                     <!-- Date 3 - Selected (Today) -->
                     <LinearLayout
-                        android:id="@+id/selected_date"
+                        android:id="@+id/day_container_3"
                         android:layout_width="60dp"
                         android:layout_height="80dp"
                         android:orientation="vertical"
@@ -140,6 +147,7 @@
                         android:padding="8dp">
 
                         <TextView
+                            android:id="@+id/tv_day_3"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="MON"
@@ -147,7 +155,7 @@
                             android:textColor="#FFFFFF" />
 
                         <TextView
-                            android:id="@+id/tv_selected_day"
+                            android:id="@+id/tv_date_3"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="24"
@@ -159,6 +167,7 @@
 
                     <!-- Date 4 -->
                     <LinearLayout
+                        android:id="@+id/day_container_4"
                         android:layout_width="60dp"
                         android:layout_height="80dp"
                         android:orientation="vertical"
@@ -169,6 +178,7 @@
                         android:padding="8dp">
 
                         <TextView
+                            android:id="@+id/tv_day_4"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="TUE"
@@ -176,6 +186,7 @@
                             android:textColor="#999999" />
 
                         <TextView
+                            android:id="@+id/tv_date_4"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="25"
@@ -187,6 +198,7 @@
 
                     <!-- Date 5 -->
                     <LinearLayout
+                        android:id="@+id/day_container_5"
                         android:layout_width="60dp"
                         android:layout_height="80dp"
                         android:orientation="vertical"
@@ -196,6 +208,7 @@
                         android:padding="8dp">
 
                         <TextView
+                            android:id="@+id/tv_day_5"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="WED"
@@ -203,6 +216,7 @@
                             android:textColor="#999999" />
 
                         <TextView
+                            android:id="@+id/tv_date_5"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="26"
@@ -388,7 +402,6 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:visibility="gone">
                 android:visibility="gone">
 
                 <!-- Breakfast Card -->
