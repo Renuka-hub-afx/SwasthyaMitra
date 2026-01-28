@@ -1,5 +1,6 @@
 package com.example.swasthyamitra
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import android.widget.Button
@@ -10,14 +11,18 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import com.example.swasthyamitra.adapters.RecommendationAdapter
 import com.example.swasthyamitra.auth.FirebaseAuthHelper
+import com.example.swasthyamitra.models.Recommendation
+import com.example.swasthyamitra.models.SuggestedFood
 import com.example.swasthyamitra.recommendation.FoodRecommendationEngine
 import com.example.swasthyamitra.repository.IndianFoodRepository
+import com.example.swasthyamitra.repository.RecommendationRepository
 import com.google.android.material.card.MaterialCardView
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-import java.text.SimpleDateFormat
-import java.util.Calendar
-import java.util.Locale
 
 class MealPlanActivity : AppCompatActivity() {
 
@@ -40,6 +45,12 @@ class MealPlanActivity : AppCompatActivity() {
     private lateinit var progressBar: ProgressBar
     private lateinit var mealPlanContainer: LinearLayout
     private lateinit var tvTotalSummary: TextView
+
+    // AI Recommendations
+    private lateinit var layoutAIRecommendations: LinearLayout
+    private lateinit var rvRecommendations: RecyclerView
+    private lateinit var recommendationAdapter: RecommendationAdapter
+    private val recommendationRepository = RecommendationRepository()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -65,8 +76,44 @@ class MealPlanActivity : AppCompatActivity() {
 
         initViews()
         setupListeners()
-        setupCalendar()
+        setupDates() // Set up the horizontal calendar with dynamic dates
+        setupRecommendations()
         loadUserDataAndShowSummary()
+    }
+
+    private fun setupDates() {
+        try {
+            val calendar = java.util.Calendar.getInstance()
+            val dateFormat = java.text.SimpleDateFormat("EEE", java.util.Locale.getDefault())
+            val dayFormat = java.text.SimpleDateFormat("d", java.util.Locale.getDefault())
+            
+            // We want to show 5 days: Today-2, Today-1, Today, Today+1, Today+2
+            // Start from 2 days ago
+            calendar.add(java.util.Calendar.DAY_OF_YEAR, -2)
+            
+            // Loop through 5 days
+            for (i in 1..5) {
+                val dayName = dateFormat.format(calendar.time).uppercase()
+                val dayNumber = dayFormat.format(calendar.time)
+                
+                // Find views using the IDs we added
+                val tvDayId = resources.getIdentifier("tv_day_$i", "id", packageName)
+                val tvDateId = resources.getIdentifier("tv_date_$i", "id", packageName)
+                
+                val tvDay = findViewById<TextView>(tvDayId)
+                val tvDate = findViewById<TextView>(tvDateId)
+                
+                if (tvDay != null && tvDate != null) {
+                    tvDay.text = dayName
+                    tvDate.text = dayNumber
+                }
+                
+                // Move to next day
+                calendar.add(java.util.Calendar.DAY_OF_YEAR, 1)
+            }
+        } catch (e: Exception) {
+            e.printStackTrace() // Fallback to hardcoded text in XML if something fails
+        }
     }
 
     private fun initViews() {
@@ -83,6 +130,7 @@ class MealPlanActivity : AppCompatActivity() {
         progressBar = findViewById(R.id.progress_bar)
         mealPlanContainer = findViewById(R.id.meal_plan_container)
         tvTotalSummary = findViewById(R.id.tv_total_summary)
+        // Note: layoutAIRecommendations and rvRecommendations are initialized in setupRecommendations() with null checks
     }
 
     private fun setupListeners() {
@@ -98,25 +146,81 @@ class MealPlanActivity : AppCompatActivity() {
         btnGeneratePlan.setOnClickListener { generateMealPlan() }
     }
 
-    private fun setupCalendar() {
-        val calendar = Calendar.getInstance()
-        // Friday, 23 Jan 2025 as "Today" for this context if needed, 
-        // but normally we use actual today. The user says today is Jan 23, Friday.
-        
-        val dayFormat = SimpleDateFormat("EEE", Locale.getDefault())
-        val dateFormat = SimpleDateFormat("d", Locale.getDefault())
-
-        // We want today to be in the middle (index 3 out of 1-5)
-        calendar.add(Calendar.DAY_OF_YEAR, -2)
-
-        for (i in 1..5) {
-            val dayTvId = resources.getIdentifier("tv_day_$i", "id", packageName)
-            val dateTvId = resources.getIdentifier("tv_date_$i", "id", packageName)
+    private fun setupRecommendations() {
+        try {
+            // Check if views exist
+            val aiLayout = findViewById<LinearLayout?>(R.id.layoutAIRecommendations)
+            val recyclerView = findViewById<RecyclerView?>(R.id.rvRecommendations)
             
-            findViewById<TextView>(dayTvId)?.text = dayFormat.format(calendar.time).uppercase()
-            findViewById<TextView>(dateTvId)?.text = dateFormat.format(calendar.time)
+            if (aiLayout == null || recyclerView == null) {
+                // Views not found, skip recommendation setup
+                return
+            }
             
-            calendar.add(Calendar.DAY_OF_YEAR, 1)
+            layoutAIRecommendations = aiLayout
+            rvRecommendations = recyclerView
+            
+            // Initialize adapter with callbacks for accept/dismiss
+            recommendationAdapter = RecommendationAdapter(
+                onAcceptClicked = { recommendation, selectedFood ->
+                    handleAcceptRecommendation(recommendation, selectedFood)
+                },
+                onDismissClicked = { recommendation ->
+                    handleDismissRecommendation(recommendation)
+                }
+            )
+
+            rvRecommendations.apply {
+                layoutManager = LinearLayoutManager(this@MealPlanActivity)
+                adapter = recommendationAdapter
+            }
+
+            // Observe recommendations from Firestore
+            lifecycleScope.launch {
+                try {
+                    recommendationRepository.observeRecommendations().collectLatest { recommendations ->
+                        if (recommendations.isNotEmpty()) {
+                            layoutAIRecommendations.visibility = View.VISIBLE
+                            recommendationAdapter.submitList(recommendations)
+                        } else {
+                            layoutAIRecommendations.visibility = View.GONE
+                        }
+                    }
+                } catch (e: Exception) {
+                    // Silently fail if recommendation loading fails
+                    layoutAIRecommendations.visibility = View.GONE
+                }
+            }
+        } catch (e: Exception) {
+            // Recommendations feature failed, but don't crash the app
+            e.printStackTrace()
+        }
+    }
+
+    private fun handleAcceptRecommendation(recommendation: Recommendation, selectedFood: SuggestedFood?) {
+        lifecycleScope.launch {
+            val success = recommendationRepository.acceptRecommendation(recommendation.documentId)
+            if (success) {
+                recommendationAdapter.removeItem(recommendation)
+                Toast.makeText(this@MealPlanActivity, "Great choice! \"${selectedFood?.name ?: "Meal"}\" noted.", Toast.LENGTH_SHORT).show()
+                
+                // Navigate to FoodLogActivity to log the food
+                if (selectedFood != null) {
+                    val intent = Intent(this@MealPlanActivity, FoodLogActivity::class.java)
+                    intent.putExtra("SUGGESTED_FOOD_NAME", selectedFood.name)
+                    intent.putExtra("SUGGESTED_FOOD_CALORIES", selectedFood.calories)
+                    startActivity(intent)
+                }
+            }
+        }
+    }
+
+    private fun handleDismissRecommendation(recommendation: Recommendation) {
+        lifecycleScope.launch {
+            val success = recommendationRepository.dismissRecommendation(recommendation.documentId)
+            if (success) {
+                recommendationAdapter.removeItem(recommendation)
+            }
         }
     }
 
@@ -188,10 +292,14 @@ class MealPlanActivity : AppCompatActivity() {
                 btnGeneratePlan.isEnabled = false
 
                 // Load food database
+                android.util.Log.d("MealPlan", "Loading food database...")
                 foodRepository.loadFoodDatabase()
                 val allFoods = foodRepository.getAllFoods()
+                
+                android.util.Log.d("MealPlan", "Loaded ${allFoods.size} foods")
 
                 if (allFoods.isEmpty()) {
+                    android.util.Log.e("MealPlan", "Food database is empty!")
                     Toast.makeText(this@MealPlanActivity, "No food data available", Toast.LENGTH_SHORT).show()
                     progressBar.visibility = View.GONE
                     btnGeneratePlan.isEnabled = true
@@ -204,6 +312,9 @@ class MealPlanActivity : AppCompatActivity() {
 
                 userDataResult.onSuccess { userData ->
                     goalResult.onSuccess { goal ->
+                        android.util.Log.d("MealPlan", "User data: $userData")
+                        android.util.Log.d("MealPlan", "Goal data: $goal")
+                        
                         val profile = FoodRecommendationEngine.UserProfile(
                             weight = (userData["weight"] as? Number)?.toDouble() ?: 70.0,
                             height = (userData["height"] as? Number)?.toDouble() ?: 170.0,
@@ -217,7 +328,13 @@ class MealPlanActivity : AppCompatActivity() {
                         // Generate meal plan
                         val mealPlan = recommendationEngine.generateMealPlan(profile, allFoods)
                         displayMealPlan(mealPlan)
+                    }.onFailure { 
+                        android.util.Log.e("MealPlan", "Goal fetch failed: ${it.message}")
+                        Toast.makeText(this@MealPlanActivity, "Please complete your goal setup", Toast.LENGTH_SHORT).show()
                     }
+                }.onFailure {
+                    android.util.Log.e("MealPlan", "User data fetch failed: ${it.message}")
+                    Toast.makeText(this@MealPlanActivity, "Could not load user data", Toast.LENGTH_SHORT).show()
                 }
 
                 progressBar.visibility = View.GONE
@@ -328,5 +445,84 @@ class MealPlanActivity : AppCompatActivity() {
             
             🎯 You're on track to meet your daily nutrition goals!
         """.trimIndent()
+
+        // --- Quick Log Button Click Handlers ---
+        
+        // Breakfast '+' button
+        findViewById<ImageView>(R.id.btn_add_breakfast).setOnClickListener {
+            mealPlan.breakfast.firstOrNull()?.let { food ->
+                quickLogFood(food, "Breakfast")
+            }
+        }
+
+        // Morning Snack '+' button
+        findViewById<ImageView>(R.id.btn_add_morning_snack).setOnClickListener {
+            mealPlan.morningSnack.firstOrNull()?.let { food ->
+                quickLogFood(food, "Snack")
+            }
+        }
+
+        // Lunch '+' button
+        findViewById<ImageView>(R.id.btn_add_lunch).setOnClickListener {
+            mealPlan.lunch.firstOrNull()?.let { food ->
+                quickLogFood(food, "Lunch")
+            }
+        }
+
+        // Evening Snack '+' button
+        findViewById<ImageView>(R.id.btn_add_evening_snack).setOnClickListener {
+            mealPlan.eveningSnack.firstOrNull()?.let { food ->
+                quickLogFood(food, "Snack")
+            }
+        }
+
+        // Dinner '+' button
+        findViewById<ImageView>(R.id.btn_add_dinner).setOnClickListener {
+            mealPlan.dinner.firstOrNull()?.let { food ->
+                quickLogFood(food, "Dinner")
+            }
+        }
+    }
+
+    private fun quickLogFood(food: FoodRecommendationEngine.FoodRecommendation, mealType: String) {
+        if (userId.isEmpty()) {
+            Toast.makeText(this, "Please log in first", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        progressBar.visibility = View.VISIBLE
+        
+        lifecycleScope.launch {
+            try {
+                val dateFormat = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
+                val foodLog = com.example.swasthyamitra.models.FoodLog(
+                    logId = "",
+                    userId = userId,
+                    foodName = food.foodName,
+                    calories = food.calories,
+                    protein = food.protein,
+                    carbs = food.carbs,
+                    fat = food.fat,
+                    servingSize = food.servingSize,
+                    mealType = mealType,
+                    timestamp = System.currentTimeMillis(),
+                    date = dateFormat.format(java.util.Date())
+                )
+
+                val result = authHelper.logFood(foodLog)
+                
+                result.onSuccess {
+                    Toast.makeText(this@MealPlanActivity, "✅ Added ${food.foodName} to $mealType!", Toast.LENGTH_SHORT).show()
+                }
+                result.onFailure { e ->
+                    Toast.makeText(this@MealPlanActivity, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
+                }
+
+                progressBar.visibility = View.GONE
+            } catch (e: Exception) {
+                progressBar.visibility = View.GONE
+                Toast.makeText(this@MealPlanActivity, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+        }
     }
 }

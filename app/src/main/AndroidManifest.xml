@@ -19,7 +19,6 @@
     <application
         android:name=".UserApplication"
         android:allowBackup="true"
-        android:extractNativeLibs="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
         android:icon="@mipmap/ic_launcher"
@@ -32,6 +31,11 @@
         <activity
             android:name=".homepage"
             android:exported="false" />
+
+        <activity
+            android:name=".AISmartDietActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
 
         <activity
             android:name=".WorkoutDashboardActivity"
@@ -51,17 +55,25 @@
             android:exported="false" />
 
         <activity
+            android:name=".StreakDetailsActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name=".ChallengeSetupActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name=".JoinChallengeActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+
+        <activity
             android:name=".CoachActivity"
             android:exported="false" />
 
-        <activity
-            android:name=".ChallengeFriendActivity"
-            android:exported="false" />
 
-        <activity
-            android:name=".DietRecommendationActivity"
-            android:exported="false"
-            android:screenOrientation="portrait" />
 
         <activity
             android:name=".ProgressActivity"
@@ -75,11 +87,6 @@
 
         <activity
             android:name=".FoodLogActivity"
-            android:exported="false"
-            android:screenOrientation="portrait" />
-
-        <activity
-            android:name=".MealPlanActivity"
             android:exported="false"
             android:screenOrientation="portrait" />
 
@@ -114,22 +121,12 @@
             android:exported="false" />
 
         <activity
-            android:name=".StreakDetailsActivity"
-            android:exported="false"
-            android:screenOrientation="portrait" />
-
-        <activity
-            android:name=".ChallengeSetupActivity"
-            android:exported="false"
-            android:screenOrientation="portrait" />
-
-        <activity
             android:name=".ActiveDuelActivity"
             android:exported="false"
             android:screenOrientation="portrait" />
-            
+
         <activity
-            android:name=".JoinChallengeActivity"
+            android:name=".MealPlanActivity"
             android:exported="false"
             android:screenOrientation="portrait" />
 

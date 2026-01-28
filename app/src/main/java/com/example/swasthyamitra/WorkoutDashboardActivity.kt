@@ -27,7 +27,6 @@ class WorkoutDashboardActivity : AppCompatActivity() {
     private lateinit var tvCalorieStatus: TextView
     private lateinit var cvVideoRecommendation: CardView
     private lateinit var tvVideoTitle: TextView
-    private lateinit var tvVideoExplanation: TextView
     private lateinit var btnBackWorkout: View 
 
     private lateinit var llVideoListContainer: android.widget.LinearLayout
@@ -257,14 +256,13 @@ class WorkoutDashboardActivity : AppCompatActivity() {
                 val itemView = inflater.inflate(R.layout.item_workout_video_card, llVideoListContainer, false)
                 
                 val tvTitle = itemView.findViewById<TextView>(R.id.tvVideoTitle)
-                val tvExp = itemView.findViewById<TextView>(R.id.tvVideoExplanation)
                 val tvType = itemView.findViewById<TextView>(R.id.tvObjType)
                 val tvDur = itemView.findViewById<TextView>(R.id.tvDuration)
                 val btnStart = itemView.findViewById<Button>(R.id.btnStartWorkout)
                 val btnComplete = itemView.findViewById<Button>(R.id.btnCompleteWorkout)
                 
                 tvTitle.text = video.title
-                tvExp.text = video.explanation
+                // explanation removed
                 tvType.text = video.category.uppercase()
                 tvDur.text = "• ${video.durationMinutes} min"
                 

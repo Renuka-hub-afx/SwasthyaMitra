@@ -29,7 +29,7 @@
                     android:id="@+id/tv_food_name"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:fontFamily="@font/source_serif_pro_bold"
+
                     android:text="Food Name"
                     android:textColor="#333333"
                     android:textSize="16sp"
@@ -40,7 +40,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="4dp"
-                    android:fontFamily="@font/source_serif_pro_regular"
+
                     android:text="🌅 Breakfast"
                     android:textColor="#7B2CBF"
                     android:textSize="13sp" />
@@ -57,7 +57,7 @@
                     android:id="@+id/tv_calories"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:fontFamily="@font/source_serif_pro_bold"
+
                     android:text="250 kcal"
                     android:textColor="#E91E63"
                     android:textSize="16sp"
@@ -68,7 +68,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="4dp"
-                    android:fontFamily="@font/source_serif_pro_regular"
+
                     android:text="08:30 AM"
                     android:textColor="#999999"
                     android:textSize="12sp" />
@@ -87,7 +87,7 @@
             android:id="@+id/tv_macros"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:fontFamily="@font/source_serif_pro_regular"
+
             android:text="P: 15g  C: 30g  F: 8g"
             android:textColor="#666666"
             android:textSize="13sp" />

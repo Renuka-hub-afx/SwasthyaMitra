@@ -3,10 +3,10 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginHorizontal="4dp"
     android:layout_marginBottom="12dp"
     app:cardCornerRadius="12dp"
-    app:cardElevation="3dp">
+    android:foreground="?android:attr/selectableItemBackground"
+    app:cardElevation="4dp">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -14,76 +14,58 @@
         android:orientation="vertical"
         android:padding="16dp">
 
-        <LinearLayout
+        <TextView
+            android:id="@+id/tvVideoTitle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical">
-            
-            <TextView
-                android:id="@+id/tvVideoTitle"
-                android:layout_width="0dp"
-                android:layout_weight="1"
-                android:layout_height="wrap_content"
-                android:text="Full Body HIIT"
-                android:textSize="18sp"
-                android:textStyle="bold"
-                android:textColor="#333333"/>
-                
-             <TextView
-                android:id="@+id/tvObjType"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="CARDIO"
-                android:textSize="11sp"
-                android:textStyle="bold"
-                android:textColor="#7B2CBF"
-                android:background="@drawable/shape_edit_text_bg"
-                android:paddingHorizontal="8dp"
-                android:paddingVertical="4dp"/>
-        </LinearLayout>
+            android:text="Video Title"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:textColor="#333333"
+            android:layout_marginBottom="4dp"/>
+
+        <TextView
+            android:id="@+id/tvObjType"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="CARDIO"
+            android:textStyle="bold"
+            android:textSize="12sp"
+            android:textColor="#7B2CBF"
+            android:background="#1A7B2CBF"
+            android:paddingHorizontal="8dp"
+            android:paddingVertical="4dp"
+            android:layout_marginBottom="8dp"/>
 
         <TextView
             android:id="@+id/tvDuration"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="• 20 min"
-            android:textSize="12sp"
-            android:textColor="#757575"
-            android:layout_marginTop="4dp"/>
-
-        <TextView
-            android:id="@+id/tvVideoExplanation"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="A high intensity workout to burn calories fast."
-            android:textColor="#555555"
-            android:layout_marginTop="8dp"
-            android:textSize="14sp"/>
+            android:text="10 min"
+            android:textColor="#666666"
+            android:layout_marginBottom="16dp"/>
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:layout_marginTop="16dp">
+            android:gravity="end">
 
             <Button
                 android:id="@+id/btnStartWorkout"
-                android:layout_width="0dp"
-                android:layout_weight="1"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Start ▶"
-                android:backgroundTint="#4CAF50"
+                android:text="Start"
                 android:textColor="#FFFFFF"
+                android:backgroundTint="#7B2CBF"
                 android:layout_marginEnd="8dp"/>
 
             <Button
                 android:id="@+id/btnCompleteWorkout"
-                android:layout_width="0dp"
-                android:layout_weight="1"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Complete"
-                android:backgroundTint="#2196F3"
+                android:backgroundTint="#4CAF50"
                 android:textColor="#FFFFFF"/>
         </LinearLayout>
 

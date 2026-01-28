@@ -40,7 +40,8 @@ class homepage : AppCompatActivity() {
 
     private lateinit var cardFood: MaterialButton
     private lateinit var cardWorkout: MaterialButton
-    private lateinit var cardMealPlan: MaterialButton
+
+    private lateinit var tvDate: TextView
 
     private var goalType: String = ""
     private var userName: String = ""
@@ -59,6 +60,7 @@ class homepage : AppCompatActivity() {
         userId = intent.getStringExtra("USER_ID") ?: ""
 
         // Initialize UI Elements
+        tvDate = findViewById(R.id.tv_date)
         tvUserName = findViewById(R.id.tv_user_name)
         tvGoalType = findViewById(R.id.tv_goal_type)
         tvCalories = findViewById(R.id.tv_calories)
@@ -78,8 +80,8 @@ class homepage : AppCompatActivity() {
 
         cardFood = findViewById(R.id.card_food)
         cardWorkout = findViewById(R.id.card_workout)
-        cardMealPlan = findViewById(R.id.card_meal_plan)
 
+        updateDateDisplay()
         loadUserData()
 
         // Initialize Step Tracking
@@ -98,10 +100,6 @@ class homepage : AppCompatActivity() {
         cardFood.setOnClickListener {
             startActivity(Intent(this, FoodLogActivity::class.java))
         }
-
-        cardMealPlan.setOnClickListener {
-            startActivity(Intent(this, MealPlanActivity::class.java))
-        }
         
         menuHome.setOnClickListener {
             Toast.makeText(this, "You are on Home", Toast.LENGTH_SHORT).show()
@@ -114,6 +112,19 @@ class homepage : AppCompatActivity() {
         menuProfile.setOnClickListener {
             startActivity(Intent(this, ProfileActivity::class.java))
         }
+
+        // Setup AI Diet Button
+        val cardAiDiet: MaterialButton = findViewById(R.id.card_ai_diet)
+        cardAiDiet.setOnClickListener {
+            val intent = Intent(this, AISmartDietActivity::class.java)
+            startActivity(intent)
+        }
+    }
+
+    private fun updateDateDisplay() {
+        val calendar = Calendar.getInstance()
+        val dateFormat = java.text.SimpleDateFormat("EEEE, MMM dd", java.util.Locale.getDefault())
+        tvDate.text = dateFormat.format(calendar.time)
     }
 
     override fun onResume() {
@@ -131,20 +142,37 @@ class homepage : AppCompatActivity() {
                 val userDataResult = authHelper.getUserData(userId)
                 userDataResult.onSuccess { userData ->
                     userName = userData["name"] as? String ?: "User"
-                    tvUserName.text = userName
+                    tvUserName.text = "Hello, $userName!"
                 }
 
                 val goalsResult = authHelper.getUserGoal(userId)
                 goalsResult.onSuccess { goal ->
-                    goalType = goal["goalType"] as? String ?: "No Goal Set"
+                    goalType = goal["goalType"] as? String ?: "Stay Healthy"
                     tvGoalType.text = "Your Goal: $goalType"
+                    
+                    val greeting = getGreeting()
+                    val emoji = when(greeting) {
+                        "Good Morning" -> "☀️"
+                        "Good Afternoon" -> "🌟"
+                        else -> "🌙"
+                    }
+                    
+                    tvCoachMessage.text = "${greeting.lowercase()} $userName! $emoji\nStay consistent with your logging to reach your $goalType goal!"
                 }
-                
-                tvCoachMessage.text = "Check the Workout tab for your activity recommendations! 🔥"
 
             } catch (e: Exception) { }
         }
     }
+
+    private fun getGreeting(): String {
+        val hour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
+        return when (hour) {
+            in 0..11 -> "Good Morning"
+            in 12..16 -> "Good Afternoon"
+            else -> "Good Evening"
+        }
+    }
+
 
     private fun displayWorkoutStatus() {
         val db = com.google.firebase.database.FirebaseDatabase.getInstance("https://swasthyamitra-c0899-default-rtdb.asia-southeast1.firebasedatabase.app").reference

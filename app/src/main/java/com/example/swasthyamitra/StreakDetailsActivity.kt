@@ -1,168 +1,148 @@
 package com.example.swasthyamitra
 
+import android.graphics.Color
+import android.graphics.Typeface
+import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
-import android.widget.Button
+import android.util.TypedValue
+import android.view.Gravity
+import android.widget.GridLayout
 import android.widget.TextView
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Date
+import java.util.Locale
 
 class StreakDetailsActivity : AppCompatActivity() {
 
-    private lateinit var tvTitle: TextView
-    private lateinit var scrollView: android.widget.ScrollView
-    
-    // Containers
-    private lateinit var llShieldSection: android.widget.LinearLayout
-    private lateinit var llStreakHistoryPlaceholder: android.widget.LinearLayout
-    
     private lateinit var tvCurrentStreak: TextView
-    private lateinit var tvAvailableXP: TextView
-    private lateinit var btnBuyFreeze: Button
-    private lateinit var btnBuyRepair: Button
-    
-    private var currentData: FitnessData? = null
+    private lateinit var tvMonthYear: TextView
+    private lateinit var calendarGrid: GridLayout
+    private var fitnessData: FitnessData? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_streak_details)
+        
+        // Retrieve Data
+        fitnessData = intent.getSerializableExtra("FITNESS_DATA") as? FitnessData
 
-        currentData = intent.getSerializableExtra("FITNESS_DATA") as? FitnessData
-        val viewMode = intent.getStringExtra("VIEW_MODE") ?: "STREAK"
+        val btnBack = findViewById<android.view.View>(R.id.btnBack)
+        btnBack.setOnClickListener {
+            finish()
+        }
         
         initViews()
-        updateUI()
-        setupListeners()
-        
-        handleViewMode(viewMode)
+        setupUI()
     }
 
     private fun initViews() {
-        tvTitle = findViewById(R.id.tvTitle)
         tvCurrentStreak = findViewById(R.id.tvCurrentStreak)
-        tvAvailableXP = findViewById(R.id.tvAvailableXP)
-        btnBuyFreeze = findViewById(R.id.btnBuyFreeze)
-        btnBuyRepair = findViewById(R.id.btnBuyRepair)
-        scrollView = findViewById(R.id.scrollView)
-        
-        llShieldSection = findViewById(R.id.llShieldSection)
-        llStreakHistoryPlaceholder = findViewById(R.id.llStreakHistoryPlaceholder)
-
-        findViewById<android.view.View>(R.id.btnBack).setOnClickListener {
-            finish()
-        }
-    }
-    
-    private fun handleViewMode(mode: String) {
-        if (mode == "SHIELD") {
-            tvTitle.text = "Shield Store 🛡️"
-            llShieldSection.visibility = android.view.View.VISIBLE
-            llStreakHistoryPlaceholder.visibility = android.view.View.GONE
-        } else {
-             tvTitle.text = "Streak Details 🔥"
-             llShieldSection.visibility = android.view.View.GONE
-             llStreakHistoryPlaceholder.visibility = android.view.View.VISIBLE
-        }
+        tvMonthYear = findViewById(R.id.tvMonthYear)
+        calendarGrid = findViewById(R.id.calendarGrid)
     }
 
-    private fun updateUI() {
-        val data = currentData ?: FitnessData()
-        tvCurrentStreak.text = "${data.streak} days"
-        tvAvailableXP.text = "${data.xp} XP"
+    private fun setupUI() {
+        val streak = fitnessData?.streak ?: 0
+        tvCurrentStreak.text = "$streak Days"
         
-        generateCalendar(data)
+        generateCalendarForCurrentMonth()
     }
 
-    private fun generateCalendar(data: FitnessData) {
-        val calendarGrid = findViewById<android.widget.GridLayout>(R.id.calendarGrid)
-        val tvCalendarMonth = findViewById<TextView>(R.id.tvCalendarMonth)
-        
+    private fun generateCalendarForCurrentMonth() {
         calendarGrid.removeAllViews()
+
+        val calendar = Calendar.getInstance()
+        // Set to first day of the month
+        calendar.set(Calendar.DAY_OF_MONTH, 1)
+
+        val currentMonth = calendar.get(Calendar.MONTH)
+        val currentYear = calendar.get(Calendar.YEAR)
         
-        val calendar = java.util.Calendar.getInstance()
-        val currentDay = calendar.get(java.util.Calendar.DAY_OF_MONTH)
-        
-        // Set to first day of month
-        calendar.set(java.util.Calendar.DAY_OF_MONTH, 1)
-        val daysInMonth = calendar.getActualMaximum(java.util.Calendar.DAY_OF_MONTH)
-        val firstDayOfWeek = calendar.get(java.util.Calendar.DAY_OF_WEEK) // Sun=1
-        
-        // Month Title
-        val monthFormat = java.text.SimpleDateFormat("MMMM yyyy", java.util.Locale.getDefault())
-        tvCalendarMonth.text = monthFormat.format(calendar.time)
-        
-        // Empty slots before 1st day
-        for (i in 1 until firstDayOfWeek) {
-            val emptyView = android.view.View(this)
-            val params = android.widget.GridLayout.LayoutParams()
+        // Update Title
+        val monthFormat = SimpleDateFormat("MMMM yyyy", Locale.getDefault())
+        tvMonthYear.text = monthFormat.format(calendar.time)
+
+        // Get day of week for the 1st (Sun=1, Mon=2, ...)
+        val firstDayOfWeek = calendar.get(Calendar.DAY_OF_WEEK)
+        // Offset (if Sun is 1, and we want 0 empty cells before Sun, offset is 0. If Mon=2, offset is 1)
+        val offset = firstDayOfWeek - 1
+
+        val daysInMonth = calendar.getActualMaximum(Calendar.DAY_OF_MONTH)
+
+        // Add empty views for offset
+        for (i in 0 until offset) {
+            val emptyView = TextView(this)
+            val params = GridLayout.LayoutParams()
             params.width = 0
-            params.height = 0
-            params.columnSpec = android.widget.GridLayout.spec(android.widget.GridLayout.UNDEFINED, 1f)
-            calendarGrid.addView(emptyView, params)
+            params.height = GridLayout.LayoutParams.WRAP_CONTENT
+            params.columnSpec = GridLayout.spec(GridLayout.UNDEFINED, 1f)
+            emptyView.layoutParams = params
+            calendarGrid.addView(emptyView)
         }
-        
-        val dateFormat = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
-        
+
+        val todayDateStr = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+        val history = fitnessData?.completionHistory ?: emptyMap()
+
+        // Generate Day Views
         for (day in 1..daysInMonth) {
-            calendar.set(java.util.Calendar.DAY_OF_MONTH, day)
-            val dateString = dateFormat.format(calendar.time)
-            val isCompleted = data.completionHistory[dateString] == true
-            val isToday = day == currentDay
+            // Reconstruct full date string for this day
+            calendar.set(Calendar.DAY_OF_MONTH, day)
+            val dateStr = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(calendar.time)
             
-            val dayView = TextView(this)
-            dayView.text = day.toString()
-            dayView.gravity = android.view.Gravity.CENTER
-            dayView.textSize = 14f
-            
-            val params = android.widget.GridLayout.LayoutParams()
-            params.width = 0
-            params.height = 100 // Fixed height for square-ish look
-            params.columnSpec = android.widget.GridLayout.spec(android.widget.GridLayout.UNDEFINED, 1f)
-            params.setMargins(4, 4, 4, 4)
-            dayView.layoutParams = params
-            
-            // Styling
-            val shape = android.graphics.drawable.GradientDrawable()
-            shape.shape = android.graphics.drawable.GradientDrawable.OVAL
-            
-            if (isCompleted) {
-                shape.colors = intArrayOf(0xFF7B2CBF.toInt(), 0xFFE91E63.toInt()) // Button Gradient colors
-                shape.orientation = android.graphics.drawable.GradientDrawable.Orientation.TL_BR
-                dayView.setTextColor(0xFFFFFFFF.toInt())
-                dayView.typeface = android.graphics.Typeface.DEFAULT_BOLD
-                dayView.background = shape
-            } else if (isToday) {
-                shape.setColor(0x00FFFFFF.toInt()) // Transparent
-                shape.setStroke(4, 0xFF7B2CBF.toInt()) // Purple Border
-                dayView.setTextColor(0xFF333333.toInt())
-                dayView.typeface = android.graphics.Typeface.DEFAULT_BOLD
-                dayView.background = shape
-            } else {
-                 dayView.setTextColor(0xFF757575.toInt())
-            }
-            
+            val isCompleted = history[dateStr] == true
+            val isToday = dateStr == todayDateStr
+            // Check if future
+            val isFuture = calendar.time.after(Date()) && !isToday
+
+            val dayView = createDayView(day, isCompleted, isToday, isFuture)
             calendarGrid.addView(dayView)
         }
     }
 
-    private fun setupListeners() {
-        btnBuyFreeze.setOnClickListener {
-             // Mock purchase
-             val cost = 500
-             if ((currentData?.xp ?: 0) >= cost) {
-                 Toast.makeText(this, "Freeze Shield Purchased! 🛡️", Toast.LENGTH_SHORT).show()
-                 // In a real app, we would update Firebase or pass result back
-             } else {
-                 Toast.makeText(this, "Not enough XP! keep walking 🚶", Toast.LENGTH_SHORT).show()
-             }
-        }
+    private fun createDayView(day: Int, isCompleted: Boolean, isToday: Boolean, isFuture: Boolean): TextView {
+        val textView = TextView(this)
+        textView.text = day.toString()
+        textView.gravity = Gravity.CENTER
+        textView.textSize = 14f
+        textView.setTypeface(null, Typeface.BOLD)
 
-        btnBuyRepair.setOnClickListener {
-            val cost = 1000
-             if ((currentData?.xp ?: 0) >= cost) {
-                 Toast.makeText(this, "Repair Shield Purchased! 🔧", Toast.LENGTH_SHORT).show()
-             } else {
-                 Toast.makeText(this, "Not enough XP! Need more sweating 💦", Toast.LENGTH_SHORT).show()
-             }
+        // Layout Params
+        val size = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 40f, resources.displayMetrics).toInt()
+        val params = GridLayout.LayoutParams()
+        params.width = 0
+        params.height = size
+        params.columnSpec = GridLayout.spec(GridLayout.UNDEFINED, 1f)
+        params.setMargins(8, 8, 8, 8) // Optional margins
+        textView.layoutParams = params
+
+        // Background
+        val shape = GradientDrawable()
+        shape.shape = GradientDrawable.OVAL
+
+        when {
+            isToday -> {
+                shape.setColor(Color.parseColor("#7B2CBF")) // Purple
+                textView.setTextColor(Color.WHITE)
+            }
+            isCompleted -> {
+                shape.setColor(Color.parseColor("#FFD700")) // Gold
+                textView.setTextColor(Color.BLACK)
+            }
+            isFuture -> {
+                shape.setColor(Color.TRANSPARENT)
+                textView.setTextColor(Color.parseColor("#CCCCCC")) // Greyed out text
+            }
+            else -> {
+                // Past but not completed
+                shape.setColor(Color.parseColor("#F0F0F0")) // Light Grey
+                textView.setTextColor(Color.DKGRAY)
+            }
         }
+        
+        textView.background = shape
+
+        return textView
     }
 }

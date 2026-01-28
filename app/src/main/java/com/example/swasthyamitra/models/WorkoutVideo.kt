@@ -5,5 +5,4 @@ data class WorkoutVideo(
     val title: String,
     val category: String,
     val durationMinutes: Int,
-    val explanation: String
 )

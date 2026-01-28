@@ -1,17 +1,18 @@
 package com.example.swasthyamitra
 
 data class FitnessData(
-    val steps: Int = 0,
+    val userId: String = "",
+    val lastActiveDate: String = "",
     val streak: Int = 0,
     val shields: Int = 0,
+    val steps: Int = 0,
     val xp: Int = 0,
     val level: Int = 1,
-    val lastActiveDate: String = "",
-    val completionHistory: Map<String, Boolean> = HashMap(), // Date (YYYY-MM-DD) -> Completed
-    val lastStreakBreakDate: String = "", // To track for comeback bonus
+    val lastStreakBreakDate: String = "",
+    val completionHistory: Map<String, Boolean> = emptyMap(),
     val activeShields: List<ShieldInstance> = emptyList(),
     val totalWorkoutMinutes: Int = 0,
-    val workoutHistory: Map<String, WorkoutSession> = HashMap() // UUID -> Session
+    val workoutHistory: Map<String, WorkoutSession> = emptyMap()
 ) : java.io.Serializable
 
 data class WorkoutSession(
@@ -21,5 +22,7 @@ data class WorkoutSession(
     val videoId: String = "",
     val duration: Int = 0,
     val completed: Boolean = false,
-    val timestamp: Long = 0L
+    val timestamp: Long = 0L,
+    val caloriesBurned: Int = 0,
+    val type: String = ""
 ) : java.io.Serializable

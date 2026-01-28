@@ -134,8 +134,9 @@
                 android:text="Start Run"
                 android:textSize="18sp"
                 android:textStyle="bold"
-                android:backgroundTint="#4CAF50"
-                android:textColor="@android:color/white"
+                app:backgroundTint="@null"
+                android:background="@drawable/button_background"
+                android:textColor="#FFFFFF"
                 android:layout_marginBottom="24dp"
                 app:cornerRadius="12dp"/>
 
@@ -146,8 +147,9 @@
                 android:text="HOLD FOR SOS 🆘"
                 android:textSize="20sp"
                 android:textStyle="bold"
-                android:backgroundTint="#D32F2F"
-                android:textColor="@android:color/white"
+                app:backgroundTint="@null"
+                android:background="@drawable/button_background"
+                android:textColor="#FFFFFF"
                 app:cornerRadius="12dp"/>
                 
         </LinearLayout>

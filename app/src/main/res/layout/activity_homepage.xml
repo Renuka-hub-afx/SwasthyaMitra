@@ -479,6 +479,23 @@
 
         </LinearLayout>
 
+
+        <!-- AI Smart Diet Button -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/card_ai_diet"
+            style="@style/Widget.MaterialComponents.Button.UnelevatedButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="8dp"
+            android:background="@drawable/button_background"
+            android:text="🤖 GENERATE AI DIET PLAN"
+            android:textColor="#FFFFFF"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            app:backgroundTint="@null"
+            app:cornerRadius="4dp" />
+
         <!-- Meal Plan Button -->
         <com.google.android.material.button.MaterialButton
             android:id="@+id/card_meal_plan"
@@ -487,9 +504,9 @@
             android:layout_height="wrap_content"
             android:layout_marginBottom="20dp"
             android:background="@drawable/button_background"
-            android:text="📋 MY PERSONALIZED MEAL PLAN"
+            android:text="📅 VIEW MEAL PLAN"
             android:textColor="#FFFFFF"
-            android:textSize="16sp"
+            android:textSize="14sp"
             android:textStyle="bold"
             app:backgroundTint="@null"
             app:cornerRadius="4dp" />

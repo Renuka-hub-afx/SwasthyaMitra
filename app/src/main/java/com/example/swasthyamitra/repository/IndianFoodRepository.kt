@@ -2,130 +2,122 @@ package com.example.swasthyamitra.repository
 
 import android.content.Context
 import com.example.swasthyamitra.models.IndianFood
-import org.apache.poi.ss.usermodel.WorkbookFactory
-import java.io.InputStream
+import org.json.JSONArray
+import java.io.BufferedReader
+import java.io.InputStreamReader
+import java.util.StringTokenizer
 
 class IndianFoodRepository(private val context: Context) {
-    
-    private var foodDatabase: List<IndianFood> = emptyList()
-    private var isLoaded = false
-    
-    /**
-     * Loads the Indian food nutrition dataset from assets folder
-     * Reads the Excel file and converts it to a list of IndianFood objects
-     */
-    suspend fun loadFoodDatabase() {
-        if (isLoaded) return
+
+    private var foodCache: List<IndianFood> = emptyList()
+    private var isLoading = false
+
+    // Load data from JSON (Blocking or Suspend - keeping it simple for now)
+    fun loadFoodDatabase() {
+        // Recursion Guard: If already loading, stop to prevent StackOverflow
+        if (foodCache.isNotEmpty() || isLoading) return
         
+        isLoading = true
+        val foodList = mutableListOf<IndianFood>()
         try {
-            val inputStream: InputStream = context.assets.open("Indian_Food_Nutrition_Processed.xlsx")
-            val workbook = WorkbookFactory.create(inputStream)
-            val sheet = workbook.getSheetAt(0)
-            
-            val foods = mutableListOf<IndianFood>()
-            
-            // Skip header row (row 0), start from row 1
-            for (rowIndex in 1 until sheet.physicalNumberOfRows) {
-                val row = sheet.getRow(rowIndex) ?: continue
-                
+            // Read food_data.json
+            val inputStream = context.assets.open("food_data.json")
+            val reader = BufferedReader(InputStreamReader(inputStream))
+            val jsonString = reader.use { it.readText() }
+            val jsonArray = JSONArray(jsonString)
+
+            for (i in 0 until jsonArray.length()) {
+                val obj = jsonArray.getJSONObject(i)
                 try {
-                    val foodName = row.getCell(0)?.stringCellValue ?: continue
-                    val servingSize = row.getCell(1)?.stringCellValue ?: "100g"
-                    val calories = row.getCell(2)?.numericCellValue?.toInt() ?: 0
-                    val protein = row.getCell(3)?.numericCellValue ?: 0.0
-                    val carbs = row.getCell(4)?.numericCellValue ?: 0.0
-                    val fat = row.getCell(5)?.numericCellValue ?: 0.0
-                    val fiber = row.getCell(6)?.numericCellValue ?: 0.0
-                    val category = row.getCell(7)?.stringCellValue ?: ""
+                    val name = obj.optString("Food") ?: obj.optString("name") ?: obj.optString("Name")
+                    if (name.isBlank()) continue
+
+                    val calories = obj.optDouble("Calories", 0.0).takeIf { !it.isNaN() } ?: obj.optDouble("cal", 0.0)
+                    val protein = obj.optDouble("Protein", 0.0).takeIf { !it.isNaN() } ?: obj.optDouble("protein", 0.0)
+                    val fat = obj.optDouble("Fat", 0.0).takeIf { !it.isNaN() } ?: obj.optDouble("fat", 0.0)
+                    val carbs = obj.optDouble("Carbs", 0.0).takeIf { !it.isNaN() } ?: obj.optDouble("carbs", 0.0)
+                    val type = obj.optString("DietType") ?: obj.optString("type") ?: "Veg"
                     
-                    foods.add(
-                        IndianFood(
-                            foodName = foodName,
-                            servingSize = servingSize,
-                            calories = calories,
-                            protein = protein,
-                            carbs = carbs,
-                            fat = fat,
-                            fiber = fiber,
-                            category = category
-                        )
-                    )
+                    // Specific fields
+                    val servingSize = obj.optString("ServingSize", "100g")
+                    val category = type // Use diet type as category for now
+
+                    foodList.add(IndianFood(
+                        foodName = name,
+                        calories = calories.toInt(),
+                        protein = protein,
+                        fat = fat,
+                        carbs = carbs,
+                        servingSize = servingSize,
+                        category = category
+                    ))
                 } catch (e: Exception) {
-                    // Skip malformed rows
-                    continue
+                    // Skip bad items
                 }
             }
-            
-            workbook.close()
-            inputStream.close()
-            
-            foodDatabase = foods
-            isLoaded = true
-            
         } catch (e: Exception) {
-            e.printStackTrace()
-            foodDatabase = getDefaultFoodItems()
-            isLoaded = true
+            // JSON Failed or Missing -> Try CSV
+            try {
+                val inputStream = context.assets.open("food_data.csv")
+                val reader = BufferedReader(InputStreamReader(inputStream))
+                
+                // Skip header
+                reader.readLine()
+                
+                reader.forEachLine { line ->
+                    try {
+                        // Simple CSV parser (assumes comma delimiter)
+                        val tokens = line.split(",")
+                        if (tokens.size >= 5) {
+                            val name = tokens[0].trim()
+                            if (name.isNotEmpty()) {
+                                // Fallback parsing
+                                val calories = tokens[1].trim().toDoubleOrNull() ?: 0.0
+                                val protein = tokens[2].trim().toDoubleOrNull() ?: 0.0
+                                val fat = tokens.getOrNull(3)?.trim()?.toDoubleOrNull() ?: 0.0
+                                val carbs = tokens.getOrNull(4)?.trim()?.toDoubleOrNull() ?: 0.0
+                                val type = tokens.getOrNull(5)?.trim() ?: "Veg"
+                                
+                                foodList.add(IndianFood(
+                                    foodName = name,
+                                    calories = calories.toInt(),
+                                    protein = protein,
+                                    fat = fat,
+                                    carbs = carbs,
+                                    servingSize = "100g",
+                                    category = type
+                                ))
+                            }
+                        }
+                    } catch (parseError: Exception) {
+                        // Skip bad line
+                    }
+                }
+            } catch (csvError: Exception) {
+                csvError.printStackTrace()
+                // Both Failed -> Mock
+                foodList.add(IndianFood("MOCK: Add food_data.csv or .json", "100g", 0, 0.0, 0.0, 0.0, 0.0, "Veg"))
+            }
+        } finally {
+            isLoading = false
+        }
+
+        // Assign result
+        if (foodList.isNotEmpty()) {
+            foodCache = foodList
         }
     }
-    
-    /**
-     * Searches for food items matching the query
-     * Uses fuzzy matching to find close matches
-     */
-    fun searchFood(query: String): List<IndianFood> {
-        if (query.isBlank()) return emptyList()
-        
-        val normalizedQuery = query.trim().lowercase()
-        
-        return foodDatabase.filter { food ->
-            food.foodName.lowercase().contains(normalizedQuery)
-        }.sortedBy { food ->
-            // Sort by relevance - exact matches first
-            when {
-                food.foodName.lowercase() == normalizedQuery -> 0
-                food.foodName.lowercase().startsWith(normalizedQuery) -> 1
-                else -> 2
-            }
-        }.take(20) // Limit to top 20 results
-    }
-    
-    /**
-     * Gets a specific food item by exact name
-     */
-    fun getFoodByName(name: String): IndianFood? {
-        return foodDatabase.find { it.foodName.equals(name, ignoreCase = true) }
-    }
-    
-    /**
-     * Returns all food items in the database
-     */
+
     fun getAllFoods(): List<IndianFood> {
-        return foodDatabase
+        if (foodCache.isEmpty() && !isLoading) loadFoodDatabase()
+        return foodCache
     }
-    
-    /**
-     * Returns food items by category
-     */
-    fun getFoodsByCategory(category: String): List<IndianFood> {
-        return foodDatabase.filter { it.category.equals(category, ignoreCase = true) }
-    }
-    
-    /**
-     * Default fallback food items if Excel loading fails
-     */
-    private fun getDefaultFoodItems(): List<IndianFood> {
-        return listOf(
-            IndianFood("Rice", "1 cup (150g)", 205, 4.3, 45.0, 0.4, 0.6, "Grains"),
-            IndianFood("Chapati", "1 piece (40g)", 104, 3.1, 18.0, 2.4, 2.7, "Bread"),
-            IndianFood("Dal", "1 cup (200g)", 198, 14.0, 35.0, 1.0, 15.6, "Legumes"),
-            IndianFood("Paneer", "100g", 265, 18.3, 3.6, 20.8, 0.0, "Dairy"),
-            IndianFood("Chicken Curry", "1 cup (200g)", 189, 28.0, 5.0, 6.0, 1.0, "Meat"),
-            IndianFood("Idli", "1 piece (40g)", 58, 2.0, 12.0, 0.2, 0.4, "Breakfast"),
-            IndianFood("Dosa", "1 piece (120g)", 168, 4.2, 29.0, 3.8, 1.5, "Breakfast"),
-            IndianFood("Sambar", "1 cup (200g)", 82, 4.0, 15.0, 1.0, 5.0, "Curry"),
-            IndianFood("Curd", "1 cup (250g)", 154, 11.0, 17.0, 4.0, 0.0, "Dairy"),
-            IndianFood("Banana", "1 medium (100g)", 89, 1.1, 23.0, 0.3, 2.6, "Fruits")
-        )
+
+    fun searchFood(query: String): List<IndianFood> {
+        if (foodCache.isEmpty() && !isLoading) loadFoodDatabase()
+        
+        return foodCache.filter { 
+            it.foodName.contains(query, ignoreCase = true) 
+        }
     }
 }
