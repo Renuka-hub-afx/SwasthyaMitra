@@ -4,46 +4,41 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="@drawable/background_main"
-    android:padding="16dp">
+    android:background="@drawable/background_main">
 
+    <!-- Header -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@drawable/button_background"
         android:elevation="4dp"
-        android:orientation="vertical"
-        android:padding="16dp">
+        android:orientation="horizontal"
+        android:padding="16dp"
+        android:gravity="center_vertical">
 
-        <LinearLayout
-            android:layout_width="match_parent"
+        <ImageButton
+            android:id="@+id/btnBack"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@drawable/ic_back_arrow"
+            android:contentDescription="Back"
+            app:tint="#FFFFFF" />
+
+        <TextView
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:gravity="center_vertical"
-            android:orientation="horizontal">
+            android:layout_weight="1"
+            android:text="Create Challenge"
+            android:textColor="#FFFFFF"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:gravity="center"/>
 
-            <ImageButton
-                android:id="@+id/btnBack"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:src="@drawable/ic_back_arrow"
-                android:scaleType="centerInside"
-                android:padding="8dp"/>
+        <View
+            android:layout_width="40dp"
+            android:layout_height="40dp" />
 
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:gravity="center"
-                android:text="Create Challenge"
-                android:textColor="#FFFFFF"
-                android:textSize="20sp"
-                android:textStyle="bold" />
-
-            <View
-                android:layout_width="40dp"
-                android:layout_height="40dp" />
-        </LinearLayout>
     </LinearLayout>
 
     <ScrollView
@@ -57,50 +52,37 @@
             android:orientation="vertical"
             android:padding="24dp">
 
-            <com.google.android.material.textfield.TextInputLayout
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Challenge Name"
+                android:textStyle="bold"
+                android:textColor="#333333"
+                android:layout_marginBottom="8dp"/>
+
+            <EditText
+                android:id="@+id/etChallengeName"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="Challenge Name"
-                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-                android:layout_marginBottom="16dp"
-                app:boxStrokeColor="#7B2CBF"
-                app:hintTextColor="#7B2CBF">
+                android:hint="Enter name"
+                android:padding="12dp"
+                android:background="@drawable/shape_edit_text_bg"
+                android:minHeight="48dp"
+                android:layout_marginBottom="24dp"/>
 
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/etChallengeName"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:inputType="text" />
-            </com.google.android.material.textfield.TextInputLayout>
-
-            <com.google.android.material.textfield.TextInputLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:hint="Target Steps"
-                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-                android:layout_marginBottom="32dp"
-                app:boxStrokeColor="#7B2CBF"
-                app:hintTextColor="#7B2CBF">
-
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/etTargetSteps"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:inputType="number" />
-            </com.google.android.material.textfield.TextInputLayout>
+            <!-- Placeholder for other fields if needed, simplified for now -->
 
             <Button
                 android:id="@+id/btnCreateChallenge"
                 android:layout_width="match_parent"
                 android:layout_height="60dp"
                 android:text="Create Challenge"
-                android:textSize="18sp"
                 android:textStyle="bold"
-                android:backgroundTint="#7B2CBF"
-                android:textColor="@android:color/white"
-                app:cornerRadius="12dp" />
+                android:background="@drawable/button_background"
+                app:backgroundTint="@null" 
+                android:textColor="#FFFFFF"
+                app:cornerRadius="12dp"/>
 
         </LinearLayout>
     </ScrollView>
-
 </LinearLayout>

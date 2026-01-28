@@ -5,8 +5,8 @@
     android:layout_height="wrap_content"
     android:layout_marginBottom="12dp"
     app:cardCornerRadius="12dp"
-    app:cardElevation="3dp"
-    app:cardBackgroundColor="#FFFFFF">
+    android:foreground="?android:attr/selectableItemBackground"
+    app:cardElevation="4dp">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -18,52 +18,32 @@
             android:id="@+id/tvVideoTitle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Workout Title"
+            android:text="Video Title"
             android:textSize="18sp"
             android:textStyle="bold"
             android:textColor="#333333"
-            android:layout_marginBottom="4dp" />
+            android:layout_marginBottom="4dp"/>
 
         <TextView
-            android:id="@+id/tvVideoExplanation"
-            android:layout_width="match_parent"
+            android:id="@+id/tvObjType"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Workout explanation"
-            android:textSize="14sp"
+            android:text="CARDIO"
+            android:textStyle="bold"
+            android:textSize="12sp"
+            android:textColor="#7B2CBF"
+            android:background="#1A7B2CBF"
+            android:paddingHorizontal="8dp"
+            android:paddingVertical="4dp"
+            android:layout_marginBottom="8dp"/>
+
+        <TextView
+            android:id="@+id/tvDuration"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="10 min"
             android:textColor="#666666"
-            android:layout_marginBottom="8dp" />
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:layout_marginBottom="12dp">
-
-            <TextView
-                android:id="@+id/tvObjType"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="CARDIO"
-                android:textSize="12sp"
-                android:textStyle="bold"
-                android:textColor="#E91E63"
-                android:background="@drawable/circular_background"
-                android:paddingStart="12dp"
-                android:paddingEnd="12dp"
-                android:paddingTop="4dp"
-                android:paddingBottom="4dp" />
-
-            <TextView
-                android:id="@+id/tvDuration"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="• 15 min"
-                android:textSize="14sp"
-                android:textColor="#666666"
-                android:layout_marginStart="12dp" />
-
-        </LinearLayout>
+            android:layout_marginBottom="16dp"/>
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -76,24 +56,18 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Start"
-                android:textSize="14sp"
-                android:backgroundTint="#7B2CBF"
                 android:textColor="#FFFFFF"
-                android:layout_marginEnd="8dp"
-                app:cornerRadius="8dp" />
+                android:backgroundTint="#7B2CBF"
+                android:layout_marginEnd="8dp"/>
 
             <Button
                 android:id="@+id/btnCompleteWorkout"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Complete"
-                android:textSize="14sp"
                 android:backgroundTint="#4CAF50"
-                android:textColor="#FFFFFF"
-                app:cornerRadius="8dp" />
-
+                android:textColor="#FFFFFF"/>
         </LinearLayout>
 
     </LinearLayout>
-
 </androidx.cardview.widget.CardView>

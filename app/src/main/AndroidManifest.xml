@@ -76,9 +76,7 @@
             android:name=".CoachActivity"
             android:exported="false" />
 
-        <activity
-            android:name=".ChallengeFriendActivity"
-            android:exported="false" />
+
 
         <activity
             android:name=".ProgressActivity"
