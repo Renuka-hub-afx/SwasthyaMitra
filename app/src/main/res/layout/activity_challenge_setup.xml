@@ -96,8 +96,9 @@
                 android:text="Create Challenge"
                 android:textSize="18sp"
                 android:textStyle="bold"
-                android:backgroundTint="#7B2CBF"
-                android:textColor="@android:color/white"
+                app:backgroundTint="@null"
+                android:background="@drawable/button_background"
+                android:textColor="#FFFFFF"
                 app:cornerRadius="12dp" />
 
         </LinearLayout>
