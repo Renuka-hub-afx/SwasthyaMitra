@@ -99,6 +99,14 @@ service cloud.firestore {
       allow delete: if request.auth != null && resource.data.userId == request.auth.uid;
     }
 
+    // Water Logs - Users can only read/write their own logs
+    match /waterLogs/{logId} {
+      allow read: if request.auth != null;
+      allow write, delete: if request.auth != null && 
+        (resource == null || resource.data.userId == request.auth.uid) &&
+        (request.resource == null || request.resource.data.userId == request.auth.uid);
+    }
+
     // User Preferences - users can only access their own preferences
     match /user_preferences/{userId} {
       allow read, write: if request.auth != null && request.auth.uid == userId;

@@ -411,23 +411,100 @@ class AIDietPlanService private constructor(private val context: Context) {
     }
 
     private fun loadFoodSampleFromCsv(preference: String, limit: Int): String {
-        return try {
-            context.assets.open("food_data.csv").use { input ->
-                val reader = BufferedReader(InputStreamReader(input))
-                val allFoods = reader.lineSequence()
-                    .drop(1)
-                    .filter { line ->
-                        if (preference == "Vegetarian") {
-                            !line.contains("Chicken", true) && !line.contains("Mutton", true) && 
-                            !line.contains("Fish", true) && !line.contains("Egg", true)
-                        } else true
+        val files = listOf("food_data.csv", "foods (1).csv", "Indian_Food_DF (2).csv")
+        val samplesPerFile = (limit / files.size).coerceAtLeast(15)
+        val allSamples = mutableListOf<String>()
+
+        files.forEach { fileName ->
+            try {
+                context.assets.open(fileName).use { input ->
+                    val reader = BufferedReader(InputStreamReader(input))
+                    val header = reader.readLine() ?: return@forEach
+                    val columns = parseCsvLine(header)
+                    
+                    val nameIdx = columns.indexOfFirst { it.contains("Name", true) || it.contains("Items", true) || it.equals("name", true) }
+                    val calIdx = columns.indexOfFirst { it.contains("Calories", true) || it.contains("Energy", true) || it.contains("kcal", true) }
+                    val proteinIdx = columns.indexOfFirst { it.contains("Protein", true) || it.contains("nutri_protein", true) }
+
+                    if (nameIdx != -1) {
+                        val foods = reader.lineSequence()
+                            .mapNotNull { line ->
+                                val parts = parseCsvLine(line)
+                                if (parts.size > nameIdx) {
+                                    val rawName = parts[nameIdx].trim().removeSurrounding("\"")
+                                    if (rawName.isEmpty()) return@mapNotNull null
+                                    
+                                    val rawCal = if (calIdx != -1 && parts.size > calIdx) parts[calIdx] else ""
+                                    val rawProtein = if (proteinIdx != -1 && parts.size > proteinIdx) parts[proteinIdx] else ""
+                                    
+                                    val cals = normalizeValue(rawCal, "kcal")
+                                    val protein = normalizeValue(rawProtein, "g")
+                                    
+                                    "$rawName ($cals kcal, $protein protein)"
+                                } else null
+                            }
+                            .filter { line ->
+                                if (preference == "Vegetarian") {
+                                    !line.contains("Chicken", true) && !line.contains("Mutton", true) && 
+                                    !line.contains("Fish", true) && !line.contains("Egg", true) &&
+                                    !line.contains("Beef", true) && !line.contains("Pork", true) &&
+                                    !line.contains("Meat", true)
+                                } else true
+                            }
+                            .toList()
+                        
+                        allSamples.addAll(foods.shuffled().take(samplesPerFile))
                     }
-                    .toList()
-                
-                allFoods.shuffled().take(limit).joinToString("\n")
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Error loading $fileName: ${e.message}")
             }
-        } catch (e: Exception) {
+        }
+
+        return if (allSamples.isEmpty()) {
             "Garam Chai, Poha, Dal Tadka, Roti, Sabzi"
+        } else {
+            allSamples.shuffled().take(limit).joinToString("\n")
+        }
+    }
+
+    private fun parseCsvLine(line: String): List<String> {
+        val result = mutableListOf<String>()
+        val sb = StringBuilder()
+        var inQuotes = false
+        for (c in line) {
+            when {
+                c == '\"' -> inQuotes = !inQuotes
+                c == ',' && !inQuotes -> {
+                    result.add(sb.toString())
+                    sb.setLength(0)
+                }
+                else -> sb.append(c)
+            }
+        }
+        result.add(sb.toString())
+        return result
+    }
+
+    private fun normalizeValue(raw: String, unit: String): String {
+        var clean = raw.trim().removeSurrounding("\"")
+        if (clean.isEmpty()) return "N/A"
+        
+        // Remove thousand separator commas (e.g., "1,200" -> "1200")
+        clean = clean.replace(",", "")
+        
+        if (unit == "kcal") {
+            // Priority: Extract specific kcal unit if present (e.g., "1000 kj (240 kcal)" -> "240")
+            val kcalMatch = Regex("""(\d+(\.\d+)?)\s*kcal""").find(clean)
+            if (kcalMatch != null) return kcalMatch.groupValues[1]
+        }
+        
+        // Fallback: Just find the first numeric value
+        val digitMatch = Regex("""(\d+(\.\d+)?)""").find(clean)
+        return if (digitMatch != null) {
+            digitMatch.groupValues[1]
+        } else {
+            "N/A"
         }
     }
 

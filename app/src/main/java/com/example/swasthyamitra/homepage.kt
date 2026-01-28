@@ -40,11 +40,15 @@ class homepage : AppCompatActivity() {
 
     private lateinit var cardFood: MaterialButton
     private lateinit var cardWorkout: MaterialButton
+    private lateinit var cardWater: MaterialButton
 
+    private lateinit var tvWaterTotal: TextView
+    private lateinit var cardWaterSummary: View
     private lateinit var tvDate: TextView
 
     private var goalType: String = ""
     private var userName: String = ""
+    private val hydrationRepo = com.example.swasthyamitra.data.repository.HydrationRepository()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -80,6 +84,9 @@ class homepage : AppCompatActivity() {
 
         cardFood = findViewById(R.id.card_food)
         cardWorkout = findViewById(R.id.card_workout)
+        cardWater = findViewById(R.id.card_water)
+        cardWaterSummary = findViewById(R.id.card_water_summary)
+        tvWaterTotal = findViewById(R.id.tv_water_total)
 
         updateDateDisplay()
         loadUserData()
@@ -100,6 +107,14 @@ class homepage : AppCompatActivity() {
         cardFood.setOnClickListener {
             startActivity(Intent(this, FoodLogActivity::class.java))
         }
+
+        cardWater.setOnClickListener {
+            val intent = Intent(this, com.example.swasthyamitra.ui.hydration.HydrationActivity::class.java)
+            intent.putExtra("USER_ID", userId)
+            startActivity(intent)
+        }
+
+
         
         menuHome.setOnClickListener {
             Toast.makeText(this, "You are on Home", Toast.LENGTH_SHORT).show()
@@ -121,6 +136,32 @@ class homepage : AppCompatActivity() {
         }
     }
 
+    private fun showCustomWaterAddDialog() {
+        val builder = android.app.AlertDialog.Builder(this)
+        builder.setTitle("Add Water (ml)")
+        
+        val input = android.widget.EditText(this)
+        input.inputType = android.text.InputType.TYPE_CLASS_NUMBER
+        input.hint = "Enter amount in ml"
+        builder.setView(input)
+        
+        builder.setPositiveButton("Add") { _, _ ->
+            val amount = input.text.toString().toIntOrNull() ?: 0
+            if (amount > 0) {
+                 lifecycleScope.launch {
+                    hydrationRepo.addWaterLog(userId, amount).onSuccess {
+                        Toast.makeText(this@homepage, "Added $amount ml", Toast.LENGTH_SHORT).show()
+                         displayWaterStatus() // Update the display immediately
+                    }.onFailure {
+                        Toast.makeText(this@homepage, "Failed to add water", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
+        }
+        builder.setNegativeButton("Cancel") { dialog, _ -> dialog.cancel() }
+        builder.show()
+    }
+
     private fun updateDateDisplay() {
         val calendar = Calendar.getInstance()
         val dateFormat = java.text.SimpleDateFormat("EEEE, MMM dd", java.util.Locale.getDefault())
@@ -133,6 +174,7 @@ class homepage : AppCompatActivity() {
             displayTodayCalories()
             displayNutritionBreakdown()
             displayWorkoutStatus()
+            displayWaterStatus()
         }
     }
 
@@ -195,6 +237,24 @@ class homepage : AppCompatActivity() {
         lifecycleScope.launch {
             authHelper.getTodayCalories(userId).onSuccess { calories ->
                 tvCalories.text = calories.toString()
+            }
+        }
+    }
+
+    private fun displayWaterStatus() {
+        lifecycleScope.launch {
+            // Get total intake
+            val totalResult = hydrationRepo.getTodayWaterTotal(userId)
+            val goalResult = hydrationRepo.getWaterGoalWithCalculation(userId)
+            
+            if (totalResult.isSuccess && goalResult.isSuccess) {
+                val total = totalResult.getOrDefault(0)
+                val goal = goalResult.getOrDefault(2500)
+                
+                // Format: "1250 / 2500 ml"
+                 tvWaterTotal.text = "$total / $goal ml"
+            } else {
+                 tvWaterTotal.text = "0 ml"
             }
         }
     }

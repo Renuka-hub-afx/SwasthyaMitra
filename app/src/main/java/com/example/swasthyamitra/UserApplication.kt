@@ -41,6 +41,7 @@ class UserApplication : Application() {
             // Trigger authHelper initialization
             val helper = authHelper
             Log.d("UserApplication", "FirebaseAuthHelper initialized successfully")
+
         } catch (e: Exception) {
             Log.e("UserApplication", "Error initializing Firebase: ${e.message}", e)
         }

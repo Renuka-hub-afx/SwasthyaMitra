@@ -154,7 +154,13 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="🌅 Breakfast"
-                app:chipBackgroundColor="@color/chip_background_color"/>
+                android:textColor="@android:color/black"
+                android:background="@drawable/button_background"
+                app:backgroundTint="@null"
+                app:chipBackgroundColor="@android:color/transparent"
+                app:chipSurfaceColor="@android:color/transparent"
+                app:chipStrokeWidth="0dp"
+                app:chipIconVisible="false"/>
 
             <com.google.android.material.chip.Chip
                 android:id="@+id/chip_lunch"
@@ -162,7 +168,11 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="☀️ Lunch"
-                app:chipBackgroundColor="@color/chip_background_color"/>
+                android:textColor="@android:color/black"
+                android:background="@drawable/button_background"
+                app:backgroundTint="@null"
+                app:chipBackgroundColor="@android:color/transparent"
+                app:chipStrokeWidth="0dp"/>
 
             <com.google.android.material.chip.Chip
                 android:id="@+id/chip_dinner"
@@ -170,7 +180,11 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="🌙 Dinner"
-                app:chipBackgroundColor="@color/chip_background_color"/>
+                android:textColor="@android:color/black"
+                android:background="@drawable/button_background"
+                app:backgroundTint="@null"
+                app:chipBackgroundColor="@android:color/transparent"
+                app:chipStrokeWidth="0dp"/>
 
             <com.google.android.material.chip.Chip
                 android:id="@+id/chip_snack"
@@ -178,8 +192,11 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="🍪 Snack"
-                app:chipBackgroundColor="@color/chip_background_color"/>
-
+                android:textColor="@android:color/black"
+                android:background="@drawable/button_background"
+                app:backgroundTint="@null"
+                app:chipBackgroundColor="@android:color/transparent"
+                app:chipStrokeWidth="0dp"/>
 
         </com.google.android.material.chip.ChipGroup>
 

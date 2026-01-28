@@ -173,7 +173,7 @@
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
                     android:layout_marginTop="18dp"
-                    android:weightSum="3">
+                    android:weightSum="4">
 
                     <LinearLayout
                         android:layout_width="0dp"
@@ -247,6 +247,36 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Workouts"
+                            android:textSize="13sp"
+                            android:textColor="#666666"
+                            android:layout_marginTop="4dp"/>
+
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/card_water_summary"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:gravity="center"
+                        android:clickable="false"
+                        android:focusable="false">
+
+                        <TextView
+                            android:id="@+id/tv_water_total"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="0"
+                            android:textSize="18sp"
+                            android:textStyle="bold"
+                            android:maxLines="1"
+                            android:textColor="#2196F3"/>
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Water"
                             android:textSize="13sp"
                             android:textColor="#666666"
                             android:layout_marginTop="4dp"/>
@@ -443,7 +473,7 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:weightSum="2"
-            android:layout_marginBottom="20dp">
+            android:layout_marginBottom="8dp">
 
             <!-- Food Log Button -->
             <com.google.android.material.button.MaterialButton
@@ -451,15 +481,15 @@
                 style="@style/Widget.MaterialComponents.Button.UnelevatedButton"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginEnd="8dp"
+                android:layout_marginEnd="4dp"
                 android:layout_weight="1"
                 android:background="@drawable/button_background"
-                android:text="🍽️\n\nFOOD LOG"
+                android:text="🍽️\nFOOD"
                 android:textColor="#FFFFFF"
-                android:textSize="16sp"
+                android:textSize="14sp"
                 android:textStyle="bold"
                 app:backgroundTint="@null"
-                app:cornerRadius="4dp" />
+                app:cornerRadius="8dp" />
 
             <!-- Workout Button -->
             <com.google.android.material.button.MaterialButton
@@ -467,49 +497,61 @@
                 style="@style/Widget.MaterialComponents.Button.UnelevatedButton"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
+                android:layout_marginStart="4dp"
                 android:layout_weight="1"
                 android:background="@drawable/button_background"
-                android:text="💪\n\nWORKOUT"
+                android:text="💪\nWORKOUT"
                 android:textColor="#FFFFFF"
-                android:textSize="16sp"
+                android:textSize="14sp"
                 android:textStyle="bold"
                 app:backgroundTint="@null"
-                app:cornerRadius="4dp" />
+                app:cornerRadius="8dp" />
 
         </LinearLayout>
 
-
-        <!-- AI Smart Diet Button -->
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/card_ai_diet"
-            style="@style/Widget.MaterialComponents.Button.UnelevatedButton"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:layout_marginBottom="8dp"
-            android:background="@drawable/button_background"
-            android:text="🤖 GENERATE AI DIET PLAN"
-            android:textColor="#FFFFFF"
-            android:textSize="14sp"
-            android:textStyle="bold"
-            app:backgroundTint="@null"
-            app:cornerRadius="4dp" />
+            android:orientation="horizontal"
+            android:weightSum="2"
+            android:layout_marginBottom="20dp">
+
+            <!-- AI Smart Diet Button -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/card_ai_diet"
+                style="@style/Widget.MaterialComponents.Button.UnelevatedButton"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="4dp"
+                android:layout_weight="1"
+                android:background="@drawable/button_background"
+                android:text="🤖\nAI PLAN"
+                android:textColor="#FFFFFF"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                app:backgroundTint="@null"
+                app:cornerRadius="8dp" />
+
+            <!-- Water Button -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/card_water"
+                style="@style/Widget.MaterialComponents.Button.UnelevatedButton"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="4dp"
+                android:layout_weight="1"
+                android:background="@drawable/button_background"
+                android:text="💧\nWATER"
+                android:textColor="#FFFFFF"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                app:backgroundTint="@null"
+                app:cornerRadius="8dp" />
+
+        </LinearLayout>
 
         <!-- Meal Plan Button -->
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/card_meal_plan"
-            style="@style/Widget.MaterialComponents.Button.UnelevatedButton"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="20dp"
-            android:background="@drawable/button_background"
-            android:text="📅 VIEW MEAL PLAN"
-            android:textColor="#FFFFFF"
-            android:textSize="14sp"
-            android:textStyle="bold"
-            app:backgroundTint="@null"
-            app:cornerRadius="4dp" />
+
 
     </LinearLayout>
 

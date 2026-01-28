@@ -1,5 +1,6 @@
 package com.example.swasthyamitra
 
+import android.app.TimePickerDialog
 import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
@@ -10,6 +11,8 @@ import com.example.swasthyamitra.databinding.ActivityLifestyleBinding
 import com.example.swasthyamitra.auth.FirebaseAuthHelper
 import com.google.android.material.card.MaterialCardView
 import kotlinx.coroutines.launch
+import java.util.Calendar
+import java.util.Locale
 
 class LifestyleActivity : AppCompatActivity() {
 
@@ -89,6 +92,28 @@ class LifestyleActivity : AppCompatActivity() {
 
         // Submit Button Listener
         binding.btnSubmit.setOnClickListener { validateAndSave() }
+        
+        // Time Pickers
+        binding.etWakeTime.setOnClickListener { showTimePicker(true) }
+        binding.inputLayoutWakeTime.setEndIconOnClickListener { showTimePicker(true) }
+        
+        binding.etSleepTime.setOnClickListener { showTimePicker(false) }
+        binding.inputLayoutSleepTime.setEndIconOnClickListener { showTimePicker(false) }
+    }
+
+    private fun showTimePicker(isWakeTime: Boolean) {
+        val calendar = Calendar.getInstance()
+        val hour = calendar.get(Calendar.HOUR_OF_DAY)
+        val minute = calendar.get(Calendar.MINUTE)
+
+        TimePickerDialog(this, { _, selectedHour, selectedMinute ->
+            val timeStr = String.format(Locale.getDefault(), "%02d:%02d", selectedHour, selectedMinute)
+            if (isWakeTime) {
+                binding.etWakeTime.setText(timeStr)
+            } else {
+                binding.etSleepTime.setText(timeStr)
+            }
+        }, hour, minute, true).show()
     }
 
     private fun selectActivityLevel(selectedCard: MaterialCardView, activityLevel: String) {
@@ -230,7 +255,9 @@ class LifestyleActivity : AppCompatActivity() {
                             targetWeight = targetWeight,
                             dailyCalories = dailyCalories,
                             bmr = bmr,
-                            tdee = tdee
+                            tdee = tdee,
+                            wakeTime = binding.etWakeTime.text.toString(),
+                            sleepTime = binding.etSleepTime.text.toString()
                         )
 
                         result.onSuccess {
