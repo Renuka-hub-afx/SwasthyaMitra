@@ -444,12 +444,29 @@ class AIDietPlanService private constructor(private val context: Context) {
                                 } else null
                             }
                             .filter { line ->
-                                if (preference == "Vegetarian") {
-                                    !line.contains("Chicken", true) && !line.contains("Mutton", true) && 
-                                    !line.contains("Fish", true) && !line.contains("Egg", true) &&
-                                    !line.contains("Beef", true) && !line.contains("Pork", true) &&
-                                    !line.contains("Meat", true)
-                                } else true
+                                when (preference) {
+                                    "Vegetarian" -> {
+                                        !line.contains("Chicken", true) && !line.contains("Mutton", true) && 
+                                        !line.contains("Fish", true) && !line.contains("Egg", true) &&
+                                        !line.contains("Beef", true) && !line.contains("Pork", true) &&
+                                        !line.contains("Meat", true)
+                                    }
+                                    "Vegan" -> {
+                                        !line.contains("Chicken", true) && !line.contains("Mutton", true) && 
+                                        !line.contains("Fish", true) && !line.contains("Egg", true) &&
+                                        !line.contains("Beef", true) && !line.contains("Pork", true) &&
+                                        !line.contains("Meat", true) && !line.contains("Milk", true) &&
+                                        !line.contains("Paneer", true) && !line.contains("Curd", true) &&
+                                        !line.contains("Ghee", true) && !line.contains("Cheese", true) &&
+                                        !line.contains("Honey", true) && !line.contains("Butter", true)
+                                    }
+                                    "Eggetarian" -> {
+                                        !line.contains("Chicken", true) && !line.contains("Mutton", true) && 
+                                        !line.contains("Fish", true) && !line.contains("Beef", true) && 
+                                        !line.contains("Pork", true) && !line.contains("Meat", true)
+                                    }
+                                    else -> true // Non-Vegetarian
+                                }
                             }
                             .toList()
                         
