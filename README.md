@@ -43,7 +43,7 @@ SwasthyaMitra (SWASTHYA: Health | MITRA: Friend) is a comprehensive healthcare a
 | **UI Framework** | Android XML (Material 3 Inspiration) |
 | **Backend** | Firebase (Auth, Firestore) |
 | **AI Engine** | Vertex AI - Gemini 2.0 Flash |
-| **APIs** | Edamam Nutrition, OpenFoodFacts Barcode |
+| **APIs** |  OpenFoodFacts Barcode |
 | **Automation** | Android AlarmManager, Coroutines |
 
 ---
