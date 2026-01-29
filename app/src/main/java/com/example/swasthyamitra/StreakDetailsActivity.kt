@@ -20,6 +20,7 @@ class StreakDetailsActivity : AppCompatActivity() {
     private lateinit var tvMonthYear: TextView
     private lateinit var calendarGrid: GridLayout
     private var fitnessData: FitnessData? = null
+    private var viewMode: String = "STREAK" // Default to streak view
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -27,6 +28,7 @@ class StreakDetailsActivity : AppCompatActivity() {
         
         // Retrieve Data
         fitnessData = intent.getSerializableExtra("FITNESS_DATA") as? FitnessData
+        viewMode = intent.getStringExtra("VIEW_MODE") ?: "STREAK"
 
         val btnBack = findViewById<android.view.View>(R.id.btnBack)
         btnBack.setOnClickListener {
@@ -44,10 +46,78 @@ class StreakDetailsActivity : AppCompatActivity() {
     }
 
     private fun setupUI() {
+        if (viewMode == "SHIELD") {
+            setupShieldUI()
+        } else {
+            setupStreakUI()
+        }
+    }
+
+    private fun setupStreakUI() {
+        // Update header to show "Streak Details"
+        findViewById<TextView>(R.id.tvTitle)?.text = "Streak Details"
+        findViewById<TextView>(R.id.tvSubtitle)?.text = "Your Current Streak"
+        
         val streak = fitnessData?.streak ?: 0
         tvCurrentStreak.text = "$streak Days"
         
         generateCalendarForCurrentMonth()
+    }
+
+    private fun setupShieldUI() {
+        // Update header to show "Shield Details"
+        findViewById<TextView>(R.id.tvTitle)?.text = "Shield Details"
+        findViewById<TextView>(R.id.tvSubtitle)?.text = "Your Available Shields"
+        
+        val shields = fitnessData?.shields ?: 0
+        tvCurrentStreak.text = "$shields Shields"
+        
+        // Show shield information instead of calendar
+        generateShieldInfo()
+    }
+
+    private fun generateShieldInfo() {
+        calendarGrid.removeAllViews()
+        calendarGrid.columnCount = 1 // Single column for shield info
+        
+        val shields = fitnessData?.shields ?: 0
+        
+        // Shield description
+        val description = TextView(this)
+        
+        val shieldText = if (shields > 0) {
+            "Your streak is protected for $shields more missed days!"
+        } else {
+            "No protection active. Start earning shields!"
+        }
+        
+        description.text = "WHAT ARE SHIELDS?\n\n" +
+                "Shields protect your streak if you miss a day.\n\n" +
+                "YOU HAVE: $shields shield" + (if (shields != 1) "s" else "") + "\n\n" +
+                shieldText + "\n\n" +
+                "HOW TO EARN SHIELDS:\n\n" +
+                "Complete ALL daily goals:\n" +
+                "- Meet step goal (5,000 steps)\n" +
+                "- Hit calorie target\n" +
+                "- Complete a workout\n\n" +
+                "Earn 1 shield per day!\n" +
+                "BONUS: 7-day streak = extra shield!"
+        
+        description.textSize = 14f
+        description.setTextColor(Color.parseColor("#333333"))
+        description.setPadding(32, 32, 32, 32)
+        description.gravity = Gravity.START
+        description.setLineSpacing(4f, 1.0f)
+        
+        val params = GridLayout.LayoutParams()
+        params.width = GridLayout.LayoutParams.MATCH_PARENT
+        params.height = GridLayout.LayoutParams.WRAP_CONTENT
+        description.layoutParams = params
+        
+        calendarGrid.addView(description)
+        
+        // Update month/year to show shield max
+        tvMonthYear.text = "Maximum: 10 shields"
     }
 
     private fun generateCalendarForCurrentMonth() {

@@ -40,7 +40,12 @@ class WorkoutDashboardActivity : AppCompatActivity() {
     
     // Cache for recommendations to prevent refresh on Resume
     private var currentRecommendations: List<WorkoutVideo> = emptyList()
-        
+    private var lastCalorieStatus: String = ""
+    private var lastIntensity: String = ""
+    private var lastGoalType: String = ""
+    
+    private var fitnessData: FitnessData? = null
+    
     private var consumedCalories: Int = 0
     private var burnedCalories: Double = 0.0
     private var currentSteps: Int = 0
@@ -144,6 +149,7 @@ class WorkoutDashboardActivity : AppCompatActivity() {
 
         userRef.get().addOnSuccessListener { snapshot ->
             val data = snapshot.getValue(FitnessData::class.java) ?: FitnessData()
+            this.fitnessData = data
             
             runOnUiThread {
                 tvTotalWorkouts.text = data.workoutHistory.size.toString()
@@ -151,7 +157,7 @@ class WorkoutDashboardActivity : AppCompatActivity() {
                 tvTotalMinutes.text = data.totalWorkoutMinutes.toString()
                 
                 // Refresh list to update "Completed" status on buttons
-                updateAIRecommendation() 
+                updateAIRecommendation(forceRefresh = true) 
             }
         }
     }
@@ -199,6 +205,9 @@ class WorkoutDashboardActivity : AppCompatActivity() {
                         tvTotalWorkouts.text = updatedHistory.size.toString()
                         tvTotalMinutes.text = updatedData.totalWorkoutMinutes.toString()
                         Toast.makeText(this, "Workout saved! +100 XP", Toast.LENGTH_SHORT).show()
+                        
+                        // Refresh cache and list state
+                        checkWorkoutStatusAndStats()
                     }
                 }
                 .addOnFailureListener { e ->
@@ -209,7 +218,7 @@ class WorkoutDashboardActivity : AppCompatActivity() {
         }
     }
 
-    private fun updateAIRecommendation() {
+    private fun updateAIRecommendation(forceRefresh: Boolean = false) {
         val netCalories = consumedCalories - burnedCalories
         val diff = netCalories - targetBase
 
@@ -230,47 +239,55 @@ class WorkoutDashboardActivity : AppCompatActivity() {
             else -> "Moderate"
         }
         
-        val videos = WorkoutVideoRepository.getSmartRecommendation(goalType, calorieStatus, intensity)
-        val totalDuration = WorkoutVideoRepository.getTotalDuration(videos)
+        // Only update recommendation if state actually changed or forced
+        if (forceRefresh || calorieStatus != lastCalorieStatus || intensity != lastIntensity || goalType != lastGoalType) {
+            lastCalorieStatus = calorieStatus
+            lastIntensity = intensity
+            lastGoalType = goalType
+            
+            val videos = WorkoutVideoRepository.getSmartRecommendation(goalType, calorieStatus, intensity)
+            val totalDuration = WorkoutVideoRepository.getTotalDuration(videos)
 
-        statusText = if (calorieStatus == "Balanced") "Status: Calories on target" 
-                     else "Status: $diffAbs kcal ${if(diff>0) "above" else "below"} target"
-        
-        // AI-powered personalized recommendations
-        recommendation = when {
-            goalType.contains("Loss", ignoreCase = true) && calorieStatus == "High" -> {
-                "⚡ High calorie intake detected! We've selected intense HIIT workouts to maximize fat burn. Total: $totalDuration min"
+            statusText = if (calorieStatus == "Balanced") "Status: Calories on target" 
+                         else "Status: $diffAbs kcal ${if(diff>0) "above" else "below"} target"
+            
+            // AI-powered personalized recommendations
+            recommendation = when {
+                goalType.contains("Loss", ignoreCase = true) && calorieStatus == "High" -> {
+                    "⚡ High calorie intake detected! We've selected intense HIIT workouts to maximize fat burn. Total: $totalDuration min"
+                }
+                goalType.contains("Loss", ignoreCase = true) && calorieStatus == "Low" -> {
+                    "💪 Lower calorie intake - we've balanced cardio with moderate intensity to avoid burnout. Total: $totalDuration min"
+                }
+                goalType.contains("Loss", ignoreCase = true) -> {
+                    "🔥 Perfect balance! Your HIIT & cardio mix will optimize fat burning. Total: $totalDuration min"
+                }
+                goalType.contains("Gain", ignoreCase = true) && calorieStatus == "High" -> {
+                    "💪 Excellent! High calories + strength training = optimal muscle growth. Total: $totalDuration min"
+                }
+                goalType.contains("Gain", ignoreCase = true) && calorieStatus == "Low" -> {
+                    "⚠️ Low calories may limit gains. We've added lighter exercises - consider eating more. Total: $totalDuration min"
+                }
+                goalType.contains("Gain", ignoreCase = true) -> {
+                    "🏋️ Great! Your strength training routine will support muscle building. Total: $totalDuration min"
+                }
+                calorieStatus == "High" -> {
+                    "🧘 Maintenance mode: We've added cardio to burn extra calories while staying balanced. Total: $totalDuration min"
+                }
+                calorieStatus == "Low" -> {
+                    "🌸 Gentle recovery workout selected - yoga & stretching to energize without overexertion. Total: $totalDuration min"
+                }
+                else -> {
+                    "✨ Perfectly balanced! Your yoga & flexibility routine maintains wellness. Total: $totalDuration min"
+                }
             }
-            goalType.contains("Loss", ignoreCase = true) && calorieStatus == "Low" -> {
-                "💪 Lower calorie intake - we've balanced cardio with moderate intensity to avoid burnout. Total: $totalDuration min"
-            }
-            goalType.contains("Loss", ignoreCase = true) -> {
-                "🔥 Perfect balance! Your HIIT & cardio mix will optimize fat burning. Total: $totalDuration min"
-            }
-            goalType.contains("Gain", ignoreCase = true) && calorieStatus == "High" -> {
-                "💪 Excellent! High calories + strength training = optimal muscle growth. Total: $totalDuration min"
-            }
-            goalType.contains("Gain", ignoreCase = true) && calorieStatus == "Low" -> {
-                "⚠️ Low calories may limit gains. We've added lighter exercises - consider eating more. Total: $totalDuration min"
-            }
-            goalType.contains("Gain", ignoreCase = true) -> {
-                "🏋️ Great! Your strength training routine will support muscle building. Total: $totalDuration min"
-            }
-            calorieStatus == "High" -> {
-                "🧘 Maintenance mode: We've added cardio to burn extra calories while staying balanced. Total: $totalDuration min"
-            }
-            calorieStatus == "Low" -> {
-                "🌸 Gentle recovery workout selected - yoga & stretching to energize without overexertion. Total: $totalDuration min"
-            }
-            else -> {
-                "✨ Perfectly balanced! Your yoga & flexibility routine maintains wellness. Total: $totalDuration min"
+
+            runOnUiThread {
+                tvCalorieStatus.text = statusText
+                tvRecommendationText.text = recommendation
+                updateVideoList(calorieStatus, intensity)
             }
         }
-
-        tvCalorieStatus.text = statusText
-        tvRecommendationText.text = recommendation
-        
-        updateVideoList(calorieStatus, intensity)
     }
 
     private fun updateVideoList(calorieStatus: String, intensity: String) {
@@ -278,14 +295,9 @@ class WorkoutDashboardActivity : AppCompatActivity() {
         
         // Get AI-powered recommendations
         currentRecommendations = WorkoutVideoRepository.getSmartRecommendation(goalType, calorieStatus, intensity)
-        
-        // Only refresh if empty or we want to force a change
-        if (currentRecommendations.isEmpty()) {
-            currentRecommendations = WorkoutVideoRepository.getSmartRecommendation(goalType, calorieStatus, intensity)
-            startedVideoIds.clear() 
-        }
-        
         val videos = currentRecommendations
+        
+        val today = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault()).format(java.util.Date())
         
         runOnUiThread {
             llVideoListContainer.removeAllViews()
@@ -305,13 +317,26 @@ class WorkoutDashboardActivity : AppCompatActivity() {
                 tvType.text = video.category.uppercase()
                 tvDur.text = "• ${video.durationMinutes} min"
                 
-                // Visual state based on whether it was started
-                if (startedVideoIds.contains(video.videoId)) {
-                    btnComplete.alpha = 1.0f
-                    btnComplete.isEnabled = true
+                // Check if already completed today
+                val isCompleted = fitnessData?.workoutHistory?.values?.any { 
+                    it.videoId == video.videoId && it.date == today 
+                } ?: false
+
+                if (isCompleted) {
+                    btnStart.isEnabled = false
+                    btnStart.alpha = 0.5f
+                    btnComplete.text = "Done ✅"
+                    btnComplete.isEnabled = false
+                    btnComplete.alpha = 0.8f
                 } else {
-                    btnComplete.alpha = 0.5f 
-                    btnComplete.isEnabled = false // Disable until started
+                    // Visual state based on whether it was started
+                    if (startedVideoIds.contains(video.videoId)) {
+                        btnComplete.alpha = 1.0f
+                        btnComplete.isEnabled = true
+                    } else {
+                        btnComplete.alpha = 0.5f 
+                        btnComplete.isEnabled = false // Disable until started
+                    }
                 }
                 
                 btnStart.setOnClickListener {
@@ -319,13 +344,13 @@ class WorkoutDashboardActivity : AppCompatActivity() {
                     btnComplete.alpha = 1.0f
                     btnComplete.isEnabled = true
                     
-                    // Simple YouTube launch - demonstrates the feature
+                    // Simple YouTube launch
                     val intent = Intent(Intent.ACTION_VIEW, android.net.Uri.parse("https://www.youtube.com/watch?v=${video.videoId}"))
                     try {
                         startActivity(intent)
                         Toast.makeText(this, "✅ Video launched: ${video.title}", Toast.LENGTH_SHORT).show()
                     } catch (e: Exception) {
-                        Toast.makeText(this, "Video feature demonstrated - AI recommendation working!", Toast.LENGTH_LONG).show()
+                        Toast.makeText(this, "Video feature demonstrated!", Toast.LENGTH_LONG).show()
                     }
                 }
                 
