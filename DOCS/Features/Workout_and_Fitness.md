@@ -103,3 +103,47 @@ btnComplete.setOnClickListener {
 - **Streak Tracking**: Encourages daily consistency through a Realtime Database sync.
 - **Video Integration**: Direct deep-linking to curated YouTube fitness content.
 - **XP System**: Integrates with the `GamificationActivity` to level up the user based on physical effort.
+
+---
+
+## 🔄 Closed-Loop Health Integration
+The most advanced part of SwasthyaMitra is the synchronization between the Food tracking and Exercise systems. They are not silos; they communicate through your daily goal data.
+
+### **1. Diet → Exercise: The Caloric Neutralizer**
+The workout dashboard monitors your food logs in real-time. If you consume more calories than your biological baseline, the app automatically switches focus to burn that specific excess.
+
+```kotlin
+// From WorkoutDashboardActivity.kt
+private fun updateAIRecommendation() {
+    val netCalories = consumedCalories - burnedCalories // 🥗 Consumed - 🔥 Burned
+    val diff = netCalories - targetBase
+
+    // If diff > 100 (Surplus), app focuses on "High" intensity fat burning.
+    val calorieStatus = when {
+        diff > 100 -> "High"
+        diff < -100 -> "Low"
+        else -> "Balanced"
+    }
+    
+    // Recommendations adapt to your surplus/deficit instantly
+    val videos = WorkoutVideoRepository.getSmartRecommendation(goalType, calorieStatus, "Moderate")
+}
+```
+
+### **2. Exercise → Diet: Recovery Logic**
+Conversely, the AI Nutritionist analyzes your recent workout logs. If you've been pushing yourself with HIIT or heavy cardio, the AI modifies your meal plan to support muscle repair.
+
+```kotlin
+// From AIDietPlanService.kt
+val exerciseLogs = authHelper.getRecentExerciseLogs(userId, 3)
+val intensityFlag = if (exerciseLogs.any { it["intensity"] == "High" }) "INTENSITY_HIGH" else "INTENSITY_NORMAL"
+
+// Prompt Rule for Gemini AI:
+"If INTENSITY_HIGH, you MUST include a 'postWorkout' meal rich in protein."
+```
+
+### **The Result: A 24-Hour Adaptive System**
+This integration ensures that:
+1.  **If you overeat**, the app works you harder.
+2.  **If you work out hard**, the app feeds you better.
+3.  **If weight stalls**, the logic shifts macros to boost metabolism.
