@@ -18,6 +18,7 @@ class LoginActivity : AppCompatActivity() {
 
     private lateinit var emailInput: TextInputEditText
     private lateinit var passwordInput: TextInputEditText
+    private lateinit var phoneNumberInput: TextInputEditText
     private lateinit var loginButton: MaterialButton
     private lateinit var signupLink: TextView
     private lateinit var forgotPasswordLink: TextView
@@ -61,6 +62,7 @@ class LoginActivity : AppCompatActivity() {
         try {
             emailInput = findViewById(R.id.email_input)
             passwordInput = findViewById(R.id.password_input)
+            phoneNumberInput = findViewById(R.id.phone_number_input)
             loginButton = findViewById(R.id.login_button)
             signupLink = findViewById(R.id.signup_link)
             forgotPasswordLink = findViewById(R.id.forgot_password_link)
@@ -101,6 +103,12 @@ class LoginActivity : AppCompatActivity() {
                 result.onSuccess { user ->
                     Toast.makeText(this@LoginActivity, "Login Successful!", Toast.LENGTH_SHORT).show()
                     saveUserId(user.uid)
+                    
+                    val phone = phoneNumberInput.text.toString().trim()
+                    if (phone.isNotEmpty()) {
+                        savePhoneNumber(user.uid, phone)
+                    }
+
                     // Check user onboarding status before navigation
                     checkUserProfileAndNavigate(user.uid)
                 }.onFailure { e ->
@@ -170,6 +178,18 @@ class LoginActivity : AppCompatActivity() {
     private fun saveUserId(userId: String) {
         val sharedPreferences = getSharedPreferences("UserPreferences", MODE_PRIVATE)
         sharedPreferences.edit().putString("USER_ID", userId).apply()
+    }
+
+    private fun savePhoneNumber(userId: String, phoneNumber: String) {
+        lifecycleScope.launch {
+            try {
+                val db = com.google.firebase.firestore.FirebaseFirestore.getInstance()
+                db.collection("users").document(userId)
+                    .update("phoneNumber", phoneNumber)
+            } catch (e: Exception) {
+                Log.e("LoginActivity", "Error saving phone: ${e.message}")
+            }
+        }
     }
 
     private fun navigateToHomePage(userId: String) {

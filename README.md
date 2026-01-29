@@ -62,6 +62,7 @@ The project features a modular documentation system located in the `DOCS` direct
     - [Hydration System](DOCS/Features/Water_Tracker.md)
     - [Utility Tools](DOCS/Features/Utility_Tools.md)
     - [Workout & Fitness](DOCS/Features/Workout_and_Fitness.md)
+    - [WhatsApp Integration Plan](DOCS/Features/WhatsApp_Integration_Plan.md)
 
 ---
 
