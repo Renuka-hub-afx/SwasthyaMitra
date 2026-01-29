@@ -22,21 +22,22 @@ class UserApplication : Application() {
             FirebaseApp.initializeApp(this)
             Log.d("UserApplication", "Firebase initialized successfully")
 
-            // 2. Initialize App Check
-            val firebaseAppCheck = FirebaseAppCheck.getInstance()
-            
-            // Use debug provider when in debug mode to allow testing on emulators
-            if (BuildConfig.DEBUG) {
-                firebaseAppCheck.installAppCheckProviderFactory(
-                    com.google.firebase.appcheck.debug.DebugAppCheckProviderFactory.getInstance()
-                )
-                Log.d("UserApplication", "App Check initialized with Debug Provider")
-            } else {
-                firebaseAppCheck.installAppCheckProviderFactory(
-                    PlayIntegrityAppCheckProviderFactory.getInstance()
-                )
-                Log.d("UserApplication", "App Check initialized with Play Integrity")
-            }
+//            // 2. Initialize App Check
+//            val firebaseAppCheck = FirebaseAppCheck.getInstance()
+//            
+//            // Use debug provider when in debug mode to allow testing on emulators
+//            if (BuildConfig.DEBUG) {
+//                firebaseAppCheck.installAppCheckProviderFactory(
+//                    com.google.firebase.appcheck.debug.DebugAppCheckProviderFactory.getInstance()
+//                )
+//                Log.d("UserApplication", "App Check initialized with Debug Provider")
+//            } else {
+//                firebaseAppCheck.installAppCheckProviderFactory(
+//                    PlayIntegrityAppCheckProviderFactory.getInstance()
+//                )
+//                Log.d("UserApplication", "App Check initialized with Play Integrity")
+//            }
+
 
             // Trigger authHelper initialization
             val helper = authHelper
