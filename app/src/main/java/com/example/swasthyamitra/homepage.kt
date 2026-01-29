@@ -11,6 +11,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.example.swasthyamitra.auth.FirebaseAuthHelper
 import com.google.android.material.button.MaterialButton
+import android.util.Log
 import kotlinx.coroutines.launch
 import java.util.Calendar
 
@@ -175,6 +176,7 @@ class homepage : AppCompatActivity() {
             displayNutritionBreakdown()
             displayWorkoutStatus()
             displayWaterStatus()
+            updateAICoachMessage()
         }
     }
 
@@ -202,7 +204,9 @@ class homepage : AppCompatActivity() {
                     tvCoachMessage.text = "${greeting.lowercase()} $userName! $emoji\nStay consistent with your logging to reach your $goalType goal!"
                 }
 
-            } catch (e: Exception) { }
+            } catch (e: Exception) {
+                Log.e("Homepage", "Error loading user data", e)
+            }
         }
     }
 
@@ -212,6 +216,63 @@ class homepage : AppCompatActivity() {
             in 0..11 -> "Good Morning"
             in 12..16 -> "Good Afternoon"
             else -> "Good Evening"
+        }
+    }
+
+    private fun updateAICoachMessage() {
+        lifecycleScope.launch {
+            try {
+                // 1. Fetch all necessary data
+                val goalsResult = authHelper.getUserGoal(userId)
+                val caloriesResult = authHelper.getTodayCalories(userId)
+                val exerciseLogs = authHelper.getRecentExerciseLogs(userId, 2) // Check last 2 days
+                val steps = if (::stepManager.isInitialized) stepManager.dailySteps else 0
+                
+                var targetCalories = 2000
+                var currentGoal = "Wellness"
+                
+                goalsResult.onSuccess { goal ->
+                    targetCalories = (goal["dailyCalories"] as? Number)?.toInt() ?: 2000
+                    currentGoal = goal["goalType"] as? String ?: "Wellness"
+                }
+                
+                val consumed = caloriesResult.getOrDefault(0)
+                val burnedFromSteps = (steps * 0.04).toInt()
+                val netCalories = consumed - burnedFromSteps
+                
+                // 2. Logic for high intensity exercise
+                val hadHighIntensity = exerciseLogs.any { 
+                    (it["intensity"] as? String)?.contains("High", ignoreCase = true) == true || 
+                    (it["type"] as? String)?.contains("HIIT", ignoreCase = true) == true 
+                }
+                
+                // 3. Generate specific coach message
+                val message = when {
+                    hadHighIntensity && consumed < targetCalories -> {
+                        "🔥 Great high-intensity work! Your body needs recovery fuel. Check the AI Diet Plan for a protein-rich post-workout meal."
+                    }
+                    netCalories > targetCalories + 200 -> {
+                        "⚖️ Caloric surplus detected! You've eaten ${netCalories - targetCalories} kcal above your $currentGoal goal. Let's burn it off with a quick Cardio session!"
+                    }
+                    steps < 3000 && Calendar.getInstance().get(Calendar.HOUR_OF_DAY) > 16 -> {
+                        "👟 Activity Alert: You're below 3000 steps for today. A 15-minute evening walk will keep your metabolism active!"
+                    }
+                    consumed > 0 && Math.abs(netCalories - targetCalories) < 150 -> {
+                        "🎯 Perfect Balance! You're exactly on track with your $currentGoal nutrition. Keep this consistency up!"
+                    }
+                    else -> {
+                        val greeting = getGreeting()
+                        "$greeting $userName! Stay consistent with your logging to reach your $currentGoal goal!"
+                    }
+                }
+                
+                runOnUiThread {
+                    tvCoachMessage.text = message
+                }
+                
+            } catch (e: Exception) {
+                Log.e("Homepage", "Error updating coach message", e)
+            }
         }
     }
 

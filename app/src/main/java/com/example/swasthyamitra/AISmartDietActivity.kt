@@ -25,6 +25,9 @@ class AISmartDietActivity : AppCompatActivity() {
     private var isGenerating = false
     private var currentPlan: AIDietPlanService.MealPlan? = null
 
+    private lateinit var tvMetabolicStatus: TextView
+    private lateinit var tvIntensityAlert: TextView
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_ai_smart_diet)
@@ -56,7 +59,16 @@ class AISmartDietActivity : AppCompatActivity() {
             findViewById<Button>(R.id.btnGenerateSnack).setOnClickListener {
                 generateSingleMeal("Snack")
             }
-            
+
+            findViewById<Button>(R.id.btnGenerateFullPlan).setOnClickListener {
+                generateFullSmartPlan()
+            }
+
+            // Status Views
+            tvMetabolicStatus = findViewById(R.id.tvMetabolicStatus)
+            tvIntensityAlert = findViewById(R.id.tvIntensityAlert)
+
+            checkMetabolicStatus()
             setupMealActionButtons()
         } catch (e: Throwable) {
              e.printStackTrace()
@@ -170,6 +182,59 @@ class AISmartDietActivity : AppCompatActivity() {
             Log.d(TAG, "Meal logged to foodLogs: ${meal.item}")
         } catch (e: Exception) {
             Log.e(TAG, "Error logging meal to foodLogs: ${e.message}", e)
+        }
+    }
+
+    private fun checkMetabolicStatus() {
+        val userId = authHelper.getCurrentUser()?.uid ?: return
+        lifecycleScope.launch {
+            try {
+                // Fetch status from the engine
+                val exerciseLogs = authHelper.getRecentExerciseLogs(userId, 3)
+                val weightLogs = authHelper.getRecentWeightLogs(userId, 14)
+                
+                val hadHighIntensity = exerciseLogs.any { 
+                    (it["intensity"] as? String)?.contains("High", ignoreCase = true) == true || 
+                    (it["type"] as? String)?.contains("HIIT", ignoreCase = true) == true 
+                }
+                
+                // Simplified plateau check
+                val isPlateau = weightLogs.size >= 5 && weightLogs.mapNotNull { it["weight"] as? Double }.distinct().size <= 1
+
+                runOnUiThread {
+                    tvIntensityAlert.text = if (hadHighIntensity) "Recent Intensity: HIGH 🔥" else "Recent Intensity: Normal"
+                    tvMetabolicStatus.text = if (isPlateau) "Metabolic Status: PLATEAU DETECTED ⚖️" else "Metabolic Status: Active Meta"
+                }
+
+            } catch (e: Exception) {
+                Log.e(TAG, "Error checking metabolic status: ${e.message}")
+            }
+        }
+    }
+
+    private fun generateFullSmartPlan() {
+        if (isGenerating) return
+        isGenerating = true
+        progressBar.visibility = View.VISIBLE
+        
+        lifecycleScope.launch {
+            try {
+                val result = aiService.generateSmartDietPlan()
+                result.onSuccess { plan ->
+                    currentPlan = plan
+                    updateUI(plan)
+                    showActionButtons()
+                    checkMetabolicStatus() // Refresh status
+                    Toast.makeText(this@AISmartDietActivity, "✨ Personalized Smarter Plan Generated!", Toast.LENGTH_LONG).show()
+                }.onFailure { e ->
+                    Toast.makeText(this@AISmartDietActivity, "Generation failed: ${e.message}", Toast.LENGTH_SHORT).show()
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Error in full plan generation: ${e.message}")
+            } finally {
+                isGenerating = false
+                progressBar.visibility = View.GONE
+            }
         }
     }
 

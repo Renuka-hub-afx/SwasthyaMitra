@@ -17,7 +17,6 @@ SwasthyaMitra (SWASTHYA: Health | MITRA: Friend) is a comprehensive healthcare a
 
 ### 🍛 Indian Food Tracking
 - **Extensive Database**: Grounded in a local 1000+ item Indian Food collection.
-- **Hybrid Search**: Blends local CSV speed with **Edamam API** for global food items.
 - **Macro Breakdown**: Real-time tracking of Protein, Carbs, and Fats.
 
 ### 🧠 AI Diet Plan (Gemini 2.0 Flash)
@@ -43,7 +42,7 @@ SwasthyaMitra (SWASTHYA: Health | MITRA: Friend) is a comprehensive healthcare a
 | **UI Framework** | Android XML (Material 3 Inspiration) |
 | **Backend** | Firebase (Auth, Firestore) |
 | **AI Engine** | Vertex AI - Gemini 2.0 Flash |
-| **APIs** |  OpenFoodFacts Barcode |
+| **APIs** | OpenFoodFacts Barcode |
 | **Automation** | Android AlarmManager, Coroutines |
 
 ---
