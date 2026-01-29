@@ -12,7 +12,7 @@ class StepManager(private val context: Context, private val onStepUpdate: (Int, 
     
     private val prefs = context.getSharedPreferences("StepCounterPrefs", Context.MODE_PRIVATE)
     
-    private var dailySteps: Int = 0
+    var dailySteps: Int = 0
     private var lastSensorValue: Float = 0f
     private var lastDate: String = ""
 
