@@ -22,10 +22,14 @@ class LifestyleActivity : AppCompatActivity() {
     
     private var selectedActivityLevel: String = ""
     private var selectedDietPreference: String = ""
+    private var selectedWorkoutTime: String = "30m" // Default
+    private var selectedPreferredTime: String = "Morning" // Default
 
     // Card lists for easy management
     private lateinit var activityCards: List<MaterialCardView>
     private lateinit var dietCards: List<MaterialCardView>
+    private lateinit var workoutTimeCards: List<MaterialCardView>
+    private lateinit var preferredTimeCards: List<MaterialCardView>
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -62,6 +66,24 @@ class LifestyleActivity : AppCompatActivity() {
             binding.cardEggetarian
         )
 
+        workoutTimeCards = listOf(
+            binding.card15min,
+            binding.card30min,
+            binding.card45min,
+            binding.card60min
+        )
+
+        preferredTimeCards = listOf(
+            binding.cardMorning,
+            binding.cardAfternoon,
+            binding.cardEvening,
+            binding.cardNight
+        )
+        
+        // Default selection
+        selectWorkoutTime(binding.card30min, "30m")
+        selectPreferredTime(binding.cardMorning, "Morning")
+
         // Activity Level Card Listeners
         binding.cardSedentary.setOnClickListener { 
             selectActivityLevel(binding.cardSedentary, "Sedentary") 
@@ -89,6 +111,18 @@ class LifestyleActivity : AppCompatActivity() {
         binding.cardEggetarian.setOnClickListener { 
             selectDietPreference(binding.cardEggetarian, "Eggetarian") 
         }
+
+        // Workout Time Card Listeners
+        binding.card15min.setOnClickListener { selectWorkoutTime(binding.card15min, "15m") }
+        binding.card30min.setOnClickListener { selectWorkoutTime(binding.card30min, "30m") }
+        binding.card45min.setOnClickListener { selectWorkoutTime(binding.card45min, "45m") }
+        binding.card60min.setOnClickListener { selectWorkoutTime(binding.card60min, "60m+") }
+
+        // Preferred Time Card Listeners
+        binding.cardMorning.setOnClickListener { selectPreferredTime(binding.cardMorning, "Morning") }
+        binding.cardAfternoon.setOnClickListener { selectPreferredTime(binding.cardAfternoon, "Afternoon") }
+        binding.cardEvening.setOnClickListener { selectPreferredTime(binding.cardEvening, "Evening") }
+        binding.cardNight.setOnClickListener { selectPreferredTime(binding.cardNight, "Night") }
 
         // Submit Button Listener
         binding.btnSubmit.setOnClickListener { validateAndSave() }
@@ -127,6 +161,16 @@ class LifestyleActivity : AppCompatActivity() {
     private fun selectDietPreference(selectedCard: MaterialCardView, dietPreference: String) {
         selectedDietPreference = dietPreference
         highlightCard(selectedCard, dietCards)
+    }
+
+    private fun selectWorkoutTime(selectedCard: MaterialCardView, workoutTime: String) {
+        selectedWorkoutTime = workoutTime
+        highlightCard(selectedCard, workoutTimeCards)
+    }
+
+    private fun selectPreferredTime(selectedCard: MaterialCardView, preferredTime: String) {
+        selectedPreferredTime = preferredTime
+        highlightCard(selectedCard, preferredTimeCards)
     }
     
     private fun calculateAndDisplayMetrics() {
@@ -257,10 +301,15 @@ class LifestyleActivity : AppCompatActivity() {
                             bmr = bmr,
                             tdee = tdee,
                             wakeTime = binding.etWakeTime.text.toString(),
-                            sleepTime = binding.etSleepTime.text.toString()
+                            sleepTime = binding.etSleepTime.text.toString(),
+                            availableExerciseTime = selectedWorkoutTime,
+                            preferredExerciseTime = selectedPreferredTime
                         )
 
                         result.onSuccess {
+                            // Schedule exercise reminder
+                            scheduleExerciseReminder(selectedPreferredTime)
+
                             Toast.makeText(
                                 this@LifestyleActivity, 
                                 "Profile Complete! Daily Target: ${dailyCalories.toInt()} kcal 🎉", 
@@ -325,6 +374,55 @@ class LifestyleActivity : AppCompatActivity() {
             "Maintain Weight" -> tdee
             "General Health" -> tdee
             else -> tdee
+        }
+    }
+
+    private fun scheduleExerciseReminder(preferredTime: String) {
+        val alarmManager = getSystemService(android.content.Context.ALARM_SERVICE) as android.app.AlarmManager
+        val intent = android.content.Intent(this, com.example.swasthyamitra.reminders.ExerciseReminderReceiver::class.java)
+        val pendingIntent = android.app.PendingIntent.getBroadcast(
+            this, 1001, intent, 
+            android.app.PendingIntent.FLAG_IMMUTABLE or android.app.PendingIntent.FLAG_UPDATE_CURRENT
+        )
+
+        val calendar = java.util.Calendar.getInstance()
+        val hour = when (preferredTime) {
+            "Morning" -> 8
+            "Afternoon" -> 14
+            "Evening" -> 19
+            "Night" -> 21
+            else -> 8
+        }
+
+        calendar.set(java.util.Calendar.HOUR_OF_DAY, hour)
+        calendar.set(java.util.Calendar.MINUTE, 0)
+        calendar.set(java.util.Calendar.SECOND, 0)
+
+        // If time has already passed today, schedule for tomorrow
+        if (calendar.timeInMillis <= System.currentTimeMillis()) {
+            calendar.add(java.util.Calendar.DAY_OF_YEAR, 1)
+        }
+
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
+            if (alarmManager.canScheduleExactAlarms()) {
+                alarmManager.setExactAndAllowWhileIdle(
+                    android.app.AlarmManager.RTC_WAKEUP,
+                    calendar.timeInMillis,
+                    pendingIntent
+                )
+            } else {
+                alarmManager.setAndAllowWhileIdle(
+                    android.app.AlarmManager.RTC_WAKEUP,
+                    calendar.timeInMillis,
+                    pendingIntent
+                )
+            }
+        } else {
+            alarmManager.setAndAllowWhileIdle(
+                android.app.AlarmManager.RTC_WAKEUP,
+                calendar.timeInMillis,
+                pendingIntent
+            )
         }
     }
 }

@@ -491,7 +491,9 @@ class FirebaseAuthHelper(private val context: Context) {
         bmr: Double,
         tdee: Double,
         wakeTime: String? = null,
-        sleepTime: String? = null
+        sleepTime: String? = null,
+        availableExerciseTime: String? = null,
+        preferredExerciseTime: String? = null
     ): Result<Unit> {
         return try {
             val updates = hashMapOf<String, Any>(
@@ -504,6 +506,9 @@ class FirebaseAuthHelper(private val context: Context) {
                 "updatedAt" to System.currentTimeMillis()
             )
 
+            if (availableExerciseTime != null) updates["availableExerciseTime"] = availableExerciseTime
+            if (preferredExerciseTime != null) updates["preferredExerciseTime"] = preferredExerciseTime
+
             // Update user collection with lifestyle data
             val userUpdates = hashMapOf<String, Any>(
                 "activityLevel" to activityLevel,
@@ -513,6 +518,8 @@ class FirebaseAuthHelper(private val context: Context) {
             // Add sleep/wake times if provided
             if (wakeTime != null) userUpdates["wakeTime"] = wakeTime
             if (sleepTime != null) userUpdates["sleepTime"] = sleepTime
+            if (availableExerciseTime != null) userUpdates["availableExerciseTime"] = availableExerciseTime
+            if (preferredExerciseTime != null) userUpdates["preferredExerciseTime"] = preferredExerciseTime
             
             firestore.collection("users").document(userId).update(userUpdates).await()
             

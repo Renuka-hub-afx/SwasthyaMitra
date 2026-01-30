@@ -20,6 +20,9 @@ class AIDietPlanService private constructor(private val context: Context) {
     private val authHelper = FirebaseAuthHelper(context)
     private val firestore = com.google.firebase.firestore.FirebaseFirestore.getInstance()
     private val TAG = "AIDietPlanService"
+    
+    // Memory Cache for Food Samples
+    private var foodCache: Map<String, List<String>>? = null
 
     companion object {
         @Volatile
@@ -179,7 +182,15 @@ class AIDietPlanService private constructor(private val context: Context) {
                 responseMimeType = "application/json"
             }
             val generativeModel = Firebase.vertexAI.generativeModel("gemini-2.0-flash", generationConfig = config)
-            val response = generativeModel.generateContent(promptText)
+            
+            val response = try {
+                kotlinx.coroutines.withTimeout(30000) { // 30s timeout
+                    generativeModel.generateContent(promptText)
+                }
+            } catch (e: kotlinx.coroutines.TimeoutCancellationException) {
+                throw Exception("AI took too long to respond. Please try again.")
+            }
+            
             val jsonStr = response.text ?: throw Exception("AI response empty")
             val cleanJson = jsonStr.trim().removeSurrounding("```json", "```").trim()
             
@@ -365,9 +376,17 @@ class AIDietPlanService private constructor(private val context: Context) {
             temperature = 0.4f
             responseMimeType = "application/json"
         }
-        val generativeModel = Firebase.vertexAI.generativeModel("gemini-2.0-flash")
+        val generativeModel = Firebase.vertexAI.generativeModel("gemini-2.0-flash", generationConfig = config)
 
-        val response = generativeModel.generateContent(promptText)
+        val response = try {
+            kotlinx.coroutines.withTimeout(60000) { // 60s timeout for full plan
+                generativeModel.generateContent(promptText)
+            }
+        } catch (e: kotlinx.coroutines.TimeoutCancellationException) {
+            Log.e(TAG, "Gemini API Timeout for full plan")
+            throw Exception("AI is taking longer than usual. Please check your internet or try again later.")
+        }
+
         val jsonStr = response.text ?: throw Exception("AI response empty")
         val cleanJson = jsonStr.trim().removeSurrounding("```json", "```").trim()
         
@@ -411,10 +430,55 @@ class AIDietPlanService private constructor(private val context: Context) {
     }
 
     private fun loadFoodSampleFromCsv(preference: String, limit: Int): String {
-        val files = listOf("food_data.csv", "foods (1).csv", "Indian_Food_DF (2).csv")
-        val samplesPerFile = (limit / files.size).coerceAtLeast(15)
+        if (foodCache == null) {
+            preloadFoodCache()
+        }
+        
         val allSamples = mutableListOf<String>()
+        val files = listOf("food_data.csv", "foods (1).csv", "Indian_Food_DF (2).csv")
+        
+        files.forEach { fileName ->
+            val cached = foodCache?.get(fileName) ?: emptyList()
+            val filtered = cached.filter { line ->
+                when (preference) {
+                    "Vegetarian" -> {
+                        !line.contains("Chicken", true) && !line.contains("Mutton", true) && 
+                        !line.contains("Fish", true) && !line.contains("Egg", true) &&
+                        !line.contains("Beef", true) && !line.contains("Pork", true) &&
+                        !line.contains("Meat", true)
+                    }
+                    "Vegan" -> {
+                        !line.contains("Chicken", true) && !line.contains("Mutton", true) && 
+                        !line.contains("Fish", true) && !line.contains("Egg", true) &&
+                        !line.contains("Beef", true) && !line.contains("Pork", true) &&
+                        !line.contains("Meat", true) && !line.contains("Milk", true) &&
+                        !line.contains("Paneer", true) && !line.contains("Curd", true) &&
+                        !line.contains("Ghee", true) && !line.contains("Cheese", true) &&
+                        !line.contains("Honey", true) && !line.contains("Butter", true)
+                    }
+                    "Eggetarian" -> {
+                        !line.contains("Chicken", true) && !line.contains("Mutton", true) && 
+                        !line.contains("Fish", true) && !line.contains("Beef", true) && 
+                        !line.contains("Pork", true) && !line.contains("Meat", true)
+                    }
+                    else -> true // Non-Vegetarian
+                }
+            }
+            val samplesPerFile = (limit / files.size).coerceAtLeast(15)
+            allSamples.addAll(filtered.shuffled().take(samplesPerFile))
+        }
 
+        return if (allSamples.isEmpty()) {
+            "Garam Chai, Poha, Dal Tadka, Roti, Sabzi"
+        } else {
+            allSamples.shuffled().take(limit).joinToString("\n")
+        }
+    }
+
+    private fun preloadFoodCache() {
+        val cache = mutableMapOf<String, List<String>>()
+        val files = listOf("food_data.csv", "foods (1).csv", "Indian_Food_DF (2).csv")
+        
         files.forEach { fileName ->
             try {
                 context.assets.open(fileName).use { input ->
@@ -443,46 +507,15 @@ class AIDietPlanService private constructor(private val context: Context) {
                                     "$rawName ($cals kcal, $protein protein)"
                                 } else null
                             }
-                            .filter { line ->
-                                when (preference) {
-                                    "Vegetarian" -> {
-                                        !line.contains("Chicken", true) && !line.contains("Mutton", true) && 
-                                        !line.contains("Fish", true) && !line.contains("Egg", true) &&
-                                        !line.contains("Beef", true) && !line.contains("Pork", true) &&
-                                        !line.contains("Meat", true)
-                                    }
-                                    "Vegan" -> {
-                                        !line.contains("Chicken", true) && !line.contains("Mutton", true) && 
-                                        !line.contains("Fish", true) && !line.contains("Egg", true) &&
-                                        !line.contains("Beef", true) && !line.contains("Pork", true) &&
-                                        !line.contains("Meat", true) && !line.contains("Milk", true) &&
-                                        !line.contains("Paneer", true) && !line.contains("Curd", true) &&
-                                        !line.contains("Ghee", true) && !line.contains("Cheese", true) &&
-                                        !line.contains("Honey", true) && !line.contains("Butter", true)
-                                    }
-                                    "Eggetarian" -> {
-                                        !line.contains("Chicken", true) && !line.contains("Mutton", true) && 
-                                        !line.contains("Fish", true) && !line.contains("Beef", true) && 
-                                        !line.contains("Pork", true) && !line.contains("Meat", true)
-                                    }
-                                    else -> true // Non-Vegetarian
-                                }
-                            }
                             .toList()
-                        
-                        allSamples.addAll(foods.shuffled().take(samplesPerFile))
+                        cache[fileName] = foods
                     }
                 }
             } catch (e: Exception) {
-                Log.e(TAG, "Error loading $fileName: ${e.message}")
+                Log.e(TAG, "Error preloading $fileName: ${e.message}")
             }
         }
-
-        return if (allSamples.isEmpty()) {
-            "Garam Chai, Poha, Dal Tadka, Roti, Sabzi"
-        } else {
-            allSamples.shuffled().take(limit).joinToString("\n")
-        }
+        foodCache = cache
     }
 
     private fun parseCsvLine(line: String): List<String> {

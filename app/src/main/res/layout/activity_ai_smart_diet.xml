@@ -99,16 +99,6 @@
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
 
-            <Button
-                android:id="@+id/btnGenerateFullPlan"
-                android:layout_width="match_parent"
-                android:layout_height="56dp"
-                android:layout_marginTop="16dp"
-                android:background="@drawable/button_background"
-                android:text="✨ GENERATE SMART DAILY PLAN"
-                android:textColor="#FFFFFF"
-                android:textStyle="bold"
-                app:backgroundTint="@null"/>
 
             <!-- Breakfast -->
             <TextView
