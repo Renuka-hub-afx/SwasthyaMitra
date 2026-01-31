@@ -168,7 +168,17 @@ class homepage : AppCompatActivity() {
         }
 
         btnRegenerateExercise.setOnClickListener {
-            updateAIExerciseRecommendation()
+            lifecycleScope.launch {
+                try {
+                    // Clear existing recommendation to force new generation
+                    firestore.collection("users").document(userId)
+                        .update("currentDailyExercise", null, "lastExerciseDate", null)
+                        .await()
+                    updateAIExerciseRecommendation()
+                } catch (e: Exception) {
+                    Log.e("Homepage", "Error skipping exercise", e)
+                }
+            }
         }
     }
 
@@ -258,52 +268,31 @@ class homepage : AppCompatActivity() {
     private fun updateAICoachMessage() {
         lifecycleScope.launch {
             try {
-                // 1. Fetch all necessary data
-                val goalsResult = authHelper.getUserGoal(userId)
-                val caloriesResult = authHelper.getTodayCalories(userId)
-                val exerciseLogs = authHelper.getRecentExerciseLogs(userId, 2) // Check last 2 days
-                val steps = if (::stepManager.isInitialized) stepManager.dailySteps else 0
-                
-                var targetCalories = 2000
-                var currentGoal = "Wellness"
-                
-                goalsResult.onSuccess { goal ->
-                    targetCalories = (goal["dailyCalories"] as? Number)?.toInt() ?: 2000
-                    currentGoal = goal["goalType"] as? String ?: "Wellness"
-                }
-                
-                val consumed = caloriesResult.getOrDefault(0)
-                val burnedFromSteps = (steps * 0.04).toInt()
-                val netCalories = consumed - burnedFromSteps
-                
-                // 2. Logic for high intensity exercise
-                val hadHighIntensity = exerciseLogs.any { 
-                    (it["intensity"] as? String)?.contains("High", ignoreCase = true) == true || 
-                    (it["type"] as? String)?.contains("HIIT", ignoreCase = true) == true 
-                }
-                
-                // 3. Generate specific coach message
-                val message = when {
-                    hadHighIntensity && consumed < targetCalories -> {
-                        "🔥 Great high-intensity work! Your body needs recovery fuel. Check the AI Diet Plan for a protein-rich post-workout meal."
-                    }
-                    netCalories > targetCalories + 200 -> {
-                        "⚖️ Caloric surplus detected! You've eaten ${netCalories - targetCalories} kcal above your $currentGoal goal. Let's burn it off with a quick Cardio session!"
-                    }
-                    steps < 3000 && Calendar.getInstance().get(Calendar.HOUR_OF_DAY) > 16 -> {
-                        "👟 Activity Alert: You're below 3000 steps for today. A 15-minute evening walk will keep your metabolism active!"
-                    }
-                    consumed > 0 && Math.abs(netCalories - targetCalories) < 150 -> {
-                        "🎯 Perfect Balance! You're exactly on track with your $currentGoal nutrition. Keep this consistency up!"
-                    }
-                    else -> {
-                        val greeting = getGreeting()
-                        "$greeting $userName! Stay consistent with your logging to reach your $currentGoal goal!"
-                    }
-                }
-                
+                // Show loading state
                 runOnUiThread {
-                    tvCoachMessage.text = message
+                    tvCoachMessage.text = "Coach is analyzing your progress... 🔍"
+                }
+
+                val steps = if (::stepManager.isInitialized) stepManager.dailySteps else 0
+                val service = com.example.swasthyamitra.ai.AICoachMessageService.getInstance(this@homepage)
+                val result = service.getCoachMessage(userId, steps)
+                
+                result.onSuccess { message ->
+                    runOnUiThread {
+                        tvCoachMessage.text = message
+                    }
+                }.onFailure {
+                    // Fallback to basic greeting if AI fails
+                    val greeting = getGreeting()
+                    val goalsResult = authHelper.getUserGoal(userId)
+                    var currentGoal = "Health"
+                    goalsResult.onSuccess { goal ->
+                        currentGoal = goal["goalType"] as? String ?: "Health"
+                    }
+                    
+                    runOnUiThread {
+                        tvCoachMessage.text = "$greeting $userName! Keep staying consistent with your $currentGoal goal!"
+                    }
                 }
                 
             } catch (e: Exception) {
@@ -421,6 +410,31 @@ class homepage : AppCompatActivity() {
                     return@launch
                 }
 
+                // 0.2 Check if we already have a sticky recommendation for today
+                val lastDate = profile.getString("lastExerciseDate") ?: ""
+                if (lastDate == today) {
+                    val savedExercise = profile.get("currentDailyExercise") as? Map<String, Any>
+                    if (savedExercise != null) {
+                        val rec = com.example.swasthyamitra.ai.AIExerciseRecommendationService.ExerciseRec(
+                            name = savedExercise["name"] as? String ?: "",
+                            targetMuscle = savedExercise["targetMuscle"] as? String ?: "",
+                            bodyPart = savedExercise["bodyPart"] as? String ?: "",
+                            equipment = savedExercise["equipment"] as? String ?: "",
+                            instructions = (savedExercise["instructions"] as? List<String>) ?: emptyList(),
+                            reason = savedExercise["reason"] as? String ?: ""
+                        )
+                        currentRecommendedExercise = rec
+                        runOnUiThread {
+                            tvRecExerciseName.text = rec.name
+                            tvRecTargetMuscle.text = "Target: ${rec.targetMuscle}"
+                            tvRecReason.text = rec.reason
+                            cardAiExercise.visibility = View.VISIBLE
+                            btnRegenerateExercise.isEnabled = true
+                        }
+                        return@launch
+                    }
+                }
+
                 // 1. Calculate burned calories from steps
                 val steps = if (::stepManager.isInitialized) stepManager.dailySteps else 0
                 val burnedFromSteps = (steps * 0.04).toInt()
@@ -436,6 +450,21 @@ class homepage : AppCompatActivity() {
                 
                 result.onSuccess { rec ->
                     currentRecommendedExercise = rec
+
+                    // Save recommendation for stickiness
+                    val exerciseMap = hashMapOf(
+                        "name" to rec.name,
+                        "targetMuscle" to rec.targetMuscle,
+                        "bodyPart" to rec.bodyPart,
+                        "equipment" to rec.equipment,
+                        "instructions" to rec.instructions,
+                        "reason" to rec.reason
+                    )
+                    
+                    firestore.collection("users").document(userId)
+                        .update("currentDailyExercise", exerciseMap, "lastExerciseDate", today)
+                        .await()
+
                     runOnUiThread {
                         tvRecExerciseName.text = rec.name
                         tvRecTargetMuscle.text = "Target: ${rec.targetMuscle}"
