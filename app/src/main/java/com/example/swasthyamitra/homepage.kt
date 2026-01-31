@@ -180,7 +180,6 @@ class homepage : AppCompatActivity() {
                 }
             }
         }
-        }
     }
 
     private fun showCustomWaterAddDialog() {
