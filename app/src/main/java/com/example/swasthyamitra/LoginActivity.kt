@@ -101,6 +101,7 @@ class LoginActivity : AppCompatActivity() {
                 result.onSuccess { user ->
                     Toast.makeText(this@LoginActivity, "Login Successful!", Toast.LENGTH_SHORT).show()
                     saveUserId(user.uid)
+                    
                     // Check user onboarding status before navigation
                     checkUserProfileAndNavigate(user.uid)
                 }.onFailure { e ->

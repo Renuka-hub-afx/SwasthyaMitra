@@ -56,12 +56,14 @@ class SignupActivity : AppCompatActivity() {
     private fun validateAndSave() {
         val name = binding.nameInput.text.toString().trim()
         val email = binding.emailInput.text.toString().trim()
+        val phoneNumber = binding.phoneInput.text.toString().trim()
         val dob = binding.textView8.tag?.toString() ?: ""
         val pass = binding.passwordInput.text.toString()
         val confirm = binding.confirmPasswordInput.text.toString()
 
         if (name.isEmpty()) { binding.nameInput.error = "Enter name"; return }
         if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) { binding.emailInput.error = "Valid email required"; return }
+        if (phoneNumber.isEmpty() || phoneNumber.length < 10) { binding.phoneInput.error = "Enter valid phone (with country code)"; return }
         if (dob.isEmpty()) { Toast.makeText(this, "Select birth date", Toast.LENGTH_SHORT).show(); return }
         if (pass.length < 6) { binding.passwordInput.error = "Min 6 chars"; return }
         if (pass != confirm) { binding.confirmPasswordInput.error = "Mismatch"; return }
@@ -69,7 +71,7 @@ class SignupActivity : AppCompatActivity() {
         val age = calculateAge(dob)
 
         lifecycleScope.launch {
-            val result = authHelper.signUpWithEmail(email, pass, name, "", age)
+            val result = authHelper.signUpWithEmail(email, pass, name, phoneNumber, age)
             result.onSuccess {
                 runOnUiThread {
                     Toast.makeText(this@SignupActivity, "Signup Successful! Please log in.", Toast.LENGTH_LONG).show()

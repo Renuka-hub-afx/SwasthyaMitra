@@ -60,9 +60,6 @@ class AISmartDietActivity : AppCompatActivity() {
                 generateSingleMeal("Snack")
             }
 
-            findViewById<Button>(R.id.btnGenerateFullPlan).setOnClickListener {
-                generateFullSmartPlan()
-            }
 
             // Status Views
             tvMetabolicStatus = findViewById(R.id.tvMetabolicStatus)

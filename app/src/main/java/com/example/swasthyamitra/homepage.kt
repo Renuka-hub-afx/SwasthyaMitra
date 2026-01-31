@@ -14,12 +14,16 @@ import com.google.android.material.button.MaterialButton
 import android.util.Log
 import kotlinx.coroutines.launch
 import java.util.Calendar
+import androidx.cardview.widget.CardView
+import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.tasks.await
 
 class homepage : AppCompatActivity() {
 
     private lateinit var authHelper: FirebaseAuthHelper
     private lateinit var stepManager: StepManager
     private var userId: String = ""
+    private lateinit var firestore: FirebaseFirestore
 
     // UI Elements
     private lateinit var tvUserName: TextView
@@ -34,6 +38,16 @@ class homepage : AppCompatActivity() {
     private lateinit var pbProtein: ProgressBar
     private lateinit var pbCarbs: ProgressBar
     private lateinit var pbFats: ProgressBar
+
+    // AI Recommendation UI
+    private lateinit var cardAiExercise: androidx.cardview.widget.CardView
+    private lateinit var tvRecExerciseName: TextView
+    private lateinit var tvRecTargetMuscle: TextView
+    private lateinit var tvRecReason: TextView
+    private lateinit var btnViewExerciseDetails: MaterialButton
+    private lateinit var btnLogRecExercise: MaterialButton
+    private lateinit var btnRegenerateExercise: MaterialButton
+    private var currentRecommendedExercise: com.example.swasthyamitra.ai.AIExerciseRecommendationService.ExerciseRec? = null
 
     private lateinit var menuHome: LinearLayout
     private lateinit var menuProgress: LinearLayout
@@ -61,6 +75,7 @@ class homepage : AppCompatActivity() {
             return
         }
         authHelper = application.authHelper
+        firestore = FirebaseFirestore.getInstance()
 
         userId = intent.getStringExtra("USER_ID") ?: ""
 
@@ -88,6 +103,14 @@ class homepage : AppCompatActivity() {
         cardWater = findViewById(R.id.card_water)
         cardWaterSummary = findViewById(R.id.card_water_summary)
         tvWaterTotal = findViewById(R.id.tv_water_total)
+
+        cardAiExercise = findViewById(R.id.card_ai_exercise)
+        tvRecExerciseName = findViewById(R.id.tv_rec_exercise_name)
+        tvRecTargetMuscle = findViewById(R.id.tv_rec_target_muscle)
+        tvRecReason = findViewById(R.id.tv_rec_reason)
+        btnViewExerciseDetails = findViewById(R.id.btn_view_exercise_details)
+        btnLogRecExercise = findViewById(R.id.btn_log_rec_exercise)
+        btnRegenerateExercise = findViewById(R.id.btn_regenerate_exercise)
 
         updateDateDisplay()
         loadUserData()
@@ -136,10 +159,27 @@ class homepage : AppCompatActivity() {
             startActivity(intent)
         }
 
-        // Setup View Details link
-        val tvViewDetails: TextView = findViewById(R.id.tv_view_details)
-        tvViewDetails.setOnClickListener {
-            startActivity(Intent(this, FoodLogActivity::class.java))
+        btnViewExerciseDetails.setOnClickListener {
+            showExerciseGuideDialog()
+        }
+
+        btnLogRecExercise.setOnClickListener {
+            logRecommendedExercise()
+        }
+
+        btnRegenerateExercise.setOnClickListener {
+            lifecycleScope.launch {
+                try {
+                    // Clear existing recommendation to force new generation
+                    firestore.collection("users").document(userId)
+                        .update("currentDailyExercise", null, "lastExerciseDate", null)
+                        .await()
+                    updateAIExerciseRecommendation()
+                } catch (e: Exception) {
+                    Log.e("Homepage", "Error skipping exercise", e)
+                }
+            }
+        }
         }
     }
 
@@ -185,6 +225,7 @@ class homepage : AppCompatActivity() {
             displayWorkoutStatus()
             displayWaterStatus()
             updateAICoachMessage()
+            updateAIExerciseRecommendation()
         }
     }
 
@@ -287,52 +328,31 @@ class homepage : AppCompatActivity() {
     private fun updateAICoachMessage() {
         lifecycleScope.launch {
             try {
-                // 1. Fetch all necessary data
-                val goalsResult = authHelper.getUserGoal(userId)
-                val caloriesResult = authHelper.getTodayCalories(userId)
-                val exerciseLogs = authHelper.getRecentExerciseLogs(userId, 2) // Check last 2 days
-                val steps = if (::stepManager.isInitialized) stepManager.dailySteps else 0
-                
-                var targetCalories = 2000
-                var currentGoal = "Wellness"
-                
-                goalsResult.onSuccess { goal ->
-                    targetCalories = (goal["dailyCalories"] as? Number)?.toInt() ?: 2000
-                    currentGoal = goal["goalType"] as? String ?: "Wellness"
-                }
-                
-                val consumed = caloriesResult.getOrDefault(0)
-                val burnedFromSteps = (steps * 0.04).toInt()
-                val netCalories = consumed - burnedFromSteps
-                
-                // 2. Logic for high intensity exercise
-                val hadHighIntensity = exerciseLogs.any { 
-                    (it["intensity"] as? String)?.contains("High", ignoreCase = true) == true || 
-                    (it["type"] as? String)?.contains("HIIT", ignoreCase = true) == true 
-                }
-                
-                // 3. Generate specific coach message
-                val message = when {
-                    hadHighIntensity && consumed < targetCalories -> {
-                        "🔥 Great high-intensity work! Your body needs recovery fuel. Check the AI Diet Plan for a protein-rich post-workout meal."
-                    }
-                    netCalories > targetCalories + 200 -> {
-                        "⚖️ Caloric surplus detected! You've eaten ${netCalories - targetCalories} kcal above your $currentGoal goal. Let's burn it off with a quick Cardio session!"
-                    }
-                    steps < 3000 && Calendar.getInstance().get(Calendar.HOUR_OF_DAY) > 16 -> {
-                        "👟 Activity Alert: You're below 3000 steps for today. A 15-minute evening walk will keep your metabolism active!"
-                    }
-                    consumed > 0 && Math.abs(netCalories - targetCalories) < 150 -> {
-                        "🎯 Perfect Balance! You're exactly on track with your $currentGoal nutrition. Keep this consistency up!"
-                    }
-                    else -> {
-                        val greeting = getGreeting()
-                        "$greeting $userName! Stay consistent with your logging to reach your $currentGoal goal!"
-                    }
-                }
-                
+                // Show loading state
                 runOnUiThread {
-                    tvCoachMessage.text = message
+                    tvCoachMessage.text = "Coach is analyzing your progress... 🔍"
+                }
+
+                val steps = if (::stepManager.isInitialized) stepManager.dailySteps else 0
+                val service = com.example.swasthyamitra.ai.AICoachMessageService.getInstance(this@homepage)
+                val result = service.getCoachMessage(userId, steps)
+                
+                result.onSuccess { message ->
+                    runOnUiThread {
+                        tvCoachMessage.text = message
+                    }
+                }.onFailure {
+                    // Fallback to basic greeting if AI fails
+                    val greeting = getGreeting()
+                    val goalsResult = authHelper.getUserGoal(userId)
+                    var currentGoal = "Health"
+                    goalsResult.onSuccess { goal ->
+                        currentGoal = goal["goalType"] as? String ?: "Health"
+                    }
+                    
+                    runOnUiThread {
+                        tvCoachMessage.text = "$greeting $userName! Keep staying consistent with your $currentGoal goal!"
+                    }
                 }
                 
             } catch (e: Exception) {
@@ -469,6 +489,177 @@ class homepage : AppCompatActivity() {
         if (::stepManager.isInitialized) {
             stepManager.stop()
         }
+    }
+
+    private fun updateAIExerciseRecommendation() {
+        lifecycleScope.launch {
+            try {
+                // 0. Check if it's time to show the recommendation
+                val userId = authHelper.getCurrentUser()?.uid ?: return@launch
+                val profile = firestore.collection("users").document(userId).get().await()
+                val preferredTime = profile.getString("preferredExerciseTime") ?: "Morning"
+                
+                val calendar = java.util.Calendar.getInstance()
+                val currentHour = calendar.get(java.util.Calendar.HOUR_OF_DAY)
+                
+                val isTimeMatch = when(preferredTime) {
+                    "Morning" -> currentHour in 5..11
+                    "Afternoon" -> currentHour in 12..16
+                    "Evening" -> currentHour in 17..20
+                    "Night" -> currentHour in 21..23 || currentHour in 0..4
+                    else -> true
+                }
+
+                if (!isTimeMatch) {
+                    runOnUiThread {
+                        cardAiExercise.visibility = View.GONE
+                    }
+                    return@launch
+                }
+
+                // 0.1 Check if already completed today
+                val db = com.google.firebase.database.FirebaseDatabase.getInstance("https://swasthyamitra-c0899-default-rtdb.asia-southeast1.firebasedatabase.app").reference
+                val today = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault()).format(java.util.Date())
+                val completedToday = db.child("users").child(userId).child("completionHistory").child(today).get().await().getValue(Boolean::class.java) ?: false
+                
+                if (completedToday) {
+                    runOnUiThread {
+                        cardAiExercise.visibility = View.GONE
+                    }
+                    return@launch
+                }
+
+                // 0.2 Check if we already have a sticky recommendation for today
+                val lastDate = profile.getString("lastExerciseDate") ?: ""
+                if (lastDate == today) {
+                    val savedExercise = profile.get("currentDailyExercise") as? Map<String, Any>
+                    if (savedExercise != null) {
+                        val rec = com.example.swasthyamitra.ai.AIExerciseRecommendationService.ExerciseRec(
+                            name = savedExercise["name"] as? String ?: "",
+                            targetMuscle = savedExercise["targetMuscle"] as? String ?: "",
+                            bodyPart = savedExercise["bodyPart"] as? String ?: "",
+                            equipment = savedExercise["equipment"] as? String ?: "",
+                            instructions = (savedExercise["instructions"] as? List<String>) ?: emptyList(),
+                            reason = savedExercise["reason"] as? String ?: ""
+                        )
+                        currentRecommendedExercise = rec
+                        runOnUiThread {
+                            tvRecExerciseName.text = rec.name
+                            tvRecTargetMuscle.text = "Target: ${rec.targetMuscle}"
+                            tvRecReason.text = rec.reason
+                            cardAiExercise.visibility = View.VISIBLE
+                            btnRegenerateExercise.isEnabled = true
+                        }
+                        return@launch
+                    }
+                }
+
+                // 1. Calculate burned calories from steps
+                val steps = if (::stepManager.isInitialized) stepManager.dailySteps else 0
+                val burnedFromSteps = (steps * 0.04).toInt()
+
+                // 2. Refresh UI to show loading state
+                runOnUiThread {
+                    tvRecExerciseName.text = "Consulting Coach... 🧠"
+                    btnRegenerateExercise.isEnabled = false
+                }
+
+                val service = com.example.swasthyamitra.ai.AIExerciseRecommendationService.getInstance(this@homepage)
+                val result = service.getExerciseRecommendation(burnedFromSteps)
+                
+                result.onSuccess { rec ->
+                    currentRecommendedExercise = rec
+
+                    // Save recommendation for stickiness
+                    val exerciseMap = hashMapOf(
+                        "name" to rec.name,
+                        "targetMuscle" to rec.targetMuscle,
+                        "bodyPart" to rec.bodyPart,
+                        "equipment" to rec.equipment,
+                        "instructions" to rec.instructions,
+                        "reason" to rec.reason
+                    )
+                    
+                    firestore.collection("users").document(userId)
+                        .update("currentDailyExercise", exerciseMap, "lastExerciseDate", today)
+                        .await()
+
+                    runOnUiThread {
+                        tvRecExerciseName.text = rec.name
+                        tvRecTargetMuscle.text = "Target: ${rec.targetMuscle}"
+                        tvRecReason.text = rec.reason
+                        cardAiExercise.visibility = View.VISIBLE
+                        btnRegenerateExercise.isEnabled = true
+                    }
+                }.onFailure {
+                    currentRecommendedExercise = null
+                    runOnUiThread {
+                        cardAiExercise.visibility = View.GONE
+                        btnRegenerateExercise.isEnabled = true
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e("Homepage", "Error updating exercise rec", e)
+            }
+        }
+    }
+
+    private fun logRecommendedExercise() {
+        val exercise = currentRecommendedExercise ?: return
+        lifecycleScope.launch {
+            try {
+                val db = com.google.firebase.database.FirebaseDatabase.getInstance("https://swasthyamitra-c0899-default-rtdb.asia-southeast1.firebasedatabase.app").reference
+                val today = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault()).format(java.util.Date())
+                
+                // 1. Mark as completed in Realtime DB (for homepage counter)
+                db.child("users").child(userId).child("completionHistory").child(today).setValue(true)
+                
+                // 2. Log full details in Firestore
+                val firestore = com.google.firebase.firestore.FirebaseFirestore.getInstance()
+                val logData = hashMapOf(
+                    "userId" to userId,
+                    "exerciseName" to exercise.name,
+                    "targetMuscle" to exercise.targetMuscle,
+                    "bodyPart" to exercise.bodyPart,
+                    "equipment" to exercise.equipment,
+                    "timestamp" to System.currentTimeMillis(),
+                    "date" to today,
+                    "source" to "AI_Recommendation"
+                )
+                firestore.collection("exerciseLogs").add(logData)
+                
+                runOnUiThread {
+                    Toast.makeText(this@homepage, "Great job! Exercise logged successfully ✅", Toast.LENGTH_SHORT).show()
+                    displayWorkoutStatus() // Refresh the counter
+                    cardAiExercise.visibility = View.GONE // Hide after logging
+                }
+            } catch (e: Exception) {
+                Log.e("Homepage", "Error logging exercise", e)
+                Toast.makeText(this@homepage, "Failed to log exercise", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    private fun showExerciseGuideDialog() {
+        val exercise = currentRecommendedExercise ?: run {
+            Toast.makeText(this, "No exercise recommended yet", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val builder = android.app.AlertDialog.Builder(this)
+        builder.setTitle(exercise.name.uppercase())
+        
+        val message = StringBuilder()
+        message.append("🎯 Target: ${exercise.targetMuscle}\n")
+        message.append("📦 Equipment: ${exercise.equipment}\n\n")
+        message.append("📝 INSTRUCTIONS:\n")
+        exercise.instructions.forEachIndexed { index, step ->
+            message.append("${index + 1}. $step\n")
+        }
+        
+        builder.setMessage(message.toString())
+        builder.setPositiveButton("Got it!") { dialog, _ -> dialog.dismiss() }
+        builder.show()
     }
 
     private fun navigateToLogin() {
