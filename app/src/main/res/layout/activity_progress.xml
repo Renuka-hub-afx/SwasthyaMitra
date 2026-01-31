@@ -40,7 +40,7 @@
                 <TextView
                     android:layout_width="80dp"
                     android:layout_height="80dp"
-                    android:text="📊"
+                    android:text="ðŸ“Š"
                     android:textSize="50sp"
                     android:gravity="center"
                     android:background="#E1BEE7"
@@ -67,7 +67,7 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="📈 Weekly Statistics"
+            android:text="ðŸ“ˆ Weekly Statistics"
             android:textSize="16sp"
             android:textStyle="bold"
             android:textColor="#9C27B0"
@@ -155,7 +155,7 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="🔥 Your Streaks"
+            android:text="ðŸ”¥ Your Streaks"
             android:textSize="16sp"
             android:textStyle="bold"
             android:textColor="#9C27B0"
@@ -243,7 +243,7 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="🎯 Coming Soon"
+            android:text="ðŸŽ¯ Coming Soon"
             android:textSize="16sp"
             android:textStyle="bold"
             android:textColor="#9C27B0"
@@ -329,7 +329,7 @@
             android:layout_width="match_parent"
             android:layout_height="56dp"
             android:layout_marginHorizontal="16dp"
-            android:text="📊 View Detailed Report"
+            android:text="ðŸ“Š View Detailed Report"
             android:textSize="16sp"
             android:textAllCaps="false"
             android:backgroundTint="#9C27B0"

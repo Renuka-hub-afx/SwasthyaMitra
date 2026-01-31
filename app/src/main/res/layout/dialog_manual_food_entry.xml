@@ -118,8 +118,8 @@
             android:hint="Serving Size"
             style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
             android:layout_marginBottom="16dp"
-            app:boxStrokeColor="#7B2CBF"
-            app:hintTextColor="#7B2CBF">
+            app:boxStrokeColor="#9C27B0"
+            app:hintTextColor="#9C27B0">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/et_serving_size"
@@ -152,7 +152,7 @@
                 android:id="@+id/chip_breakfast"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="🌅 Breakfast"
+                android:text="ðŸŒ… Breakfast"
                 style="@style/Widget.MaterialComponents.Chip.Choice"
                 app:chipBackgroundColor="@color/chip_background_color" />
 
@@ -160,7 +160,7 @@
                 android:id="@+id/chip_lunch"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="☀️ Lunch"
+                android:text="â˜€ï¸ Lunch"
                 style="@style/Widget.MaterialComponents.Chip.Choice"
                 app:chipBackgroundColor="@color/chip_background_color" />
 
@@ -168,7 +168,7 @@
                 android:id="@+id/chip_dinner"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="🌙 Dinner"
+                android:text="ðŸŒ™ Dinner"
                 style="@style/Widget.MaterialComponents.Chip.Choice"
                 app:chipBackgroundColor="@color/chip_background_color" />
 
@@ -176,7 +176,7 @@
                 android:id="@+id/chip_snack"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="🍪 Snack"
+                android:text="ðŸª Snack"
                 style="@style/Widget.MaterialComponents.Chip.Choice"
                 app:chipBackgroundColor="@color/chip_background_color" />
 

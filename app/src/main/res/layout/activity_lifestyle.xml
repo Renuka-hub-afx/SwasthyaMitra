@@ -82,7 +82,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="🛋️"
+                        android:text="ðŸ›‹ï¸"
                         android:textSize="24sp" />
 
                     <TextView
@@ -118,7 +118,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="🚶"
+                        android:text="ðŸš¶"
                         android:textSize="24sp" />
 
                     <TextView
@@ -164,7 +164,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="🏃"
+                        android:text="ðŸƒ"
                         android:textSize="24sp" />
 
                     <TextView
@@ -200,7 +200,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="🏋️"
+                        android:text="ðŸ‹ï¸"
                         android:textSize="24sp" />
 
                     <TextView
@@ -260,7 +260,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="🥗"
+                        android:text="ðŸ¥—"
                         android:textSize="24sp" />
 
                     <TextView
@@ -296,7 +296,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="🍗"
+                        android:text="ðŸ—"
                         android:textSize="24sp" />
 
                     <TextView
@@ -342,7 +342,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="🌱"
+                        android:text="ðŸŒ±"
                         android:textSize="24sp" />
 
                     <TextView
@@ -378,7 +378,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="🥚"
+                        android:text="ðŸ¥š"
                         android:textSize="24sp" />
 
                     <TextView
@@ -453,7 +453,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="📊 Your Metabolic Profile"
+                    android:text="ðŸ“Š Your Metabolic Profile"
                     android:textColor="#6A1B9A"
                     android:textSize="18sp"
                     android:fontFamily="@font/source_serif_pro_bold"
@@ -590,7 +590,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="🎯 Your Daily Target"
+                            android:text="ðŸŽ¯ Your Daily Target"
                             android:textColor="#6A1B9A"
                             android:textSize="14sp"
                             android:textStyle="bold" />

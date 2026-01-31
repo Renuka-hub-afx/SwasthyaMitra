@@ -41,8 +41,8 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="4dp"
                     android:fontFamily="@font/source_serif_pro_regular"
-                    android:text="🌅 Breakfast"
-                    android:textColor="#7B2CBF"
+                    android:text="ðŸŒ… Breakfast"
+                    android:textColor="#9C27B0"
                     android:textSize="13sp" />
 
             </LinearLayout>

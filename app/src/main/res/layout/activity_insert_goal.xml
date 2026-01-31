@@ -59,7 +59,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="🏃‍♂️"
+                    android:text="ðŸƒâ€â™‚ï¸"
                     android:textSize="32sp" />
 
                 <LinearLayout
@@ -112,7 +112,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="🧘‍♂️"
+                    android:text="ðŸ§˜â€â™‚ï¸"
                     android:textSize="32sp" />
 
                 <LinearLayout
@@ -165,7 +165,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="💪"
+                    android:text="ðŸ’ª"
                     android:textSize="32sp" />
 
                 <LinearLayout
@@ -218,7 +218,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="🎮"
+                    android:text="ðŸŽ®"
                     android:textSize="32sp" />
 
                 <LinearLayout

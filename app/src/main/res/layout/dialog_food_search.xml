@@ -13,15 +13,15 @@
         android:text="Search Indian Food"
         android:textSize="24sp"
         android:fontFamily="@font/source_serif_pro_bold"
-        android:textColor="#7B2CBF"
+        android:textColor="#9C27B0"
         android:layout_marginBottom="16dp" />
 
     <com.google.android.material.textfield.TextInputLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-        app:boxStrokeColor="#7B2CBF"
-        app:hintTextColor="#7B2CBF">
+        app:boxStrokeColor="#9C27B0"
+        app:hintTextColor="#9C27B0">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/et_search_food"
@@ -39,7 +39,7 @@
         android:id="@+id/tv_search_hint"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="💡 Start typing to search from 1000+ Indian foods"
+        android:text="ðŸ’¡ Start typing to search from 1000+ Indian foods"
         android:textSize="12sp"
         android:fontFamily="@font/source_serif_pro_regular"
         android:textColor="#666666"
@@ -96,7 +96,7 @@
             android:layout_height="wrap_content"
             android:text="Cancel"
             android:fontFamily="@font/source_serif_pro_bold"
-            android:textColor="#7B2CBF"
+            android:textColor="#9C27B0"
             android:background="@android:color/transparent"
             android:padding="12dp" />
     </LinearLayout>

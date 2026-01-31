@@ -191,7 +191,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="--"
-                    android:textColor="#7B2CBF"
+                    android:textColor="#9C27B0"
                     android:textSize="36sp"
                     android:textStyle="bold"
                     android:layout_marginTop="4dp" />
@@ -218,12 +218,12 @@
             android:layout_marginTop="16dp"
             android:text="Calculate BMI"
             android:textAllCaps="false"
-            android:textColor="#7B2CBF"
+            android:textColor="#9C27B0"
             android:textStyle="bold"
             app:backgroundTint="#FCE4EC"
             app:cornerRadius="20dp"
             app:icon="@android:drawable/ic_menu_info_details"
-            app:iconTint="#7B2CBF"
+            app:iconTint="#9C27B0"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/cardBMI" />
