@@ -161,6 +161,20 @@
                     android:text="23 years"
                     android:textColor="#1D1617"
                     android:textStyle="bold" />
+                <EditText
+                    android:id="@+id/userAgeEdit"
+                    android:layout_width="60dp"
+                    android:layout_height="wrap_content"
+                    android:inputType="number"
+                    android:visibility="gone"
+                    android:textSize="14sp"/>
+                <ImageView
+                    android:id="@+id/editAgeIcon"
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:layout_marginStart="8dp"
+                    android:src="@drawable/ic_edit"
+                    app:tint="#9C27B0" />
             </LinearLayout>
 
             <View android:layout_width="match_parent" android:layout_height="16dp"/>
@@ -182,6 +196,18 @@
                     android:text="Male"
                     android:textColor="#1D1617"
                     android:textStyle="bold" />
+                <Spinner
+                    android:id="@+id/userGenderSpinner"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:visibility="gone" />
+                <ImageView
+                    android:id="@+id/editGenderIcon"
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:layout_marginStart="8dp"
+                    android:src="@drawable/ic_edit"
+                    app:tint="#9C27B0" />
             </LinearLayout>
 
             <View android:layout_width="match_parent" android:layout_height="16dp"/>
@@ -203,6 +229,20 @@
                     android:text="179.0 cm"
                     android:textColor="#1D1617"
                     android:textStyle="bold" />
+                <EditText
+                    android:id="@+id/userHeightEdit"
+                    android:layout_width="60dp"
+                    android:layout_height="wrap_content"
+                    android:inputType="numberDecimal"
+                    android:visibility="gone"
+                    android:textSize="14sp"/>
+                <ImageView
+                    android:id="@+id/editHeightIcon"
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:layout_marginStart="8dp"
+                    android:src="@drawable/ic_edit"
+                    app:tint="#9C27B0" />
             </LinearLayout>
 
             <View android:layout_width="match_parent" android:layout_height="16dp"/>
@@ -224,6 +264,20 @@
                     android:text="85.0 kg"
                     android:textColor="#1D1617"
                     android:textStyle="bold" />
+                <EditText
+                    android:id="@+id/userWeightEdit"
+                    android:layout_width="60dp"
+                    android:layout_height="wrap_content"
+                    android:inputType="numberDecimal"
+                    android:visibility="gone"
+                    android:textSize="14sp"/>
+                <ImageView
+                    android:id="@+id/editWeightIcon"
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:layout_marginStart="8dp"
+                    android:src="@drawable/ic_edit"
+                    app:tint="#9C27B0" />
             </LinearLayout>
 
             <View android:layout_width="match_parent" android:layout_height="16dp"/>

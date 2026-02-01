@@ -7,6 +7,8 @@ import android.widget.EditText
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
+import android.widget.ArrayAdapter
+import android.widget.Spinner
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
@@ -43,6 +45,20 @@ class ProfileActivity : AppCompatActivity() {
     private lateinit var btnSettings: ImageView
     private lateinit var avatarContainer: ViewGroup
     private lateinit var avatarManager: AvatarManager
+    private lateinit var sharedPrefs: android.content.SharedPreferences
+
+    // Edit Views
+    private lateinit var userAgeEdit: EditText
+    private lateinit var userHeightEdit: EditText
+    private lateinit var userWeightEdit: EditText
+    private lateinit var userGenderSpinner: Spinner
+    private lateinit var editAgeIcon: ImageView
+    private lateinit var editGenderIcon: ImageView
+    private lateinit var editHeightIcon: ImageView
+    private lateinit var editWeightIcon: ImageView
+
+    private var isEditMode = false
+    private val genderOptions = listOf("Male", "Female", "Other", "Prefer not to say")
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -50,6 +66,7 @@ class ProfileActivity : AppCompatActivity() {
 
         authHelper = FirebaseAuthHelper(this)
         avatarManager = AvatarManager(this)
+        sharedPrefs = getSharedPreferences("user_profile", android.content.Context.MODE_PRIVATE)
         userId = authHelper.getCurrentUser()?.uid ?: ""
 
         if (userId.isEmpty()) {
@@ -87,6 +104,17 @@ class ProfileActivity : AppCompatActivity() {
         btnSettings = findViewById(R.id.btnSettings)
         avatarContainer = findViewById(R.id.avatarContainer)
 
+        userAgeEdit = findViewById(R.id.userAgeEdit)
+        userHeightEdit = findViewById(R.id.userHeightEdit)
+        userWeightEdit = findViewById(R.id.userWeightEdit)
+        userGenderSpinner = findViewById(R.id.userGenderSpinner)
+        editAgeIcon = findViewById(R.id.editAgeIcon)
+        editGenderIcon = findViewById(R.id.editGenderIcon)
+        editHeightIcon = findViewById(R.id.editHeightIcon)
+        editWeightIcon = findViewById(R.id.editWeightIcon)
+
+        setupGenderSpinner()
+
         // Set up click listeners
         avatarContainer.setOnClickListener {
             startActivity(Intent(this, AvatarCustomizationActivity::class.java))
@@ -100,8 +128,18 @@ class ProfileActivity : AppCompatActivity() {
         }
 
         editProfileButton.setOnClickListener {
-            Toast.makeText(this, "Edit profile - Coming in Week 2", Toast.LENGTH_SHORT).show()
+            if (isEditMode) {
+                saveProfileChanges()
+            } else {
+                toggleEditMode(true)
+            }
         }
+
+        val editIconListener = View.OnClickListener { toggleEditMode(true) }
+        editAgeIcon.setOnClickListener(editIconListener)
+        editGenderIcon.setOnClickListener(editIconListener)
+        editHeightIcon.setOnClickListener(editIconListener)
+        editWeightIcon.setOnClickListener(editIconListener)
 
         logoutButton.setOnClickListener {
             handleLogout()
@@ -119,7 +157,27 @@ class ProfileActivity : AppCompatActivity() {
                 if (currentUser != null) {
                     userEmailText.text = currentUser.email ?: "No email"
 
-                    // Load user data from Firestore
+                    // Load user data from SharedPreferences first (offline/immediate)
+                    val localAge = sharedPrefs.getInt("age", -1)
+                    val localGender = sharedPrefs.getString("gender", null)
+                    val localHeight = sharedPrefs.getString("height", null)
+                    val localWeight = sharedPrefs.getString("weight", null)
+
+                    if (localAge != -1 && localGender != null && localHeight != null && localWeight != null) {
+                        userAgeText.text = "$localAge years"
+                        userGenderText.text = localGender
+                        userHeightText.text = "$localHeight cm"
+                        userWeightText.text = "$localWeight kg"
+                        
+                        val h = localHeight.toDoubleOrNull() ?: 0.0
+                        val w = localWeight.toDoubleOrNull() ?: 0.0
+                        if (h > 0) {
+                            val bmi = w / ((h / 100) * (h / 100))
+                            userBmiText.text = String.format("%.1f", bmi)
+                        }
+                    }
+
+                    // Load user data from Firestore to keep it synced
                     FirebaseFirestore.getInstance().collection("users")
                         .document(userId)
                         .get()
@@ -132,18 +190,19 @@ class ProfileActivity : AppCompatActivity() {
                                 val weight = document.get("weight").toString()
 
                                 userNameText.text = name
-                                userAgeText.text = "$age years"
+                                
+                                // Only update text views if local data is not already present or if we want Firestore to be ultimate truth
+                                // For now, let's update them anyway to sync from server
+                                userAgeText.text = if (age != "null") "$age years" else userAgeText.text
                                 userGenderText.text = gender
-                                userHeightText.text = "$height cm"
-                                userWeightText.text = "$weight kg"
+                                userHeightText.text = if (height != "null") "$height cm" else userHeightText.text
+                                userWeightText.text = if (weight != "null") "$weight kg" else userWeightText.text
 
                                 val heightValue = height.toDoubleOrNull()
                                 val weightValue = weight.toDoubleOrNull()
                                 if (heightValue != null && weightValue != null && heightValue > 0) {
                                     val bmi = weightValue / ((heightValue / 100) * (heightValue / 100))
                                     userBmiText.text = String.format("%.1f", bmi)
-                                } else {
-                                    userBmiText.text = "N/A"
                                 }
                             }
                         }
@@ -236,6 +295,99 @@ class ProfileActivity : AppCompatActivity() {
             }
     }
     
+    private fun setupGenderSpinner() {
+        val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, genderOptions)
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        userGenderSpinner.adapter = adapter
+    }
+
+    private fun toggleEditMode(edit: Boolean) {
+        isEditMode = edit
+        
+        // Toggle Visibility
+        val viewVisibility = if (edit) View.GONE else View.VISIBLE
+        val editVisibility = if (edit) View.VISIBLE else View.GONE
+
+        userAgeText.visibility = viewVisibility
+        userAgeEdit.visibility = editVisibility
+        userGenderText.visibility = viewVisibility
+        userGenderSpinner.visibility = editVisibility
+        userHeightText.visibility = viewVisibility
+        userHeightEdit.visibility = editVisibility
+        userWeightText.visibility = viewVisibility
+        userWeightEdit.visibility = editVisibility
+
+        editProfileButton.text = if (edit) "✅ Save Changes" else "✏️ Edit Profile"
+
+        if (edit) {
+            // Populate fields with current values
+            userAgeEdit.setText(userAgeText.text.toString().filter { it.isDigit() })
+            userHeightEdit.setText(userHeightText.text.toString().filter { it.isDigit() || it == '.' })
+            userWeightEdit.setText(userWeightText.text.toString().filter { it.isDigit() || it == '.' })
+            val genderIndex = genderOptions.indexOf(userGenderText.text.toString())
+            if (genderIndex != -1) userGenderSpinner.setSelection(genderIndex)
+        }
+    }
+
+    private fun saveProfileChanges() {
+        val ageStr = userAgeEdit.text.toString()
+        val heightStr = userHeightEdit.text.toString()
+        val weightStr = userWeightEdit.text.toString()
+        val gender = userGenderSpinner.selectedItem.toString()
+
+        // Validation
+        if (ageStr.isEmpty() || heightStr.isEmpty() || weightStr.isEmpty()) {
+            Toast.makeText(this, "Fields cannot be empty", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val age = ageStr.toIntOrNull() ?: 0
+        val height = heightStr.toDoubleOrNull() ?: 0.0
+        val weight = weightStr.toDoubleOrNull() ?: 0.0
+
+        if (age !in 1..120) {
+            Toast.makeText(this, "Please enter a realistic age", Toast.LENGTH_SHORT).show()
+            return
+        }
+        if (height !in 50.0..250.0) {
+            Toast.makeText(this, "Please enter a realistic height (50-250 cm)", Toast.LENGTH_SHORT).show()
+            return
+        }
+        if (weight !in 2.0..300.0) {
+            Toast.makeText(this, "Please enter a realistic weight (2-300 kg)", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        // Persistence: SharedPreferences
+        sharedPrefs.edit().apply {
+            putInt("age", age)
+            putString("gender", gender)
+            putString("height", height.toString())
+            putString("weight", weight.toString())
+            apply()
+        }
+
+        // Sync with Firestore
+        FirebaseFirestore.getInstance().collection("users")
+            .document(userId)
+            .update(mapOf(
+                "age" to age,
+                "gender" to gender,
+                "height" to height,
+                "weight" to weight
+            ))
+            .addOnSuccessListener {
+                Toast.makeText(this, "Profile updated successfully!", Toast.LENGTH_SHORT).show()
+                toggleEditMode(false)
+                loadUserProfile() // Refresh UI from data
+            }
+            .addOnFailureListener { e ->
+                Toast.makeText(this, "Sync failed: ${e.message}, saved locally", Toast.LENGTH_SHORT).show()
+                toggleEditMode(false)
+                loadUserProfile()
+            }
+    }
+
     private fun updateAvatarDisplay() {
         val galleryUri = avatarManager.getGalleryUri()
 
