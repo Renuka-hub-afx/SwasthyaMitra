@@ -18,6 +18,14 @@
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
     <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
+    
+    <queries>
+        <package android:name="com.google.android.youtube" />
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="https" />
+        </intent>
+    </queries>
 
     <application
         android:name=".UserApplication"
@@ -76,9 +84,7 @@
             android:name=".CoachActivity"
             android:exported="false" />
 
-        <activity
-            android:name=".ChallengeFriendActivity"
-            android:exported="false" />
+
 
         <activity
             android:name=".ProgressActivity"
@@ -132,6 +138,11 @@
 
         <activity
             android:name=".MealPlanActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name=".AvatarCustomizationActivity"
             android:exported="false"
             android:screenOrientation="portrait" />
 

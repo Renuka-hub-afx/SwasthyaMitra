@@ -1,119 +1,177 @@
 package com.example.swasthyamitra
 
-import android.util.Log
 import com.example.swasthyamitra.auth.FirebaseAuthHelper
-import com.google.firebase.database.DataSnapshot
-import com.google.firebase.database.DatabaseError
+import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.database.FirebaseDatabase
-import com.google.firebase.database.ValueEventListener
-import kotlinx.coroutines.suspendCancellableCoroutine
+
+import kotlinx.coroutines.tasks.await
 import java.text.SimpleDateFormat
 import java.util.*
-import kotlin.coroutines.resume
-import kotlin.coroutines.resumeWithException
+import android.util.Log
+import kotlin.math.min
 
-class InsightsRepository(
-    private val authHelper: FirebaseAuthHelper,
-    private val userId: String
-) {
-    
-    private val database = FirebaseDatabase.getInstance("https://swasthyamitra-c0899-default-rtdb.asia-southeast1.firebasedatabase.app").reference
-    
+class InsightsRepository(private val authHelper: FirebaseAuthHelper, private val userId: String) {
+
+    private val firestore = FirebaseFirestore.getInstance()
+    private val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+    private val dayFormat = SimpleDateFormat("EEE", Locale.getDefault())
+
     suspend fun getWeeklyMetrics(): WeeklyMetrics {
-        val insights = fetchWeeklyInsights()
-        val score = calculateBalanceScore(insights)
-        val category = getScoreCategory(score)
-        val narrative = generateNarrative(insights, score)
-        val microGoal = generateMicroGoal(insights)
-        
-        return WeeklyMetrics(
-            balanceScore = score,
-            category = category,
-            narrative = narrative,
-            microGoal = microGoal,
-            insights = insights
-        )
-    }
-    
-    private suspend fun fetchWeeklyInsights(): List<DailyInsight> = suspendCancellableCoroutine { continuation ->
-        val insights = mutableListOf<DailyInsight>()
-        val calendar = Calendar.getInstance()
-        val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-        val dayFormat = SimpleDateFormat("EEE", Locale.getDefault())
-        
-        // Get last 7 days
-        calendar.add(Calendar.DAY_OF_YEAR, -6)
-        
-        for (i in 0 until 7) {
-            val dateStr = dateFormat.format(calendar.time)
-            val dayName = dayFormat.format(calendar.time)
+        try {
+            // Get data for the past 7 days
+            val insights = mutableListOf<DailyInsight>()
+            val calendar = Calendar.getInstance()
             
-            insights.add(DailyInsight(
-                dayName = dayName,
-                date = dateStr,
-                caloriesConsumed = (1500..2500).random(), // Mock data
-                steps = (2000..8000).random(), // Mock data
-                workoutMinutes = (0..60).random() // Mock data
-            ))
+            // Start from 6 days ago to today (7 days total)
+            calendar.add(Calendar.DAY_OF_YEAR, -6)
             
-            calendar.add(Calendar.DAY_OF_YEAR, 1)
+            var totalSteps = 0
+            var totalCalories = 0
+            var totalWorkoutMinutes = 0
+            var daysWithWorkouts = 0
+            
+            for (i in 0 until 7) {
+                val date = calendar.time
+                val dateString = dateFormat.format(date)
+                val dayName = dayFormat.format(date)
+                
+                // Fetch steps for this day
+                val steps = getStepsForDate(dateString)
+                
+                // Fetch calories for this day
+                val calories = getCaloriesForDate(dateString)
+                
+                // Fetch workout minutes for this day
+                val workoutMinutes = getWorkoutMinutesForDate(dateString)
+                
+                insights.add(DailyInsight(dayName, dateString, calories, steps, workoutMinutes))
+                
+                totalSteps += steps
+                totalCalories += calories
+                totalWorkoutMinutes += workoutMinutes
+                if (workoutMinutes > 0) daysWithWorkouts++
+                
+                calendar.add(Calendar.DAY_OF_YEAR, 1)
+            }
+            
+            // Calculate balance score (0-100)
+            val avgSteps = totalSteps / 7.0
+            val avgCalories = totalCalories / 7.0
+            
+            // Consistency score (40%): Based on workout frequency (target: 4 days/week)
+            val consistencyScore = min((daysWithWorkouts / 4.0 * 40).toInt(), 40)
+            
+            // Activity score (30%): Based on steps (target: 5000/day)
+            val activityScore = min((avgSteps / 5000.0 * 30).toInt(), 30)
+            
+            // Balance score (30%): Based on calories (target: 2000/day)
+            val nutritionScore = min((avgCalories / 2000.0 * 30).toInt(), 30)
+            
+            val balanceScore = consistencyScore + activityScore + nutritionScore
+            
+            // Determine category and narrative
+            val (category, narrative, microGoal) = when {
+                balanceScore >= 80 -> Triple(
+                    "Excellent Balance ⭐",
+                    "Outstanding! You're maintaining great balance this week with consistent workouts, active movement, and good nutrition.",
+                    "Keep up the momentum! Challenge yourself to beat your step count.")
+                balanceScore >= 60 -> Triple(
+                    "Good Balance 👍",
+                    "You're on the right track! Your activity and nutrition are well-balanced. A few more workouts would be perfect.",
+                    "Try to add one more workout session this week.")
+                balanceScore >= 40 -> Triple(
+                    "Needs Improvement 📈",
+                    "You're making progress, but there's room to grow. Focus on consistency in both movement and nutrition.",
+                    "Set a goal to reach 5,000 steps and log at least one workout.")
+                else -> Triple(
+                    "Getting Started 🌱",
+                    "Every journey starts somewhere! Let's build healthy habits one day at a time.",
+                    "Start small: Aim for 3,000 steps today and log your meals.")
+            }
+            
+            Log.d("InsightsRepository", "Weekly metrics calculated: Score=$balanceScore, Days with workouts=$daysWithWorkouts")
+            
+            return WeeklyMetrics(
+                balanceScore = balanceScore,
+                category = category,
+                narrative = narrative,
+                microGoal = microGoal,
+                insights = insights
+            )
+            
+        } catch (e: Exception) {
+            Log.e("InsightsRepository", "Error fetching weekly metrics", e)
+            // Return default data if error occurs
+            return WeeklyMetrics(
+                balanceScore = 0,
+                category = "No Data",
+                narrative = "Unable to load insights. Please ensure you've logged some activities.",
+                microGoal = "Start by logging your first workout!",
+                insights = emptyList()
+            )
         }
-        
-        Log.d("InsightsRepository", "Generated ${insights.size} daily insights")
-        continuation.resume(insights)
     }
     
-    private fun calculateBalanceScore(insights: List<DailyInsight>): Int {
-        if (insights.isEmpty()) return 0
-        
-        val avgSteps = insights.map { it.steps }.average()
-        val avgCalories = insights.map { it.caloriesConsumed }.average()
-        val workoutDays = insights.count { it.workoutMinutes > 0 }
-        
-        // Consistency score (40%): based on workout days
-        val consistencyScore = (workoutDays / 7.0 * 40).toInt()
-        
-        // Activity score (30%): based on steps (target: 5000)
-        val activityScore = ((avgSteps / 5000.0).coerceAtMost(1.0) * 30).toInt()
-        
-        // Balance score (30%): based on calories (target: 2000)
-        val calorieBalance = 1.0 - kotlin.math.abs(avgCalories - 2000) / 2000.0
-        val balanceScore = (calorieBalance.coerceAtLeast(0.0) * 30).toInt()
-        
-        return (consistencyScore + activityScore + balanceScore).coerceIn(0, 100)
-    }
-    
-    private fun getScoreCategory(score: Int): String {
-        return when {
-            score >= 80 -> "Excellent 🌟"
-            score >= 60 -> "Good 👍"
-            score >= 40 -> "Fair 😊"
-            else -> "Needs Improvement 💪"
+    private suspend fun getStepsForDate(date: String): Int {
+        return try {
+            val prefs = authHelper.getContext().getSharedPreferences("StepCounterPrefs", android.content.Context.MODE_PRIVATE)
+            val savedDate = prefs.getString("last_date", "")
+            val today = dateFormat.format(Date())
+
+            val steps = if (date == today && date == savedDate) {
+                prefs.getInt("daily_steps", 0)
+            } else {
+                // Try to get from Realtime Database
+                val db = FirebaseDatabase.getInstance("https://swasthyamitra-c0899-default-rtdb.asia-southeast1.firebasedatabase.app").reference
+                val snapshot = db.child("dailyActivity").child(userId).child(date).child("steps").get().await()
+                snapshot.getValue(Long::class.java)?.toInt() ?: 0
+            }
+
+            Log.d("InsightsRepository", "Steps for $date: $steps")
+            steps
+        } catch (e: Exception) {
+            Log.e("InsightsRepository", "Error getting steps for $date", e)
+            0
         }
     }
     
-    private fun generateNarrative(insights: List<DailyInsight>, score: Int): String {
-        val avgSteps = insights.map { it.steps }.average().toInt()
-        val workoutDays = insights.count { it.workoutMinutes > 0 }
-        
-        return when {
-            score >= 80 -> "Amazing work this week! You're maintaining excellent balance with $avgSteps average daily steps and $workoutDays workout days. Keep up this fantastic momentum!"
-            score >= 60 -> "Great progress! You averaged $avgSteps steps daily with $workoutDays workout days. You're on the right track to achieving your fitness goals."
-            score >= 40 -> "You're making progress with $avgSteps average steps and $workoutDays workout days. Let's aim for more consistency to boost your score!"
-            else -> "This week showed $avgSteps average steps and $workoutDays workout days. Small improvements each day will help you build momentum!"
+    private suspend fun getCaloriesForDate(date: String): Int {
+        return try {
+            val foodLogs = firestore.collection("foodLogs")
+                .whereEqualTo("userId", userId)
+                .whereEqualTo("date", date)
+                .get()
+                .await()
+            
+            var totalCalories = 0
+            for (doc in foodLogs.documents) {
+                totalCalories += doc.getLong("calories")?.toInt() ?: 0
+            }
+            Log.d("InsightsRepository", "Calories for $date: $totalCalories (from ${foodLogs.documents.size} food logs)")
+            totalCalories
+        } catch (e: Exception) {
+            Log.e("InsightsRepository", "Error getting calories for $date", e)
+            0
         }
     }
     
-    private fun generateMicroGoal(insights: List<DailyInsight>): String {
-        val avgSteps = insights.map { it.steps }.average().toInt()
-        val workoutDays = insights.count { it.workoutMinutes > 0 }
-        
-        return when {
-            avgSteps < 3000 -> "🎯 This week: Aim for 3,500 daily steps"
-            avgSteps < 5000 -> "🎯 This week: Reach 5,000 steps per day"
-            workoutDays < 3 -> "🎯 This week: Complete 3 workout sessions"
-            workoutDays < 4 -> "🎯 This week: Achieve 4 workout days"
-            else -> "🎯 This week: Maintain your excellent routine!"
+    private suspend fun getWorkoutMinutesForDate(date: String): Int {
+        return try {
+            val workouts = firestore.collection("workouts")
+                .whereEqualTo("userId", userId)
+                .whereEqualTo("date", date)
+                .whereEqualTo("completed", true)
+                .get()
+                .await()
+            
+            var totalMinutes = 0
+            for (doc in workouts.documents) {
+                totalMinutes += doc.getLong("durationMinutes")?.toInt() ?: 30 // Default 30 min if not specified
+            }
+            totalMinutes
+        } catch (e: Exception) {
+            Log.e("InsightsRepository", "Error getting workout minutes for $date", e)
+            0
         }
     }
 }

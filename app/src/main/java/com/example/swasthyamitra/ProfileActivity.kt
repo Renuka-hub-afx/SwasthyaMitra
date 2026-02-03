@@ -2,6 +2,7 @@ package com.example.swasthyamitra
 
 import android.content.Intent
 import android.os.Bundle
+import android.view.View
 import android.widget.EditText
 import android.widget.ImageView
 import android.widget.TextView
@@ -14,6 +15,8 @@ import com.google.android.material.button.MaterialButton
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.launch
+import android.view.ViewGroup
+import android.widget.FrameLayout
 
 class ProfileActivity : AppCompatActivity() {
 
@@ -38,12 +41,15 @@ class ProfileActivity : AppCompatActivity() {
     private lateinit var editGoalWeightButton: ImageView
     private lateinit var btnBack: ImageView
     private lateinit var btnSettings: ImageView
+    private lateinit var avatarContainer: ViewGroup
+    private lateinit var avatarManager: AvatarManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_profile)
 
         authHelper = FirebaseAuthHelper(this)
+        avatarManager = AvatarManager(this)
         userId = authHelper.getCurrentUser()?.uid ?: ""
 
         if (userId.isEmpty()) {
@@ -54,6 +60,11 @@ class ProfileActivity : AppCompatActivity() {
 
         initializeViews()
         loadUserProfile()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        updateAvatarDisplay()
     }
 
     private fun initializeViews() {
@@ -74,8 +85,12 @@ class ProfileActivity : AppCompatActivity() {
         editGoalWeightButton = findViewById(R.id.editGoalWeightButton)
         btnBack = findViewById(R.id.btnBack)
         btnSettings = findViewById(R.id.btnSettings)
+        avatarContainer = findViewById(R.id.avatarContainer)
 
         // Set up click listeners
+        avatarContainer.setOnClickListener {
+            startActivity(Intent(this, AvatarCustomizationActivity::class.java))
+        }
         btnBack.setOnClickListener {
             finish()
         }
@@ -111,7 +126,6 @@ class ProfileActivity : AppCompatActivity() {
                         .addOnSuccessListener { document ->
                             if (document.exists()) {
                                 val name = document.getString("name") ?: "User"
-                                // Handle numbers stored as strings or numbers safely
                                 val age = document.get("age").toString()
                                 val gender = document.getString("gender") ?: "N/A"
                                 val height = document.get("height").toString()
@@ -123,7 +137,6 @@ class ProfileActivity : AppCompatActivity() {
                                 userHeightText.text = "$height cm"
                                 userWeightText.text = "$weight kg"
 
-                                // Calculate BMI
                                 val heightValue = height.toDoubleOrNull()
                                 val weightValue = weight.toDoubleOrNull()
                                 if (heightValue != null && weightValue != null && heightValue > 0) {
@@ -138,7 +151,6 @@ class ProfileActivity : AppCompatActivity() {
                             Toast.makeText(this@ProfileActivity, "Error loading profile: ${e.message}", Toast.LENGTH_SHORT).show()
                         }
 
-                    // Load goals from Firestore
                     FirebaseFirestore.getInstance().collection("goals")
                         .whereEqualTo("userId", userId)
                         .limit(1)
@@ -176,7 +188,6 @@ class ProfileActivity : AppCompatActivity() {
         FirebaseAuth.getInstance().signOut()
         Toast.makeText(this, "Logged out successfully", Toast.LENGTH_SHORT).show()
 
-        // Navigate back to login screen
         val intent = Intent(this, LoginActivity::class.java)
         intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         startActivity(intent)
@@ -223,5 +234,25 @@ class ProfileActivity : AppCompatActivity() {
             .addOnFailureListener { e ->
                 Toast.makeText(this@ProfileActivity, "Error updating goal weight: ${e.message}", Toast.LENGTH_SHORT).show()
             }
+    }
+    
+    private fun updateAvatarDisplay() {
+        val galleryUri = avatarManager.getGalleryUri()
+
+        avatarContainer.removeAllViews()
+
+        val imageView = ImageView(this)
+        imageView.layoutParams = FrameLayout.LayoutParams(
+            FrameLayout.LayoutParams.MATCH_PARENT,
+            FrameLayout.LayoutParams.MATCH_PARENT
+        )
+        imageView.scaleType = ImageView.ScaleType.CENTER_CROP
+        
+        if (galleryUri != null) {
+            imageView.setImageURI(galleryUri)
+        } else {
+            imageView.setImageResource(R.drawable.circular_background) // Default
+        }
+        avatarContainer.addView(imageView)
     }
 }

@@ -15,6 +15,9 @@ class FirebaseAuthHelper(private val context: Context) {
     // Get current user
     fun getCurrentUser(): FirebaseUser? = auth.currentUser
 
+    // Get context
+    fun getContext(): Context = context
+
     // Check if user is logged in
     fun isUserLoggedIn(): Boolean = auth.currentUser != null
 

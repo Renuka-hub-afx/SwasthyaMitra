@@ -1,0 +1,461 @@
+[
+    {
+        "exerciseId": "yoga_bridge",
+        "name": "Bridge Pose",
+        "gifUrl": "exercise 2/Bridge/File1.png",
+        "targetMuscles": [
+            "glutes",
+            "core",
+            "lower back"
+        ],
+        "bodyParts": [
+            "hips",
+            "spine"
+        ],
+        "equipments": [
+            "body weight"
+        ],
+        "secondaryMuscles": [
+            "hamstrings",
+            "abs"
+        ],
+        "instructions": [
+            "Step:1 Lie on your back with knees bent and feet flat on the floor, hip-width apart.",
+            "Step:2 Place your arms alongside your body with palms facing down.",
+            "Step:3 Press your feet and arms into the floor as you lift your hips toward the ceiling.",
+            "Step:4 Keep your thighs and feet parallel, engaging your glutes and core.",
+            "Step:5 Hold for 30 seconds to 1 minute, breathing deeply.",
+            "Step:6 Slowly lower your hips back down to the floor."
+        ],
+        "genderTags": [
+            "female",
+            "male"
+        ],
+        "ageGroups": [
+            "all"
+        ],
+        "periodModeSafe": true,
+        "intensityLevel": "gentle",
+        "periodBenefits": "Helps relieve lower back tension and menstrual cramps while gently strengthening your core",
+        "motivationalMessage": "This gentle pose is perfect for easing discomfort while keeping your body active! You're doing great! 🌸",
+        "genderBenefits": {
+            "male": "Strengthens glutes and lower back for better posture and athletic performance",
+            "female": "Excellent for pelvic floor strength and relieving lower back tension, especially during menstrual days"
+        },
+        "ageRecommendations": {
+            "under18": "Great for building core foundation and improving flexibility",
+            "18-50": "Perfect for strengthening glutes and relieving stress from sitting",
+            "over50": "Gentle way to maintain spine mobility and strengthen supporting muscles"
+        }
+    },
+    {
+        "exerciseId": "yoga_cat",
+        "name": "Cat-Cow Stretch",
+        "gifUrl": "exercise 2/Cat/File1.png",
+        "targetMuscles": [
+            "spine",
+            "core"
+        ],
+        "bodyParts": [
+            "back",
+            "neck"
+        ],
+        "equipments": [
+            "body weight"
+        ],
+        "secondaryMuscles": [
+            "abs",
+            "shoulders"
+        ],
+        "instructions": [
+            "Step:1 Start on your hands and knees in a tabletop position.",
+            "Step:2 Inhale and arch your back, lifting your chest and tailbone (Cow Pose).",
+            "Step:3 Exhale and round your spine, tucking your chin to chest (Cat Pose).",
+            "Step:4 Flow between these positions for 5-10 breaths.",
+            "Step:5 Move slowly and mindfully with your breath."
+        ],
+        "genderTags": [
+            "female",
+            "male"
+        ],
+        "ageGroups": [
+            "all"
+        ],
+        "periodModeSafe": true,
+        "intensityLevel": "gentle",
+        "periodBenefits": "Gentle spinal movement improves circulation and reduces menstrual cramps",
+        "motivationalMessage": "This flowing movement is like a gentle massage for your spine. Perfect for today! 💕",
+        "genderBenefits": {
+            "male": "Improves spine flexibility and relieves tension from desk work",
+            "female": "Excellent for pelvic circulation and relieving menstrual discomfort"
+        },
+        "ageRecommendations": {
+            "under18": "Builds body awareness and improves posture",
+            "18-50": "Relieves stress and improves spine mobility",
+            "over50": "Gentle way to maintain spine health and reduce stiffness"
+        }
+    },
+    {
+        "exerciseId": "yoga_plank",
+        "name": "Plank Pose",
+        "gifUrl": "exercise 2/Plank/File1.png",
+        "targetMuscles": [
+            "core",
+            "abs"
+        ],
+        "bodyParts": [
+            "waist",
+            "shoulders"
+        ],
+        "equipments": [
+            "body weight"
+        ],
+        "secondaryMuscles": [
+            "shoulders",
+            "glutes",
+            "quads"
+        ],
+        "instructions": [
+            "Step:1 Start in a push-up position with hands directly under shoulders.",
+            "Step:2 Engage your core and keep your body in a straight line from head to heels.",
+            "Step:3 Don't let your hips sag or pike up.",
+            "Step:4 Hold for 20-60 seconds, breathing steadily.",
+            "Step:5 Lower down gently when done."
+        ],
+        "genderTags": [
+            "female",
+            "male"
+        ],
+        "ageGroups": [
+            "under18",
+            "18-50"
+        ],
+        "periodModeSafe": false,
+        "intensityLevel": "moderate",
+        "genderBenefits": {
+            "male": "Builds core strength for better athletic performance and posture",
+            "female": "Strengthens core and improves posture, great for overall body stability"
+        },
+        "ageRecommendations": {
+            "under18": "Perfect for building core foundation and body control",
+            "18-50": "Essential for core strength and functional fitness",
+            "over50": "Try modified plank on knees to build strength safely"
+        }
+    },
+    {
+        "exerciseId": "3eGE2JC",
+        "name": "Dumbbell Front Raise",
+        "gifUrl": "exercisedb_v1_sample/gifs_360x360/3eGE2JC.gif",
+        "targetMuscles": [
+            "delts"
+        ],
+        "bodyParts": [
+            "shoulders"
+        ],
+        "equipments": [
+            "dumbbell"
+        ],
+        "secondaryMuscles": [
+            "biceps",
+            "trapezius"
+        ],
+        "instructions": [
+            "Step:1 Stand with your feet shoulder-width apart, holding a dumbbell in each hand with your palms facing your thighs.",
+            "Step:2 Keeping your arms straight, exhale and lift the dumbbells in front of you until they are at shoulder level.",
+            "Step:3 Pause for a moment at the top, then inhale and slowly lower the dumbbells back down to the starting position.",
+            "Step:4 Repeat for the desired number of repetitions."
+        ],
+        "genderTags": [
+            "female",
+            "male"
+        ],
+        "ageGroups": [
+            "18-50"
+        ],
+        "periodModeSafe": false,
+        "intensityLevel": "moderate",
+        "genderBenefits": {
+            "male": "Builds strong, defined shoulders for upper body strength",
+            "female": "Tones shoulders and improves posture, great for everyday activities"
+        },
+        "ageRecommendations": {
+            "under18": "Start with lighter weights to build proper form",
+            "18-50": "Great for building shoulder strength and definition",
+            "over50": "Use lighter weights and focus on controlled movement"
+        }
+    },
+    {
+        "exerciseId": "05Cf2v8",
+        "name": "Dips",
+        "gifUrl": "exercisedb_v1_sample/gifs_360x360/05Cf2v8.gif",
+        "targetMuscles": [
+            "triceps"
+        ],
+        "bodyParts": [
+            "upper arms"
+        ],
+        "equipments": [
+            "body weight"
+        ],
+        "secondaryMuscles": [
+            "chest",
+            "shoulders"
+        ],
+        "instructions": [
+            "Step:1 Position yourself between two parallel bars with your arms fully extended and your body suspended in the air.",
+            "Step:2 Bend your knees and cross your ankles.",
+            "Step:3 Lower your body by bending your elbows until your upper arms are parallel to the ground.",
+            "Step:4 Pause for a moment, then push yourself back up to the starting position by straightening your arms.",
+            "Step:5 Repeat for the desired number of repetitions."
+        ],
+        "genderTags": [
+            "male",
+            "female"
+        ],
+        "ageGroups": [
+            "18-50"
+        ],
+        "periodModeSafe": false,
+        "intensityLevel": "high",
+        "genderBenefits": {
+            "male": "Builds powerful triceps and chest for upper body strength",
+            "female": "Strengthens arms and improves upper body tone"
+        },
+        "ageRecommendations": {
+            "under18": "Try assisted dips or bench dips to build strength first",
+            "18-50": "Excellent for building upper body pushing strength",
+            "over50": "Consider assisted dips or modified versions to protect joints"
+        }
+    },
+    {
+        "exerciseId": "2Qh2J1e",
+        "name": "Leg Press",
+        "gifUrl": "exercisedb_v1_sample/gifs_360x360/2Qh2J1e.gif",
+        "targetMuscles": [
+            "glutes"
+        ],
+        "bodyParts": [
+            "upper legs"
+        ],
+        "equipments": [
+            "sled machine"
+        ],
+        "secondaryMuscles": [
+            "quadriceps",
+            "hamstrings",
+            "calves"
+        ],
+        "instructions": [
+            "Step:1 Adjust the seat of the sled machine so that your knees are at a 90-degree angle when your feet are on the footplate.",
+            "Step:2 Sit on the sled machine with your back flat against the backrest and your feet shoulder-width apart on the footplate.",
+            "Step:3 Grip the handles on the sides of the seat for stability.",
+            "Step:4 Push against the footplate to extend your legs, straightening them completely.",
+            "Step:5 Pause for a moment at the top, then slowly bend your knees to lower the footplate back to the starting position.",
+            "Step:6 Repeat for the desired number of repetitions."
+        ],
+        "genderTags": [
+            "female",
+            "male"
+        ],
+        "ageGroups": [
+            "18-50",
+            "over50"
+        ],
+        "periodModeSafe": false,
+        "intensityLevel": "moderate",
+        "genderBenefits": {
+            "male": "Builds powerful legs for athletic performance and strength",
+            "female": "Tones and strengthens glutes and legs, great for lower body definition"
+        },
+        "ageRecommendations": {
+            "under18": "Start with lighter weight to build proper form and strength",
+            "18-50": "Perfect for building leg strength and muscle",
+            "over50": "Excellent low-impact option for maintaining leg strength safely"
+        }
+    },
+    {
+        "exerciseId": "yoga_warrior_one",
+        "name": "Warrior One Pose",
+        "gifUrl": "exercise 2/Warrior One/File1.png",
+        "targetMuscles": [
+            "legs",
+            "core"
+        ],
+        "bodyParts": [
+            "upper legs",
+            "hips"
+        ],
+        "equipments": [
+            "body weight"
+        ],
+        "secondaryMuscles": [
+            "glutes",
+            "shoulders",
+            "back"
+        ],
+        "instructions": [
+            "Step:1 Step your left foot back about 3-4 feet, turning it slightly outward.",
+            "Step:2 Bend your right knee to 90 degrees, keeping it over your ankle.",
+            "Step:3 Square your hips forward and reach your arms overhead.",
+            "Step:4 Keep your back leg straight and strong.",
+            "Step:5 Hold for 30 seconds to 1 minute, then switch sides."
+        ],
+        "genderTags": [
+            "female",
+            "male"
+        ],
+        "ageGroups": [
+            "all"
+        ],
+        "periodModeSafe": true,
+        "intensityLevel": "gentle",
+        "periodBenefits": "Gentle leg strengthening that improves circulation without high impact",
+        "motivationalMessage": "You're a warrior! This pose builds strength while honoring your body's needs today 💪🌸",
+        "genderBenefits": {
+            "male": "Builds leg strength and improves balance and focus",
+            "female": "Strengthens legs and opens hips, great for flexibility and balance"
+        },
+        "ageRecommendations": {
+            "under18": "Builds leg strength and improves balance and confidence",
+            "18-50": "Great for building lower body strength and mental focus",
+            "over50": "Improves balance and leg strength with modifications as needed"
+        }
+    },
+    {
+        "exerciseId": "7F1DVzn",
+        "name": "Lat Pulldown",
+        "gifUrl": "exercisedb_v1_sample/gifs_360x360/7F1DVzn.gif",
+        "targetMuscles": [
+            "lats"
+        ],
+        "bodyParts": [
+            "back"
+        ],
+        "equipments": [
+            "leverage machine"
+        ],
+        "secondaryMuscles": [
+            "biceps",
+            "rhomboids",
+            "rear deltoids"
+        ],
+        "instructions": [
+            "Step:1 Adjust the seat height and position yourself on the machine with your knees under the pads and your feet flat on the ground.",
+            "Step:2 Grasp the handles with an overhand grip, slightly wider than shoulder-width apart.",
+            "Step:3 Sit upright with your chest lifted and your shoulders back, maintaining a slight arch in your lower back.",
+            "Step:4 Engage your lats and pull the handles down towards your chest, squeezing your shoulder blades together.",
+            "Step:5 Pause for a moment at the bottom of the movement, then slowly release the handles back to the starting position.",
+            "Step:6 Repeat for the desired number of repetitions."
+        ],
+        "genderTags": [
+            "female",
+            "male"
+        ],
+        "ageGroups": [
+            "18-50",
+            "over50"
+        ],
+        "periodModeSafe": false,
+        "intensityLevel": "moderate",
+        "genderBenefits": {
+            "male": "Builds a strong, wide back for upper body power",
+            "female": "Tones back and improves posture, great for everyday strength"
+        },
+        "ageRecommendations": {
+            "under18": "Start with lighter weight to build proper pulling strength",
+            "18-50": "Excellent for building back strength and improving posture",
+            "over50": "Great controlled movement for maintaining back strength safely"
+        }
+    },
+    {
+        "exerciseId": "yoga_sphinx",
+        "name": "Sphinx Pose",
+        "gifUrl": "exercise 2/Sphinx/File1.png",
+        "targetMuscles": [
+            "spine",
+            "chest"
+        ],
+        "bodyParts": [
+            "back",
+            "chest"
+        ],
+        "equipments": [
+            "body weight"
+        ],
+        "secondaryMuscles": [
+            "shoulders",
+            "abs"
+        ],
+        "instructions": [
+            "Step:1 Lie on your stomach with legs extended behind you.",
+            "Step:2 Place your forearms on the floor with elbows under shoulders.",
+            "Step:3 Press your forearms down and lift your chest, creating a gentle backbend.",
+            "Step:4 Keep your shoulders relaxed away from your ears.",
+            "Step:5 Hold for 1-3 minutes, breathing deeply."
+        ],
+        "genderTags": [
+            "female",
+            "male"
+        ],
+        "ageGroups": [
+            "all"
+        ],
+        "periodModeSafe": true,
+        "intensityLevel": "gentle",
+        "periodBenefits": "Gentle backbend that relieves lower back tension and opens the chest",
+        "motivationalMessage": "This calming pose is like a gentle hug for your spine. Perfect for self-care today! 🌸",
+        "genderBenefits": {
+            "male": "Opens chest and improves spine flexibility",
+            "female": "Relieves lower back tension and opens the heart space, great for stress relief"
+        },
+        "ageRecommendations": {
+            "under18": "Builds spine awareness and improves posture",
+            "18-50": "Counteracts sitting and relieves back tension",
+            "over50": "Gentle way to maintain spine mobility and reduce stiffness"
+        }
+    },
+    {
+        "exerciseId": "3TZduzM",
+        "name": "Barbell Incline Bench Press",
+        "gifUrl": "exercisedb_v1_sample/gifs_360x360/3TZduzM.gif",
+        "targetMuscles": [
+            "pectorals"
+        ],
+        "bodyParts": [
+            "chest"
+        ],
+        "equipments": [
+            "barbell"
+        ],
+        "secondaryMuscles": [
+            "shoulders",
+            "triceps"
+        ],
+        "instructions": [
+            "Step:1 Set up an incline bench at a 45-degree angle.",
+            "Step:2 Lie down on the bench with your feet flat on the ground.",
+            "Step:3 Grasp the barbell with an overhand grip, slightly wider than shoulder-width apart.",
+            "Step:4 Unrack the barbell and lower it slowly towards your chest, keeping your elbows at a 45-degree angle.",
+            "Step:5 Pause for a moment at the bottom, then push the barbell back up to the starting position.",
+            "Step:6 Repeat for the desired number of repetitions."
+        ],
+        "genderTags": [
+            "male",
+            "female"
+        ],
+        "ageGroups": [
+            "18-50"
+        ],
+        "periodModeSafe": false,
+        "intensityLevel": "high",
+        "genderBenefits": {
+            "male": "Builds powerful upper chest for strength and definition",
+            "female": "Tones upper chest and improves upper body strength"
+        },
+        "ageRecommendations": {
+            "under18": "Start with lighter weight and focus on proper form",
+            "18-50": "Excellent for building upper chest strength and muscle",
+            "over50": "Use lighter weight and consider machine press for joint safety"
+        }
+    }
+]

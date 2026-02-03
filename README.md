@@ -17,7 +17,6 @@ SwasthyaMitra (SWASTHYA: Health | MITRA: Friend) is a comprehensive healthcare a
 
 ### 🍛 Indian Food Tracking
 - **Extensive Database**: Grounded in a local 1000+ item Indian Food collection.
-- **Micro-Database Speed**: Blends local CSV speed with verified nutritional data.
 - **Macro Breakdown**: Real-time tracking of Protein, Carbs, and Fats.
 
 ### 🧠 AI Diet Plan (Gemini 2.0 Flash)
@@ -53,7 +52,6 @@ SwasthyaMitra (SWASTHYA: Health | MITRA: Friend) is a comprehensive healthcare a
 The project features a modular documentation system located in the `DOCS` directory:
 
 - **[Master Guide](DOCS/Project_Master_Guide.md)**: Overview of implementation phases and project structure.
-- **[Theoretical Guide](DOCS/Project_Theoretical_Explanation.md)**: The core mission and architectural logic of the app.
 - **[Firebase Schema](DOCS/Firebase_Schema.md)**: Complete database collection and attribute reference.
 - **Feature Deep Dives**:
     - [Architecture & AI Logic](DOCS/Features/AI_Diet_System.md)

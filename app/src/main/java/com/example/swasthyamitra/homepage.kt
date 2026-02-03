@@ -242,11 +242,13 @@ class homepage : AppCompatActivity() {
     private fun updateDateDisplay() {
         val calendar = Calendar.getInstance()
         val dateFormat = java.text.SimpleDateFormat("EEEE, MMM dd", java.util.Locale.getDefault())
-        tvDate.text = dateFormat.format(calendar.time)
+        val currentDate = dateFormat.format(calendar.time)
+        tvDate.text = currentDate
     }
 
     override fun onResume() {
         super.onResume()
+        updateDateDisplay() // Refresh date every time screen is shown
         if (userId.isNotEmpty()) {
             displayTodayCalories()
             displayNutritionBreakdown()
@@ -281,7 +283,63 @@ class homepage : AppCompatActivity() {
                 val goalsResult = authHelper.getUserGoal(userId)
                 goalsResult.onSuccess { goal ->
                     goalType = goal["goalType"] as? String ?: "Stay Healthy"
-                    tvGoalType.text = "Your Goal: $goalType"
+                    tvGoalType.text = goalType
+                    
+                    // Get target weight from goals - check multiple possible fieldnames
+                    val targetWeight = when {
+                        goal["targetWeight"] != null -> when (val tw = goal["targetWeight"]) {
+                            is Number -> tw.toDouble()
+                            is String -> tw.toDoubleOrNull() ?: 0.0
+                            else -> 0.0
+                        }
+                        goal["targetValue"] != null -> when (val tv = goal["targetValue"]) {
+                            is Number -> tv.toDouble()
+                            is String -> tv.toDoubleOrNull() ?: 0.0
+                            else -> 0.0
+                        }
+                        else -> 0.0
+                    }
+                    
+                    // Get current weight - first try from goal, then from user profile
+                    var currentWeight = when {
+                        goal["currentWeight"] != null -> when (val cw = goal["currentWeight"]) {
+                            is Number -> cw.toDouble()
+                            is String -> cw.toDoubleOrNull() ?: 0.0
+                            else -> 0.0
+                        }
+                        goal["currentValue"] != null -> when (val cv = goal["currentValue"]) {
+                            is Number -> cv.toDouble()
+                            is String -> cv.toDoubleOrNull() ?: 0.0
+                            else -> 0.0
+                        }
+                        else -> 0.0
+                    }
+                    
+                    // Debug logging
+                    android.util.Log.d("Homepage", "===== WEIGHT CALCULATION DEBUG =====")
+                    android.util.Log.d("Homepage", "Goal Type: $goalType")
+                    android.util.Log.d("Homepage", "Current Weight (from goal): $currentWeight kg")
+                    android.util.Log.d("Homepage", "Target Weight: $targetWeight kg")
+                    
+                    // If current weight is 0, try to get it from user profile
+                    if (currentWeight == 0.0) {
+                        lifecycleScope.launch {
+                            authHelper.getUserData(userId).onSuccess { userData ->
+                                val userWeight = when (val w = userData["weight"]) {
+                                    is Number -> w.toDouble()
+                                    is String -> w.toDoubleOrNull() ?: 0.0
+                                    else -> 0.0
+                                }
+                                if (userWeight > 0) {
+                                    currentWeight = userWeight
+                                    android.util.Log.d("Homepage", "Current Weight (from user profile): $currentWeight kg")
+                                    updateWeightRemainingDisplay(goalType, currentWeight, targetWeight)
+                                }
+                            }
+                        }
+                    } else {
+                        updateWeightRemainingDisplay(goalType, currentWeight, targetWeight)
+                    }
                     
                     val greeting = getGreeting()
                     val emoji = when(greeting) {
@@ -290,7 +348,8 @@ class homepage : AppCompatActivity() {
                         else -> "🌙"
                     }
                     
-                    tvCoachMessage.text = "${greeting.lowercase()} $userName! $emoji\nStay consistent with your logging to reach your $goalType goal!"
+                    // Coach message without repeating goal
+                    tvCoachMessage.text = "${greeting.lowercase()} $userName! $emoji\nStay consistent with your logging to reach your goals!"
                 }
 
             } catch (e: Exception) {
@@ -341,6 +400,47 @@ class homepage : AppCompatActivity() {
             } catch (e: Exception) {
                 Log.e("Homepage", "Error updating coach message", e)
             }
+        }
+    }
+
+    private fun updateWeightRemainingDisplay(goalType: String, currentWeight: Double, targetWeight: Double) {
+        val tvGoalRemaining: TextView = findViewById(R.id.tv_goal_remaining)
+        
+        // Only show if both weights are valid (> 0)
+        if (currentWeight > 0 && targetWeight > 0) {
+            val weightDiff = when {
+                // For "Gain Muscle" or "Weight Gain" - show how much MORE to gain
+                goalType.contains("Gain", ignoreCase = true) || 
+                goalType.contains("Muscle", ignoreCase = true) -> {
+                    targetWeight - currentWeight  // e.g., 68 - 55 = 13 kg to gain
+                }
+                // For "Weight Loss" or "Lose Weight" - show how much to lose
+                goalType.contains("Loss", ignoreCase = true) || 
+                goalType.contains("Lose", ignoreCase = true) -> {
+                    currentWeight - targetWeight  // e.g., 70 - 65 = 5 kg to lose
+                }
+                // For "Maintain" - show difference (usually small)
+                else -> {
+                    kotlin.math.abs(currentWeight - targetWeight)
+                }
+            }
+            
+            android.util.Log.d("Homepage", "Weight Difference: $weightDiff kg")
+            
+            // Only show if there's actually weight to gain/lose (> 0.1 kg)
+            if (weightDiff > 0.1) {
+                tvGoalRemaining.text = String.format("%.1f kg remaining", weightDiff)
+                tvGoalRemaining.visibility = View.VISIBLE
+                android.util.Log.d("Homepage", "Displaying: ${tvGoalRemaining.text}")
+            } else {
+                // Goal achieved!
+                tvGoalRemaining.visibility = View.GONE
+                android.util.Log.d("Homepage", "Goal achieved - hiding remaining")
+            }
+        } else {
+            // Missing weight data
+            tvGoalRemaining.visibility = View.GONE
+            android.util.Log.d("Homepage", "Invalid weights (current: $currentWeight, target: $targetWeight) - hiding remaining")
         }
     }
 
@@ -403,7 +503,25 @@ class homepage : AppCompatActivity() {
                     pbProtein.progress = ((totalProtein / 120) * 100).toInt().coerceIn(0, 100)
                     pbCarbs.progress = ((totalCarbs / 200) * 100).toInt().coerceIn(0, 100)
                     pbFats.progress = ((totalFat / 65) * 100).toInt().coerceIn(0, 100)
+                } else {
+                    // No food logged - show zeros
+                    tvProteinValue.text = "0g / 120g"
+                    tvCarbsValue.text = "0g / 200g"
+                    tvFatsValue.text = "0g / 65g"
+                    
+                    pbProtein.progress = 0
+                    pbCarbs.progress = 0
+                    pbFats.progress = 0
                 }
+            }.onFailure {
+                // Error fetching logs - show zeros
+                tvProteinValue.text = "0g / 120g"
+                tvCarbsValue.text = "0g / 200g"
+                tvFatsValue.text = "0g / 65g"
+                
+                pbProtein.progress = 0
+                pbCarbs.progress = 0
+                pbFats.progress = 0
             }
         }
     }

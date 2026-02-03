@@ -101,14 +101,15 @@
                     android:textStyle="bold"/>
             </FrameLayout>
 
-            <!-- Steps Card (Hero) -->
+            <!-- Steps Card (Hero) - HIDDEN since steps shown elsewhere -->
             <androidx.cardview.widget.CardView
                 android:id="@+id/cvLevel"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 app:cardCornerRadius="20dp"
                 app:cardElevation="4dp"
-                android:layout_marginBottom="20dp">
+                android:layout_marginBottom="20dp"
+                android:visibility="gone">
 
                 <LinearLayout
                     android:layout_width="match_parent"
