@@ -99,7 +99,8 @@
                 android:text="Join Challenge"
                 android:textSize="18sp"
                 android:textStyle="bold"
-                android:backgroundTint="#E91E63"
+                android:background="@drawable/button_background"
+                app:backgroundTint="@null"
                 android:textColor="@android:color/white"
                 app:cornerRadius="12dp" />
 

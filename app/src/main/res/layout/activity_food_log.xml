@@ -268,6 +268,7 @@
         android:layout_margin="24dp"
         android:contentDescription="Add Food"
         android:src="@android:drawable/ic_input_add"
+        android:background="@drawable/button_background"
         app:backgroundTint="#E91E63"
         app:tint="#FFFFFF" />
 

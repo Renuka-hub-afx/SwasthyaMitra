@@ -47,6 +47,10 @@ class homepage : AppCompatActivity() {
     private lateinit var btnViewExerciseDetails: MaterialButton
     private lateinit var btnLogRecExercise: MaterialButton
     private lateinit var btnRegenerateExercise: MaterialButton
+    private lateinit var ivExerciseGif: android.widget.ImageView
+    private lateinit var tvAgeExplanation: TextView
+    private lateinit var tvGenderNote: TextView
+    private lateinit var tvMotivationalMessage: TextView
     private var currentRecommendedExercise: com.example.swasthyamitra.ai.AIExerciseRecommendationService.ExerciseRec? = null
 
     private lateinit var menuHome: LinearLayout
@@ -60,9 +64,11 @@ class homepage : AppCompatActivity() {
     private lateinit var tvWaterTotal: TextView
     private lateinit var cardWaterSummary: View
     private lateinit var tvDate: TextView
+    private lateinit var chipPeriodMode: com.google.android.material.chip.Chip
 
     private var goalType: String = ""
     private var userName: String = ""
+    private var isOnPeriod: Boolean = false
     private val hydrationRepo = com.example.swasthyamitra.data.repository.HydrationRepository()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -111,6 +117,11 @@ class homepage : AppCompatActivity() {
         btnViewExerciseDetails = findViewById(R.id.btn_view_exercise_details)
         btnLogRecExercise = findViewById(R.id.btn_log_rec_exercise)
         btnRegenerateExercise = findViewById(R.id.btn_regenerate_exercise)
+        chipPeriodMode = findViewById(R.id.chip_period_mode)
+        ivExerciseGif = findViewById(R.id.iv_exercise_gif)
+        tvAgeExplanation = findViewById(R.id.tv_age_explanation)
+        tvGenderNote = findViewById(R.id.tv_gender_note)
+        tvMotivationalMessage = findViewById(R.id.tv_motivational_message)
 
         updateDateDisplay()
         loadUserData()
@@ -136,6 +147,26 @@ class homepage : AppCompatActivity() {
             val intent = Intent(this, com.example.swasthyamitra.ui.hydration.HydrationActivity::class.java)
             intent.putExtra("USER_ID", userId)
             startActivity(intent)
+        }
+
+        chipPeriodMode.setOnCheckedChangeListener { _, isChecked ->
+            isOnPeriod = isChecked
+            lifecycleScope.launch {
+                try {
+                    firestore.collection("users").document(userId)
+                        .update("isOnPeriod", isChecked)
+                        .await()
+                    
+                    // Trigger AI refreshes for specialized mode
+                    updateAICoachMessage()
+                    updateAIExerciseRecommendation()
+                    
+                    val status = if (isChecked) "activated 🌸" else "deactivated"
+                    Toast.makeText(this@homepage, "Period Mode $status", Toast.LENGTH_SHORT).show()
+                } catch (e: Exception) {
+                    Log.e("Homepage", "Error updating period mode", e)
+                }
+            }
         }
 
 
@@ -233,6 +264,18 @@ class homepage : AppCompatActivity() {
                 userDataResult.onSuccess { userData ->
                     userName = userData["name"] as? String ?: "User"
                     tvUserName.text = "Hello, $userName!"
+                    
+                    // Load Period Mode status
+                    isOnPeriod = userData["isOnPeriod"] as? Boolean ?: false
+                    chipPeriodMode.isChecked = isOnPeriod
+
+                    // Restrict visibility to Female users only
+                    val gender = userData["gender"] as? String ?: "Other"
+                    if (gender.equals("Female", ignoreCase = true)) {
+                        chipPeriodMode.visibility = android.view.View.VISIBLE
+                    } else {
+                        chipPeriodMode.visibility = android.view.View.GONE
+                    }
                 }
 
                 val goalsResult = authHelper.getUserGoal(userId)
@@ -469,6 +512,46 @@ class homepage : AppCompatActivity() {
                         tvRecExerciseName.text = rec.name
                         tvRecTargetMuscle.text = "Target: ${rec.targetMuscle}"
                         tvRecReason.text = rec.reason
+                        
+                        // Display GIF if available
+                        if (rec.gifUrl.isNotEmpty()) {
+                            try {
+                                com.bumptech.glide.Glide.with(this@homepage)
+                                    .load("file:///android_asset/${rec.gifUrl}")
+                                    .into(ivExerciseGif)
+                                ivExerciseGif.visibility = android.view.View.VISIBLE
+                            } catch (e: Exception) {
+                                Log.e("Homepage", "Error loading GIF: ${e.message}")
+                                ivExerciseGif.visibility = android.view.View.GONE
+                            }
+                        } else {
+                            ivExerciseGif.visibility = android.view.View.GONE
+                        }
+                        
+                        // Display age explanation
+                        if (rec.ageExplanation.isNotEmpty()) {
+                            tvAgeExplanation.text = "💡 Age ${profile["age"]}: ${rec.ageExplanation}"
+                            tvAgeExplanation.visibility = android.view.View.VISIBLE
+                        } else {
+                            tvAgeExplanation.visibility = android.view.View.GONE
+                        }
+                        
+                        // Display gender-specific benefits
+                        if (rec.genderNote.isNotEmpty()) {
+                            tvGenderNote.text = "✨ ${rec.genderNote}"
+                            tvGenderNote.visibility = android.view.View.VISIBLE
+                        } else {
+                            tvGenderNote.visibility = android.view.View.GONE
+                        }
+                        
+                        // Display motivational message (Period Mode)
+                        if (rec.motivationalMessage.isNotEmpty()) {
+                            tvMotivationalMessage.text = rec.motivationalMessage
+                            tvMotivationalMessage.visibility = android.view.View.VISIBLE
+                        } else {
+                            tvMotivationalMessage.visibility = android.view.View.GONE
+                        }
+                        
                         cardAiExercise.visibility = View.VISIBLE
                         btnRegenerateExercise.isEnabled = true
                     }
@@ -528,18 +611,34 @@ class homepage : AppCompatActivity() {
         }
 
         val builder = android.app.AlertDialog.Builder(this)
-        builder.setTitle(exercise.name.uppercase())
+        builder.setTitle("${exercise.name.uppercase()} 💪")
         
         val message = StringBuilder()
         message.append("🎯 Target: ${exercise.targetMuscle}\n")
         message.append("📦 Equipment: ${exercise.equipment}\n\n")
-        message.append("📝 INSTRUCTIONS:\n")
+        
+        // Add age explanation if available
+        if (exercise.ageExplanation.isNotEmpty()) {
+            message.append("💡 Why for your age:\n${exercise.ageExplanation}\n\n")
+        }
+        
+        // Add gender benefits if available
+        if (exercise.genderNote.isNotEmpty()) {
+            message.append("✨ Benefits for you:\n${exercise.genderNote}\n\n")
+        }
+        
+        // Add motivational message if available
+        if (exercise.motivationalMessage.isNotEmpty()) {
+            message.append("🌸 ${exercise.motivationalMessage}\n\n")
+        }
+        
+        message.append("📝 HOW TO DO IT:\n")
         exercise.instructions.forEachIndexed { index, step ->
             message.append("${index + 1}. $step\n")
         }
         
         builder.setMessage(message.toString())
-        builder.setPositiveButton("Got it!") { dialog, _ -> dialog.dismiss() }
+        builder.setPositiveButton("Got it! 👍") { dialog, _ -> dialog.dismiss() }
         builder.show()
     }
 

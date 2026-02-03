@@ -63,6 +63,7 @@ class AIDietPlanService private constructor(private val context: Context) {
             // 1. Fetch Profile & Goals (Firestore)
             val profile = authHelper.getUserData(userId).getOrThrow()
             val goal = authHelper.getUserGoal(userId).getOrThrow()
+            val isOnPeriod = profile["isOnPeriod"] as? Boolean ?: false
 
             val age = (profile["age"] as? Number)?.toInt() ?: 25
             val weight = (profile["weight"] as? Number)?.toDouble() ?: 70.0
@@ -99,7 +100,7 @@ class AIDietPlanService private constructor(private val context: Context) {
             val promptText = buildPrompt(
                 age, gender, weight, height, targetCalories, dietaryPreference, allergies,
                 activityLevel, intensityFlag, plateauFlag, pastMealsList, dislikedFoods,
-                foodSample, festivalNote
+                foodSample, festivalNote, isOnPeriod
             )
 
             // 8. Execute Vertex AI (Gemini 2.0 Flash)
@@ -132,6 +133,7 @@ class AIDietPlanService private constructor(private val context: Context) {
 
             val dietaryPreference = profile["eatingPreference"] as? String ?: "Vegetarian"
             val targetCalories = (goal["dailyCalories"] as? Number)?.toInt() ?: 2000
+            val isOnPeriod = profile["isOnPeriod"] as? Boolean ?: false
             val mealCalories = when(mealType) {
                 "Breakfast" -> (targetCalories * 0.25).toInt()
                 "Lunch" -> (targetCalories * 0.35).toInt()
@@ -145,6 +147,9 @@ class AIDietPlanService private constructor(private val context: Context) {
 
             val festivalNote = getFestivalInstruction()
             val season = getSeason()
+            val periodContext = if (isOnPeriod) {
+                "STRICT: The user is on her period. Focus on iron-rich, warm, and comforting foods. Avoid heavy, spicy, or fried items if possible."
+            } else ""
 
             val promptText = """
                 You are SwasthyaMitra, an expert Indian Nutritionist.
@@ -155,6 +160,7 @@ class AIDietPlanService private constructor(private val context: Context) {
                 
                 **CONTEXT:**
                 - Season: $season
+                - Period Context: $periodContext
                 - Festival Context: $festivalNote
                 - Health Focus: Hydration (water intake) and $mealType timing.
                 
@@ -165,7 +171,7 @@ class AIDietPlanService private constructor(private val context: Context) {
                 
                 **TASK:**
                 Provide a healthy suggestion and a "Pro Tip" specifically for this $mealType.
-                The tip must be seasonal, festival-aware, or related to hydration and health.
+                ${if (isOnPeriod) "The suggestion must be supportive of menstrual comfort (e.g., warm dal, iron-rich greens, ginger tea)." else "The tip must be seasonal, festival-aware, or related to hydration and health."}
                 
                 Return ONLY JSON:
                 {
@@ -328,7 +334,8 @@ class AIDietPlanService private constructor(private val context: Context) {
         age: Int, gender: String, weight: Double, height: Double, targetCalories: Int,
         dietaryPreference: String, allergies: String, activityLevel: String,
         intensityFlag: String, plateauFlag: String, pastMealsList: String,
-        dislikedFoods: String, foodSample: String, festivalNote: String
+        dislikedFoods: String, foodSample: String, festivalNote: String,
+        isOnPeriod: Boolean = false
     ): String {
         return """
             You are SwasthyaMitra, an expert Indian Nutritionist.
@@ -353,8 +360,14 @@ class AIDietPlanService private constructor(private val context: Context) {
             **TASK:**
             Generate a personalized daily meal plan in STRICT JSON format.
             Rules:
+            ${if (isOnPeriod) """
+            1. PERIOD MODE: Focus on iron-rich foods (Spinach, Beets, Dal, Pomegranate) and warm meals.
+            2. COMFORT: Suggest easy-to-digest items. Mention ginger tea or dark chocolate in the daily tip.
+            3. NO PRESSURE: Avoid suggesting heavy workouts; focus on recovery nutrition.
+            """ else """
             1. If INTENSITY_HIGH, you MUST include a "postWorkout" meal rich in protein.
             2. If PLATEAU_DETECTED, suggest a slightly higher protein and fiber mix to boost metabolism.
+            """}
             3. Ensure total calories are within +/- 100 of $targetCalories.
             4. Focus on authentic Indian dishes.
             5. NEVER suggest items from the disliked foods list.
