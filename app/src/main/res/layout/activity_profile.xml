@@ -168,13 +168,7 @@
                     android:inputType="number"
                     android:visibility="gone"
                     android:textSize="14sp"/>
-                <ImageView
-                    android:id="@+id/editAgeIcon"
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
-                    android:layout_marginStart="8dp"
-                    android:src="@drawable/ic_edit"
-                    app:tint="#9C27B0" />
+
             </LinearLayout>
 
             <View android:layout_width="match_parent" android:layout_height="16dp"/>
@@ -201,13 +195,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:visibility="gone" />
-                <ImageView
-                    android:id="@+id/editGenderIcon"
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
-                    android:layout_marginStart="8dp"
-                    android:src="@drawable/ic_edit"
-                    app:tint="#9C27B0" />
+
             </LinearLayout>
 
             <View android:layout_width="match_parent" android:layout_height="16dp"/>
@@ -236,13 +224,7 @@
                     android:inputType="numberDecimal"
                     android:visibility="gone"
                     android:textSize="14sp"/>
-                <ImageView
-                    android:id="@+id/editHeightIcon"
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
-                    android:layout_marginStart="8dp"
-                    android:src="@drawable/ic_edit"
-                    app:tint="#9C27B0" />
+
             </LinearLayout>
 
             <View android:layout_width="match_parent" android:layout_height="16dp"/>
@@ -271,13 +253,7 @@
                     android:inputType="numberDecimal"
                     android:visibility="gone"
                     android:textSize="14sp"/>
-                <ImageView
-                    android:id="@+id/editWeightIcon"
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
-                    android:layout_marginStart="8dp"
-                    android:src="@drawable/ic_edit"
-                    app:tint="#9C27B0" />
+
             </LinearLayout>
 
             <View android:layout_width="match_parent" android:layout_height="16dp"/>

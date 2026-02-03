@@ -52,10 +52,7 @@ class ProfileActivity : AppCompatActivity() {
     private lateinit var userHeightEdit: EditText
     private lateinit var userWeightEdit: EditText
     private lateinit var userGenderSpinner: Spinner
-    private lateinit var editAgeIcon: ImageView
-    private lateinit var editGenderIcon: ImageView
-    private lateinit var editHeightIcon: ImageView
-    private lateinit var editWeightIcon: ImageView
+
 
     private var isEditMode = false
     private val genderOptions = listOf("Male", "Female", "Other", "Prefer not to say")
@@ -108,10 +105,7 @@ class ProfileActivity : AppCompatActivity() {
         userHeightEdit = findViewById(R.id.userHeightEdit)
         userWeightEdit = findViewById(R.id.userWeightEdit)
         userGenderSpinner = findViewById(R.id.userGenderSpinner)
-        editAgeIcon = findViewById(R.id.editAgeIcon)
-        editGenderIcon = findViewById(R.id.editGenderIcon)
-        editHeightIcon = findViewById(R.id.editHeightIcon)
-        editWeightIcon = findViewById(R.id.editWeightIcon)
+
 
         setupGenderSpinner()
 
@@ -135,11 +129,7 @@ class ProfileActivity : AppCompatActivity() {
             }
         }
 
-        val editIconListener = View.OnClickListener { toggleEditMode(true) }
-        editAgeIcon.setOnClickListener(editIconListener)
-        editGenderIcon.setOnClickListener(editIconListener)
-        editHeightIcon.setOnClickListener(editIconListener)
-        editWeightIcon.setOnClickListener(editIconListener)
+
 
         logoutButton.setOnClickListener {
             handleLogout()

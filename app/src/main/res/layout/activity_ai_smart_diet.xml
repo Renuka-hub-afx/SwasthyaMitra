@@ -590,7 +590,20 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <!-- Floating Moon Button -->
+    <!-- WhatsApp Share Button -->
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fabShare"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="24dp"
+        android:layout_marginBottom="16dp"
+        android:src="@android:drawable/ic_menu_share"
+        app:backgroundTint="#25D366"
+        app:tint="#FFFFFF"
+        app:layout_constraintBottom_toTopOf="@id/fabMode"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <!-- Floating Moon Button (Existing) -->
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/fabMode"
         android:layout_width="wrap_content"

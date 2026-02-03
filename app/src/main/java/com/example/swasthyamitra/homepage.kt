@@ -111,6 +111,11 @@ class homepage : AppCompatActivity() {
         btnViewExerciseDetails = findViewById(R.id.btn_view_exercise_details)
         btnLogRecExercise = findViewById(R.id.btn_log_rec_exercise)
         btnRegenerateExercise = findViewById(R.id.btn_regenerate_exercise)
+        
+        val tvViewDetails: TextView = findViewById(R.id.tv_view_details)
+        tvViewDetails.setOnClickListener {
+            startActivity(Intent(this, FoodLogActivity::class.java))
+        }
 
         updateDateDisplay()
         loadUserData()
@@ -406,13 +411,20 @@ class homepage : AppCompatActivity() {
         val db = com.google.firebase.database.FirebaseDatabase.getInstance("https://swasthyamitra-c0899-default-rtdb.asia-southeast1.firebasedatabase.app").reference
         val today = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault()).format(java.util.Date())
         
-        db.child("users").child(userId).child("completionHistory").child(today).get()
+        // Fetch full workout history to count actual sessions
+        db.child("users").child(userId).child("workoutHistory").get()
             .addOnSuccessListener { snapshot ->
-                if (snapshot.exists() && snapshot.value == true) {
-                    tvWorkouts.text = "1"
-                } else {
-                    tvWorkouts.text = "0"
+                var count = 0
+                if (snapshot.exists()) {
+                    snapshot.children.forEach { sessionSnapshot ->
+                        // Check if session date matches today
+                        val date = sessionSnapshot.child("date").value as? String
+                        if (date == today) {
+                            count++
+                        }
+                    }
                 }
+                tvWorkouts.text = count.toString()
             }
             .addOnFailureListener {
                 tvWorkouts.text = "0" 

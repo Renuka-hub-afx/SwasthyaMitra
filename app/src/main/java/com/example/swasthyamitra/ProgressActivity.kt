@@ -46,71 +46,98 @@ class ProgressActivity : AppCompatActivity() {
         findViewById<androidx.appcompat.widget.Toolbar>(R.id.toolbar).apply {
             setNavigationOnClickListener { finish() }
         }
+        
+        // Setup click listeners
+        findViewById<android.view.View>(R.id.viewDetailedReportButton)?.setOnClickListener { showChartsView() }
+        
+        // Progress Roadmap Click Listeners
+        findViewById<android.view.View>(R.id.roadmapItemWeight)?.setOnClickListener { 
+            startActivity(android.content.Intent(this, WeightProgressActivity::class.java))
+        }
+        findViewById<android.view.View>(R.id.roadmapItemBadges)?.setOnClickListener { 
+            startActivity(android.content.Intent(this, BadgesActivity::class.java))
+        }
+        findViewById<android.view.View>(R.id.roadmapItemHistory)?.setOnClickListener { 
+            startActivity(android.content.Intent(this, HistoryActivity::class.java))
+        }
     }
-
-
 
     private fun loadProgressData() {
-        lifecycleScope.launch {
-            try {
-                // Load weekly statistics
-                val weeklyCalories = getWeeklyCalories()
-                val weeklyWorkouts = getWeeklyWorkouts()
-                val streaks = calculateStreaks()
+        // 1. Load User Statistics (Streaks, Workouts, Calories) from Firebase Realtime Database
+        val db = com.google.firebase.database.FirebaseDatabase.getInstance("https://swasthyamitra-c0899-default-rtdb.asia-southeast1.firebasedatabase.app").reference
+        val userRef = db.child("users").child(userId)
 
-                weeklyCaloriesText.text = "$weeklyCalories kcal"
-                weeklyWorkoutsText.text = "$weeklyWorkouts workouts"
-                currentStreakText.text = "${streaks.first} days"
-                longestStreakText.text = "${streaks.second} days"
+        // Use addValueEventListener for real-time updates
+        userRef.addValueEventListener(object : com.google.firebase.database.ValueEventListener {
+            override fun onDataChange(snapshot: com.google.firebase.database.DataSnapshot) {
+                val data = snapshot.getValue(FitnessData::class.java) ?: FitnessData()
+                
+                runOnUiThread {
+                    // Update Streak
+                    currentStreakText.text = "${data.streak} days"
+                    longestStreakText.text = "${data.streak} days" 
 
+                    // Calculate Weekly Stats (Workouts & Calories Burned)
+                    val (workouts, calories) = calculateWeeklyStats(data.workoutHistory)
+                    
+                    weeklyWorkoutsText.text = "$workouts workouts"
+                    weeklyCaloriesText.text = "$calories kcal"
+                }
+            }
+
+            override fun onCancelled(error: com.google.firebase.database.DatabaseError) {
+                Toast.makeText(this@ProgressActivity, "Failed to load stats: ${error.message}", Toast.LENGTH_SHORT).show()
+            }
+        })
+    }
+
+    private fun calculateWeeklyStats(history: Map<String, WorkoutSession>): Pair<Int, Int> {
+        val calendar = Calendar.getInstance()
+        // Reset to start of current week (e.g., last 7 days)
+        calendar.add(Calendar.DAY_OF_YEAR, -7)
+        val oneWeekAgo = calendar.timeInMillis
+        
+        var workoutCount = 0
+        var caloriesBurned = 0
+        val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+
+        for (session in history.values) {
+             try {
+                // If session has a timestamp, use it. If not, parse the date string.
+                val sessionTime = if (session.timestamp > 0) {
+                    session.timestamp
+                } else {
+                    dateFormat.parse(session.date)?.time ?: 0L
+                }
+
+                if (sessionTime > oneWeekAgo && session.completed) {
+                    workoutCount++
+                    // Fix for legacy data: If calories not saved, estimate based on duration (~6 kcal/min)
+                    val burned = if (session.caloriesBurned > 0) {
+                        session.caloriesBurned
+                    } else {
+                        session.duration * 6
+                    }
+                    caloriesBurned += burned
+                }
             } catch (e: Exception) {
-                Toast.makeText(this@ProgressActivity, "Error loading progress: ${e.message}", Toast.LENGTH_SHORT).show()
+                continue
             }
         }
-    }
-
-    private suspend fun getWeeklyCalories(): Int {
-        // Get total calories consumed in the last 7 days
-        val calendar = Calendar.getInstance()
-        var totalCalories = 0
-        
-        for (i in 0 until 7) {
-            val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-            val date = dateFormat.format(calendar.time)
-            
-            val dailyCalories = authHelper.getDailyCalories(userId, date)
-            totalCalories += dailyCalories
-            
-            calendar.add(Calendar.DAY_OF_YEAR, -1)
-        }
-        
-        return totalCalories
-    }
-
-    private suspend fun getWeeklyWorkouts(): Int {
-        // TODO: Implement workout counting once exercise tracking is added
-        // For now, return mock data
-        return 0
-    }
-
-    private fun calculateStreaks(): Pair<Int, Int> {
-        // TODO: Implement streak calculation based on food logs and workouts
-        // For now, return mock data
-        return Pair(0, 0)
+        return Pair(workoutCount, caloriesBurned)
     }
 
     private fun showChartsView() {
-        Toast.makeText(this, "Charts view - Coming in Week 2", Toast.LENGTH_SHORT).show()
-        // TODO: Show weight/calorie/workout charts using MPAndroidChart
-    }
+    startActivity(android.content.Intent(this, DetailedReportActivity::class.java))
+}
+
+
 
     private fun showHistoryView() {
-        Toast.makeText(this, "History view - Coming in Week 2", Toast.LENGTH_SHORT).show()
-        // TODO: Show daily logs history
+        // Placeholder
     }
 
     private fun showAchievementsView() {
-        Toast.makeText(this, "Achievements view - Coming in Week 2", Toast.LENGTH_SHORT).show()
-        // TODO: Show badges, levels, and tasks
+        // Placeholder
     }
 }
