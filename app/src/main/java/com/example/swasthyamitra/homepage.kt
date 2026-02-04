@@ -28,7 +28,6 @@ class homepage : AppCompatActivity() {
     // UI Elements
     private lateinit var tvUserName: TextView
     private lateinit var tvGoalType: TextView
-    private lateinit var tvCalories: TextView
     private lateinit var tvSteps: TextView
     private lateinit var tvWorkouts: TextView
     private lateinit var tvCoachMessage: TextView
@@ -65,6 +64,15 @@ class homepage : AppCompatActivity() {
     private lateinit var cardWaterSummary: View
     private lateinit var tvDate: TextView
     private lateinit var chipPeriodMode: com.google.android.material.chip.Chip
+    
+    // Calorie Balance UI
+    private lateinit var tvCaloriesIn: TextView
+    private lateinit var tvCaloriesOut: TextView
+    private lateinit var pbCaloriesIn: ProgressBar
+    private lateinit var pbCaloriesOut: ProgressBar
+    private lateinit var tvNetBalance: TextView
+    private lateinit var tvCalorieGoal: TextView
+    private lateinit var tvCalorieStatus: TextView
 
     private var goalType: String = ""
     private var userName: String = ""
@@ -89,7 +97,6 @@ class homepage : AppCompatActivity() {
         tvDate = findViewById(R.id.tv_date)
         tvUserName = findViewById(R.id.tv_user_name)
         tvGoalType = findViewById(R.id.tv_goal_type)
-        tvCalories = findViewById(R.id.tv_calories)
         tvSteps = findViewById(R.id.tv_steps)
         tvWorkouts = findViewById(R.id.tv_workouts)
         tvCoachMessage = findViewById(R.id.tv_coach_message)
@@ -122,6 +129,15 @@ class homepage : AppCompatActivity() {
         tvAgeExplanation = findViewById(R.id.tv_age_explanation)
         tvGenderNote = findViewById(R.id.tv_gender_note)
         tvMotivationalMessage = findViewById(R.id.tv_motivational_message)
+        
+        // Initialize calorie balance UI
+        tvCaloriesIn = findViewById(R.id.tv_calories_in)
+        tvCaloriesOut = findViewById(R.id.tv_calories_out)
+        pbCaloriesIn = findViewById(R.id.pb_calories_in)
+        pbCaloriesOut = findViewById(R.id.pb_calories_out)
+        tvNetBalance = findViewById(R.id.tv_net_balance)
+        tvCalorieGoal = findViewById(R.id.tv_calorie_goal)
+        tvCalorieStatus = findViewById(R.id.tv_calorie_status)
 
         updateDateDisplay()
         loadUserData()
@@ -250,12 +266,12 @@ class homepage : AppCompatActivity() {
         super.onResume()
         updateDateDisplay() // Refresh date every time screen is shown
         if (userId.isNotEmpty()) {
-            displayTodayCalories()
             displayNutritionBreakdown()
             displayWorkoutStatus()
             displayWaterStatus()
             updateAICoachMessage()
             updateAIExerciseRecommendation()
+            updateCalorieBalance()
         }
     }
 
@@ -446,26 +462,27 @@ class homepage : AppCompatActivity() {
 
 
     private fun displayWorkoutStatus() {
-        val db = com.google.firebase.database.FirebaseDatabase.getInstance("https://swasthyamitra-c0899-default-rtdb.asia-southeast1.firebasedatabase.app").reference
-        val today = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault()).format(java.util.Date())
-        
-        db.child("users").child(userId).child("completionHistory").child(today).get()
-            .addOnSuccessListener { snapshot ->
-                if (snapshot.exists() && snapshot.value == true) {
-                    tvWorkouts.text = "1"
-                } else {
+        lifecycleScope.launch {
+            try {
+                val today = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault()).format(java.util.Date())
+                
+                // Count all exercises logged today from exercise_logs collection
+                val exerciseLogs = firestore.collection("exercise_logs")
+                    .whereEqualTo("userId", userId)
+                    .whereEqualTo("date", today)
+                    .get()
+                    .await()
+                
+                val workoutCount = exerciseLogs.documents.size
+                
+                runOnUiThread {
+                    tvWorkouts.text = workoutCount.toString()
+                }
+            } catch (e: Exception) {
+                Log.e("Homepage", "Error fetching workout count", e)
+                runOnUiThread {
                     tvWorkouts.text = "0"
                 }
-            }
-            .addOnFailureListener {
-                tvWorkouts.text = "0" 
-            }
-    }
-
-    private fun displayTodayCalories() {
-        lifecycleScope.launch {
-            authHelper.getTodayCalories(userId).onSuccess { calories ->
-                tvCalories.text = calories.toString()
             }
         }
     }
@@ -765,5 +782,130 @@ class homepage : AppCompatActivity() {
         intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         startActivity(intent)
         finish()
+    }
+    
+    // ========== Calorie Balance Tracking ==========
+    
+    private fun updateCalorieBalance() {
+        lifecycleScope.launch {
+            try {
+                val dateFormat = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
+                val today = dateFormat.format(java.util.Date())
+                
+                // 1. Get target calories from goals
+                val goalsResult = authHelper.getUserGoal(userId)
+                var targetCalories = 2000
+                goalsResult.onSuccess { goal ->
+                    targetCalories = (goal["dailyCalories"] as? Number)?.toInt() ?: 2000
+                }
+                
+                // 2. Calculate Calories In (from food logs)
+                val caloriesIn = calculateCaloriesIn(today)
+                
+                // 3. Calculate Calories Out (steps + workouts)
+                val caloriesOut = calculateCaloriesOut(today)
+                
+                // 4. Calculate net balance
+                val netBalance = caloriesIn - caloriesOut
+                
+                // 5. Update UI
+                runOnUiThread {
+                    updateCalorieBalanceUI(caloriesIn, caloriesOut, netBalance, targetCalories)
+                }
+                
+            } catch (e: Exception) {
+                Log.e("Homepage", "Error updating calorie balance", e)
+            }
+        }
+    }
+    
+    private suspend fun calculateCaloriesIn(date: String): Int {
+        return try {
+            val foodLogs = firestore.collection("foodLogs")
+                .whereEqualTo("userId", userId)
+                .whereEqualTo("date", date)
+                .get()
+                .await()
+            
+            var totalCalories = 0
+            for (doc in foodLogs.documents) {
+                val calories = (doc.get("calories") as? Number)?.toInt() ?: 0
+                totalCalories += calories
+            }
+            totalCalories
+        } catch (e: Exception) {
+            Log.e("Homepage", "Error calculating calories in", e)
+            0
+        }
+    }
+    
+    private suspend fun calculateCaloriesOut(date: String): Int {
+        return try {
+            var totalCalories = 0
+            
+            // 1. Calories from steps
+            val steps = if (::stepManager.isInitialized) stepManager.dailySteps else 0
+            val stepCalories = (steps * 0.04).toInt() // ~0.04 kcal per step
+            totalCalories += stepCalories
+            
+            // 2. Calories from logged workouts
+            val workoutLogs = firestore.collection("exercise_logs")
+                .whereEqualTo("userId", userId)
+                .whereEqualTo("date", date)
+                .get()
+                .await()
+            
+            for (doc in workoutLogs.documents) {
+                val calories = (doc.get("caloriesBurned") as? Number)?.toInt() ?: 0
+                totalCalories += calories
+            }
+            
+            totalCalories
+        } catch (e: Exception) {
+            Log.e("Homepage", "Error calculating calories out", e)
+            0
+        }
+    }
+    
+    private fun updateCalorieBalanceUI(caloriesIn: Int, caloriesOut: Int, netBalance: Int, targetCalories: Int) {
+        // Update Calories In
+        tvCaloriesIn.text = caloriesIn.toString()
+        val percentIn = ((caloriesIn.toFloat() / targetCalories) * 100).toInt().coerceIn(0, 100)
+        pbCaloriesIn.progress = percentIn
+        
+        // Update Calories Out
+        tvCaloriesOut.text = caloriesOut.toString()
+        val percentOut = ((caloriesOut.toFloat() / targetCalories) * 100).toInt().coerceIn(0, 100)
+        pbCaloriesOut.progress = percentOut
+        
+        // Update Net Balance with color coding
+        val balanceText = if (netBalance >= 0) "+$netBalance" else "$netBalance"
+        tvNetBalance.text = "$balanceText kcal"
+        
+        // Color code based on goal type
+        val goalTypeLower = goalType.lowercase()
+        val balanceColor = when {
+            goalTypeLower.contains("loss") && netBalance < 0 -> android.graphics.Color.parseColor("#4CAF50") // Deficit is good for weight loss
+            goalTypeLower.contains("gain") && netBalance > 0 -> android.graphics.Color.parseColor("#4CAF50") // Surplus is good for weight gain
+            goalTypeLower.contains("maintain") && kotlin.math.abs(netBalance) < 200 -> android.graphics.Color.parseColor("#4CAF50") // Near balance
+            netBalance > 0 -> android.graphics.Color.parseColor("#E91E63") // Surplus (pink)
+            else -> android.graphics.Color.parseColor("#2196F3") // Deficit (blue)
+        }
+        tvNetBalance.setTextColor(balanceColor)
+        
+        // Update Goal with comma formatting
+        val formattedGoal = String.format("%,d", targetCalories)
+        tvCalorieGoal.text = "$formattedGoal kcal"
+        
+        // Update Status Message
+        val percentConsumed = ((caloriesIn.toFloat() / targetCalories) * 100).toInt()
+        val statusMessage = when {
+            percentConsumed < 50 -> "You've consumed $percentConsumed% of your daily goal. Keep going! 💪"
+            percentConsumed in 50..80 -> "Great progress! You've consumed $percentConsumed% of your daily goal 🎯"
+            percentConsumed in 81..100 -> "Almost there! You've consumed $percentConsumed% of your daily goal ✨"
+            percentConsumed in 101..120 -> "You've reached your daily goal! ($percentConsumed%) 🎉"
+            else -> "You've exceeded your daily goal ($percentConsumed%). Monitor your intake 📊"
+        }
+        tvCalorieStatus.text = statusMessage
     }
 }

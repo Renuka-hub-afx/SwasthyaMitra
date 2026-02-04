@@ -4,9 +4,9 @@ import android.content.Context
 import android.util.Log
 import com.example.swasthyamitra.auth.FirebaseAuthHelper
 import com.google.firebase.Firebase
-import com.google.firebase.vertexai.vertexAI
-import com.google.firebase.vertexai.type.content
-import com.google.firebase.vertexai.type.generationConfig
+import com.google.firebase.ai.ai
+import com.google.firebase.ai.type.GenerativeBackend
+import com.google.firebase.ai.type.generationConfig
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.json.JSONArray
@@ -165,7 +165,8 @@ class AIExerciseRecommendationService private constructor(private val context: C
                 temperature = 0.4f
                 responseMimeType = "application/json"
             }
-            val generativeModel = Firebase.vertexAI.generativeModel("gemini-2.0-flash", generationConfig = config)
+            val generativeModel = Firebase.ai(backend = GenerativeBackend.googleAI())
+                .generativeModel("gemini-2.0-flash", generationConfig = config)
             
             val response = try {
                 kotlinx.coroutines.withTimeout(30000) { // 30s timeout

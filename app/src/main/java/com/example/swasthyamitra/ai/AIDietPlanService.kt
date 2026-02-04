@@ -4,9 +4,9 @@ import android.content.Context
 import android.util.Log
 import com.example.swasthyamitra.auth.FirebaseAuthHelper
 import com.google.firebase.Firebase
-import com.google.firebase.vertexai.vertexAI
-import com.google.firebase.vertexai.type.content
-import com.google.firebase.vertexai.type.generationConfig
+import com.google.firebase.ai.ai
+import com.google.firebase.ai.type.GenerativeBackend
+import com.google.firebase.ai.type.generationConfig
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.tasks.await
@@ -23,6 +23,38 @@ class AIDietPlanService private constructor(private val context: Context) {
     
     // Memory Cache for Food Samples
     private var foodCache: Map<String, List<String>>? = null
+    private var veganDatasetCache: List<String>? = null
+    
+    // Comprehensive Dietary Exclusion Lists
+    private val veganExclusions = listOf(
+        // Meat & Poultry
+        "Chicken", "Mutton", "Lamb", "Goat", "Beef", "Pork", "Meat", "Bacon", "Sausage",
+        "Turkey", "Duck", "Quail",
+        // Fish & Seafood
+        "Fish", "Prawn", "Shrimp", "Crab", "Lobster", "Seafood", "Salmon", "Tuna",
+        "Anchovy", "Sardine",
+        // Eggs
+        "Egg", "Omelette", "Scrambled", "Boiled Egg", "Anda", "Egg Curry",
+        // Dairy Products
+        "Milk", "Paneer", "Cheese", "Butter", "Ghee", "Cream", "Curd", "Yogurt", "Dahi",
+        "Lassi", "Raita", "Kheer", "Kulfi", "Rabri", "Malai", "Makhani", "Shrikhand",
+        "Buttermilk", "Whey", "Casein", "Lactose", "Condensed Milk",
+        // Honey & Animal-Derived
+        "Honey", "Gelatin", "Lard", "Fish Sauce", "Oyster Sauce", "Bone Broth"
+    )
+    
+    private val vegetarianExclusions = listOf(
+        // Meat & Poultry
+        "Chicken", "Mutton", "Lamb", "Goat", "Beef", "Pork", "Meat", "Bacon", "Sausage",
+        "Turkey", "Duck", "Quail",
+        // Fish & Seafood
+        "Fish", "Prawn", "Shrimp", "Crab", "Lobster", "Seafood", "Salmon", "Tuna",
+        "Anchovy", "Sardine",
+        // Eggs
+        "Egg", "Omelette", "Scrambled", "Boiled Egg", "Anda", "Egg Curry",
+        // Animal-Derived Ingredients
+        "Gelatin", "Lard", "Fish Sauce", "Oyster Sauce", "Bone Broth", "Meat Broth"
+    )
 
     companion object {
         @Volatile
@@ -90,8 +122,12 @@ class AIDietPlanService private constructor(private val context: Context) {
             // 4. Get user preferences (disliked foods)
             val dislikedFoods = getUserPreferences(userId)
 
-            // 5. Grounding Data (Random CSV Sample)
-            val foodSample = loadFoodSampleFromCsv(dietaryPreference, 50)
+            // 5. Grounding Data (Vegan Dataset or CSV Sample)
+            val foodSample = if (dietaryPreference == "Vegan") {
+                loadVeganDataset(weight, height, allergies, 50)
+            } else {
+                loadFoodSampleFromCsv(dietaryPreference, 50)
+            }
 
             // 6. Festival Check
             val festivalNote = getFestivalInstruction()
@@ -105,6 +141,12 @@ class AIDietPlanService private constructor(private val context: Context) {
 
             // 8. Execute Vertex AI (Gemini 2.0 Flash)
             val plan = callGeminiAPI(promptText)
+            
+            // 8.5. Validate Dietary Compliance
+            validateDietaryCompliance(plan, dietaryPreference).getOrElse {
+                Log.e(TAG, "Dietary compliance validation failed: ${it.message}")
+                throw it
+            }
             
             // 9. Save plan to Firestore for history
             savePlanToFirestore(userId, plan)
@@ -142,7 +184,15 @@ class AIDietPlanService private constructor(private val context: Context) {
                 else -> 300
             }
 
-            val foodSample = loadFoodSampleFromCsv(dietaryPreference, 30)
+            val weight = (profile["weight"] as? Number)?.toDouble() ?: 70.0
+            val height = (profile["height"] as? Number)?.toDouble() ?: 170.0
+            val allergies = (profile["allergies"] as? List<*>)?.joinToString(", ") ?: "None"
+            
+            val foodSample = if (dietaryPreference == "Vegan") {
+                loadVeganDataset(weight, height, allergies, 30)
+            } else {
+                loadFoodSampleFromCsv(dietaryPreference, 30)
+            }
             val exclusionList = excludedItems.joinToString(", ")
 
             val festivalNote = getFestivalInstruction()
@@ -151,12 +201,16 @@ class AIDietPlanService private constructor(private val context: Context) {
                 "STRICT: The user is on her period. Focus on iron-rich, warm, and comforting foods. Avoid heavy, spicy, or fried items if possible."
             } else ""
 
+            val dietaryRules = getDietaryRules(dietaryPreference)
+            
             val promptText = """
                 You are SwasthyaMitra, an expert Indian Nutritionist.
                 
                 Generate a SINGLE $mealType suggestion.
                 Target Calories: $mealCalories kcal
                 Dietary Preference: $dietaryPreference
+                
+                $dietaryRules
                 
                 **CONTEXT:**
                 - Season: $season
@@ -187,7 +241,8 @@ class AIDietPlanService private constructor(private val context: Context) {
                 temperature = 0.5f
                 responseMimeType = "application/json"
             }
-            val generativeModel = Firebase.vertexAI.generativeModel("gemini-2.0-flash", generationConfig = config)
+            val generativeModel = Firebase.ai(backend = GenerativeBackend.googleAI())
+                .generativeModel("gemini-2.0-flash", generationConfig = config)
             
             val response = try {
                 kotlinx.coroutines.withTimeout(30000) { // 30s timeout
@@ -337,6 +392,8 @@ class AIDietPlanService private constructor(private val context: Context) {
         dislikedFoods: String, foodSample: String, festivalNote: String,
         isOnPeriod: Boolean = false
     ): String {
+        val dietaryRules = getDietaryRules(dietaryPreference)
+        
         return """
             You are SwasthyaMitra, an expert Indian Nutritionist.
             
@@ -345,6 +402,8 @@ class AIDietPlanService private constructor(private val context: Context) {
             - Target Daily Calories: $targetCalories kcal.
             - Preference: $dietaryPreference.
             - Allergies/Restrictions: $allergies.
+            
+            $dietaryRules
             
             **DYNAMIC STATUS:**
             - Activity Level: $activityLevel ($intensityFlag).
@@ -383,13 +442,51 @@ class AIDietPlanService private constructor(private val context: Context) {
             }
         """.trimIndent()
     }
+    
+    private fun getDietaryRules(dietaryPreference: String): String {
+        return when (dietaryPreference) {
+            "Vegan" -> """
+                **CRITICAL DIETARY RULES - STRICT VEGAN:**
+                - NEVER suggest ANY animal products whatsoever
+                - FORBIDDEN: All meat, fish, eggs, dairy (milk, paneer, ghee, butter, curd, cheese, yogurt, lassi, raita, kheer, kulfi, malai, cream), honey
+                - ALLOWED ONLY: 100% plant-based foods (vegetables, fruits, grains, legumes, nuts, seeds)
+                - PROTEIN SOURCES: Dal, chickpeas, tofu, soy chunks, quinoa, nuts, seeds, lentils
+                - DAIRY ALTERNATIVES: Almond milk, coconut milk, soy milk, cashew cream
+                - DOUBLE-CHECK: Every single suggested item must be completely plant-based
+                - VERIFY: No hidden dairy in curries, desserts, or snacks
+            """.trimIndent()
+            "Vegetarian" -> """
+                **CRITICAL DIETARY RULES - STRICT VEGETARIAN:**
+                - NEVER suggest meat, fish, or eggs
+                - FORBIDDEN: Chicken, mutton, fish, seafood, eggs, gelatin, meat broths, fish sauce
+                - ALLOWED: Dairy products (milk, paneer, ghee, curd, yogurt), vegetables, fruits, grains, legumes
+                - PROTEIN SOURCES: Dal, paneer, milk, curd, chickpeas, nuts, soy
+                - VERIFY: No hidden meat/fish ingredients (e.g., fish sauce in Indo-Chinese dishes)
+                - CHECK: No gelatin in desserts, no meat-based broths
+            """.trimIndent()
+            "Eggetarian" -> """
+                **CRITICAL DIETARY RULES - EGGETARIAN:**
+                - NEVER suggest meat, fish, or seafood
+                - FORBIDDEN: Chicken, mutton, fish, seafood, meat broths
+                - ALLOWED: Eggs, dairy products, vegetables, fruits, grains, legumes
+                - PROTEIN SOURCES: Eggs, dal, paneer, milk, curd, chickpeas, nuts
+            """.trimIndent()
+            else -> """
+                **DIETARY RULES - NON-VEGETARIAN:**
+                - All food types allowed
+                - BALANCE: Include both vegetarian and non-vegetarian options for variety
+                - PROTEIN SOURCES: Chicken, fish, eggs, dal, paneer, legumes
+            """.trimIndent()
+        }
+    }
 
     private suspend fun callGeminiAPI(promptText: String): MealPlan {
         val config = generationConfig {
             temperature = 0.4f
             responseMimeType = "application/json"
         }
-        val generativeModel = Firebase.vertexAI.generativeModel("gemini-2.0-flash", generationConfig = config)
+        val generativeModel = Firebase.ai(backend = GenerativeBackend.googleAI())
+            .generativeModel("gemini-2.0-flash", generationConfig = config)
 
         val response = try {
             kotlinx.coroutines.withTimeout(60000) { // 60s timeout for full plan
@@ -454,27 +551,26 @@ class AIDietPlanService private constructor(private val context: Context) {
             val cached = foodCache?.get(fileName) ?: emptyList()
             val filtered = cached.filter { line ->
                 when (preference) {
-                    "Vegetarian" -> {
-                        !line.contains("Chicken", true) && !line.contains("Mutton", true) && 
-                        !line.contains("Fish", true) && !line.contains("Egg", true) &&
-                        !line.contains("Beef", true) && !line.contains("Pork", true) &&
-                        !line.contains("Meat", true)
-                    }
                     "Vegan" -> {
-                        !line.contains("Chicken", true) && !line.contains("Mutton", true) && 
-                        !line.contains("Fish", true) && !line.contains("Egg", true) &&
-                        !line.contains("Beef", true) && !line.contains("Pork", true) &&
-                        !line.contains("Meat", true) && !line.contains("Milk", true) &&
-                        !line.contains("Paneer", true) && !line.contains("Curd", true) &&
-                        !line.contains("Ghee", true) && !line.contains("Cheese", true) &&
-                        !line.contains("Honey", true) && !line.contains("Butter", true)
+                        // Use comprehensive vegan exclusion list
+                        veganExclusions.none { exclusion ->
+                            line.contains(exclusion, ignoreCase = true)
+                        }
+                    }
+                    "Vegetarian" -> {
+                        // Use comprehensive vegetarian exclusion list
+                        vegetarianExclusions.none { exclusion ->
+                            line.contains(exclusion, ignoreCase = true)
+                        }
                     }
                     "Eggetarian" -> {
-                        !line.contains("Chicken", true) && !line.contains("Mutton", true) && 
-                        !line.contains("Fish", true) && !line.contains("Beef", true) && 
-                        !line.contains("Pork", true) && !line.contains("Meat", true)
+                        // Vegetarian + eggs allowed
+                        val eggetarianExclusions = vegetarianExclusions.filter { it != "Egg" && it != "Omelette" && it != "Scrambled" && it != "Boiled Egg" && it != "Anda" && it != "Egg Curry" }
+                        eggetarianExclusions.none { exclusion ->
+                            line.contains(exclusion, ignoreCase = true)
+                        }
                     }
-                    else -> true // Non-Vegetarian
+                    else -> true // Non-Vegetarian - all foods allowed
                 }
             }
             val samplesPerFile = (limit / files.size).coerceAtLeast(15)
@@ -485,6 +581,140 @@ class AIDietPlanService private constructor(private val context: Context) {
             "Garam Chai, Poha, Dal Tadka, Roti, Sabzi"
         } else {
             allSamples.shuffled().take(limit).joinToString("\n")
+        }
+    }
+    
+    private fun loadVeganDataset(weight: Double, height: Double, allergies: String, limit: Int): String {
+        // Check cache first
+        if (veganDatasetCache != null && veganDatasetCache!!.isNotEmpty()) {
+            return veganDatasetCache!!.shuffled().take(limit).joinToString("\n")
+        }
+        
+        try {
+            // Calculate BMI to determine weight status
+            val bmi = weight / ((height / 100) * (height / 100))
+            val isObese = bmi >= 30
+            
+            // Select appropriate file based on weight and allergies
+            val fileName = when {
+                allergies.contains("gluten", ignoreCase = true) -> 
+                    if (isObese) "Obese_vegans_gluten_allergy .xlsx" 
+                    else "Normal_weight_vegans_gluten_allergy .xlsx"
+                allergies.contains("nut", ignoreCase = true) || allergies.contains("peanut", ignoreCase = true) -> 
+                    if (isObese) "Obese_vegans_nut_allergy .xlsx" 
+                    else "Normal_weight_vegans_nut_allergy .xlsx"
+                else -> 
+                    if (isObese) "Obese_vegans_no_allergy .xlsx" 
+                    else "Normal_weight_vegans_no_allergy .xlsx"
+            }
+            
+            val veganFoods = parseVeganExcel(fileName)
+            
+            if (veganFoods.isNotEmpty()) {
+                veganDatasetCache = veganFoods
+                return veganFoods.shuffled().take(limit).joinToString("\n")
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error loading vegan dataset: ${e.message}", e)
+        }
+        
+        // Fallback to CSV filtering if vegan dataset fails
+        Log.w(TAG, "Falling back to CSV filtering for vegan foods")
+        return loadFoodSampleFromCsv("Vegan", limit)
+    }
+    
+    private fun parseVeganExcel(fileName: String): List<String> {
+        val foods = mutableListOf<String>()
+        
+        try {
+            val inputStream = context.assets.open("vegan/Vegan_datasets/$fileName")
+            val workbook = org.apache.poi.xssf.usermodel.XSSFWorkbook(inputStream)
+            val sheet = workbook.getSheetAt(0)
+            
+            // Get header row to find column indices
+            val headerRow = sheet.getRow(0)
+            var foodNameIdx = -1
+            var descriptionIdx = -1
+            
+            for (i in 0 until headerRow.lastCellNum) {
+                val cellValue = headerRow.getCell(i)?.toString() ?: ""
+                when {
+                    cellValue.contains("Foods", ignoreCase = true) -> foodNameIdx = i
+                    cellValue.contains("Description", ignoreCase = true) -> descriptionIdx = i
+                }
+            }
+            
+            if (foodNameIdx == -1) {
+                Log.e(TAG, "Could not find 'Foods' column in $fileName")
+                return emptyList()
+            }
+            
+            // Parse data rows
+            for (rowIdx in 1..sheet.lastRowNum) {
+                val row = sheet.getRow(rowIdx) ?: continue
+                val foodCell = row.getCell(foodNameIdx)
+                val foodName = foodCell?.toString()?.trim() ?: ""
+                
+                if (foodName.isNotEmpty() && foodName != "null") {
+                    val description = if (descriptionIdx != -1) {
+                        row.getCell(descriptionIdx)?.toString()?.trim() ?: ""
+                    } else ""
+                    
+                    val formattedFood = if (description.isNotEmpty()) {
+                        "$foodName ($description)"
+                    } else {
+                        foodName
+                    }
+                    
+                    foods.add(formattedFood)
+                }
+            }
+            
+            workbook.close()
+            inputStream.close()
+            
+            Log.d(TAG, "Loaded ${foods.size} vegan foods from $fileName")
+            
+        } catch (e: Exception) {
+            Log.e(TAG, "Error parsing vegan Excel file $fileName: ${e.message}", e)
+        }
+        
+        return foods
+    }
+    
+    private fun validateDietaryCompliance(mealPlan: MealPlan, dietaryPreference: String): Result<MealPlan> {
+        val allItems = listOf(
+            mealPlan.breakfast.item,
+            mealPlan.lunch.item,
+            mealPlan.snack.item,
+            mealPlan.dinner.item,
+            mealPlan.postWorkout?.item
+        ).filterNotNull()
+        
+        val violations = when (dietaryPreference) {
+            "Vegan" -> {
+                allItems.filter { item ->
+                    veganExclusions.any { exclusion ->
+                        item.contains(exclusion, ignoreCase = true)
+                    }
+                }
+            }
+            "Vegetarian" -> {
+                allItems.filter { item ->
+                    vegetarianExclusions.any { exclusion ->
+                        item.contains(exclusion, ignoreCase = true)
+                    }
+                }
+            }
+            else -> emptyList()
+        }
+        
+        return if (violations.isNotEmpty()) {
+            Log.e(TAG, "❌ DIETARY VIOLATION DETECTED for $dietaryPreference user: $violations")
+            Result.failure(Exception("AI suggested non-compliant food: ${violations.joinToString()}. This violates $dietaryPreference dietary restrictions. Please regenerate."))
+        } else {
+            Log.d(TAG, "✅ Dietary compliance validated for $dietaryPreference user")
+            Result.success(mealPlan)
         }
     }
 

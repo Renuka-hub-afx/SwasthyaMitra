@@ -5,8 +5,9 @@ import android.util.Log
 import com.example.swasthyamitra.auth.FirebaseAuthHelper
 import com.example.swasthyamitra.data.repository.HydrationRepository
 import com.google.firebase.Firebase
-import com.google.firebase.vertexai.vertexAI
-import com.google.firebase.vertexai.type.generationConfig
+import com.google.firebase.ai.ai
+import com.google.firebase.ai.type.GenerativeBackend
+import com.google.firebase.ai.type.generationConfig
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.util.Calendar
@@ -108,7 +109,8 @@ class AICoachMessageService private constructor(private val context: Context) {
             val config = generationConfig {
                 temperature = 0.7f
             }
-            val generativeModel = Firebase.vertexAI.generativeModel("gemini-1.5-flash", generationConfig = config)
+            val generativeModel = Firebase.ai(backend = GenerativeBackend.googleAI())
+                .generativeModel("gemini-2.0-flash", generationConfig = config)
             
             val response = try {
                 kotlinx.coroutines.withTimeout(15000) { // 15s timeout
