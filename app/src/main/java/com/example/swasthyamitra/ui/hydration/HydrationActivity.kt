@@ -47,6 +47,7 @@ class HydrationActivity : AppCompatActivity() {
         }
 
         reminderManager = WaterReminderManager(this)
+        Toast.makeText(this, "User ID: $userId", Toast.LENGTH_LONG).show()
         
         // Handle quick log from notification
         val quickLogAmount = intent.getIntExtra("QUICK_LOG_AMOUNT", 0)
@@ -131,9 +132,18 @@ class HydrationActivity : AppCompatActivity() {
                 updateProgressUI()
             }
 
-            // Load history for selected date
-            hydrationRepo.getWaterLogs(userId, dateStr).onSuccess { logs ->
-                adapter.updateLogs(logs)
+            // Load history for selected date in parallel
+            lifecycleScope.launch {
+                hydrationRepo.getWaterLogs(userId, dateStr).onSuccess { logs ->
+                    adapter.updateLogs(logs)
+                    if (logs.isNotEmpty()) {
+                        Toast.makeText(this@HydrationActivity, "Loaded ${logs.size} history logs", Toast.LENGTH_SHORT).show()
+                    } else {
+                        Toast.makeText(this@HydrationActivity, "No logs found for $dateStr", Toast.LENGTH_SHORT).show()
+                    }
+                }.onFailure { e ->
+                    Toast.makeText(this@HydrationActivity, "History Error: ${e.message}", Toast.LENGTH_LONG).show()
+                }
             }
             
             // Load user profile for wake/sleep times
@@ -166,7 +176,10 @@ class HydrationActivity : AppCompatActivity() {
         val dateStr = dateFormat.format(selectedDate.time)
         lifecycleScope.launch {
             hydrationRepo.getWaterLogs(userId, dateStr).onSuccess { logs ->
+                android.util.Log.d("HydrationActivity", "Updating logs: ${logs.size}")
                 adapter.updateLogs(logs)
+            }.onFailure {
+                Toast.makeText(this@HydrationActivity, "Failed to refresh history", Toast.LENGTH_SHORT).show()
             }
         }
     }

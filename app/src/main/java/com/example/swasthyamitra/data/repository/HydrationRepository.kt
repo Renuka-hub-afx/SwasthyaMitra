@@ -50,6 +50,7 @@ class HydrationRepository {
 
     suspend fun getWaterLogs(userId: String, date: String? = null, limit: Int = 20): Result<List<WaterLog>> {
         return try {
+            android.util.Log.d("HydrationRepo", "Fetching logs for userId: $userId, date: $date")
             var query = waterLogsCollection
                 .whereEqualTo("userId", userId)
             
@@ -58,14 +59,36 @@ class HydrationRepository {
             }
             
             val snapshot = query
-                .orderBy("timestamp", com.google.firebase.firestore.Query.Direction.DESCENDING)
                 .limit(limit.toLong())
                 .get()
                 .await()
             
-            val logs = snapshot.documents.mapNotNull { it.toObject(WaterLog::class.java)?.copy(logId = it.id) }
+            android.util.Log.d("HydrationRepo", "Found ${snapshot.documents.size} documents")
+            
+            val logs = snapshot.documents
+                .mapNotNull { doc ->
+                    val log = doc.toObject(WaterLog::class.java)
+                    if (log == null) {
+                        try {
+                            WaterLog(
+                                logId = doc.id,
+                                userId = doc.getString("userId") ?: "",
+                                amountML = (doc.get("amountML") as? Number)?.toInt() ?: 0,
+                                timestamp = (doc.get("timestamp") as? Number)?.toLong() ?: doc.getTimestamp("timestamp")?.toDate()?.time ?: 0L,
+                                date = doc.getString("date") ?: ""
+                            )
+                        } catch (e: Exception) {
+                            null
+                        }
+                    } else {
+                        log.copy(logId = doc.id)
+                    }
+                }
+                .sortedByDescending { it.timestamp }
+            
             Result.success(logs)
         } catch (e: Exception) {
+            android.util.Log.e("HydrationRepo", "Error fetching logs", e)
             Result.failure(e)
         }
     }

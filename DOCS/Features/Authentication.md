@@ -48,9 +48,10 @@ Unlike simple toast-based resets, `ForgotPasswordActivity` provides a standalone
 - **Onboarding Guard**: Even after a successful login, if a user hasn't set their BMR/TDEE, they are redirected to the Profile Setup flow to prevent "Goal-less" usage.
 - **Data Isolation**: Uses the Firebase `uid` as the primary key for all Firestore documents, ensuring that "User A" can never access "User B's" health logs.
 - **Cloud Firestore Security Rules**:
-  ```text
-  allow read, write: if request.auth != null && request.auth.uid == userId;
-  ```
+  
+```text
+allow read, write: if request.auth != null && request.auth.uid == userId;
+```
 
 ---
 
