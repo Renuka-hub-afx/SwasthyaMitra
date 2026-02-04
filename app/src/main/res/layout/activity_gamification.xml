@@ -291,7 +291,8 @@
                 android:layout_marginTop="24dp"
                 android:text="⚔️ Challenge a Friend"
                 android:textColor="#FFFFFF"
-                android:backgroundTint="#9C27B0"
+                android:background="@drawable/button_background"
+                android:backgroundTint="@null"
                 android:textSize="16sp"
                 android:textStyle="bold"
                 app:cornerRadius="12dp"/>

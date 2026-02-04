@@ -108,6 +108,22 @@
 
                 </LinearLayout>
 
+                <!-- Period Mode Toggle -->
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chip_period_mode"
+                    style="@style/Widget.MaterialComponents.Chip.Filter"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="Period Mode 🌸"
+                    android:checkable="true"
+                    android:checked="false"
+                    app:chipBackgroundColor="@color/white"
+                    app:chipStrokeColor="#FCE4EC"
+                    app:chipStrokeWidth="1dp"
+                    android:textColor="#C2185B"
+                    android:textSize="12sp"/>
+
                 <!-- AI Coach Message with Profile -->
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -172,33 +188,7 @@
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
                     android:layout_marginTop="18dp"
-                    android:weightSum="4">
-
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:orientation="vertical"
-                        android:gravity="center">
-
-                        <TextView
-                            android:id="@+id/tv_calories"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="0"
-                            android:textSize="28sp"
-                            android:textStyle="bold"
-                            android:textColor="#E91E63"/>
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Calories"
-                            android:textSize="13sp"
-                            android:textColor="#666666"
-                            android:layout_marginTop="4dp"/>
-
-                    </LinearLayout>
+                    android:weightSum="3">
 
                     <LinearLayout
                         android:layout_width="0dp"
@@ -283,6 +273,206 @@
                     android:text="Water"
                     android:textColor="#666666"
                     android:textSize="13sp" />
+
+            </LinearLayout>
+
+        </androidx.cardview.widget.CardView>
+
+        <!-- Calories In/Out Tracking Card -->
+        <androidx.cardview.widget.CardView
+            android:id="@+id/card_calorie_balance"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="18dp"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="2dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="20dp"
+                android:background="@android:color/white">
+
+                <!-- Header -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Today's Calorie Balance 🔥"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:textColor="#333333"/>
+
+                <!-- Calories In/Out Row -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginTop="16dp"
+                    android:weightSum="2">
+
+                    <!-- Calories In -->
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:paddingEnd="8dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Calories In"
+                            android:textSize="12sp"
+                            android:textColor="#999999"/>
+
+                        <TextView
+                            android:id="@+id/tv_calories_in"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="0"
+                            android:textSize="24sp"
+                            android:textStyle="bold"
+                            android:textColor="#4CAF50"
+                            android:layout_marginTop="4dp"/>
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="kcal"
+                            android:textSize="11sp"
+                            android:textColor="#666666"/>
+
+                        <ProgressBar
+                            android:id="@+id/pb_calories_in"
+                            style="?android:attr/progressBarStyleHorizontal"
+                            android:layout_width="match_parent"
+                            android:layout_height="8dp"
+                            android:layout_marginTop="8dp"
+                            android:progressTint="#4CAF50"
+                            android:max="100"
+                            android:progress="0"/>
+
+                    </LinearLayout>
+
+                    <!-- Calories Out -->
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:paddingStart="8dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Calories Out"
+                            android:textSize="12sp"
+                            android:textColor="#999999"/>
+
+                        <TextView
+                            android:id="@+id/tv_calories_out"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="0"
+                            android:textSize="24sp"
+                            android:textStyle="bold"
+                            android:textColor="#FF9800"
+                            android:layout_marginTop="4dp"/>
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="kcal"
+                            android:textSize="11sp"
+                            android:textColor="#666666"/>
+
+                        <ProgressBar
+                            android:id="@+id/pb_calories_out"
+                            style="?android:attr/progressBarStyleHorizontal"
+                            android:layout_width="match_parent"
+                            android:layout_height="8dp"
+                            android:layout_marginTop="8dp"
+                            android:progressTint="#FF9800"
+                            android:max="100"
+                            android:progress="0"/>
+
+                    </LinearLayout>
+
+                </LinearLayout>
+
+                <!-- Divider -->
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="#EEEEEE"
+                    android:layout_marginTop="16dp"
+                    android:layout_marginBottom="12dp"/>
+
+                <!-- Net Balance -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Net Balance:"
+                        android:textSize="14sp"
+                        android:textColor="#666666"/>
+
+                    <TextView
+                        android:id="@+id/tv_net_balance"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="+0 kcal"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:textColor="#E91E63"/>
+
+                </LinearLayout>
+
+                <!-- Goal Progress -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginTop="8dp"
+                    android:gravity="center_vertical">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Daily Goal:"
+                        android:textSize="14sp"
+                        android:textColor="#666666"/>
+
+                    <TextView
+                        android:id="@+id/tv_calorie_goal"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="2,000 kcal"
+                        android:textSize="14sp"
+                        android:textColor="#333333"/>
+
+                </LinearLayout>
+
+                <!-- Status Message -->
+                <TextView
+                    android:id="@+id/tv_calorie_status"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:padding="12dp"
+                    android:background="#F5F5F5"
+                    android:text="You've consumed 0% of your daily goal"
+                    android:textSize="13sp"
+                    android:textColor="#666666"
+                    android:gravity="center"/>
 
             </LinearLayout>
 
@@ -483,7 +673,7 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="Coach Suggestion"
+                        android:text="Your Personalized Exercise Today 💪"
                         android:textSize="18sp"
                         android:textStyle="bold"
                         android:textColor="#333333"/>
@@ -495,6 +685,17 @@
                         android:textSize="20sp"/>
 
                 </LinearLayout>
+
+                <!-- Exercise GIF Display -->
+                <ImageView
+                    android:id="@+id/iv_exercise_gif"
+                    android:layout_width="match_parent"
+                    android:layout_height="200dp"
+                    android:layout_marginTop="12dp"
+                    android:scaleType="centerCrop"
+                    android:background="#F5F5F5"
+                    android:contentDescription="Exercise demonstration"
+                    android:visibility="gone"/>
 
                 <TextView
                     android:id="@+id/tv_rec_exercise_name"
@@ -526,6 +727,42 @@
                     android:textStyle="italic"
                     android:lineSpacingExtra="2dp"/>
 
+                <!-- Age-specific explanation -->
+                <TextView
+                    android:id="@+id/tv_age_explanation"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text=""
+                    android:textColor="#4CAF50"
+                    android:textSize="13sp"
+                    android:visibility="gone"/>
+
+                <!-- Gender-specific benefits -->
+                <TextView
+                    android:id="@+id/tv_gender_note"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:text=""
+                    android:textColor="#2196F3"
+                    android:textSize="13sp"
+                    android:visibility="gone"/>
+
+                <!-- Motivational message (Period Mode) -->
+                <TextView
+                    android:id="@+id/tv_motivational_message"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:padding="12dp"
+                    android:background="#FCE4EC"
+                    android:text=""
+                    android:textColor="#C2185B"
+                    android:textSize="13sp"
+                    android:textStyle="bold"
+                    android:visibility="gone"/>
+
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -538,7 +775,7 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1.2"
-                        android:text="DONE ✅"
+                        android:text="I Did It! 🎉"
                         android:textSize="11sp"
                         android:textStyle="bold"
                         app:cornerRadius="8dp"
@@ -551,7 +788,7 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="0.8"
                         android:layout_marginStart="4dp"
-                        android:text="SKIP"
+                        android:text="Maybe Later"
                         android:textSize="11sp"
                         android:textStyle="bold"
                         app:cornerRadius="8dp"
@@ -564,7 +801,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="4dp"
-                        android:text="GUIDE >>"
+                        android:text="Show Me How 👀"
                         android:textColor="#E91E63"
                         android:textSize="11sp"
                         android:textStyle="bold"/>
@@ -574,6 +811,7 @@
             </LinearLayout>
 
         </androidx.cardview.widget.CardView>
+
 
         <!-- Quick Actions -->
         <TextView

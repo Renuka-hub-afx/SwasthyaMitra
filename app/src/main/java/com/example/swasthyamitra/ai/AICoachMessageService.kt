@@ -5,8 +5,9 @@ import android.util.Log
 import com.example.swasthyamitra.auth.FirebaseAuthHelper
 import com.example.swasthyamitra.data.repository.HydrationRepository
 import com.google.firebase.Firebase
-import com.google.firebase.vertexai.vertexAI
-import com.google.firebase.vertexai.type.generationConfig
+import com.google.firebase.ai.ai
+import com.google.firebase.ai.type.GenerativeBackend
+import com.google.firebase.ai.type.generationConfig
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.util.Calendar
@@ -49,6 +50,7 @@ class AICoachMessageService private constructor(private val context: Context) {
             
             val burnedFromSteps = (steps * 0.04).toInt()
             val netCalories = consumed - burnedFromSteps
+            val isOnPeriod = profile["isOnPeriod"] as? Boolean ?: false
 
             val hour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
             val timeOfDay = when (hour) {
@@ -59,14 +61,21 @@ class AICoachMessageService private constructor(private val context: Context) {
             }
 
             // 2. Construct Prompt
+            val periodContext = if (isOnPeriod) {
+                "STRICT: The user is currently on her period (menstrual days). Switch tone to: EMPATHETIC, GENTLE, SUPPORTIVE. Focus on self-care, rest, and comfort."
+            } else {
+                "Tone: Encouraging, Concise, Scientific."
+            }
+
             val promptText = """
                 You are a professional Health & Fitness Coach for the SwasthyaMitra app.
-                Your tone is encouraging, concise, and scientific.
+                $periodContext
                 
                 **USER PROFILE:**
                 - Name: $userName
                 - Main Goal: $currentGoal
                 - Current Time: $timeOfDay
+                - Period Status: ${if (isOnPeriod) "ON PERIOD" else "Normal"}
                 
                 **TODAY'S LOGS:**
                 - Calories: $consumed / $targetCalories kcal
@@ -78,13 +87,19 @@ class AICoachMessageService private constructor(private val context: Context) {
                 **TASK:**
                 Provide a 1-sentence personalized and insightful coach message based on the data above.
                 
-                **GUIDELINES:**
+                **LOGIC RULES:**
+                ${if (isOnPeriod) """
+                1. EMOTIONAL SUPPORT: Acknowledge that she might feel low energy or discomfort. 
+                2. GENTLE ADVICE: Suggest rest, hydration, or heat therapy for cramps.
+                3. NO PRESSURE: Reinforce that it's okay to slow down and listen to her body.
+                4. CULTURAL FLEXIBILITY: Use warm, caring language.
+                """ else """
                 1. If water is low (< 50% of goal) and it's afternoon/evening, mention hydration.
-                2. If protein is low (< 0.8g per kg equivalent, roughly < 40g for now), suggest a protein-rich snack.
-                3. If they are exactly on track with calories (±100 kcal), congratulate them on balance.
+                2. If protein is low (< 40g), suggest a protein-rich snack.
+                3. If on track (±100 kcal), congratulate on balance.
                 4. If steps are low (< 3000) and it's evening, suggest a short walk.
+                """}
                 5. Address them by name ($userName).
-                6. Avoid generic "Good job", be specific about their data.
                 
                 **OUTPUT:**
                 Just the message string. No JSON, no quotes.
@@ -94,7 +109,8 @@ class AICoachMessageService private constructor(private val context: Context) {
             val config = generationConfig {
                 temperature = 0.7f
             }
-            val generativeModel = Firebase.vertexAI.generativeModel("gemini-1.5-flash", generationConfig = config)
+            val generativeModel = Firebase.ai(backend = GenerativeBackend.googleAI())
+                .generativeModel("gemini-2.0-flash", generationConfig = config)
             
             val response = try {
                 kotlinx.coroutines.withTimeout(15000) { // 15s timeout
