@@ -81,6 +81,16 @@ class FirebaseAuthHelper(private val context: Context) {
     fun signOut() {
         auth.signOut()
     }
+    
+    // Send password reset email
+    suspend fun sendPasswordResetEmail(email: String): Result<Unit> {
+        return try {
+            auth.sendPasswordResetEmail(email).await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 
     // Update user physical stats
     suspend fun updateUserPhysicalStats(

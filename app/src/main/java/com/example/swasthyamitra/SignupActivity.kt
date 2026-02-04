@@ -63,10 +63,23 @@ class SignupActivity : AppCompatActivity() {
 
         if (name.isEmpty()) { binding.nameInput.error = "Enter name"; return }
         if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) { binding.emailInput.error = "Valid email required"; return }
-        if (phoneNumber.isEmpty() || phoneNumber.length < 10) { binding.phoneInput.error = "Enter valid phone (with country code)"; return }
+        
+        // Phone validation - 10-15 digits, optional country code
+        if (!isValidPhone(phoneNumber)) { 
+            binding.phoneInput.error = "Enter valid phone (10-15 digits, with country code)"
+            return 
+        }
+        
         if (dob.isEmpty()) { Toast.makeText(this, "Select birth date", Toast.LENGTH_SHORT).show(); return }
-        if (pass.length < 6) { binding.passwordInput.error = "Min 6 chars"; return }
-        if (pass != confirm) { binding.confirmPasswordInput.error = "Mismatch"; return }
+        
+        // Strong password validation
+        val passwordError = getPasswordError(pass)
+        if (passwordError != null) {
+            binding.passwordInput.error = passwordError
+            return
+        }
+        
+        if (pass != confirm) { binding.confirmPasswordInput.error = "Passwords don't match"; return }
 
         val age = calculateAge(dob)
 
@@ -96,5 +109,29 @@ class SignupActivity : AppCompatActivity() {
             if (today.get(Calendar.DAY_OF_YEAR) < birth.get(Calendar.DAY_OF_YEAR)) age--
             age
         } catch (e: Exception) { 0 }
+    }
+    
+    /**
+     * Validates phone number: 10-15 digits, optional + prefix for country code
+     */
+    private fun isValidPhone(phone: String): Boolean {
+        val cleanPhone = phone.replace(Regex("[\\s\\-()]"), "") // Remove spaces, dashes, parentheses
+        return when {
+            cleanPhone.isEmpty() -> false
+            cleanPhone.startsWith("+") -> cleanPhone.length in 11..16 && cleanPhone.drop(1).all { it.isDigit() }
+            else -> cleanPhone.length in 10..15 && cleanPhone.all { it.isDigit() }
+        }
+    }
+    
+    /**
+     * Returns null if password is strong, or an error message if weak
+     */
+    private fun getPasswordError(password: String): String? {
+        if (password.length < 8) return "Password must be at least 8 characters"
+        if (!password.any { it.isUpperCase() }) return "Password must contain an uppercase letter"
+        if (!password.any { it.isLowerCase() }) return "Password must contain a lowercase letter"
+        if (!password.any { it.isDigit() }) return "Password must contain a number"
+        if (!password.any { !it.isLetterOrDigit() }) return "Password must contain a special character (!@#\$%)"
+        return null
     }
 }

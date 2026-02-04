@@ -244,42 +244,100 @@ class AIDietPlanService private constructor(private val context: Context) {
             val generativeModel = Firebase.ai(backend = GenerativeBackend.googleAI())
                 .generativeModel("gemini-2.0-flash", generationConfig = config)
             
-            val response = try {
-                kotlinx.coroutines.withTimeout(30000) { // 30s timeout
-                    generativeModel.generateContent(promptText)
+            // Retry mechanism for meal regeneration
+            var lastException: Exception? = null
+            for (attempt in 1..2) {
+                try {
+                    Log.d(TAG, "Regenerate meal attempt $attempt for $mealType")
+                    
+                    val response = kotlinx.coroutines.withTimeout(30000) {
+                        generativeModel.generateContent(promptText)
+                    }
+                    
+                    val jsonStr = response.text
+                    if (jsonStr.isNullOrBlank()) {
+                        Log.e(TAG, "Attempt $attempt: Empty response")
+                        lastException = Exception("AI response empty")
+                        kotlinx.coroutines.delay(1000L * attempt)
+                        continue
+                    }
+                    
+                    val cleanJson = jsonStr.trim()
+                        .removeSurrounding("```json", "```")
+                        .removeSurrounding("```", "```")
+                        .trim()
+                    
+                    // Handle both array and object responses
+                    val meal = if (cleanJson.startsWith("[")) {
+                        val jsonArray = org.json.JSONArray(cleanJson)
+                        parseMeal(jsonArray.getJSONObject(0))
+                    } else {
+                        parseMeal(JSONObject(cleanJson))
+                    }
+                    
+                    // Track regeneration
+                    trackFeedback(userId, excludedItems.lastOrNull() ?: "", mealType, "Regenerated")
+                    
+                    return@withContext Result.success(meal)
+                    
+                } catch (e: kotlinx.coroutines.TimeoutCancellationException) {
+                    Log.e(TAG, "Attempt $attempt: Timeout for $mealType")
+                    lastException = Exception("AI took too long. Please try again.")
+                    kotlinx.coroutines.delay(1500L * attempt)
+                } catch (e: Exception) {
+                    Log.e(TAG, "Attempt $attempt failed for $mealType: ${e.message}", e)
+                    lastException = e
+                    if (attempt < 2) {
+                        kotlinx.coroutines.delay(1000L * attempt)
+                    }
                 }
-            } catch (e: kotlinx.coroutines.TimeoutCancellationException) {
-                throw Exception("AI took too long to respond. Please try again.")
             }
             
-            val jsonStr = response.text ?: throw Exception("AI response empty")
-            val cleanJson = jsonStr.trim().removeSurrounding("```json", "```").trim()
+            // Return fallback meal after retries
+            Log.w(TAG, "Using fallback for $mealType after failed attempts")
+            Result.success(getFallbackMeal(mealType, mealCalories))
             
-            // Handle both array and object responses
-            val meal = try {
-                if (cleanJson.startsWith("[")) {
-                    // Response is an array, take first element
-                    val jsonArray = org.json.JSONArray(cleanJson)
-                    parseMeal(jsonArray.getJSONObject(0))
-                } else {
-                    // Response is a single object
-                    parseMeal(JSONObject(cleanJson))
-                }
-            } catch (e: Exception) {
-                Log.e(TAG, "JSON parsing error. Raw response: $cleanJson", e)
-                throw Exception("Failed to parse AI response: ${e.message}")
-            }
-            
-            // Track regeneration
-            trackFeedback(userId, excludedItems.lastOrNull() ?: "", mealType, "Regenerated")
-            
-            Result.success(meal)
         } catch (e: Exception) {
             Log.e(TAG, "Error regenerating meal: ${e.message}", e)
             Result.failure(e)
         }
     }
-
+    
+    /**
+     * Fallback meal for a specific meal type
+     */
+    private fun getFallbackMeal(mealType: String, targetCalories: Int): MealRec {
+        return when (mealType.lowercase()) {
+            "breakfast" -> MealRec(
+                item = "Idli Sambar",
+                calories = targetCalories,
+                protein = "10g",
+                reason = "Healthy South Indian breakfast, easy to digest.",
+                tip = "Add coconut chutney for taste!"
+            )
+            "lunch" -> MealRec(
+                item = "Vegetable Biryani with Raita",
+                calories = targetCalories,
+                protein = "15g",
+                reason = "Flavorful and filling lunch option.",
+                tip = "Balance with fresh salad."
+            )
+            "dinner" -> MealRec(
+                item = "Chapati with Mixed Vegetable Curry",
+                calories = targetCalories,
+                protein = "12g",
+                reason = "Light dinner for good digestion.",
+                tip = "Eat at least 2 hours before sleep."
+            )
+            else -> MealRec(
+                item = "Roasted Makhana (Fox Nuts)",
+                calories = targetCalories,
+                protein = "5g",
+                reason = "Healthy, low-calorie snack option.",
+                tip = "Great for evening cravings!"
+            )
+        }
+    }
     /**
      * Track user feedback (Ate/Skipped/Regenerated)
      */
@@ -488,27 +546,94 @@ class AIDietPlanService private constructor(private val context: Context) {
         val generativeModel = Firebase.ai(backend = GenerativeBackend.googleAI())
             .generativeModel("gemini-2.0-flash", generationConfig = config)
 
-        val response = try {
-            kotlinx.coroutines.withTimeout(60000) { // 60s timeout for full plan
-                generativeModel.generateContent(promptText)
+        // Retry mechanism with backoff
+        var lastException: Exception? = null
+        for (attempt in 1..3) {
+            try {
+                Log.d(TAG, "Gemini API attempt $attempt for diet plan")
+                
+                val response = kotlinx.coroutines.withTimeout(45000) { // 45s timeout
+                    generativeModel.generateContent(promptText)
+                }
+                
+                val jsonStr = response.text
+                if (jsonStr.isNullOrBlank()) {
+                    Log.e(TAG, "Attempt $attempt: Empty response from AI")
+                    lastException = Exception("AI response empty")
+                    kotlinx.coroutines.delay(1000L * attempt) // Backoff delay
+                    continue
+                }
+                
+                val cleanJson = jsonStr.trim()
+                    .removeSurrounding("```json", "```")
+                    .removeSurrounding("```", "```")
+                    .trim()
+                
+                Log.d(TAG, "Attempt $attempt: Got response, parsing JSON")
+                
+                val json = JSONObject(cleanJson)
+                
+                return MealPlan(
+                    parseMeal(json.getJSONObject("breakfast")),
+                    parseMeal(json.getJSONObject("lunch")),
+                    parseMeal(json.getJSONObject("snack")),
+                    parseMeal(json.getJSONObject("dinner")),
+                    if (json.has("postWorkout")) parseMeal(json.getJSONObject("postWorkout")) else null,
+                    json.optString("dailyTip", "Health is wealth!")
+                )
+                
+            } catch (e: kotlinx.coroutines.TimeoutCancellationException) {
+                Log.e(TAG, "Attempt $attempt: Timeout")
+                lastException = Exception("AI is taking longer than usual. Please try again.")
+                kotlinx.coroutines.delay(2000L * attempt)
+            } catch (e: Exception) {
+                Log.e(TAG, "Attempt $attempt failed: ${e.message}", e)
+                lastException = e
+                if (attempt < 3) {
+                    kotlinx.coroutines.delay(1500L * attempt)
+                }
             }
-        } catch (e: kotlinx.coroutines.TimeoutCancellationException) {
-            Log.e(TAG, "Gemini API Timeout for full plan")
-            throw Exception("AI is taking longer than usual. Please check your internet or try again later.")
         }
-
-        val jsonStr = response.text ?: throw Exception("AI response empty")
-        val cleanJson = jsonStr.trim().removeSurrounding("```json", "```").trim()
         
-        val json = JSONObject(cleanJson)
-        
+        // All retries failed - return fallback meal plan
+        Log.w(TAG, "All API attempts failed, using fallback meal plan")
+        return getFallbackMealPlan()
+    }
+    
+    /**
+     * Fallback meal plan when AI is unavailable
+     */
+    private fun getFallbackMealPlan(): MealPlan {
         return MealPlan(
-            parseMeal(json.getJSONObject("breakfast")),
-            parseMeal(json.getJSONObject("lunch")),
-            parseMeal(json.getJSONObject("snack")),
-            parseMeal(json.getJSONObject("dinner")),
-            if (json.has("postWorkout")) parseMeal(json.getJSONObject("postWorkout")) else null,
-            json.optString("dailyTip", "Health is wealth!")
+            breakfast = MealRec(
+                item = "Poha with Vegetables",
+                calories = 350,
+                protein = "8g",
+                reason = "Light, nutritious Indian breakfast to start your day right.",
+                tip = "Add peanuts for extra protein!"
+            ),
+            lunch = MealRec(
+                item = "Dal Rice with Vegetables",
+                calories = 550,
+                protein = "18g",
+                reason = "Balanced meal with protein from dal and energy from rice.",
+                tip = "Include a salad for extra fiber."
+            ),
+            snack = MealRec(
+                item = "Fruit Bowl with Nuts",
+                calories = 200,
+                protein = "5g",
+                reason = "Healthy snack to keep energy levels up.",
+                tip = "Almonds and walnuts are great options!"
+            ),
+            dinner = MealRec(
+                item = "Roti with Paneer Sabzi",
+                calories = 450,
+                protein = "20g",
+                reason = "Protein-rich dinner for muscle recovery.",
+                tip = "Have dinner 2-3 hours before sleep."
+            ),
+            dailyTip = "Stay hydrated and eat mindfully! 💧"
         )
     }
 
