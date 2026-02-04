@@ -20,8 +20,8 @@ SwasthyaMitra (SWASTHYA: Health | MITRA: Friend) is a comprehensive healthcare a
 - **Macro Breakdown**: Real-time tracking of Protein, Carbs, and Fats.
 
 ### 🧠 AI Diet Plan (Gemini 2.0 Flash)
-- **Generative Coaching**: Personalized meal recommendations using **Google Vertex AI**.
-- **Context-Aware**: Adapts to exercise intensity, weight plateaus, and even Indian Festivals.
+- **Generative Coaching**: Personalized meal recommendations using **Firebase GenAI SDK**.
+- **Context-Aware**: Adapts to exercise intensity, weight plateaus, Indian Festivals, and specialized **Period Mode** logic.
 - **Interactive Plans**: "Regenerate" specific meals or provide "Ate/Skipped" feedback to the AI.
 
 ### 💧 Hydration & Reminders
@@ -40,10 +40,10 @@ SwasthyaMitra (SWASTHYA: Health | MITRA: Friend) is a comprehensive healthcare a
 | :--- | :--- |
 | **Language** | Kotlin |
 | **UI Framework** | Android XML (Material 3 Inspiration) |
-| **Backend** | Firebase (Auth, Firestore) |
-| **AI Engine** | Vertex AI - Gemini 2.0 Flash |
+| **Backend** | Firebase (Auth with Email Validation, Firestore, Cloud Functions) |
+| **AI Engine** | Firebase GenAI SDK - Gemini 2.0 Flash |
 | **APIs** | OpenFoodFacts Barcode |
-| **Automation** | Android AlarmManager, Coroutines |
+| **Frameworks** | Retrofit (Networking), Coroutines (Async), ViewBinding |
 
 ---
 

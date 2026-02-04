@@ -10,16 +10,15 @@ class HydrationRepository {
     private val firestore = FirebaseFirestore.getInstance()
     private val waterLogsCollection = firestore.collection("waterLogs")
 
-    suspend fun addWaterLog(userId: String, amountML: Int): Result<Unit> {
+    suspend fun addWaterLog(userId: String, amountML: Int, targetDate: String? = null): Result<Unit> {
         return try {
-            val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-            val date = dateFormat.format(Date())
+            val dateStr = targetDate ?: SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
             
             val log = WaterLog(
                 userId = userId,
                 amountML = amountML,
                 timestamp = System.currentTimeMillis(),
-                date = date
+                date = dateStr
             )
             
             waterLogsCollection.add(log).await()

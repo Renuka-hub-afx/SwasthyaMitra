@@ -1,62 +1,48 @@
-# Women’s Health and Wellness: Period-Aware AI Coaching 🌸
+# Feature: Women's Health & Wellness (Period Mode)
 
-SwasthyaMitra includes a specialized "Period Mode" logic for our AI Coach. This feature ensures that during menstrual days, the app shifts its tone and recommendations to be gentle, safe, and supportive.
+## 🌸 Overview
 
-> [!NOTE]
-> This mode is automatically restricted to users who identify as **Female** in their health profile. The toggle will not appear for other users.
-
-## 🎯 Core Principles
-- **Body First**: Emphasize listening to the body over hitting strict targets.
-- **Empathetic AI**: Use supportive, warm language instead of standard high-performance coaching.
-- **Safe Guidelines**: Shift from high-intensity to restorative activities.
+SwasthyaMitra includes a specialized "Period Mode" designed to provide supportive health adjustments for female users. When activated, the entire app context shifts—including AI tone, exercise intensity recommendations, and nutritional focus.
 
 ---
 
-## 🧘 Exercise Recommendations
-When the user indicates she is on her period, the AI shifts its recommendation logic:
+## 🛠️ Implementation Details
 
-### Recommended (Restorative)
-- **Yoga & Stretching**: Focus on pelvic relaxation and child’s pose for cramp relief.
-- **Light Walking**: Low-intensity movement to improve blood flow.
-- **Breathing Exercises**: To manage mood swings and discomfort.
+### **1. Homepage Integration**
 
-### Activities to Avoid
-- **High-Intensity Interval Training (HIIT)**
-- **Heavy Weightlifting**
-- **Intense Cardio/Core Workouts**
+The feature is accessible via a primary toggle on the `homepage.kt`.
 
----
+- **Persistence**: The state is stored in Firestore as a `periodMode` Boolean within the specific User document.
+- **UI Feedback**: Activating the mode displays a specialized greeting and modifies the aesthetic vibe of the dashboard.
 
-## 🥗 Food & Nutrition
-The AI Diet Plan adapts to help manage common symptoms like bloating, low iron, and fatigue.
+### **2. AI Coaching Adaptation**
 
-### Recommended Foods
-- **Iron-Rich**: Spinach, lentils (Dal), and pomegranate to replenish energy.
-- **Warm & Comforting**: Ginger tea, warm soups, and Khichdi.
-- **Magnesium-Rich**: Dark chocolate or nuts to help with cramps.
-- **Hydrating**: Watermelons, cucumbers, and plenty of water.
+The `AICoachMessageService.kt` and `AIDietPlanService.kt` listen to this flag.
 
-### Limit or Avoid
-- **Junk/Processed Food**: High salt increases bloating.
-- **Excess Caffeine**: Can worsen anxiety and cramps.
-- **Cold Foods**: Traditional wisdom suggests warm foods are more soothing for the digestive system during this time.
+- **Empathetic Tone**: The AI shifts from "Push harder" to "Listen to your body" and "Focus on recovery."
+- **Focus Areas**: The prompts emphasize:
+  - **Iron & Magnesium**: Prioritizing foods like spinach, nuts, and dark chocolate.
+  - **Hydration**: Increasing water intake nudges.
+
+### **3. Exercise Modification**
+
+When Period Mode is **ACTIVE**, the `AIExerciseRecommendationService.kt` ignores high-intensity HIIT prompts.
+
+- **Filtered Database**: The AI is instructed to select ONLY restorative yoga, gentle stretching, or slow walks from the `exercises.json` database.
 
 ---
 
-## ✨ Daily Care Advice
-The AI Coach Message will prioritize self-care tips:
-- **Hydration & Rest**: "It's 10:00 PM, renu. Your body is working hard—try to get 8-9 hours of restful sleep tonight."
-- **Heat Therapy**: Suggesting a warm compress for cramp relief.
-- **Emotional Support**: "It’s okay to slow down today. You’re doing enough just by taking care of yourself."
+## 🧠 Core Principles
+
+- **Empowerment**: Providing data-driven comfort during a biological shift.
+- **Privacy**: The mode is optional and the data remains encrypted under the user's UID.
+- **Holistic Care**: Bridging the gap between general fitness and specialized biological needs.
 
 ---
 
-## 🛠️ Implementation Strategy
-1. **User Profile Update**: Add a "Period Tracking" toggle or logging option.
-2. **Logic Override**: When the "Menstrual Days" flag is active:
-    - `AIExerciseRecommendationService`: Filters for "Gentle" tags and restorative yoga.
-    - `AIDietPlanService`: Replaces regular suggestions with the nutrition guidelines above.
-    - `AICoachMessageService`: Switches tone to *Empathetic/Supportive*.
+## ✅ Deployment Status
 
----
-> *Remember: It’s okay to slow down and listen to your body. You are strong even when you rest.* 🤍
+- **Status**: ✅ ACTIVE
+- **Platform**: Android Native (Kotlin)
+- **Data Source**: Cloud Firestore
+- **AI Engine**: Firebase GenAI SDK (Gemini 1.5/2.0 Flash)

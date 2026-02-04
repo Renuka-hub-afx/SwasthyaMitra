@@ -147,16 +147,14 @@ class HydrationActivity : AppCompatActivity() {
     }
 
     private fun addWater(amount: Int) {
+        val targetDateStr = dateFormat.format(selectedDate.time)
         lifecycleScope.launch {
-            hydrationRepo.addWaterLog(userId, amount).onSuccess {
-                // Refresh if the log was for the selected date (usually today)
-                val todayStr = dateFormat.format(Calendar.getInstance().time)
-                val selectedStr = dateFormat.format(selectedDate.time)
-                if (todayStr == selectedStr) {
-                    currentIntake += amount
-                    updateProgressUI()
-                    loadHistory()
-                }
+            hydrationRepo.addWaterLog(userId, amount, targetDateStr).onSuccess {
+                // Refresh data for the current view
+                currentIntake += amount
+                updateProgressUI()
+                loadHistory()
+                
                 Toast.makeText(this@HydrationActivity, "Added $amount ml", Toast.LENGTH_SHORT).show()
             }.onFailure {
                 Toast.makeText(this@HydrationActivity, "Failed to add water", Toast.LENGTH_SHORT).show()
