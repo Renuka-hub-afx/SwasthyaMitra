@@ -379,7 +379,9 @@ class ProfileActivity : AppCompatActivity() {
     }
 
     private fun updateAvatarDisplay() {
+        val mode = avatarManager.getProfileMode()
         val galleryUri = avatarManager.getGalleryUri()
+        val avatarId = avatarManager.getAvatarId()
 
         avatarContainer.removeAllViews()
 
@@ -390,11 +392,27 @@ class ProfileActivity : AppCompatActivity() {
         )
         imageView.scaleType = ImageView.ScaleType.CENTER_CROP
         
-        if (galleryUri != null) {
+        if (mode == ProfileMode.PRESET_AVATAR && avatarId != null) {
+            val resId = getAvatarDrawable(avatarId)
+            if (resId != 0) {
+                imageView.setImageResource(resId)
+            } else {
+                imageView.setImageResource(R.drawable.circular_background)
+            }
+        } else if (mode == ProfileMode.GALLERY_PHOTO && galleryUri != null) {
             imageView.setImageURI(galleryUri)
         } else {
             imageView.setImageResource(R.drawable.circular_background) // Default
         }
         avatarContainer.addView(imageView)
+    }
+
+    private fun getAvatarDrawable(avatarId: String): Int {
+        val resName = avatarId.replace("_", "")
+        return try {
+            resources.getIdentifier(resName, "drawable", packageName)
+        } catch (e: Exception) {
+            0
+        }
     }
 }

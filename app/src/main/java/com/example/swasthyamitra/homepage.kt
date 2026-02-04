@@ -240,6 +240,14 @@ class homepage : AppCompatActivity() {
                 userDataResult.onSuccess { userData ->
                     userName = userData["name"] as? String ?: "User"
                     tvUserName.text = "Hello, $userName!"
+                    
+                    val avatarId = userData["selected_avatar_id"] as? String
+                    if (avatarId != null) {
+                        val avatarResId = getAvatarDrawable(avatarId)
+                        if (avatarResId != 0) {
+                            findViewById<android.widget.ImageView>(R.id.iv_user_profile).setImageResource(avatarResId)
+                        }
+                    }
                 }
 
                 val goalsResult = authHelper.getUserGoal(userId)
@@ -671,6 +679,15 @@ class homepage : AppCompatActivity() {
         builder.setMessage(message.toString())
         builder.setPositiveButton("Got it!") { dialog, _ -> dialog.dismiss() }
         builder.show()
+    }
+
+    private fun getAvatarDrawable(avatarId: String): Int {
+        val resName = avatarId.replace("_", "")
+        return try {
+            resources.getIdentifier(resName, "drawable", packageName)
+        } catch (e: Exception) {
+            0
+        }
     }
 
     private fun navigateToLogin() {
