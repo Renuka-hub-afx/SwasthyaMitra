@@ -231,6 +231,62 @@ class homepage : AppCompatActivity() {
                 }
             }
         }
+
+        findViewById<TextView>(R.id.tv_view_mood_details).setOnClickListener {
+            val intent = Intent(this, MoodRecommendationActivity::class.java)
+            startActivity(intent)
+        }
+
+        setupMoodTracking()
+    }
+
+    private fun setupMoodTracking() {
+        val moods = mapOf(
+            R.id.btn_mood_happy to "Happy",
+            R.id.btn_mood_calm to "Calm",
+            R.id.btn_mood_tired to "Tired",
+            R.id.btn_mood_sad to "Sad",
+            R.id.btn_mood_stressed to "Stressed"
+        )
+
+        moods.forEach { (id, mood) ->
+            findViewById<LinearLayout>(id).setOnClickListener {
+                handleMoodSelection(mood)
+            }
+        }
+    }
+
+    private fun handleMoodSelection(mood: String) {
+        // 1. Local Analysis
+        val analyzer = com.example.swasthyamitra.ai.LocalMoodAnalyzer()
+        val analysis = analyzer.analyze(mood)
+
+        // 2. Create Data Object
+        val moodData = com.example.swasthyamitra.models.MoodData(
+            userId = userId,
+            mood = mood,
+            intensity = analysis.intensity,
+            energy = analysis.energy,
+            suggestion = analysis.suggestion,
+            timestamp = System.currentTimeMillis(),
+            date = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault()).format(java.util.Date())
+        )
+
+        // 3. Save to Repository (Background)
+        val repo = com.example.swasthyamitra.repository.MoodRepository()
+        lifecycleScope.launch {
+            repo.saveMood(userId, moodData)
+            
+            // 4. Update Coach Message Immediately (Offline Fallback)
+            runOnUiThread {
+                tvCoachMessage.text = "I notice you're feeling $mood. ${analysis.suggestion}"
+            }
+        }
+
+        // 5. Navigate to Recommendation Page
+        val intent = Intent(this, MoodRecommendationActivity::class.java)
+        intent.putExtra("MOOD_DATA", com.google.gson.Gson().toJson(moodData))
+        startActivity(intent)
     }
 
     private fun showCustomWaterAddDialog() {

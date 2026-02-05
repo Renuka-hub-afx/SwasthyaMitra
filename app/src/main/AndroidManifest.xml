@@ -44,6 +44,11 @@
             android:exported="false" />
 
         <activity
+            android:name=".MoodRecommendationActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+
+        <activity
             android:name=".AISmartDietActivity"
             android:exported="false"
             android:screenOrientation="portrait" />

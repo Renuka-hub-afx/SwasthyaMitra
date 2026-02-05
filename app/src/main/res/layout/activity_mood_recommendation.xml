@@ -1,0 +1,274 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#F5F5F5"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <!-- Back Button -->
+        <ImageButton
+            android:id="@+id/btn_back"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@drawable/ic_arrow_back"
+            app:tint="#333333"
+            android:contentDescription="Back"
+            android:padding="8dp"/>
+
+        <!-- Header -->
+        <TextView
+            android:id="@+id/tv_mood_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Your Mood Insights"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            android:textColor="#333333"
+            android:layout_marginTop="16dp"/>
+
+        <!-- Current Mood Card -->
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="2dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="20dp"
+                android:background="@android:color/white">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <TextView
+                        android:id="@+id/tv_current_mood_emoji"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="😄"
+                        android:textSize="40sp"/>
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:layout_marginStart="16dp">
+
+                        <TextView
+                            android:id="@+id/tv_current_mood_text"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Feeling Happy"
+                            android:textSize="18sp"
+                            android:textStyle="bold"
+                            android:textColor="#333333"/>
+
+                        <TextView
+                            android:id="@+id/tv_mood_date"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Today, 10:30 AM"
+                            android:textSize="12sp"
+                            android:textColor="#888888"/>
+                    </LinearLayout>
+
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/tv_mood_suggestion"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:text="Great energy! Keep it up."
+                    android:textSize="14sp"
+                    android:textColor="#666666"
+                    android:lineSpacingExtra="4dp"/>
+
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+        <!-- AI Recommendations Header -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="AI Recommendations"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:textColor="#333333"
+            android:layout_marginTop="24dp"
+            android:layout_marginBottom="12dp"/>
+
+        <!-- Loading View -->
+        <LinearLayout
+            android:id="@+id/layout_loading"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:padding="32dp"
+            android:visibility="visible">
+            
+            <ProgressBar
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
+            
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="AI is analyzing your mood..."
+                android:layout_marginTop="16dp"
+                android:textColor="#666666"/>
+        </LinearLayout>
+
+        <!-- Content Layout -->
+        <LinearLayout
+            android:id="@+id/layout_recommendations"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:visibility="gone">
+
+            <!-- Food Recommendation -->
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="2dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp"
+                    android:background="#FFF3E0">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="🥗 Food for your Mood"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:textColor="#E65100"/>
+
+                    <TextView
+                        android:id="@+id/tv_food_rec"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:text="Loading..."
+                        android:textColor="#333333"/>
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <!-- Exercise Recommendation -->
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="2dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp"
+                    android:background="#E8F5E9">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="🧘 Exercise for your Mood"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:textColor="#2E7D32"/>
+
+                    <TextView
+                        android:id="@+id/tv_exercise_rec"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:text="Loading..."
+                        android:textColor="#333333"/>
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <!-- Tip Recommendation -->
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="2dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp"
+                    android:background="#E1F5FE">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="💡 Quick Tip"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:textColor="#0277BD"/>
+
+                    <TextView
+                        android:id="@+id/tv_tip_rec"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:text="Loading..."
+                        android:textColor="#333333"/>
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+        </LinearLayout>
+
+        <!-- History Section -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Your Mood Over Time"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:textColor="#333333"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="12dp"/>
+
+        <!-- Mood Pie Chart -->
+        <com.github.mikephil.charting.charts.PieChart
+            android:id="@+id/pieChart"
+            android:layout_width="match_parent"
+            android:layout_height="250dp"
+            android:layout_marginBottom="16dp" />
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rv_mood_history"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:nestedScrollingEnabled="false"
+            android:clipToPadding="false"
+            android:paddingBottom="24dp"/>
+
+    </LinearLayout>
+</androidx.core.widget.NestedScrollView>
