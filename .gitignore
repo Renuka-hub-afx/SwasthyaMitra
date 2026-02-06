@@ -17,6 +17,8 @@ local.properties
 # Firebase and Sensitive Configuration Files
 **/google-services.json
 **/google-services-debug.json
+**/google-services.json.backup
+**/.firebaserc.backup
 **/*.keystore
 **/*.jks
 
