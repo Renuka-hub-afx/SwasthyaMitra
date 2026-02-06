@@ -91,7 +91,7 @@ class homepage : AppCompatActivity() {
             return
         }
         authHelper = application.authHelper
-        firestore = FirebaseFirestore.getInstance()
+        firestore = FirebaseFirestore.getInstance("renu")
 
         userId = intent.getStringExtra("USER_ID") ?: ""
 
@@ -581,7 +581,7 @@ class homepage : AppCompatActivity() {
                 }
 
                 // 0.1 Check if already completed today
-                val db = com.google.firebase.database.FirebaseDatabase.getInstance("https://swasthyamitra-c0899-default-rtdb.asia-southeast1.firebasedatabase.app").reference
+                val db = com.google.firebase.database.FirebaseDatabase.getInstance("https://swasthyamitra-ded44-default-rtdb.asia-southeast1.firebasedatabase.app").reference
                 val today = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault()).format(java.util.Date())
                 val completedToday = db.child("users").child(userId).child("completionHistory").child(today).get().await().getValue(Boolean::class.java) ?: false
                 
@@ -719,14 +719,14 @@ class homepage : AppCompatActivity() {
         val exercise = currentRecommendedExercise ?: return
         lifecycleScope.launch {
             try {
-                val db = com.google.firebase.database.FirebaseDatabase.getInstance("https://swasthyamitra-c0899-default-rtdb.asia-southeast1.firebasedatabase.app").reference
+                val db = com.google.firebase.database.FirebaseDatabase.getInstance("https://swasthyamitra-ded44-default-rtdb.asia-southeast1.firebasedatabase.app").reference
                 val today = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault()).format(java.util.Date())
                 
                 // 1. Mark as completed in Realtime DB (for homepage counter)
                 db.child("users").child(userId).child("completionHistory").child(today).setValue(true)
                 
                 // 2. Log full details in Firestore
-                val firestore = com.google.firebase.firestore.FirebaseFirestore.getInstance()
+                val firestore = com.google.firebase.firestore.FirebaseFirestore.getInstance("renu")
                 val logData = hashMapOf(
                     "userId" to userId,
                     "exerciseName" to exercise.name,

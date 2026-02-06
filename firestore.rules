@@ -43,7 +43,7 @@ service cloud.firestore {
       allow delete: if request.auth != null && resource.data.creatorId == request.auth.uid;
     }
 
-    // Exercise Logs (Standardized to camelCase to match your DB)
+    // Exercise Logs
     match /exerciseLogs/{logId} { 
       allow read: if request.auth != null;
       allow write, delete: if request.auth != null && 
@@ -51,7 +51,7 @@ service cloud.firestore {
         (request.resource == null || request.resource.data.userId == request.auth.uid); 
     }
 
-    // Weight Logs (Standardized to camelCase to match your DB)
+    // Weight Logs
     match /weightLogs/{logId} { 
       allow read: if request.auth != null;
       allow write, delete: if request.auth != null && 
@@ -82,7 +82,7 @@ service cloud.firestore {
         (request.resource == null || request.resource.data.userId == request.auth.uid); 
     }
 
-    // Meal Feedback - users can only access their own feedback
+    // Meal Feedback
     match /meal_feedback/{feedbackId} {
       allow read: if request.auth != null;
       allow write, delete: if request.auth != null && 
@@ -90,7 +90,7 @@ service cloud.firestore {
         (request.resource == null || request.resource.data.userId == request.auth.uid);
     }
 
-    // AI Generated Plans - users can only access their own plans
+    // AI Generated Plans
     match /ai_generated_plans/{planId} {
       allow read: if request.auth != null && resource.data.userId == request.auth.uid;
       allow write: if request.auth != null && 
@@ -99,7 +99,7 @@ service cloud.firestore {
       allow delete: if request.auth != null && resource.data.userId == request.auth.uid;
     }
 
-    // Water Logs - Users can only read/write their own logs
+    // Water Logs
     match /waterLogs/{logId} {
       allow read: if request.auth != null;
       allow write, delete: if request.auth != null && 
@@ -107,7 +107,7 @@ service cloud.firestore {
         (request.resource == null || request.resource.data.userId == request.auth.uid);
     }
 
-    // User Preferences - users can only access their own preferences
+    // User Preferences
     match /user_preferences/{userId} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
     }
