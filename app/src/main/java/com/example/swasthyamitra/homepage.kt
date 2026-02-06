@@ -210,6 +210,13 @@ class homepage : AppCompatActivity() {
             startActivity(intent)
         }
 
+        // Setup AI Rasoi (Smart Pantry)
+        val cardAiRasoi: MaterialButton? = findViewById(R.id.card_ai_pantry)
+        cardAiRasoi?.setOnClickListener {
+            val intent = Intent(this, SmartPantryActivity::class.java)
+            startActivity(intent)
+        }
+
         btnViewExerciseDetails.setOnClickListener {
             showExerciseGuideDialog()
         }
