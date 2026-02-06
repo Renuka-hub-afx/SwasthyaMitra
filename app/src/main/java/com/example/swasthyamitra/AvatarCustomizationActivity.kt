@@ -20,7 +20,7 @@ import com.google.android.material.button.MaterialButton
 import com.google.firebase.firestore.FirebaseFirestore
 
 enum class AvatarCategory {
-    HAIR, EYES, OUTFIT, EXTRAS
+    AVATAR_FULL
 }
 
 data class AvatarItem(
@@ -31,14 +31,11 @@ data class AvatarItem(
 
 class AvatarCustomizationActivity : AppCompatActivity() {
 
-    // Layered ImageView references
+    // ImageViews
     private lateinit var ivBase: ImageView
     private lateinit var ivHair: ImageView
     private lateinit var ivEyes: ImageView
     private lateinit var ivOutfit: ImageView
-    
-    // Legacy single preview reference (optional, used for gallery fallback)
-    // We can reuse one of the layers or hide others.
     
     private lateinit var recyclerItems: RecyclerView
     private lateinit var avatarManager: AvatarManager
@@ -46,41 +43,44 @@ class AvatarCustomizationActivity : AppCompatActivity() {
 
     // Category Views
     private lateinit var catGallery: TextView
-    private lateinit var catHair: TextView
-    private lateinit var catEyes: TextView
-    private lateinit var catOutfit: TextView
-    private lateinit var catExtras: TextView
+    private lateinit var catAvatar: TextView
     private lateinit var tvCategoryTitle: TextView
     
-    // Buttons
-    private lateinit var btnZoom: ImageButton
-    private lateinit var btnRotate: ImageButton
+    // Undo/Redo Buttons
+    private lateinit var btnUndo: ImageButton
+    private lateinit var btnRedo: ImageButton
 
-    // Current State
+    // State
     private var selectedGalleryUri: Uri? = null
+    private var currentAvatarResId: Int = R.drawable.avatar1 
     
-    // Default Configuration matching "Avatar 1" style
-    private var currentHairRes = R.drawable.vector_hair_messy_brown
-    private var currentEyesRes = R.drawable.vector_eyes_glasses
-    private var currentOutfitRes = R.drawable.vector_outfit_kimono
-    private var currentExtrasRes = 0 
+    // History
+    data class AvatarState(val galleryUri: Uri?, val avatarResId: Int)
+    private val historyStack = mutableListOf<AvatarState>()
+    private var historyPointer = -1
 
-    // Assets - Pointing to NEW Vector Drawables
-    private val hairItems = listOf(
-        AvatarItem("hair_messy", R.drawable.vector_hair_messy_brown, AvatarCategory.HAIR),
-        AvatarItem("hair_long", R.drawable.vector_hair_long_black, AvatarCategory.HAIR)
-    )
-    private val eyesItems = listOf(
-        AvatarItem("eyes_glasses", R.drawable.vector_eyes_glasses, AvatarCategory.EYES),
-        AvatarItem("eyes_blue", R.drawable.vector_eyes_blue, AvatarCategory.EYES)
-    )
-    private val outfitItems = listOf(
-        AvatarItem("outfit_kimono", R.drawable.vector_outfit_kimono, AvatarCategory.OUTFIT),
-        AvatarItem("outfit_green", R.drawable.vector_outfit_green, AvatarCategory.OUTFIT)
-    )
-    
-    // extras can be empty or reused
-    private val extrasItems = listOf<AvatarItem>()
+    // Avatar Items List
+    private val avatarItems by lazy {
+        val list = mutableListOf<AvatarItem>()
+        try {
+            list.add(AvatarItem("avatar1", R.drawable.avatar1, AvatarCategory.AVATAR_FULL))
+            list.add(AvatarItem("avatar2", R.drawable.avatar2, AvatarCategory.AVATAR_FULL))
+            list.add(AvatarItem("avatar3", R.drawable.avatar3, AvatarCategory.AVATAR_FULL))
+            list.add(AvatarItem("avatar4", R.drawable.avatar4, AvatarCategory.AVATAR_FULL))
+            list.add(AvatarItem("avatar5", R.drawable.avatar5, AvatarCategory.AVATAR_FULL))
+            list.add(AvatarItem("avatar6", R.drawable.avatar6, AvatarCategory.AVATAR_FULL))
+            list.add(AvatarItem("avatar7", R.drawable.avatar7, AvatarCategory.AVATAR_FULL))
+            list.add(AvatarItem("avatar8", R.drawable.avatar8, AvatarCategory.AVATAR_FULL))
+            list.add(AvatarItem("avatar9", R.drawable.avatar9, AvatarCategory.AVATAR_FULL))
+            list.add(AvatarItem("avatar10", R.drawable.avatar10, AvatarCategory.AVATAR_FULL))
+            list.add(AvatarItem("avatar11", R.drawable.avatar11, AvatarCategory.AVATAR_FULL))
+            list.add(AvatarItem("avatar12", R.drawable.avatar12, AvatarCategory.AVATAR_FULL))
+            list.add(AvatarItem("avatar13", R.drawable.avatar13, AvatarCategory.AVATAR_FULL))
+        } catch (e: Exception) {
+            Log.e("Avatar", "Error loading avatar resources: ${e.message}")
+        }
+        list
+    }
 
     private lateinit var adapter: AvatarAdapter
     
@@ -90,10 +90,17 @@ class AvatarCustomizationActivity : AppCompatActivity() {
             Log.d("PhotoPicker", "Selected URI: $uri")
             val flag = android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION
             contentResolver.takePersistableUriPermission(uri, flag)
+            
+            // Update State
             selectedGalleryUri = uri
+            
+            // UI Update
             showGalleryImage(uri)
             tvCategoryTitle.text = "From Gallery"
+            selectCategoryUIOnly(catGallery, "Gallery")
             adapter.updateData(emptyList()) 
+            
+            addToHistory()
         }
     }
 
@@ -108,11 +115,11 @@ class AvatarCustomizationActivity : AppCompatActivity() {
         setupRecyclerView()
         setupListeners() 
         
-        // Initial Render
-        updateLayers()
+        // Initial History
+        addToHistory()
         
-        // Select Hair by default
-        selectCategory(catHair, "Hairstyles", hairItems)
+        // Default to Avatar Mode
+        clickAvatarCategory()
     }
 
     private fun setupViews() {
@@ -124,14 +131,12 @@ class AvatarCustomizationActivity : AppCompatActivity() {
         recyclerItems = findViewById(R.id.recycler_items)
         
         catGallery = findViewById(R.id.cat_gallery)
-        catHair = findViewById(R.id.cat_hair)
-        catEyes = findViewById(R.id.cat_eyes)
-        catOutfit = findViewById(R.id.cat_outfit)
-        catExtras = findViewById(R.id.cat_extras)
+        catAvatar = findViewById(R.id.cat_avatar)
         
         tvCategoryTitle = findViewById(R.id.tv_category_title)
-        btnZoom = findViewById(R.id.btn_zoom)
-        btnRotate = findViewById(R.id.btn_rotate)
+        
+        btnUndo = findViewById(R.id.btn_undo)
+        btnRedo = findViewById(R.id.btn_redo)
     }
 
     private fun setupRecyclerView() {
@@ -144,43 +149,94 @@ class AvatarCustomizationActivity : AppCompatActivity() {
     }
     
     private fun applySelection(item: AvatarItem) {
-        selectedGalleryUri = null // Switch back to avatar mode
-        
-        when (item.category) {
-            AvatarCategory.HAIR -> currentHairRes = item.resId
-            AvatarCategory.EYES -> currentEyesRes = item.resId
-            AvatarCategory.OUTFIT -> currentOutfitRes = item.resId
-            AvatarCategory.EXTRAS -> currentExtrasRes = item.resId
+        if (item.resId != null) {
+            selectedGalleryUri = null
+            currentAvatarResId = item.resId
+            showFullAvatar(currentAvatarResId)
+            addToHistory()
         }
-        updateLayers()
     }
     
-    private fun updateLayers() {
-        ivBase.scaleType = ImageView.ScaleType.FIT_CENTER
-        ivBase.imageTintList = null // Reset tint if any
+    private fun addToHistory() {
+        // Remove future states if we are in the middle
+        while (historyStack.size > historyPointer + 1) {
+            historyStack.removeAt(historyStack.lastIndex)
+        }
         
-        // Base Layer (Face/Skin) always visible
-        ivBase.setImageResource(R.drawable.vector_base_girl)
+        val newState = AvatarState(selectedGalleryUri, currentAvatarResId)
+        
+        // Don't add if identical to current top (optional optimization)
+        if (historyStack.isNotEmpty() && historyStack.last() == newState) {
+            return
+        }
+        
+        historyStack.add(newState)
+        historyPointer++
+        updateUndoRedoButtons()
+    }
+    
+    private fun undo() {
+        if (historyPointer > 0) {
+            historyPointer--
+            restoreState(historyStack[historyPointer])
+        }
+    }
+    
+    private fun redo() {
+        if (historyPointer < historyStack.size - 1) {
+            historyPointer++
+            restoreState(historyStack[historyPointer])
+        }
+    }
+    
+    private fun restoreState(state: AvatarState) {
+        selectedGalleryUri = state.galleryUri
+        currentAvatarResId = state.avatarResId
+        
+        if (selectedGalleryUri != null) {
+            showGalleryImage(selectedGalleryUri!!)
+            tvCategoryTitle.text = "From Gallery"
+            selectCategoryUIOnly(catGallery, "Gallery")
+            adapter.updateData(emptyList())
+        } else {
+            showFullAvatar(currentAvatarResId)
+            tvCategoryTitle.text = "Choose Avatar"
+            selectCategoryUIOnly(catAvatar, "Choose Avatar")
+            adapter.updateData(avatarItems) 
+        }
+        updateUndoRedoButtons()
+    }
+    
+    private fun updateUndoRedoButtons() {
+        btnUndo.isEnabled = historyPointer > 0
+        btnUndo.alpha = if (btnUndo.isEnabled) 1.0f else 0.5f
+        
+        btnRedo.isEnabled = historyPointer < historyStack.size - 1
+        btnRedo.alpha = if (btnRedo.isEnabled) 1.0f else 0.5f
+    }
+    
+    // Updated to show full avatar logic
+    private fun showFullAvatar(resId: Int) {
+        ivBase.scaleType = ImageView.ScaleType.FIT_CENTER
+        ivBase.imageTintList = null
+        
+        // Show Full Avatar on Base Layer
+        ivBase.setImageResource(resId)
         ivBase.visibility = View.VISIBLE
         
-        // Stack other layers
-        ivHair.setImageResource(currentHairRes)
-        ivHair.visibility = View.VISIBLE
-        
-        ivEyes.setImageResource(currentEyesRes)
-        ivEyes.visibility = View.VISIBLE
-        
-        ivOutfit.setImageResource(currentOutfitRes)
-        ivOutfit.visibility = View.VISIBLE
+        // Hide Layers
+        ivHair.visibility = View.GONE
+        ivEyes.visibility = View.GONE
+        ivOutfit.visibility = View.GONE
     }
     
     private fun showGalleryImage(uri: Uri) {
-        // Hide overlay layers
+        // Hide Layers
         ivHair.visibility = View.GONE
         ivEyes.visibility = View.GONE
         ivOutfit.visibility = View.GONE
         
-        // Use Base layer as the main image holder
+        // Show Image
         ivBase.setImageURI(uri)
         ivBase.scaleType = ImageView.ScaleType.FIT_CENTER
         ivBase.visibility = View.VISIBLE
@@ -190,11 +246,10 @@ class AvatarCustomizationActivity : AppCompatActivity() {
         findViewById<View>(R.id.btn_back).setOnClickListener { finish() }
         
         findViewById<View>(R.id.btn_reset).setOnClickListener {
-             currentHairRes = R.drawable.vector_hair_messy_brown
-             currentEyesRes = R.drawable.vector_eyes_glasses
-             currentOutfitRes = R.drawable.vector_outfit_kimono
+             currentAvatarResId = R.drawable.avatar1
              selectedGalleryUri = null
-             updateLayers()
+             showFullAvatar(currentAvatarResId)
+             addToHistory()
              Toast.makeText(this, "Reset to default", Toast.LENGTH_SHORT).show()
         }
 
@@ -204,26 +259,27 @@ class AvatarCustomizationActivity : AppCompatActivity() {
         
         catGallery.setOnClickListener {
             pickMedia.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
-            selectCategoryUIOnly(catGallery, "Gallery")
         }
         
-        catHair.setOnClickListener { selectCategory(catHair, "Hairstyles", hairItems) }
-        catEyes.setOnClickListener { selectCategory(catEyes, "Eyes", eyesItems) }
-        catOutfit.setOnClickListener { selectCategory(catOutfit, "Outfits", outfitItems) }
-        catExtras.setOnClickListener { selectCategory(catExtras, "Extras", extrasItems) }
+        catAvatar.setOnClickListener { 
+            clickAvatarCategory()
+        }
         
-        val simpleToast = { msg: String -> Toast.makeText(this, msg, Toast.LENGTH_SHORT).show() }
-        findViewById<View>(R.id.btn_undo).setOnClickListener { simpleToast("Undo") }
-        findViewById<View>(R.id.btn_redo).setOnClickListener { simpleToast("Redo") }
-    }
-
-    private fun selectCategory(selectedView: TextView, title: String, items: List<AvatarItem>) {
-        selectCategoryUIOnly(selectedView, title)
-        adapter.updateData(items)
+        btnUndo.setOnClickListener { undo() }
+        btnRedo.setOnClickListener { redo() }
     }
     
+    private fun clickAvatarCategory() {
+        selectCategoryUIOnly(catAvatar, "Choose Avatar")
+        adapter.updateData(avatarItems)
+        // Ensure preview reflects current selection if switching back from gallery
+        if (selectedGalleryUri == null) {
+            showFullAvatar(currentAvatarResId)
+        }
+    }
+
     private fun selectCategoryUIOnly(selectedView: TextView, title: String) {
-        val allCats = listOf(catGallery, catHair, catEyes, catOutfit, catExtras)
+        val allCats = listOf(catGallery, catAvatar)
         val inactiveColor = Color.parseColor("#757575")
         val activeColor = Color.parseColor("#D500F9")
         
@@ -247,13 +303,10 @@ class AvatarCustomizationActivity : AppCompatActivity() {
             avatarManager.saveGalleryUri(selectedGalleryUri!!)
             updateMap["selected_avatar_id"] = "gallery_selection"
         } else {
-            // Save composite config
-            updateMap["selected_avatar_id"] = "custom_layered"
-            updateMap["avatar_config"] = mapOf(
-                "hair" to getResName(currentHairRes),
-                "eyes" to getResName(currentEyesRes),
-                "outfit" to getResName(currentOutfitRes)
-            )
+            // Save selection (using resource name as ID)
+            val resName = getResName(currentAvatarResId)
+            avatarManager.saveAvatarId(resName)
+            updateMap["selected_avatar_id"] = resName
         }
 
         FirebaseFirestore.getInstance().collection("users").document(userId)

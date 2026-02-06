@@ -3,6 +3,7 @@ package com.example.swasthyamitra
 import android.app.DatePickerDialog
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.util.Patterns
 import android.view.View
 import android.widget.Toast
@@ -70,17 +71,32 @@ class SignupActivity : AppCompatActivity() {
 
         val age = calculateAge(dob)
 
+        binding.signupButton.isEnabled = false
+        binding.signupButton.text = "Signing Up..."
+
         lifecycleScope.launch {
             val result = authHelper.signUpWithEmail(email, pass, name, phoneNumber, age)
             result.onSuccess {
                 runOnUiThread {
                     Toast.makeText(this@SignupActivity, "Signup Successful! Please log in.", Toast.LENGTH_LONG).show()
-                    // NAVIGATE BACK TO LOGIN
                     startActivity(Intent(this@SignupActivity, LoginActivity::class.java))
                     finish()
                 }
             }.onFailure { e ->
-                runOnUiThread { Toast.makeText(this@SignupActivity, "Error: ${e.message}", Toast.LENGTH_LONG).show() }
+                runOnUiThread { 
+                    binding.signupButton.isEnabled = true
+                    binding.signupButton.text = "Sign Up"
+
+                    Log.e("SignupDebug", "Signup failed for email: '$email'. Error: ${e.message}")
+                    
+                    if (e.message?.contains("already in use") == true) {
+                        Toast.makeText(this@SignupActivity, "Account '$email' already exists! Please Log In.", Toast.LENGTH_LONG).show()
+                        startActivity(Intent(this@SignupActivity, LoginActivity::class.java))
+                        finish()
+                    } else {
+                        Toast.makeText(this@SignupActivity, "Error: ${e.message}", Toast.LENGTH_LONG).show() 
+                    }
+                }
             }
         }
     }
