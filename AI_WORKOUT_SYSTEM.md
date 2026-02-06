@@ -103,6 +103,7 @@ The system provides contextual feedback:
 - 🧘 **High Calories**: "Maintenance mode: We've added cardio to burn extra calories while staying balanced."
 - ✨ **Balanced**: "Perfectly balanced! Your yoga & flexibility routine maintains wellness."
 - 🌸 **Low Calories**: "Gentle recovery workout selected - yoga & stretching to energize without overexertion."
+- 🧘 **Period Mode ACTIVE**: "Period mode detected: Focus on gentle, restorative movement today to listen to your body."
 
 ## Safety Features
 

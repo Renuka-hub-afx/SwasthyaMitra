@@ -20,7 +20,7 @@ class ExerciseReminderReceiver : BroadcastReceiver() {
         
         val auth = FirebaseAuth.getInstance()
         val userId = auth.currentUser?.uid ?: return
-        val firestore = FirebaseFirestore.getInstance()
+        val firestore = FirebaseFirestore.getInstance("renu")
         
         CoroutineScope(Dispatchers.IO).launch {
             try {

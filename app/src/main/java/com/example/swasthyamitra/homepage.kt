@@ -50,6 +50,8 @@ class homepage : AppCompatActivity() {
     private lateinit var tvAgeExplanation: TextView
     private lateinit var tvGenderNote: TextView
     private lateinit var tvMotivationalMessage: TextView
+    private lateinit var tvExerciseCalories: TextView
+    private lateinit var tvExerciseDuration: TextView
     private var currentRecommendedExercise: com.example.swasthyamitra.ai.AIExerciseRecommendationService.ExerciseRec? = null
 
     private lateinit var menuHome: LinearLayout
@@ -89,7 +91,7 @@ class homepage : AppCompatActivity() {
             return
         }
         authHelper = application.authHelper
-        firestore = FirebaseFirestore.getInstance()
+        firestore = FirebaseFirestore.getInstance("renu")
 
         userId = intent.getStringExtra("USER_ID") ?: ""
 
@@ -129,6 +131,8 @@ class homepage : AppCompatActivity() {
         tvAgeExplanation = findViewById(R.id.tv_age_explanation)
         tvGenderNote = findViewById(R.id.tv_gender_note)
         tvMotivationalMessage = findViewById(R.id.tv_motivational_message)
+        tvExerciseCalories = findViewById(R.id.tv_exercise_calories)
+        tvExerciseDuration = findViewById(R.id.tv_exercise_duration)
         
         // Initialize calorie balance UI
         tvCaloriesIn = findViewById(R.id.tv_calories_in)
@@ -203,6 +207,13 @@ class homepage : AppCompatActivity() {
         val cardAiDiet: MaterialButton = findViewById(R.id.card_ai_diet)
         cardAiDiet.setOnClickListener {
             val intent = Intent(this, AISmartDietActivity::class.java)
+            startActivity(intent)
+        }
+
+        // Setup AI Rasoi (Smart Pantry)
+        val cardAiRasoi: MaterialButton? = findViewById(R.id.card_ai_pantry)
+        cardAiRasoi?.setOnClickListener {
+            val intent = Intent(this, SmartPantryActivity::class.java)
             startActivity(intent)
         }
 
@@ -577,7 +588,7 @@ class homepage : AppCompatActivity() {
                 }
 
                 // 0.1 Check if already completed today
-                val db = com.google.firebase.database.FirebaseDatabase.getInstance("https://swasthyamitra-c0899-default-rtdb.asia-southeast1.firebasedatabase.app").reference
+                val db = com.google.firebase.database.FirebaseDatabase.getInstance("https://swasthyamitra-ded44-default-rtdb.asia-southeast1.firebasedatabase.app").reference
                 val today = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault()).format(java.util.Date())
                 val completedToday = db.child("users").child(userId).child("completionHistory").child(today).get().await().getValue(Boolean::class.java) ?: false
                 
@@ -599,13 +610,17 @@ class homepage : AppCompatActivity() {
                             bodyPart = savedExercise["bodyPart"] as? String ?: "",
                             equipment = savedExercise["equipment"] as? String ?: "",
                             instructions = (savedExercise["instructions"] as? List<String>) ?: emptyList(),
-                            reason = savedExercise["reason"] as? String ?: ""
+                            reason = savedExercise["reason"] as? String ?: "",
+                            estimatedCalories = (savedExercise["estimatedCalories"] as? Number)?.toInt() ?: 100,
+                            recommendedDuration = savedExercise["recommendedDuration"] as? String ?: "15 mins"
                         )
                         currentRecommendedExercise = rec
                         runOnUiThread {
                             tvRecExerciseName.text = rec.name
                             tvRecTargetMuscle.text = "Target: ${rec.targetMuscle}"
                             tvRecReason.text = rec.reason
+                            tvExerciseCalories.text = "🔥 ~${rec.estimatedCalories} kcal"
+                            tvExerciseDuration.text = "⏱️ ${rec.recommendedDuration}"
                             cardAiExercise.visibility = View.VISIBLE
                             btnRegenerateExercise.isEnabled = true
                         }
@@ -636,7 +651,9 @@ class homepage : AppCompatActivity() {
                         "bodyPart" to rec.bodyPart,
                         "equipment" to rec.equipment,
                         "instructions" to rec.instructions,
-                        "reason" to rec.reason
+                        "reason" to rec.reason,
+                        "estimatedCalories" to rec.estimatedCalories,
+                        "recommendedDuration" to rec.recommendedDuration
                     )
                     
                     firestore.collection("users").document(userId)
@@ -647,6 +664,8 @@ class homepage : AppCompatActivity() {
                         tvRecExerciseName.text = rec.name
                         tvRecTargetMuscle.text = "Target: ${rec.targetMuscle}"
                         tvRecReason.text = rec.reason
+                        tvExerciseCalories.text = "🔥 ~${rec.estimatedCalories} kcal"
+                        tvExerciseDuration.text = "⏱️ ${rec.recommendedDuration}"
                         
                         // Display GIF if available
                         if (rec.gifUrl.isNotEmpty()) {
@@ -707,20 +726,22 @@ class homepage : AppCompatActivity() {
         val exercise = currentRecommendedExercise ?: return
         lifecycleScope.launch {
             try {
-                val db = com.google.firebase.database.FirebaseDatabase.getInstance("https://swasthyamitra-c0899-default-rtdb.asia-southeast1.firebasedatabase.app").reference
+                val db = com.google.firebase.database.FirebaseDatabase.getInstance("https://swasthyamitra-ded44-default-rtdb.asia-southeast1.firebasedatabase.app").reference
                 val today = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault()).format(java.util.Date())
                 
                 // 1. Mark as completed in Realtime DB (for homepage counter)
                 db.child("users").child(userId).child("completionHistory").child(today).setValue(true)
                 
                 // 2. Log full details in Firestore
-                val firestore = com.google.firebase.firestore.FirebaseFirestore.getInstance()
+                val firestore = com.google.firebase.firestore.FirebaseFirestore.getInstance("renu")
                 val logData = hashMapOf(
                     "userId" to userId,
                     "exerciseName" to exercise.name,
                     "targetMuscle" to exercise.targetMuscle,
                     "bodyPart" to exercise.bodyPart,
                     "equipment" to exercise.equipment,
+                    "caloriesBurned" to exercise.estimatedCalories,
+                    "duration" to exercise.recommendedDuration,
                     "timestamp" to System.currentTimeMillis(),
                     "date" to today,
                     "source" to "AI_Recommendation"

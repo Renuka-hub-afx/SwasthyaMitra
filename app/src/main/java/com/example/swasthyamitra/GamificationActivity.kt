@@ -84,7 +84,7 @@ class GamificationActivity : AppCompatActivity() {
         
         try {
             if (FirebaseApp.getApps(this).isNotEmpty()) {
-                database = FirebaseDatabase.getInstance("https://swasthyamitra-c0899-default-rtdb.asia-southeast1.firebasedatabase.app").reference
+                database = FirebaseDatabase.getInstance("https://swasthyamitra-ded44-default-rtdb.asia-southeast1.firebasedatabase.app").reference
                 repository = GamificationRepository(database!!, userId)
                 syncWithFirebase()
             } else {

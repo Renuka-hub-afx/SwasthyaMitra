@@ -120,7 +120,7 @@ class ProfileActivity : AppCompatActivity() {
                     userEmailText.text = currentUser.email ?: "No email"
 
                     // Load user data from Firestore
-                    FirebaseFirestore.getInstance().collection("users")
+                    FirebaseFirestore.getInstance("renu").collection("users")
                         .document(userId)
                         .get()
                         .addOnSuccessListener { document ->
@@ -151,7 +151,7 @@ class ProfileActivity : AppCompatActivity() {
                             Toast.makeText(this@ProfileActivity, "Error loading profile: ${e.message}", Toast.LENGTH_SHORT).show()
                         }
 
-                    FirebaseFirestore.getInstance().collection("goals")
+                    FirebaseFirestore.getInstance("renu").collection("goals")
                         .whereEqualTo("userId", userId)
                         .limit(1)
                         .get()
@@ -215,14 +215,14 @@ class ProfileActivity : AppCompatActivity() {
     }
 
     private fun updateGoalWeight(newGoalWeight: Double) {
-        FirebaseFirestore.getInstance().collection("goals")
+        FirebaseFirestore.getInstance("renu").collection("goals")
             .whereEqualTo("userId", userId)
             .limit(1)
             .get()
             .addOnSuccessListener { querySnapshot ->
                 if (!querySnapshot.isEmpty) {
                     val goalDocId = querySnapshot.documents[0].id
-                    FirebaseFirestore.getInstance().collection("goals")
+                    FirebaseFirestore.getInstance("renu").collection("goals")
                         .document(goalDocId)
                         .update("targetWeight", newGoalWeight)
                         .addOnSuccessListener {

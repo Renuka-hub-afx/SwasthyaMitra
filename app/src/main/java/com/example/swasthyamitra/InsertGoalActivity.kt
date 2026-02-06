@@ -125,4 +125,11 @@ class InsertGoalActivity : AppCompatActivity() {
             }
         }
     }
+    
+    @Deprecated("Deprecated in Java")
+    override fun onBackPressed() {
+        // Prevent going back to login without completing profile
+        android.widget.Toast.makeText(this, "Please complete your goal selection first", android.widget.Toast.LENGTH_SHORT).show()
+        // Don't call super - prevents back navigation
+    }
 }

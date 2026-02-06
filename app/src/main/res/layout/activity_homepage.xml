@@ -716,6 +716,33 @@
                     android:textColor="#666666"
                     android:textSize="14sp"/>
 
+                <!-- Calories and Duration Row -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <TextView
+                        android:id="@+id/tv_exercise_calories"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="🔥 ~150 kcal"
+                        android:textColor="#FF5722"
+                        android:textSize="14sp"
+                        android:textStyle="bold"/>
+
+                    <TextView
+                        android:id="@+id/tv_exercise_duration"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="16dp"
+                        android:text="⏱️ 15 mins"
+                        android:textColor="#666666"
+                        android:textSize="14sp"/>
+                </LinearLayout>
+
                 <TextView
                     android:id="@+id/tv_rec_reason"
                     android:layout_width="match_parent"
@@ -903,6 +930,38 @@
                 android:textStyle="bold"
                 app:backgroundTint="@null"
                 app:cornerRadius="8dp" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:weightSum="2"
+            android:layout_marginBottom="20dp">
+
+            <!-- AI Rasoi (Smart Pantry) Button -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/card_ai_pantry"
+                style="@style/Widget.MaterialComponents.Button.UnelevatedButton"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="4dp"
+                android:layout_weight="1"
+                android:background="@drawable/button_background"
+                android:text="👨‍🍳\nAI RASOI"
+                android:textColor="#FFFFFF"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                app:backgroundTint="@null"
+                app:cornerRadius="8dp" />
+
+            <!-- Spacer for alignment -->
+            <View
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="4dp"
+                android:layout_weight="1" />
 
         </LinearLayout>
 
