@@ -155,7 +155,7 @@ class AISmartDietActivity : AppCompatActivity() {
     private suspend fun logMealToFoodLog(meal: AIDietPlanService.MealRec, mealType: String) {
         try {
             val userId = authHelper.getCurrentUser()?.uid ?: return
-            val firestore = com.google.firebase.firestore.FirebaseFirestore.getInstance()
+            val firestore = com.google.firebase.firestore.FirebaseFirestore.getInstance("renu")
             
             val dateFormat = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
             val currentDate = dateFormat.format(java.util.Date())

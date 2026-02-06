@@ -12,7 +12,7 @@ import kotlin.math.min
 
 class InsightsRepository(private val authHelper: FirebaseAuthHelper, private val userId: String) {
 
-    private val firestore = FirebaseFirestore.getInstance()
+    private val firestore = FirebaseFirestore.getInstance("renu")
     private val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
     private val dayFormat = SimpleDateFormat("EEE", Locale.getDefault())
 
@@ -122,7 +122,7 @@ class InsightsRepository(private val authHelper: FirebaseAuthHelper, private val
                 prefs.getInt("daily_steps", 0)
             } else {
                 // Try to get from Realtime Database
-                val db = FirebaseDatabase.getInstance("https://swasthyamitra-c0899-default-rtdb.asia-southeast1.firebasedatabase.app").reference
+                val db = FirebaseDatabase.getInstance("https://swasthyamitra-ded44-default-rtdb.asia-southeast1.firebasedatabase.app").reference
                 val snapshot = db.child("dailyActivity").child(userId).child(date).child("steps").get().await()
                 snapshot.getValue(Long::class.java)?.toInt() ?: 0
             }

@@ -10,7 +10,7 @@ import kotlinx.coroutines.tasks.await
 class FirebaseAuthHelper(private val context: Context) {
 
     private val auth: FirebaseAuth = FirebaseAuth.getInstance()
-    private val firestore: FirebaseFirestore = FirebaseFirestore.getInstance()
+    private val firestore: FirebaseFirestore = FirebaseFirestore.getInstance("renu")
 
     // Get current user
     fun getCurrentUser(): FirebaseUser? = auth.currentUser
@@ -80,6 +80,16 @@ class FirebaseAuthHelper(private val context: Context) {
     // Sign out
     fun signOut() {
         auth.signOut()
+    }
+    
+    // Send password reset email
+    suspend fun sendPasswordResetEmail(email: String): Result<Unit> {
+        return try {
+            auth.sendPasswordResetEmail(email).await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
     }
 
     // Update user physical stats

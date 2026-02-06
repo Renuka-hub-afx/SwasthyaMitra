@@ -40,7 +40,9 @@ class AIExerciseRecommendationService private constructor(private val context: C
         val gifUrl: String = "",
         val ageExplanation: String = "",
         val genderNote: String = "",
-        val motivationalMessage: String = ""
+        val motivationalMessage: String = "",
+        val estimatedCalories: Int = 0,
+        val recommendedDuration: String = "15 mins"
     )
 
     suspend fun getExerciseRecommendation(stepCalories: Int = 0): Result<ExerciseRec> = withContext(Dispatchers.IO) {
@@ -156,7 +158,9 @@ class AIExerciseRecommendationService private constructor(private val context: C
                   "gifUrl": "path/to/exercise.gif",
                   "ageExplanation": "Why this exercise is great for age $age",
                   "genderNote": "Gender-specific benefits for $gender",
-                  "motivationalMessage": "${if (isOnPeriod) "Encouraging message for period mode" else ""}"
+                  "motivationalMessage": "${if (isOnPeriod) "Encouraging message for period mode" else ""}",
+                  "estimatedCalories": 150,
+                  "recommendedDuration": "$workoutTimeLimit"
                 }
             """.trimIndent()
 
@@ -193,7 +197,9 @@ class AIExerciseRecommendationService private constructor(private val context: C
                 gifUrl = json.optString("gifUrl", ""),
                 ageExplanation = json.optString("ageExplanation", ""),
                 genderNote = json.optString("genderNote", ""),
-                motivationalMessage = json.optString("motivationalMessage", "")
+                motivationalMessage = json.optString("motivationalMessage", ""),
+                estimatedCalories = json.optInt("estimatedCalories", 100),
+                recommendedDuration = json.optString("recommendedDuration", "15 mins")
             )
 
             Result.success(result)

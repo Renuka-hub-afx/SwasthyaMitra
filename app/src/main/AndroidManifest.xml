@@ -132,6 +132,11 @@
             android:exported="false" />
 
         <activity
+            android:name=".ForgotPasswordActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+
+        <activity
             android:name=".ActiveDuelActivity"
             android:exported="false"
             android:screenOrientation="portrait" />

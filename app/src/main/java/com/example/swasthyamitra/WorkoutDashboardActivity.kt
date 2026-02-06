@@ -143,7 +143,7 @@ class WorkoutDashboardActivity : AppCompatActivity() {
     }
 
     private fun checkWorkoutStatusAndStats() {
-        val db = FirebaseDatabase.getInstance("https://swasthyamitra-c0899-default-rtdb.asia-southeast1.firebasedatabase.app").reference
+        val db = FirebaseDatabase.getInstance("https://swasthyamitra-ded44-default-rtdb.asia-southeast1.firebasedatabase.app").reference
         val userRef = db.child("users").child(userId)
         val today = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault()).format(java.util.Date())
 
@@ -166,7 +166,7 @@ class WorkoutDashboardActivity : AppCompatActivity() {
         btnComplete.isEnabled = false 
         btnComplete.text = "..."
 
-        val dbUrl = "https://swasthyamitra-c0899-default-rtdb.asia-southeast1.firebasedatabase.app"
+        val dbUrl = "https://swasthyamitra-ded44-default-rtdb.asia-southeast1.firebasedatabase.app"
         val db = FirebaseDatabase.getInstance(dbUrl).reference
         val userRef = db.child("users").child(userId)
         val today = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault()).format(java.util.Date())

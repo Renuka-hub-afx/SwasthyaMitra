@@ -85,12 +85,13 @@ class LoginActivity : AppCompatActivity() {
         }
 
         forgotPasswordLink.setOnClickListener {
-            Toast.makeText(this, "Coming soon!", Toast.LENGTH_SHORT).show()
+            val intent = Intent(this, ForgotPasswordActivity::class.java)
+            startActivity(intent)
         }
         
         Log.d("LoginActivity", "onCreate completed successfully")
     }
-
+    
     private fun handleLogin() {
         val email = emailInput.text.toString().trim()
         val password = passwordInput.text.toString()
@@ -105,7 +106,17 @@ class LoginActivity : AppCompatActivity() {
                     // Check user onboarding status before navigation
                     checkUserProfileAndNavigate(user.uid)
                 }.onFailure { e ->
-                    Toast.makeText(this@LoginActivity, "Login failed: ${e.message}", Toast.LENGTH_SHORT).show()
+                    Log.e("LoginActivity", "Login failed: ${e.message}", e)
+                    val errorMessage = when (e) {
+                        is com.google.firebase.FirebaseNetworkException -> 
+                            "Network Error: Please check your internet connection or try a different network (hotspot)."
+                        is com.google.firebase.auth.FirebaseAuthInvalidUserException ->
+                            "Account not found. Please sign up or check the email."
+                        is com.google.firebase.auth.FirebaseAuthInvalidCredentialsException ->
+                            "Invalid password or email format."
+                        else -> "Login failed: ${e.localizedMessage ?: "Unknown error"}"
+                    }
+                    Toast.makeText(this@LoginActivity, errorMessage, Toast.LENGTH_LONG).show()
                 }
             }
         }

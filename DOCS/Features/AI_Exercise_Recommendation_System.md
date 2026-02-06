@@ -7,23 +7,25 @@ This document outlines the technical design for a unique, AI-driven exercise rec
 ## 🏗️ 1. The "Closed-Loop" Logic
 The core innovation is that **Exercise follows Diet**. The app doesn't just recommend random workouts; it reacts to what the user ate today.
 
-| Scenario | Nutritional Trigger | Exercise Logic |
+| Scenario | Nutritional/State Trigger | Exercise Logic |
 | :--- | :--- | :--- |
 | **Calorie Surplus** | User exceeded target calories by > 200 | Recommend **High-Intensity Cardio** to burn the excess. |
 | **High Carbs** | Carbs > 60% of daily macros | Recommend **Compound Movements** (Squats/Press) to use glucose. |
 | **Protein Rich** | Protein target met or exceeded | Recommend **Hypertrophy/Strength** training for muscle repair. |
+| **Period Mode** | Menstrual cycle toggle active | Recommend **Restorative Yoga / Gentle Stretching** only. |
 | **Sedentary / Low Cal** | User ate very little | Recommend **Low Impact/Yoga** to prevent fatigue. |
 
 ---
 
-## 🧠 2. Gemini 2.0 Integration & Contextual Filtering
-We use **Vertex AI (Gemini 2.0 Flash)** to marry the user's bio-data with the physical exercise database.
+## 🧠 2. Gemini Integration & Contextual Filtering
+We use the **Firebase GenAI SDK** to marry the user's bio-data with the physical exercise database.
 
 ### The Input Context (Prompt):
-> "You are a Sports Scientist. User is **{{age}}** years old. Goal: **{{goal}}**. 
-> Today's intake: **{{calories}}** kcal, **{{protein}}**g. 
+> "You are a Sports Scientist. User is **{{age}}** years old. Goal: **{{goal}}**.
+> Today's intake: **{{calories}}** kcal, **{{protein}}**g.
+> State: **{{period_mode_active}}**.
 > Recommended from DB: Provide 3 exercises from this list: **{{exercise_db_sample}}**.
-> **Rule**: If age > 50, avoid high-impact jumping. If surplus > 300, prioritize fat burning."
+> **Rule**: If Period Mode is ACTIVE, suggest ONLY restorative/gentle movements. If age > 50, avoid high-impact jumping."
 
 ### Data Source:
 - **Location**: `app/src/main/assets/exercisedb_v1_sample/exercises.json`
@@ -32,7 +34,7 @@ We use **Vertex AI (Gemini 2.0 Flash)** to marry the user's bio-data with the ph
 ---
 
 ## 🛠️ 3. Technology Stack
-1.  **AI Engine**: Google Vertex AI (Gemini 2.0 Flash).
+1.  **AI Engine**: Firebase GenAI SDK (Gemini 1.5/2.0).
 2.  **Scheduling**: `WorkManager` (to analyze dinner intake and recommend next-morning workouts).
 3.  **Local DB**: JSON parsing of assets for fast offline filtering.
 4.  **UI**: Material Design 3 cards showing GIFs (from `gifs_360x360` folder) and instructions.

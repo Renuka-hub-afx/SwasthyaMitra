@@ -1,11 +1,13 @@
 # Feature: Workout & Fitness Tracking
 
 ## 🏋️ Overview
+
 The Workout & Fitness module is a reactive system that tracks physical movement and provides intelligent exercise recommendations based on the user's daily caloric balance and weight goals.
 
 ---
 
 ## 🛠️ Technology Used
+
 - **Android Sensor API**: Specifically uses the `TYPE_STEP_COUNTER` hardware sensor for low-power, background step tracking.
 - **Firebase Realtime Database**: Selected for its lightning-fast sync speeds to handle high-frequency XP updates and live streaks.
 - **YouTube Deep Linking**: Uses standard Android Intents to launch curated fitness content directly in the official YouTube app.
@@ -17,17 +19,21 @@ The Workout & Fitness module is a reactive system that tracks physical movement 
 ## 🛠️ File Architecture
 
 ### **1. The Hub (UI & Activity)**
+
 - **`WorkoutDashboardActivity.kt`**: The central dashboard for viewing steps, calories burned, and tailored workout videos.
 - **`activity_workout_dashboard.xml`**: The layout containing the live step counter, macro status, and video list.
 
 ### **2. The Movement Engine (Hardware Integration)**
+
 - **`StepManager.kt`**: A specialized sensor listener that interfaces with the device's physical `STEP_COUNTER` hardware.
 
 ### **3. The Recommendation Layer**
+
 - **`WorkoutVideoRepository.kt`**: The logic engine that filters a library of 50+ curated workout videos based on the user's current metabolic state.
 - **`WorkoutVideo.kt`**: Data model for exercise sessions (Duration, Intensity, Category).
 
 ### **4. Persistence & Gamification**
+
 - **Firebase Realtime Database**: Used for high-frequency activity logging and streak tracking.
 - **`FitnessData.kt`**: Model for storing XP, levels, and workout history.
 
@@ -36,6 +42,7 @@ The Workout & Fitness module is a reactive system that tracks physical movement 
 ## 🧠 Core Logic & Implementation
 
 ### **1. Hardware Step Tracking**
+
 The app uses the `TYPE_STEP_COUNTER` sensor for high accuracy and low battery consumption. It handles critical edge cases like device reboots.
 
 ```kotlin
@@ -59,6 +66,7 @@ override fun onSensorChanged(event: SensorEvent) {
 ```
 
 ### **2. Dynamic "AI" Recommendations**
+
 The dashboard doesn't just show videos; it analyzes your `netCalories` (Consumed - Burned) vs your `TargetBase`.
 
 ```kotlin
@@ -79,6 +87,7 @@ private fun updateAIRecommendation() {
 ```
 
 ### **3. Completion & Reward System**
+
 To prevent "cheating," a workout is only marked complete if the user actually starts the video.
 
 ```kotlin
@@ -98,8 +107,9 @@ btnComplete.setOnClickListener {
 ---
 
 ## ✅ Feature Set
+
 - **Live Step Sync**: Real-time step and calorie burn updates on every movement.
-- **Context-Aware Recommendations**: High-calorie days trigger HIIT/Cardio suggestions, while low-calorie days suggest Yoga/Mobility.
+- **Context-Aware Recommendations**: High-calorie days trigger HIIT/Cardio suggestions, while low-calorie days suggest Yoga/Mobility. **Period Mode** triggers a shift to restorative and gentle stretching routines.
 - **Streak Tracking**: Encourages daily consistency through a Realtime Database sync.
 - **Video Integration**: Direct deep-linking to curated YouTube fitness content.
 - **XP System**: Integrates with the `GamificationActivity` to level up the user based on physical effort.
@@ -107,43 +117,21 @@ btnComplete.setOnClickListener {
 ---
 
 ## 🔄 Closed-Loop Health Integration
-The most advanced part of SwasthyaMitra is the synchronization between the Food tracking and Exercise systems. They are not silos; they communicate through your daily goal data.
+
+The most advanced part of SwasthyaMitra is the synchronization between the Food tracking and Exercise systems.
 
 ### **1. Diet → Exercise: The Caloric Neutralizer**
+
 The workout dashboard monitors your food logs in real-time. If you consume more calories than your biological baseline, the app automatically switches focus to burn that specific excess.
 
-```kotlin
-// From WorkoutDashboardActivity.kt
-private fun updateAIRecommendation() {
-    val netCalories = consumedCalories - burnedCalories // 🥗 Consumed - 🔥 Burned
-    val diff = netCalories - targetBase
-
-    // If diff > 100 (Surplus), app focuses on "High" intensity fat burning.
-    val calorieStatus = when {
-        diff > 100 -> "High"
-        diff < -100 -> "Low"
-        else -> "Balanced"
-    }
-    
-    // Recommendations adapt to your surplus/deficit instantly
-    val videos = WorkoutVideoRepository.getSmartRecommendation(goalType, calorieStatus, "Moderate")
-}
-```
-
 ### **2. Exercise → Diet: Recovery Logic**
+
 Conversely, the AI Nutritionist analyzes your recent workout logs. If you've been pushing yourself with HIIT or heavy cardio, the AI modifies your meal plan to support muscle repair.
 
-```kotlin
-// From AIDietPlanService.kt
-val exerciseLogs = authHelper.getRecentExerciseLogs(userId, 3)
-val intensityFlag = if (exerciseLogs.any { it["intensity"] == "High" }) "INTENSITY_HIGH" else "INTENSITY_NORMAL"
+---
 
-// Prompt Rule for Gemini AI:
-"If INTENSITY_HIGH, you MUST include a 'postWorkout' meal rich in protein."
-```
+## 📊 Summary: The 24-Hour Adaptive System
 
-### **The Result: A 24-Hour Adaptive System**
-This integration ensures that:
 1.  **If you overeat**, the app works you harder.
 2.  **If you work out hard**, the app feeds you better.
 3.  **If weight stalls**, the logic shifts macros to boost metabolism.

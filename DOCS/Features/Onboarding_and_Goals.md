@@ -8,9 +8,12 @@ The Onboarding & Goal Setting feature is the scientific backbone of SwasthyaMitr
 ## 🛠️ File Architecture
 The onboarding follows a strict 3-stage sequence, ensuring no user enters the dashboard without a valid goal.
 
-### **Stage 1: Physical Profiling**
+### **Stage 1: Identity & Physical Profiling**
+- **Authentication**: High-security signup with strong password requirements and verified phone number format.
 - **`UserInfoActivity.kt`**: Captures **Height, Weight, and Gender**.
 - **Logic**: Instantly calculates and displays **BMI** (Body Mass Index) with color-coded categories (Underweight, Normal, Overweight, Obese) to give the user immediate health feedback.
+
+---
 
 ### **Stage 2: Mission Selection**
 - **`InsertGoalActivity.kt`**: Captures the user's primary "Mission":
@@ -86,4 +89,5 @@ The application uses a "Sequential Guard" logic in `LoginActivity.kt`. Every tim
 
 ## ✅ Feature Persistence
 - **Firestore Integration**: All metrics (BMR, TDEE, Daily Target) are saved in a high-priority `goals` collection.
-- **Dynamic Updates**: If a user updates their weight in the profile, the app can re-trigger these formulas to keep the goals updated as the user progresses.
+- **Dynamic Updates**: If a user updates their weight in the profile, the app re-triggers these formulas to keep goals accurate.
+- **Period Mode Initialization**: For female users, the `periodMode` flag is initialized as `false` in Firestore, ready to be toggled on the homepage.
