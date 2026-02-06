@@ -14,6 +14,12 @@ sealed class HistoryItem {
     abstract val timestamp: Long
     abstract val calories: Int
 
+    data class HeaderItem(
+        val dateString: String,
+        override val timestamp: Long,
+        override val calories: Int = 0
+    ) : HistoryItem()
+
     data class FoodItem(
         val name: String,
         val mealType: String,
@@ -38,12 +44,14 @@ class HistoryAdapter(
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     companion object {
-        private const val TYPE_FOOD = 0
-        private const val TYPE_EXERCISE = 1
+        private const val TYPE_HEADER = 0
+        private const val TYPE_FOOD = 1
+        private const val TYPE_EXERCISE = 2
     }
 
     override fun getItemViewType(position: Int): Int {
         return when (items[position]) {
+            is HistoryItem.HeaderItem -> TYPE_HEADER
             is HistoryItem.FoodItem -> TYPE_FOOD
             is HistoryItem.ExerciseItem -> TYPE_EXERCISE
         }
@@ -51,6 +59,10 @@ class HistoryAdapter(
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         return when (viewType) {
+            TYPE_HEADER -> {
+                val view = LayoutInflater.from(parent.context).inflate(R.layout.item_history_header, parent, false)
+                HeaderViewHolder(view)
+            }
             TYPE_FOOD -> {
                 val view = LayoutInflater.from(parent.context).inflate(R.layout.item_history_food, parent, false)
                 FoodViewHolder(view)
@@ -65,12 +77,20 @@ class HistoryAdapter(
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         when (val item = items[position]) {
+            is HistoryItem.HeaderItem -> (holder as HeaderViewHolder).bind(item)
             is HistoryItem.FoodItem -> (holder as FoodViewHolder).bind(item)
             is HistoryItem.ExerciseItem -> (holder as ExerciseViewHolder).bind(item)
         }
     }
 
     override fun getItemCount(): Int = items.size
+
+    class HeaderViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+        private val tvDate: TextView = itemView.findViewById(R.id.tv_header_date)
+        fun bind(item: HistoryItem.HeaderItem) {
+            tvDate.text = item.dateString
+        }
+    }
 
     class FoodViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         private val tvName: TextView = itemView.findViewById(R.id.tv_history_name)
@@ -89,7 +109,9 @@ class HistoryAdapter(
             tvDetails.text = details.toString()
             
             tvCalories.text = "+${item.calories} kcal"
-            tvCalories.setTextColor(itemView.context.getColor(R.color.green_700)) // Assuming defined or standard color
+            try {
+                tvCalories.setTextColor(android.graphics.Color.parseColor("#388E3C")) 
+            } catch (e: Exception) {}
             
             val timeFormat = SimpleDateFormat("h:mm a", Locale.getDefault())
             tvTime.text = timeFormat.format(Date(item.timestamp))
@@ -109,10 +131,14 @@ class HistoryAdapter(
             
             if (item.calories > 0) {
                 tvCalories.text = "-${item.calories} kcal"
-                tvCalories.setTextColor(itemView.context.getColor(R.color.orange_700)) // Assuming defined or standard color
+                try {
+                     tvCalories.setTextColor(android.graphics.Color.parseColor("#E64A19"))
+                } catch (e: Exception) {}
             } else {
                 tvCalories.text = "Workout"
-                tvCalories.setTextColor(itemView.context.getColor(R.color.gray_600))
+                 try {
+                     tvCalories.setTextColor(android.graphics.Color.GRAY)
+                } catch (e: Exception) {}
             }
             
             val timeFormat = SimpleDateFormat("h:mm a", Locale.getDefault())
