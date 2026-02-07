@@ -67,22 +67,9 @@ class AIDietPlanService private constructor(private val context: Context) {
         }
     }
 
-    data class MealPlan(
-        val breakfast: MealRec,
-        val lunch: MealRec,
-        val snack: MealRec,
-        val dinner: MealRec,
-        val postWorkout: MealRec? = null,
-        val dailyTip: String = ""
-    )
-
-    data class MealRec(
-        val item: String,
-        val calories: Int,
-        val protein: String,
-        val reason: String,
-        val tip: String = ""
-    )
+    /**
+     * MealPlan and MealRec data classes are now top-level for easier access
+     */
 
     /**
      * Core orchestration method to generate a personalized diet plan.
@@ -952,11 +939,13 @@ class AIDietPlanService private constructor(private val context: Context) {
         }
     }
 
-    private fun parseMeal(json: JSONObject) = MealRec(
-        json.getString("item"),
-        json.getInt("calories"),
-        json.getString("protein"),
-        json.getString("reason"),
-        json.optString("tip", "Stay hydrated and eat fresh!")
-    )
+    private fun parseMeal(json: JSONObject): MealRec {
+        return MealRec(
+            item = json.optString("item", "Healthy Option"),
+            calories = json.optInt("calories", 0),
+            protein = json.optString("protein", "0g"),
+            reason = json.optString("reason", "Nutritious choice"),
+            tip = json.optString("tip", "")
+        )
+    }
 }

@@ -309,15 +309,17 @@ class AvatarCustomizationActivity : AppCompatActivity() {
             updateMap["selected_avatar_id"] = resName
         }
 
+        // Show Success Message Immediately as requested (Optimistic UI)
+        Toast.makeText(this, "Avatar updated", Toast.LENGTH_SHORT).show()
+
+        // Background Sync
         FirebaseFirestore.getInstance().collection("users").document(userId)
             .update(updateMap)
-            .addOnSuccessListener {
-                Toast.makeText(this, "Saved!", Toast.LENGTH_SHORT).show()
-                finish()
-            }
             .addOnFailureListener {
-                Toast.makeText(this, "Failed", Toast.LENGTH_SHORT).show()
+                // Optional log
             }
+            
+        finish()
     }
     
     private fun getResName(resId: Int): String {

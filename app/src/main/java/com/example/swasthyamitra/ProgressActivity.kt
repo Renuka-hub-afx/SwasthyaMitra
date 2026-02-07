@@ -9,6 +9,7 @@ import com.example.swasthyamitra.auth.FirebaseAuthHelper
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
+import com.example.swasthyamitra.services.TelegramService
 
 class ProgressActivity : AppCompatActivity() {
 
@@ -59,6 +60,11 @@ class ProgressActivity : AppCompatActivity() {
         }
         findViewById<android.view.View>(R.id.roadmapItemHistory)?.setOnClickListener { 
             startActivity(android.content.Intent(this, HistoryActivity::class.java))
+        }
+        
+        // Telegram button
+        findViewById<com.google.android.material.button.MaterialButton>(R.id.btn_send_telegram_progress)?.setOnClickListener {
+            sendProgressToTelegram()
         }
     }
 
@@ -139,5 +145,40 @@ class ProgressActivity : AppCompatActivity() {
 
     private fun showAchievementsView() {
         // Placeholder
+    }
+    
+    private fun sendProgressToTelegram() {
+        lifecycleScope.launch {
+            try {
+                runOnUiThread {
+                    Toast.makeText(this@ProgressActivity, "Sending to Telegram... 📤", Toast.LENGTH_SHORT).show()
+                }
+                
+                // Get current values from UI
+                val weeklyCalories = weeklyCaloriesText.text.toString().replace(Regex("[^0-9]"), "").toIntOrNull() ?: 0
+                val weeklyWorkouts = weeklyWorkoutsText.text.toString().replace(Regex("[^0-9]"), "").toIntOrNull() ?: 0
+                val currentStreak = currentStreakText.text.toString().replace(Regex("[^0-9]"), "").toIntOrNull() ?: 0
+                
+                val result = TelegramService.sendExerciseSummaryToTelegram(
+                    exerciseName = "Weekly Progress Report",
+                    duration = "$weeklyWorkouts workouts",
+                    caloriesBurned = weeklyCalories,
+                    exerciseType = "Weekly",
+                    notes = "Current streak: $currentStreak days 🔥"
+                )
+                
+                runOnUiThread {
+                    if (result.isSuccess) {
+                        Toast.makeText(this@ProgressActivity, "✅ Sent to Telegram!", Toast.LENGTH_SHORT).show()
+                    } else {
+                        Toast.makeText(this@ProgressActivity, "❌ Failed to send", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            } catch (e: Exception) {
+                runOnUiThread {
+                    Toast.makeText(this@ProgressActivity, "❌ Error: ${e.message}", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
     }
 }

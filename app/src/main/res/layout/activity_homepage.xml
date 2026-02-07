@@ -274,6 +274,20 @@
                     android:textColor="#666666"
                     android:textSize="13sp" />
 
+                <!-- Send to Telegram Button -->
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_send_telegram_summary"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:text="📤 Send Summary to Telegram"
+                    android:textColor="#FFFFFF"
+                    android:textSize="14sp"
+                    app:backgroundTint="#0088CC"
+                    app:cornerRadius="8dp"
+                    app:icon="@android:drawable/ic_menu_share"
+                    app:iconTint="#FFFFFF" />
+
             </LinearLayout>
 
         </androidx.cardview.widget.CardView>

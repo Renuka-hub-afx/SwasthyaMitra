@@ -13,6 +13,8 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.example.swasthyamitra.ai.AIDietPlanService
 import com.example.swasthyamitra.auth.FirebaseAuthHelper
+import com.example.swasthyamitra.ai.MealPlan
+import com.example.swasthyamitra.ai.MealRec
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 
@@ -23,7 +25,7 @@ class AISmartDietActivity : AppCompatActivity() {
     private lateinit var progressBar: ProgressBar
     private lateinit var tvDailyTip: TextView
     private var isGenerating = false
-    private var currentPlan: AIDietPlanService.MealPlan? = null
+    private var currentPlan: MealPlan? = null
 
     private lateinit var tvMetabolicStatus: TextView
     private lateinit var tvIntensityAlert: TextView
@@ -126,7 +128,7 @@ class AISmartDietActivity : AppCompatActivity() {
         }
     }
 
-    private fun handleMealAction(mealType: String, meal: AIDietPlanService.MealRec?, action: String) {
+    private fun handleMealAction(mealType: String, meal: MealRec?, action: String) {
         if (meal == null) {
             Toast.makeText(this, "Please generate a plan first", Toast.LENGTH_SHORT).show()
             return
@@ -152,7 +154,7 @@ class AISmartDietActivity : AppCompatActivity() {
         }
     }
 
-    private suspend fun logMealToFoodLog(meal: AIDietPlanService.MealRec, mealType: String) {
+    private suspend fun logMealToFoodLog(meal: MealRec, mealType: String) {
         try {
             val userId = authHelper.getCurrentUser()?.uid ?: return
             val firestore = com.google.firebase.firestore.FirebaseFirestore.getInstance("renu")
@@ -295,41 +297,41 @@ class AISmartDietActivity : AppCompatActivity() {
                 result.onSuccess { newMeal ->
                     when (mealType) {
                         "Breakfast" -> {
-                            currentPlan = currentPlan?.copy(breakfast = newMeal) ?: AIDietPlanService.MealPlan(
+                            currentPlan = currentPlan?.copy(breakfast = newMeal) ?: MealPlan(
                                 breakfast = newMeal,
-                                lunch = AIDietPlanService.MealRec("", 0, "", ""),
-                                snack = AIDietPlanService.MealRec("", 0, "", ""),
-                                dinner = AIDietPlanService.MealRec("", 0, "", "")
+                                lunch = MealRec("", 0, "", ""),
+                                snack = MealRec("", 0, "", ""),
+                                dinner = MealRec("", 0, "", "")
                             )
                             updateMealCard(R.id.tvBreakfastName, R.id.tvBreakfastDetails, newMeal)
                             findViewById<LinearLayout>(R.id.layoutBreakfastActions).visibility = View.VISIBLE
                         }
                         "Lunch" -> {
-                            currentPlan = currentPlan?.copy(lunch = newMeal) ?: AIDietPlanService.MealPlan(
-                                breakfast = AIDietPlanService.MealRec("", 0, "", ""),
+                            currentPlan = currentPlan?.copy(lunch = newMeal) ?: MealPlan(
+                                breakfast = MealRec("", 0, "", ""),
                                 lunch = newMeal,
-                                snack = AIDietPlanService.MealRec("", 0, "", ""),
-                                dinner = AIDietPlanService.MealRec("", 0, "", "")
+                                snack = MealRec("", 0, "", ""),
+                                dinner = MealRec("", 0, "", "")
                             )
                             updateMealCard(R.id.tvLunchName, R.id.tvLunchDetails, newMeal)
                             findViewById<LinearLayout>(R.id.layoutLunchActions).visibility = View.VISIBLE
                         }
                         "Dinner" -> {
-                            currentPlan = currentPlan?.copy(dinner = newMeal) ?: AIDietPlanService.MealPlan(
-                                breakfast = AIDietPlanService.MealRec("", 0, "", ""),
-                                lunch = AIDietPlanService.MealRec("", 0, "", ""),
-                                snack = AIDietPlanService.MealRec("", 0, "", ""),
+                            currentPlan = currentPlan?.copy(dinner = newMeal) ?: MealPlan(
+                                breakfast = MealRec("", 0, "", ""),
+                                lunch = MealRec("", 0, "", ""),
+                                snack = MealRec("", 0, "", ""),
                                 dinner = newMeal
                             )
                             updateMealCard(R.id.tvDinnerName, R.id.tvDinnerDetails, newMeal)
                             findViewById<LinearLayout>(R.id.layoutDinnerActions).visibility = View.VISIBLE
                         }
                         "Snack" -> {
-                            currentPlan = currentPlan?.copy(snack = newMeal) ?: AIDietPlanService.MealPlan(
-                                breakfast = AIDietPlanService.MealRec("", 0, "", ""),
-                                lunch = AIDietPlanService.MealRec("", 0, "", ""),
+                            currentPlan = currentPlan?.copy(snack = newMeal) ?: MealPlan(
+                                breakfast = MealRec("", 0, "", ""),
+                                lunch = MealRec("", 0, "", ""),
                                 snack = newMeal,
-                                dinner = AIDietPlanService.MealRec("", 0, "", "")
+                                dinner = MealRec("", 0, "", "")
                             )
                             updateMealCard(R.id.tvSnacksName, R.id.tvSnacksDetails, newMeal)
                             findViewById<LinearLayout>(R.id.layoutSnacksActions).visibility = View.VISIBLE
@@ -350,7 +352,7 @@ class AISmartDietActivity : AppCompatActivity() {
         }
     }
 
-    private fun updateUI(plan: AIDietPlanService.MealPlan) {
+    private fun updateUI(plan: MealPlan) {
         tvDailyTip.text = "💡 Tip: ${plan.dailyTip}"
 
         updateMealCard(R.id.tvBreakfastName, R.id.tvBreakfastDetails, plan.breakfast)
@@ -359,7 +361,7 @@ class AISmartDietActivity : AppCompatActivity() {
         updateMealCard(R.id.tvSnacksName, R.id.tvSnacksDetails, plan.snack)
     }
 
-    private fun updateMealCard(nameResId: Int, detailsResId: Int, meal: AIDietPlanService.MealRec) {
+    private fun updateMealCard(nameResId: Int, detailsResId: Int, meal: MealRec) {
         findViewById<TextView>(nameResId).text = meal.item
         findViewById<TextView>(detailsResId).text = "${meal.calories} kcal | ${meal.protein} protein"
     }

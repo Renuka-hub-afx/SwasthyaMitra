@@ -205,6 +205,18 @@
 
                 </LinearLayout>
 
+                <!-- Send to Telegram Button -->
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_send_telegram_meals"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:text="📤 Send to Telegram"
+                    android:textColor="#FFFFFF"
+                    android:textSize="13sp"
+                    app:backgroundTint="#0088CC"
+                    app:cornerRadius="8dp" />
+
             </LinearLayout>
 
         </androidx.cardview.widget.CardView>
