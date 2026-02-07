@@ -3,7 +3,7 @@ package com.example.swasthyamitra
 import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
-import android.util.Log
+
 import android.view.View
 import android.widget.TextView
 import android.widget.Toast
@@ -14,16 +14,18 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.swasthyamitra.adapters.HistoryAdapter
 import com.example.swasthyamitra.adapters.HistoryItem
 import com.example.swasthyamitra.auth.FirebaseAuthHelper
-import com.example.swasthyamitra.GamificationActivity
+
 import com.google.firebase.database.FirebaseDatabase
-import com.google.firebase.firestore.FirebaseFirestore
+
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
+
+import androidx.core.graphics.drawable.toDrawable
 import java.text.SimpleDateFormat
 import java.util.*
-import kotlin.collections.ArrayList
+
 
 class ProgressActivity : AppCompatActivity() {
 
@@ -76,9 +78,9 @@ class ProgressActivity : AppCompatActivity() {
     private fun setupListeners() {
         findViewById<View>(R.id.row_weight_charts).setOnClickListener {
              // Open Insights Activity as it is the new home for charts
-             try {
+            try {
                 startActivity(Intent(this, InsightsActivity::class.java))
-             } catch (e: Exception) {
+            } catch (_: Exception) {
                  Toast.makeText(this, "Charts not ready", Toast.LENGTH_SHORT).show()
              }
         }
@@ -113,15 +115,15 @@ class ProgressActivity : AppCompatActivity() {
         val totalCalories = stats.sumOf { it.calories }
         val sessions = stats.count { it.workoutCalories > 0 }
         
-        weeklyCaloriesText.text = "$totalCalories kcal"
-        weeklyWorkoutsText.text = "$sessions"
+        weeklyCaloriesText.text = getString(R.string.kcal_suffix, totalCalories)
+        weeklyWorkoutsText.text = getString(R.string.count_only, sessions)
         
         // Calculate streak
         val streak = calculateStreak(stats)
-        currentStreakText.text = "$streak days"
+        currentStreakText.text = getString(R.string.days_suffix, streak)
         
         // Best Streak (Placeholder or fetch from DB)
-        longestStreakText.text = "$streak days" // Using current for now
+        longestStreakText.text = getString(R.string.days_suffix, streak) // Using current for now
     }
 
     private fun calculateStreak(stats: List<DailyStat>): Int {
@@ -131,7 +133,7 @@ class ProgressActivity : AppCompatActivity() {
             if (stats[i].calories > 0 || stats[i].workoutCalories > 0) {
                 streak++
             } else {
-                // If it's today and 0, dont break yet? Logic: strictly consecutive days
+                // If it's today and 0, don't break yet? Logic: strictly consecutive days
                 // If today is empty, streak is 0 unless we count yesterday.
                 // Simple logic: consecutive days with activity ending at today or yesterday
                 if (i == stats.lastIndex) continue // Skip today if empty? No, strict streak.
@@ -159,14 +161,13 @@ class ProgressActivity : AppCompatActivity() {
     private suspend fun getWeeklyStats(): List<DailyStat> {
         return withContext(Dispatchers.IO) {
             val stats = mutableListOf<DailyStat>()
-            val calendar = Calendar.getInstance()
             val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
             
             // 1. Prepare dates
             val dates = mutableListOf<String>()
             val cal = Calendar.getInstance()
             cal.add(Calendar.DAY_OF_YEAR, -6)
-            for (i in 0 until 7) {
+            repeat(7) {
                 dates.add(dateFormat.format(cal.time))
                 cal.add(Calendar.DAY_OF_YEAR, 1)
             }
@@ -199,7 +200,7 @@ class ProgressActivity : AppCompatActivity() {
                 ))
             }
             
-            // Fetch Workouts (from RTDB)
+            // Fetch Workouts (from Realtime Database)
             try {
                val db = FirebaseDatabase.getInstance("https://swasthyamitra-c0899-default-rtdb.asia-southeast1.firebasedatabase.app").reference
                val snapshot = db.child("users").child(userId).child("workoutHistory").get().await()
@@ -218,7 +219,7 @@ class ProgressActivity : AppCompatActivity() {
                        ))
                    }
                }
-            } catch (e: Exception) {}
+            } catch (_: Exception) {}
 
             val sortedList = allItems.sortedByDescending { it.timestamp }
             
@@ -242,7 +243,7 @@ class ProgressActivity : AppCompatActivity() {
     private fun showHistoryDialog() {
         val dialog = android.app.Dialog(this)
         dialog.setContentView(R.layout.dialog_history)
-        dialog.window?.setBackgroundDrawable(android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT))
+        dialog.window?.setBackgroundDrawable(Color.TRANSPARENT.toDrawable())
         val width = (resources.displayMetrics.widthPixels * 0.95).toInt()
         dialog.window?.setLayout(width, android.view.ViewGroup.LayoutParams.WRAP_CONTENT)
         
