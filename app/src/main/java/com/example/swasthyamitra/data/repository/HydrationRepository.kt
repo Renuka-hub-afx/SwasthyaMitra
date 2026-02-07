@@ -7,7 +7,7 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 class HydrationRepository {
-    private val firestore = FirebaseFirestore.getInstance()
+    private val firestore = FirebaseFirestore.getInstance("renu")
     private val waterLogsCollection = firestore.collection("waterLogs")
 
     suspend fun addWaterLog(userId: String, amountML: Int, targetDate: String? = null): Result<Unit> {

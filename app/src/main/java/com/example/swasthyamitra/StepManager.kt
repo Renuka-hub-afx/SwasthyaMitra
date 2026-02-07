@@ -48,7 +48,7 @@ class StepManager(private val context: Context, private val onStepUpdate: (Int, 
         // Also persist to Firebase for historical insights
         val userId = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.uid
         if (userId != null) {
-            val db = com.google.firebase.database.FirebaseDatabase.getInstance("https://swasthyamitra-c0899-default-rtdb.asia-southeast1.firebasedatabase.app").reference
+            val db = com.google.firebase.database.FirebaseDatabase.getInstance("https://swasthyamitra-ded44-default-rtdb.asia-southeast1.firebasedatabase.app").reference
             db.child("dailyActivity").child(userId).child(lastDate).child("steps").setValue(dailySteps)
         }
     }

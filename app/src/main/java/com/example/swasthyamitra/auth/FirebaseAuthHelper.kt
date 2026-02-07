@@ -10,7 +10,7 @@ import kotlinx.coroutines.tasks.await
 class FirebaseAuthHelper(private val context: Context) {
 
     private val auth: FirebaseAuth = FirebaseAuth.getInstance()
-    private val firestore: FirebaseFirestore = FirebaseFirestore.getInstance()
+    private val firestore: FirebaseFirestore = FirebaseFirestore.getInstance("renu")
 
     // Get current user
     fun getCurrentUser(): FirebaseUser? = auth.currentUser

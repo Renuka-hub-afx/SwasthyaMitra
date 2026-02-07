@@ -18,7 +18,7 @@ import java.util.*
 class AIDietPlanService private constructor(private val context: Context) {
 
     private val authHelper = FirebaseAuthHelper(context)
-    private val firestore = com.google.firebase.firestore.FirebaseFirestore.getInstance()
+    private val firestore = com.google.firebase.firestore.FirebaseFirestore.getInstance("renu")
     private val TAG = "AIDietPlanService"
     
     // Memory Cache for Food Samples

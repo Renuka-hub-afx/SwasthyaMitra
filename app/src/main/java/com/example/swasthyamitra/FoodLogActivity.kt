@@ -590,7 +590,7 @@ class FoodLogActivity : AppCompatActivity() {
                 binding.progressBar.visibility = View.VISIBLE
                 lifecycleScope.launch {
                     try {
-                        com.google.firebase.firestore.FirebaseFirestore.getInstance()
+                        com.google.firebase.firestore.FirebaseFirestore.getInstance("renu")
                             .collection("foodLogs")
                             .document(foodLog.logId)
                             .delete()
