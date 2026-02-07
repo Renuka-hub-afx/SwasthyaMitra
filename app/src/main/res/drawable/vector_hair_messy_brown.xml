@@ -1,0 +1,19 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="300dp"
+    android:height="300dp"
+    android:viewportWidth="300"
+    android:viewportHeight="300">
+    <!-- Hair Back (Behind neck) -->
+    <path
+        android:fillColor="#4E342E"
+        android:pathData="M80,100 Q60,150 70,180 L80,190 L220,190 L230,180 Q240,150 220,100 Z"/>
+    <!-- Bangs/Front -->
+    <path
+        android:fillColor="#5D4037"
+        android:pathData="M70,130 Q60,80 150,60 Q240,80 230,130 Q240,160 220,180 L200,160 Q210,120 150,110 Q90,120 100,160 L80,180 Q60,160 70,130 Z"/>
+    <!-- Texture Lines -->
+    <path
+        android:strokeColor="#3E2723"
+        android:strokeWidth="2"
+        android:pathData="M150,60 Q180,80 190,120 M150,60 Q120,80 110,120"/>
+</vector>

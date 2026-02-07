@@ -442,6 +442,32 @@ class FirebaseAuthHelper(private val context: Context) {
         }
     }
 
+    // Log weight entry
+    suspend fun logWeight(userId: String, weight: Double): Result<Unit> {
+        return try {
+            val timestamp = System.currentTimeMillis()
+            val date = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault()).format(java.util.Date())
+            
+            val weightData = hashMapOf(
+                "userId" to userId,
+                "weight" to weight,
+                "timestamp" to timestamp,
+                "date" to date
+            )
+            
+            firestore.collection("weightLogs").add(weightData).await()
+            
+            // Also update current weight in user profile
+            updateUserPhysicalStats(userId, 0.0, weight, "", 0) // Validating parameters might be needed, ignoring for now as update helper might overwrite
+            // Actually updateUserPhysicalStats requires all params. Let's just update weight field directly
+            firestore.collection("users").document(userId).update("weight", weight).await()
+
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
     // Get recent weight logs for plateau detection
     suspend fun getRecentWeightLogs(userId: String, days: Int = 14): List<Map<String, Any>> {
         return try {

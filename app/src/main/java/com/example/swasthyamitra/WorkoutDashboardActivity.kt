@@ -174,6 +174,9 @@ class WorkoutDashboardActivity : AppCompatActivity() {
         userRef.get().addOnSuccessListener { snapshot ->
             val data = snapshot.getValue(FitnessData::class.java) ?: FitnessData()
             
+            // Calculate estimated calories (approx 6 kcal/min * duration)
+            val estimatedCalories = video.durationMinutes * 6
+            
             val session = WorkoutSession(
                 id = java.util.UUID.randomUUID().toString(),
                 date = today,
@@ -181,7 +184,8 @@ class WorkoutDashboardActivity : AppCompatActivity() {
                 videoId = video.videoId,
                 duration = video.durationMinutes,
                 completed = true,
-                timestamp = System.currentTimeMillis()
+                timestamp = System.currentTimeMillis(),
+                caloriesBurned = estimatedCalories
             )
 
             val updatedHistory = data.workoutHistory.toMutableMap()

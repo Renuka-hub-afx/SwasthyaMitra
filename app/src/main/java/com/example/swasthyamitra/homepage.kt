@@ -129,6 +129,12 @@ class homepage : AppCompatActivity() {
         btnViewExerciseDetails = findViewById(R.id.btn_view_exercise_details)
         btnLogRecExercise = findViewById(R.id.btn_log_rec_exercise)
         btnRegenerateExercise = findViewById(R.id.btn_regenerate_exercise)
+        
+        val tvViewDetails: TextView = findViewById(R.id.tv_view_details)
+        tvViewDetails.setOnClickListener {
+            startActivity(Intent(this, FoodLogActivity::class.java))
+        }
+
         chipPeriodMode = findViewById(R.id.chip_period_mode)
         ivExerciseGif = findViewById(R.id.iv_exercise_gif)
         tvAgeExplanation = findViewById(R.id.tv_age_explanation)
@@ -301,6 +307,14 @@ class homepage : AppCompatActivity() {
                     userName = userData["name"] as? String ?: "User"
                     tvUserName.text = "Hello, $userName!"
                     
+                    val avatarId = userData["selected_avatar_id"] as? String
+                    if (avatarId != null) {
+                        val avatarResId = getAvatarDrawable(avatarId)
+                        if (avatarResId != 0) {
+                            findViewById<android.widget.ImageView>(R.id.iv_user_profile).setImageResource(avatarResId)
+                        }
+                    }
+
                     // Load Period Mode status
                     isOnPeriod = userData["isOnPeriod"] as? Boolean ?: false
                     chipPeriodMode.isChecked = isOnPeriod
@@ -803,6 +817,15 @@ class homepage : AppCompatActivity() {
         builder.setMessage(message.toString())
         builder.setPositiveButton("Got it! 👍") { dialog, _ -> dialog.dismiss() }
         builder.show()
+    }
+
+    private fun getAvatarDrawable(avatarId: String): Int {
+        val resName = avatarId.replace("_", "")
+        return try {
+            resources.getIdentifier(resName, "drawable", packageName)
+        } catch (e: Exception) {
+            0
+        }
     }
 
     private fun navigateToLogin() {

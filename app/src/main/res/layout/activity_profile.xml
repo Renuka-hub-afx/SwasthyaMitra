@@ -161,6 +161,14 @@
                     android:text="23 years"
                     android:textColor="#1D1617"
                     android:textStyle="bold" />
+                <EditText
+                    android:id="@+id/userAgeEdit"
+                    android:layout_width="60dp"
+                    android:layout_height="wrap_content"
+                    android:inputType="number"
+                    android:visibility="gone"
+                    android:textSize="14sp"/>
+
             </LinearLayout>
 
             <View android:layout_width="match_parent" android:layout_height="16dp"/>
@@ -182,6 +190,12 @@
                     android:text="Male"
                     android:textColor="#1D1617"
                     android:textStyle="bold" />
+                <Spinner
+                    android:id="@+id/userGenderSpinner"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:visibility="gone" />
+
             </LinearLayout>
 
             <View android:layout_width="match_parent" android:layout_height="16dp"/>
@@ -203,6 +217,14 @@
                     android:text="179.0 cm"
                     android:textColor="#1D1617"
                     android:textStyle="bold" />
+                <EditText
+                    android:id="@+id/userHeightEdit"
+                    android:layout_width="60dp"
+                    android:layout_height="wrap_content"
+                    android:inputType="numberDecimal"
+                    android:visibility="gone"
+                    android:textSize="14sp"/>
+
             </LinearLayout>
 
             <View android:layout_width="match_parent" android:layout_height="16dp"/>
@@ -224,6 +246,14 @@
                     android:text="85.0 kg"
                     android:textColor="#1D1617"
                     android:textStyle="bold" />
+                <EditText
+                    android:id="@+id/userWeightEdit"
+                    android:layout_width="60dp"
+                    android:layout_height="wrap_content"
+                    android:inputType="numberDecimal"
+                    android:visibility="gone"
+                    android:textSize="14sp"/>
+
             </LinearLayout>
 
             <View android:layout_width="match_parent" android:layout_height="16dp"/>
