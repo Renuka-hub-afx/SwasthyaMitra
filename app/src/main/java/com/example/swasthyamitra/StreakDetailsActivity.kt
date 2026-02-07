@@ -19,8 +19,12 @@ class StreakDetailsActivity : AppCompatActivity() {
     private lateinit var tvCurrentStreak: TextView
     private lateinit var tvMonthYear: TextView
     private lateinit var calendarGrid: GridLayout
+    private lateinit var btnPrevMonth: android.widget.ImageButton
+    private lateinit var btnNextMonth: android.widget.ImageButton
+    
     private var fitnessData: FitnessData? = null
     private var viewMode: String = "STREAK" // Default to streak view
+    private var currentCalendar: Calendar = Calendar.getInstance()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -43,6 +47,8 @@ class StreakDetailsActivity : AppCompatActivity() {
         tvCurrentStreak = findViewById(R.id.tvCurrentStreak)
         tvMonthYear = findViewById(R.id.tvMonthYear)
         calendarGrid = findViewById(R.id.calendarGrid)
+        btnPrevMonth = findViewById(R.id.btnPrevMonth)
+        btnNextMonth = findViewById(R.id.btnNextMonth)
     }
 
     private fun setupUI() {
@@ -61,7 +67,30 @@ class StreakDetailsActivity : AppCompatActivity() {
         val streak = fitnessData?.streak ?: 0
         tvCurrentStreak.text = "$streak Days"
         
+        setupCalendarNavigation()
         generateCalendarForCurrentMonth()
+    }
+    
+    private fun setupCalendarNavigation() {
+        btnPrevMonth.setOnClickListener {
+            currentCalendar.add(Calendar.MONTH, -1)
+            generateCalendarForCurrentMonth()
+        }
+        
+        btnNextMonth.setOnClickListener {
+            val today = Calendar.getInstance()
+            // Check if adding a month would exceed current month
+            val nextMonthCheck = currentCalendar.clone() as Calendar
+            nextMonthCheck.add(Calendar.MONTH, 1)
+            
+            if (nextMonthCheck.get(Calendar.YEAR) < today.get(Calendar.YEAR) ||
+                (nextMonthCheck.get(Calendar.YEAR) == today.get(Calendar.YEAR) && 
+                 nextMonthCheck.get(Calendar.MONTH) <= today.get(Calendar.MONTH))) {
+                 
+                currentCalendar.add(Calendar.MONTH, 1)
+                generateCalendarForCurrentMonth()
+            }
+        }
     }
 
     private fun setupShieldUI() {
@@ -123,12 +152,18 @@ class StreakDetailsActivity : AppCompatActivity() {
     private fun generateCalendarForCurrentMonth() {
         calendarGrid.removeAllViews()
 
-        val calendar = Calendar.getInstance()
+        val calendar = currentCalendar.clone() as Calendar
         // Set to first day of the month
         calendar.set(Calendar.DAY_OF_MONTH, 1)
 
         val currentMonth = calendar.get(Calendar.MONTH)
         val currentYear = calendar.get(Calendar.YEAR)
+        
+        // Disable next button if future
+        val today = Calendar.getInstance()
+        val isCurrentMonth = (currentYear == today.get(Calendar.YEAR) && currentMonth == today.get(Calendar.MONTH))
+        btnNextMonth.alpha = if (isCurrentMonth) 0.3f else 1.0f
+        btnNextMonth.isEnabled = !isCurrentMonth
         
         // Update Title
         val monthFormat = SimpleDateFormat("MMMM yyyy", Locale.getDefault())
