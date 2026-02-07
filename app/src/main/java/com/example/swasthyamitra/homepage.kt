@@ -18,6 +18,7 @@ import androidx.cardview.widget.CardView
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
 
+
 class homepage : AppCompatActivity() {
 
     private lateinit var authHelper: FirebaseAuthHelper
@@ -73,8 +74,10 @@ class homepage : AppCompatActivity() {
     private lateinit var pbCaloriesIn: ProgressBar
     private lateinit var pbCaloriesOut: ProgressBar
     private lateinit var tvNetBalance: TextView
-    private lateinit var tvCalorieGoal: TextView
     private lateinit var tvCalorieStatus: TextView
+    
+    // History Log UI
+    private lateinit var tvCalorieGoal: TextView
 
     private var goalType: String = ""
     private var userName: String = ""
@@ -142,6 +145,9 @@ class homepage : AppCompatActivity() {
         tvNetBalance = findViewById(R.id.tv_net_balance)
         tvCalorieGoal = findViewById(R.id.tv_calorie_goal)
         tvCalorieStatus = findViewById(R.id.tv_calorie_status)
+        
+        // Initialize History UI
+
 
         updateDateDisplay()
         loadUserData()
@@ -282,6 +288,7 @@ class homepage : AppCompatActivity() {
             displayWaterStatus()
             updateAICoachMessage()
             updateAIExerciseRecommendation()
+            updateCalorieBalance()
             updateCalorieBalance()
         }
     }
@@ -804,6 +811,8 @@ class homepage : AppCompatActivity() {
         startActivity(intent)
         finish()
     }
+
+
     
     // ========== Calorie Balance Tracking ==========
     

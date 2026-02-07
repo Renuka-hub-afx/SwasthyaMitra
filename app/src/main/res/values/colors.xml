@@ -19,4 +19,8 @@
     <color name="teal_200">#80CBC4</color>
 
     <!-- REMOVED: <color name="button_text">#FFFFFF</color> to fix duplicate error -->
+    <color name="green_700">#388E3C</color>
+    <color name="orange_700">#F57C00</color>
+    <color name="gray_600">#757575</color>
+    <color name="gray_100">#F5F5F5</color>
 </resources>

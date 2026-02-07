@@ -2,4 +2,7 @@
     <string name="app_name" translatable="false">SWASTHYAMITRA</string>
     <string name="swasthyamitra" translatable="false">SWASTHYAMITRA</string>
     <string name="get_started" translatable="false">GET STARTED</string>
+    <string name="kcal_suffix">%d kcal</string>
+    <string name="days_suffix">%d days</string>
+    <string name="count_only">%d</string>
 </resources>

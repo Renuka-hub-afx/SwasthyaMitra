@@ -798,46 +798,37 @@
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/btn_log_rec_exercise"
-                        style="@style/Widget.MaterialComponents.Button.UnelevatedButton"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1.2"
-                        android:text="I Did It! 🎉"
-                        android:textSize="11sp"
-                        android:textStyle="bold"
-                        app:cornerRadius="8dp"
-                        app:backgroundTint="#E91E63"/>
-
-                    <com.google.android.material.button.MaterialButton
-                        android:id="@+id/btn_regenerate_exercise"
                         style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:layout_weight="0.8"
-                        android:layout_marginStart="4dp"
-                        android:text="Maybe Later"
-                        android:textSize="11sp"
-                        android:textStyle="bold"
-                        app:cornerRadius="8dp"
+                        android:layout_weight="1"
+                        android:text="Log Activity"
                         app:strokeColor="#E91E63"
-                        app:rippleColor="#FCE4EC"/>
+                        android:textColor="#E91E63"
+                        android:layout_marginEnd="8dp"/>
 
                     <com.google.android.material.button.MaterialButton
-                        android:id="@+id/btn_view_exercise_details"
+                        android:id="@+id/btn_regenerate_exercise"
                         style="@style/Widget.MaterialComponents.Button.TextButton"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginStart="4dp"
-                        android:text="Show Me How 👀"
-                        android:textColor="#E91E63"
-                        android:textSize="11sp"
-                        android:textStyle="bold"/>
+                        android:text="Try Another"
+                        android:textColor="#888888"/>
 
                 </LinearLayout>
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_view_exercise_details"
+                    style="@style/Widget.MaterialComponents.Button.TextButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="View Step-by-Step Guide"
+                    android:textColor="#2196F3"/>
 
             </LinearLayout>
 
         </androidx.cardview.widget.CardView>
+
 
 
         <!-- Quick Actions -->
