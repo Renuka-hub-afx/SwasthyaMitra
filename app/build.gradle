@@ -71,8 +71,6 @@ android {
     kotlinOptions {
         jvmTarget = '17'
     }
-    
-    buildToolsVersion '35.0.0'
 }
 
 dependencies {
@@ -96,6 +94,8 @@ dependencies {
 
     // Play Services
     implementation libs.play.services.location
+    // Temporarily commented out due to resolution issues
+    // implementation libs.play.services.activity.recognition
 
     // ML Kit & CameraX (Stable versions)
     implementation 'com.google.mlkit:barcode-scanning:17.3.0'

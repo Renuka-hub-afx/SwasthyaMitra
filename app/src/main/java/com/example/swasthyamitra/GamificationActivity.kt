@@ -61,8 +61,17 @@ class GamificationActivity : AppCompatActivity() {
     private lateinit var xpProgress: ProgressBar
 
     private val requestPermissionLauncher =
-        registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted: Boolean ->
-            if (isGranted) startStepTracking()
+        registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
+            val isActivityRecognitionGranted = permissions[Manifest.permission.ACTIVITY_RECOGNITION] ?: false
+            val isNotificationGranted = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                permissions[Manifest.permission.POST_NOTIFICATIONS] ?: false
+            } else true
+            
+            if (isActivityRecognitionGranted) {
+                startStepTracking()
+            } else {
+                 Toast.makeText(this, "Permission required for step counting", Toast.LENGTH_SHORT).show()
+            }
         }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -359,11 +368,25 @@ class GamificationActivity : AppCompatActivity() {
     }
 
     private fun checkAndRequestPermissions() {
+        val permissionsToRequest = mutableListOf<String>()
+        
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACTIVITY_RECOGNITION) != PackageManager.PERMISSION_GRANTED) {
-                requestPermissionLauncher.launch(Manifest.permission.ACTIVITY_RECOGNITION)
-            } else { startStepTracking() }
-        } else { startStepTracking() }
+                permissionsToRequest.add(Manifest.permission.ACTIVITY_RECOGNITION)
+            }
+        }
+        
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                permissionsToRequest.add(Manifest.permission.POST_NOTIFICATIONS)
+            }
+        }
+        
+        if (permissionsToRequest.isNotEmpty()) {
+            requestPermissionLauncher.launch(permissionsToRequest.toTypedArray())
+        } else {
+            startStepTracking()
+        }
     }
 
     override fun onDestroy() {

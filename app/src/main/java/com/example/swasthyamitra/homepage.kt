@@ -25,6 +25,7 @@ class homepage : AppCompatActivity() {
     private lateinit var stepManager: StepManager
     private var userId: String = ""
     private lateinit var firestore: FirebaseFirestore
+    private var currentSteps: Int = 0 // Store current step count
 
     // UI Elements
     private lateinit var tvUserName: TextView
@@ -154,6 +155,7 @@ class homepage : AppCompatActivity() {
 
         // Initialize Step Tracking
         stepManager = StepManager(this) { steps, _ ->
+            currentSteps = steps // Store the step count
             runOnUiThread {
                 tvSteps.text = steps.toString()
             }
@@ -402,7 +404,7 @@ class homepage : AppCompatActivity() {
                     tvCoachMessage.text = "Coach is analyzing your progress... 🔍"
                 }
 
-                val steps = if (::stepManager.isInitialized) stepManager.dailySteps else 0
+                val steps = currentSteps
                 val service = com.example.swasthyamitra.ai.AICoachMessageService.getInstance(this@homepage)
                 val result = service.getCoachMessage(userId, steps)
                 
@@ -629,7 +631,7 @@ class homepage : AppCompatActivity() {
                 }
 
                 // 1. Calculate burned calories from steps
-                val steps = if (::stepManager.isInitialized) stepManager.dailySteps else 0
+                val steps = currentSteps
                 val burnedFromSteps = (steps * 0.04).toInt()
 
                 // 2. Refresh UI to show loading state
@@ -867,7 +869,7 @@ class homepage : AppCompatActivity() {
             var totalCalories = 0
             
             // 1. Calories from steps
-            val steps = if (::stepManager.isInitialized) stepManager.dailySteps else 0
+            val steps = currentSteps
             val stepCalories = (steps * 0.04).toInt() // ~0.04 kcal per step
             totalCalories += stepCalories
             

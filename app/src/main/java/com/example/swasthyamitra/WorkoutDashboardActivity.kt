@@ -10,6 +10,11 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.cardview.widget.CardView
 import androidx.lifecycle.lifecycleScope
 import com.example.swasthyamitra.auth.FirebaseAuthHelper
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
 import com.example.swasthyamitra.models.WorkoutVideoRepository
 import com.google.firebase.database.FirebaseDatabase
 import kotlinx.coroutines.launch
@@ -52,6 +57,16 @@ class WorkoutDashboardActivity : AppCompatActivity() {
     private var goalType: String = ""
     private var targetBase: Int = 2200
 
+    private val requestPermissionLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
+            val isActivityRecognitionGranted = permissions[Manifest.permission.ACTIVITY_RECOGNITION] ?: false
+            if (isActivityRecognitionGranted) {
+                // Permission granted, sensor will work
+            } else {
+                 Toast.makeText(this, "Permission required for live step updates", Toast.LENGTH_SHORT).show()
+            }
+        }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_workout_dashboard)
@@ -71,10 +86,34 @@ class WorkoutDashboardActivity : AppCompatActivity() {
                 updateAIRecommendation()
             }
         }
+        
+        // Start immediately to show cached data
         stepManager.start()
+        
+        checkAndRequestPermissions()
 
         fetchUserData()
         setupListeners()
+    }
+    
+    private fun checkAndRequestPermissions() {
+        val permissionsToRequest = mutableListOf<String>()
+        
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACTIVITY_RECOGNITION) != PackageManager.PERMISSION_GRANTED) {
+                permissionsToRequest.add(Manifest.permission.ACTIVITY_RECOGNITION)
+            }
+        }
+        
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                permissionsToRequest.add(Manifest.permission.POST_NOTIFICATIONS)
+            }
+        }
+        
+        if (permissionsToRequest.isNotEmpty()) {
+            requestPermissionLauncher.launch(permissionsToRequest.toTypedArray())
+        }
     }
 
     private fun initViews() {
