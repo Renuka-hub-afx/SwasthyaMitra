@@ -147,10 +147,6 @@ class ProfileActivity : AppCompatActivity() {
                 if (currentUser != null) {
                     userEmailText.text = currentUser.email ?: "No email"
 
-<<<<<<< HEAD
-                    // Load user data from Firestore
-                    FirebaseFirestore.getInstance("renu").collection("users")
-=======
                     // Load user data from SharedPreferences first (offline/immediate)
                     val localAge = sharedPrefs.getInt("age", -1)
                     val localGender = sharedPrefs.getString("gender", null)
@@ -172,8 +168,7 @@ class ProfileActivity : AppCompatActivity() {
                     }
 
                     // Load user data from Firestore to keep it synced
-                    FirebaseFirestore.getInstance().collection("users")
->>>>>>> 6ffaca4e2ad6389aaa534c619ac478ecfe33809c
+                    FirebaseFirestore.getInstance("renu").collection("users")
                         .document(userId)
                         .get()
                         .addOnSuccessListener { document ->
