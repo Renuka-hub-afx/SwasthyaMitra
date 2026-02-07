@@ -39,6 +39,23 @@ class SmartPantryActivity : AppCompatActivity() {
     }
 
     private fun setupUI() {
+        // Navigation Logic
+        binding.menuHome.setOnClickListener {
+            // Return to Homepage
+            finish()
+        }
+        
+        binding.menuDashboard.setOnClickListener {
+            // Already on a feature, maybe go to logs? For now, just finish to home
+            finish()
+        }
+        
+        binding.menuProfile.setOnClickListener {
+            // Navigate to Profile
+             val intent = Intent(this, UserInfoActivity::class.java)
+             startActivity(intent)
+        }
+
         binding.btnTakePhoto.setOnClickListener {
             if (checkCameraPermission()) {
                 openCamera()
@@ -101,13 +118,65 @@ class SmartPantryActivity : AppCompatActivity() {
             instructionsText.append("${index + 1}. $step\n")
         }
         binding.tvInstructions.text = instructionsText.toString()
+
+        // Set up Log Button
+        binding.btnLogRecipe.setOnClickListener {
+            logRecipeToDiary(recipe)
+        }
         
         // Scroll to bottom to show result
         binding.root.post {
-            // If the parent is a NestedScrollView, strict scrolling might vary, 
-            // but usually specific view focus works.
             binding.cardRecipeResult.requestFocus()
         }
+    }
+
+    private fun logRecipeToDiary(recipe: AIPantryService.RecipeResult) {
+        val authHelper = com.example.swasthyamitra.auth.FirebaseAuthHelper(this)
+        val user = authHelper.getCurrentUser()
+        
+        if (user == null) {
+            Toast.makeText(this, "Please verify you are logged in", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        binding.btnLogRecipe.isEnabled = false
+        binding.btnLogRecipe.text = "Logging... ⏳"
+
+        val foodLog = hashMapOf(
+            "userId" to user.uid,
+            "foodName" to recipe.title,
+            "calories" to recipe.calories,
+            "protein" to recipe.protein,
+            "carbs" to recipe.carbs,
+            "fat" to recipe.fat,
+            "timestamp" to System.currentTimeMillis(),
+            "date" to java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault()).format(java.util.Date())
+        )
+
+        com.google.firebase.firestore.FirebaseFirestore.getInstance("renu")
+            .collection("foodLogs")
+            .add(foodLog)
+            .addOnSuccessListener {
+                Toast.makeText(this, "Logged to Diary! ✅", Toast.LENGTH_SHORT).show()
+                binding.btnLogRecipe.text = "Logged ✅"
+                
+                // Optional: Update completion history for engagement
+                updateCompletionHistory(user.uid)
+                
+                // Return to home after delay
+                binding.root.postDelayed({ finish() }, 1500)
+            }
+            .addOnFailureListener { e ->
+                binding.btnLogRecipe.isEnabled = true
+                binding.btnLogRecipe.text = "Log to My Diary 📖"
+                Toast.makeText(this, "Failed to log: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+    }
+
+    private fun updateCompletionHistory(userId: String) {
+        val today = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault()).format(java.util.Date())
+        // Just a simple touch to realtime DB to signify activity if needed, 
+        // or we rely on the foodLog existence for other stats.
     }
 
     // --- Camera & Gallery Logic ---
@@ -164,6 +233,7 @@ class SmartPantryActivity : AppCompatActivity() {
     private fun setBitmap(bitmap: Bitmap) {
         selectedBitmap = bitmap
         binding.ivPantryPreview.setImageBitmap(bitmap)
+        binding.ivPantryPreview.imageTintList = null // Clear tint so photo is visible
         binding.ivPantryPreview.setPadding(0, 0, 0, 0) // Remove padding to confirm full image
         binding.tvPlaceholderHint.visibility = View.GONE
         binding.btnGenerateRecipe.isEnabled = true

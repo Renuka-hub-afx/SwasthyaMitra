@@ -30,6 +30,9 @@ class AIPantryService private constructor(private val context: Context) {
     data class RecipeResult(
         val title: String,
         val calories: Int,
+        val protein: Int,
+        val carbs: Int,
+        val fat: Int,
         val ingredientsDetected: List<String>,
         val instructions: List<String>,
         val reason: String
@@ -43,12 +46,14 @@ class AIPantryService private constructor(private val context: Context) {
                 Look at this image of ingredients.
                 1. Identify the healthy ingredients available.
                 2. Suggest ONE healthy, home-cooked Indian recipe using these ingredients.
-                3. Provide estimated calories per serving.
                 
                 Strictly return JSON format:
                 {
                   "title": "Recipe Name",
                   "calories": 300,
+                  "protein": 15, // grams
+                  "carbs": 40, // grams
+                  "fat": 10, // grams
                   "ingredientsDetected": ["Item 1", "Item 2"],
                   "instructions": ["Step 1", "Step 2", "Step 3"],
                   "reason": "Why this is healthy and uses the ingredients well"
@@ -76,6 +81,9 @@ class AIPantryService private constructor(private val context: Context) {
             val result = RecipeResult(
                 title = json.getString("title"),
                 calories = json.optInt("calories", 0),
+                protein = json.optInt("protein", 0),
+                carbs = json.optInt("carbs", 0),
+                fat = json.optInt("fat", 0),
                 ingredientsDetected = mutableListOf<String>().apply {
                     val arr = json.getJSONArray("ingredientsDetected")
                     for (i in 0 until arr.length()) add(arr.getString(i))

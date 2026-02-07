@@ -1,0 +1,29 @@
+ {
+  "project_info": {
+    "project_number": "625041977542",
+    "project_id": "swasthyamitra-ded44",
+    "storage_bucket": "swasthyamitra-ded44.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:625041977542:android:4ae9d96492a403df0c27c7",
+        "android_client_info": {
+          "package_name": "com.example.swasthyamitra"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBe9olQt-IrE7cQk1G7JFaC60Md9RTNJ20"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

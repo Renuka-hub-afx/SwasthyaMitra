@@ -573,10 +573,10 @@ class homepage : AppCompatActivity() {
                 val currentHour = calendar.get(java.util.Calendar.HOUR_OF_DAY)
                 
                 val isTimeMatch = when(preferredTime) {
-                    "Morning" -> currentHour in 5..11
+                    "Morning" -> currentHour in 4..11
                     "Afternoon" -> currentHour in 12..16
                     "Evening" -> currentHour in 17..20
-                    "Night" -> currentHour in 21..23 || currentHour in 0..4
+                    "Night" -> currentHour in 21..23 || currentHour in 0..3
                     else -> true
                 }
 
