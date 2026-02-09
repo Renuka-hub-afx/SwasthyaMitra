@@ -670,7 +670,7 @@ class AIDietPlanService private constructor(private val context: Context) {
         }
         
         val allSamples = mutableListOf<String>()
-        val files = listOf("food_data.csv", "foods (1).csv", "Indian_Food_DF (2).csv")
+        val files = listOf("food_data.csv", "foods (1).csv", "Indian_Food_DF (2).csv", "newfood.csv")
         
         files.forEach { fileName ->
             val cached = foodCache?.get(fileName) ?: emptyList()
@@ -845,7 +845,7 @@ class AIDietPlanService private constructor(private val context: Context) {
 
     private fun preloadFoodCache() {
         val cache = mutableMapOf<String, List<String>>()
-        val files = listOf("food_data.csv", "foods (1).csv", "Indian_Food_DF (2).csv")
+        val files = listOf("food_data.csv", "foods (1).csv", "Indian_Food_DF (2).csv", "newfood.csv")
         
         files.forEach { fileName ->
             try {

@@ -37,6 +37,7 @@ class AIExerciseRecommendationService private constructor(private val context: C
         val equipment: String,
         val instructions: List<String>,
         val reason: String,
+        val benefits: String = "", // Added: Personalized benefits explanation
         val gifUrl: String = "",
         val ageExplanation: String = "",
         val genderNote: String = "",
@@ -44,170 +45,364 @@ class AIExerciseRecommendationService private constructor(private val context: C
         val estimatedCalories: Int = 0,
         val recommendedDuration: String = "15 mins"
     )
+    
+    // Cache for exercise name -> GIF path mapping
+    private var exerciseGifMap: Map<String, String> = emptyMap()
 
-    suspend fun getExerciseRecommendation(stepCalories: Int = 0): Result<ExerciseRec> = withContext(Dispatchers.IO) {
+
+    private data class ExerciseData(
+        val name: String,
+        val type: String, // "json" or "folder"
+        val path: String, // json gif path or folder path
+        val details: String // instructions or "Yoga Pose"
+    )
+
+    /**
+     * Load exercises based on user gender:
+     * - Male: Gym exercises from exercisedb_v1_sample
+     * - Female: Yoga poses from exercise 2
+     * - Other/Unknown: Mix of both
+     */
+    private suspend fun loadCombinedExercises(gender: String): List<ExerciseData> = withContext(Dispatchers.IO) {
+        val exercises = mutableListOf<ExerciseData>()
+        val gifMap = mutableMapOf<String, String>()
+        val isMale = gender.equals("Male", ignoreCase = true)
+        val isFemale = gender.equals("Female", ignoreCase = true)
+        
         try {
-            val user = authHelper.getCurrentUser() ?: return@withContext Result.failure(Exception("User not logged in"))
-            val userId = user.uid
+            // 1. Load GYM exercises for MALE or UNSPECIFIED users
+            if (isMale || (!isMale && !isFemale)) {
+                val jsonString = context.assets.open("exercisedb_v1_sample/exercises.json").bufferedReader().use { it.readText() }
+                val jsonArray = org.json.JSONArray(jsonString)
+                
+                for (i in 0 until jsonArray.length()) {
+                    val obj = jsonArray.getJSONObject(i)
+                    val name = obj.optString("name")
+                    val gifPath = "exercisedb_v1_sample/gifs_360x360/" + obj.optString("gifUrl")
+                    exercises.add(ExerciseData(
+                        name = name,
+                        type = "json",
+                        path = gifPath,
+                        details = "Target: ${obj.optString("target")}, BodyPart: ${obj.optString("bodyPart")}"
+                    ))
+                    gifMap[name.lowercase()] = gifPath
+                }
+            }
 
-            // 1. Fetch User Data
-            val profile = authHelper.getUserData(userId).getOrThrow()
-            val goal = authHelper.getUserGoal(userId).getOrThrow()
-            val caloriesResult = authHelper.getTodayCalories(userId)
-            val foodLogs = authHelper.getTodayFoodLogs(userId).getOrNull() ?: emptyList()
+            // 2. Load YOGA poses for FEMALE or UNSPECIFIED users
+            if (isFemale || (!isMale && !isFemale)) {
+                val yogaPoses = context.assets.list("exercise 2") ?: emptyArray()
+                for (pose in yogaPoses) {
+                    val files = context.assets.list("exercise 2/$pose") ?: emptyArray()
+                    val imageFile = files.firstOrNull { it.endsWith(".png") || it.endsWith(".jpg") || it.endsWith(".gif") }
+                    if (imageFile != null) {
+                        val imagePath = "exercise 2/$pose/$imageFile"
+                        exercises.add(ExerciseData(
+                            name = pose,
+                            type = "folder",
+                            path = imagePath,
+                            details = "Yoga Pose / Stretching"
+                        ))
+                        gifMap[pose.lowercase()] = imagePath
+                    }
+                }
+            }
+            
+            // 3. Load exercise types from exercise3.csv (for ALL users)
+            try {
+                val csvStream = context.assets.open("exercise3.csv")
+                val csvReader = java.io.BufferedReader(java.io.InputStreamReader(csvStream))
+                val uniqueExercises = mutableMapOf<String, Pair<Int, Int>>() // name -> (avgDuration, avgCalories)
+                
+                csvReader.readLine() // Skip header
+                csvReader.forEachLine { line ->
+                    val parts = line.split(",")
+                    if (parts.size >= 5) {
+                        val exerciseType = parts[2].trim()
+                        val duration = parts[3].toIntOrNull() ?: 0
+                        val calories = parts[4].toIntOrNull() ?: 0
+                        
+                        if (exerciseType.isNotEmpty()) {
+                            val existing = uniqueExercises[exerciseType]
+                            if (existing == null) {
+                                uniqueExercises[exerciseType] = Pair(duration, calories)
+                            } else {
+                                // Average the values
+                                uniqueExercises[exerciseType] = Pair(
+                                    (existing.first + duration) / 2,
+                                    (existing.second + calories) / 2
+                                )
+                            }
+                        }
+                    }
+                }
+                csvReader.close()
+                
+                // Add unique exercise types from CSV (no images for these)
+                for ((exerciseName, stats) in uniqueExercises) {
+                    // Skip if already exists from JSON or folder sources
+                    if (!gifMap.containsKey(exerciseName.lowercase())) {
+                        exercises.add(ExerciseData(
+                            name = exerciseName,
+                            type = "csv",
+                            path = "", // No image available
+                            details = "General Exercise (~${stats.first} mins, ~${stats.second} kcal)"
+                        ))
+                    }
+                }
+                Log.d(TAG, "Loaded ${uniqueExercises.size} unique exercises from CSV")
+            } catch (e: Exception) {
+                Log.e(TAG, "Error loading exercise3.csv: ${e.message}")
+            }
+            
+            // Update the class-level map
+            exerciseGifMap = gifMap
+            
+        } catch (e: Exception) {
+            Log.e(TAG, "Error loading exercises", e)
+        }
+        
+        exercises
+    }
 
-            val age = (profile["age"] as? Number)?.toInt() ?: 25
-            val gender = profile["gender"] as? String ?: "Unknown"
-            val goalType = goal["goalType"] as? String ?: "General Fitness"
-            val consumed = caloriesResult.getOrDefault(0)
-            val targetCalories = (goal["dailyCalories"] as? Number)?.toInt() ?: 2000
-            val workoutTimeLimit = profile["availableExerciseTime"] as? String ?: "30m"
-            val preferredTime = profile["preferredExerciseTime"] as? String ?: "Anytime"
-            val isOnPeriod = profile["isOnPeriod"] as? Boolean ?: false
+    suspend fun getExerciseRecommendation(
+        mood: String = "Neutral", 
+        stepCalories: Int = 0
+    ): Result<List<ExerciseRec>> = withContext(Dispatchers.IO) {
+        try {
+            val userId = authHelper.getCurrentUser()?.uid ?: return@withContext Result.failure(Exception("No user logged in"))
+            val userData = authHelper.getUserData(userId).getOrNull() ?: emptyMap()
+            val userGoal = authHelper.getUserGoal(userId).getOrNull() ?: emptyMap()
+
+            // Safe data extraction - get gender FIRST to filter exercises
+            val gender = userData["gender"] as? String ?: "Not specified"
+            val age = (userData["age"] as? String)?.toIntOrNull() ?: (userData["age"] as? Long)?.toInt() ?: 25
+            val weight = (userData["weight"] as? String)?.toDoubleOrNull() ?: (userData["weight"] as? Double) ?: 70.0
             
-            val totalProtein = foodLogs.sumOf { it.protein }
-            val totalCarbs = foodLogs.sumOf { it.carbs }
-            val totalFat = foodLogs.sumOf { it.fat }
+            // Load exercises filtered by gender
+            val allExercises = loadCombinedExercises(gender)
+            // ONLY include exercises that HAVE IMAGES (non-empty path)
+            val availableExercises = allExercises.filter { it.path.isNotEmpty() }
+            val simplifiedList = availableExercises.joinToString("\n") { "- ${it.name} (${it.details})" }
+            val goalType = userGoal["goalType"] as? String ?: "General Fitness"
+            val isOnPeriod = userData["isOnPeriod"] as? Boolean ?: false
             
-            // Get current time of day
-            val hour = java.util.Calendar.getInstance().get(java.util.Calendar.HOUR_OF_DAY)
+            // Get current time
+            val calendar = java.util.Calendar.getInstance()
+            val hour = calendar.get(java.util.Calendar.HOUR_OF_DAY)
             val timeOfDay = when (hour) {
                 in 5..11 -> "Morning"
                 in 12..16 -> "Afternoon"
-                in 17..21 -> "Evening"
+                in 17..22 -> "Evening"
                 else -> "Night"
             }
 
-            // 2. Load Exercises from Assets with Smart Filtering
-            val exerciseSample = loadSmartExerciseSample(gender, age, isOnPeriod, 15)
+            // Consumption Status
+            val foodLogs = authHelper.getTodayFoodLogs(userId).getOrNull() ?: emptyList()
+            val consumed = foodLogs.sumOf { it.calories }
+            val targetCalories = (userGoal["dailyCalories"] as? Number)?.toInt() ?: 2000
+            
+            // Time constraints
+            val workoutTimeLimit = "15 mins" // Fixed per exercise for a session flow
 
-            // 3. Construct Prompt with Motivational Support
-            val periodConstraint = if (isOnPeriod) {
-                """
-                **PERIOD MODE - MOTIVATIONAL SUPPORT:**
-                The user is on her period. Be extra encouraging and supportive!
-                - RECOMMEND: Gentle yoga, stretching, breathing exercises, light walking
-                - FOCUS: Exercises that ease cramps, boost mood, and improve circulation
-                - TONE: Warm, empathetic, and motivating (e.g., "You're doing great by listening to your body!")
-                - BENEFITS: Explain how the exercise helps with period symptoms
-                - Include a motivationalMessage field with encouraging words
-                """
-            } else ""
+            var periodConstraint = ""
+            if (isOnPeriod) {
+                periodConstraint = """
+                    CRITICAL: User is currently on their period.
+                    - STRICTLY FORBIDDEN: High intensity, jumping, heavy lifting, crunches, or inversions.
+                    - REQUIRED: Gentle stretching, yoga, walking, or light movements.
+                    - Focus on pain relief (cramps) and mood boosting.
+                """.trimIndent()
+            }
 
             val promptText = """
                 You are a friendly Sports Scientist for the SwasthyaMitra app.
                 $periodConstraint
-                
+
                 **USER CONTEXT:**
+                - Mood: $mood
                 - Age: $age years old
                 - Gender: $gender
+                - Weight: $weight kg
                 - Current Goal: $goalType
                 - Period Status: ${if (isOnPeriod) "ON PERIOD 🌸" else "Normal"}
                 - Current Time: $timeOfDay
-                - Available Time: $workoutTimeLimit
-                
+                - Session Target: 3 Exercises (~45 mins total)
+
                 **METABOLIC STATUS:**
                 - Consumed: $consumed / $targetCalories kcal
                 - Burned (Steps): $stepCalories kcal
-                
+
                 **TASK:**
-                Recommend exactly ONE exercise from the provided list that best fits the user's current context.
+                Create a balanced workout session consisting of exactly **3 DISTINCT exercises**.
+                ⚠️ CRITICAL: You MUST choose ONLY from the "Available Exercises" list below.
+                ⚠️ Use the EXACT exercise name as written - DO NOT invent new names like "Push-ups" or "Squats".
+                ⚠️ Only choose exercises that appear in the list below.
                 
-                **GENDER-SPECIFIC GUIDANCE:**
-                ${if (gender.equals("Female", ignoreCase = true)) """
-                - For females: Focus on exercises that support pelvic floor strength, core stability, and overall wellness
-                - Consider hormonal cycle impact on energy and recovery
-                - Emphasize functional strength for daily activities
-                """ else """
-                - For males: Focus on building strength, power, and athletic performance
-                - Emphasize progressive overload and muscle building
-                - Include compound movements for maximum efficiency
-                """}
-                
-                **AGE-SPECIFIC GUIDANCE:**
-                ${when {
-                    age < 18 -> "Young athlete: Focus on bodyweight exercises, proper form, and building foundation. Avoid heavy weights."
-                    age in 18..50 -> "Prime years: Perfect time for building strength and muscle. Can handle moderate to high intensity."
-                    else -> "Mature fitness: Prioritize low-impact exercises, joint health, and maintaining mobility. Focus on controlled movements."
-                }}
-                
+                The sequence should be logical (e.g., Warmup -> Main -> Cool-down OR Upper -> Lower -> Core).
+                Each exercise should be ~15 minutes.
+
+                **MOOD GUIDANCE:**
+                - Sad/Depressed: Gentle, rhythmic items.
+                - Stressed/Anxious: Calming, focus-based items.
+                - Angry/Frustrated: Higher intensity.
+                - Happy/Energetic: Challenging items.
+                - Tired: Restorative.
+
                 **LOGIC RULES:**
                 ${if (isOnPeriod) """
-                1. COMFORT: Choose exercises that feel good and don't cause discomfort
+                1. COMFORT: Choose 3 exercises that feel good and don't cause discomfort
                 2. BENEFITS: Prioritize movements that ease cramps and boost mood
-                3. GENTLE: Stick to low-intensity, restorative activities
-                4. MOTIVATION: Be extra encouraging and supportive!
+                3. GENTLE: Stick to low-intensity
                 """ else """
-                1. DURATION: Must fit within $workoutTimeLimit
-                2. NUTRITION: High Carbs → Cardio/HIIT. High Protein → Strength training
-                3. INTENSITY: Match to current energy levels and goals
-                4. PROGRESSION: Challenge appropriately for age and fitness level
+                1. DURATION: Each must be ~15 mins.
+                2. MATCH MOOD: Ensure the intensity matches $mood.
+                3. VARIETY: Do not repeat the same exercise type 3 times.
                 """}
-                
-                Available Exercises (JSON):
-                $exerciseSample
-                
-                **STRICT OUTPUT FORMAT (JSON ONLY):**
-                {
-                  "name": "Exercise Name",
-                  "targetMuscle": "...",
-                  "bodyPart": "...",
-                  "equipment": "...",
-                  "instructions": ["Step 1", "Step 2"],
-                  "reason": "Explain why this exercise is perfect for their current situation",
-                  "gifUrl": "path/to/exercise.gif",
-                  "ageExplanation": "Why this exercise is great for age $age",
-                  "genderNote": "Gender-specific benefits for $gender",
-                  "motivationalMessage": "${if (isOnPeriod) "Encouraging message for period mode" else ""}",
-                  "estimatedCalories": 150,
-                  "recommendedDuration": "$workoutTimeLimit"
-                }
+
+                📋 **Available Exercises (MUST choose from this list ONLY):**
+                $simplifiedList
+
+                **STRICT OUTPUT FORMAT (JSON ARRAY ONLY):**
+                [
+                    {
+                      "name": "EXACT name from Available Exercises list above",
+                      "targetMuscle": "...",
+                      "bodyPart": "...",
+                      "equipment": "...",
+                      "instructions": ["Step 1", "Step 2"],
+                      "reason": "Briefly why this fits the sequence.",
+                      "benefits": "Explain specific benefits for a $age-year-old $gender weighing $weight kg with goal '$goalType' and mood '$mood'. If on period, explain how it helps cramps/mood.",
+                      "ageExplanation": "Safety note for age $age",
+                      "genderNote": "Benefit for $gender",
+                      "motivationalMessage": "Short encouraging text.",
+                      "estimatedCalories": 120,
+                      "recommendedDuration": "15 mins"
+                    },
+                    ... (Total 3 items)
+                ]
             """.trimIndent()
 
-            // 4. Call Gemini 2.0
             val config = generationConfig {
-                temperature = 0.4f
+                temperature = 0.5f // Slightly higher for variety
                 responseMimeType = "application/json"
             }
             val generativeModel = Firebase.ai(backend = GenerativeBackend.googleAI())
                 .generativeModel("gemini-2.0-flash", generationConfig = config)
             
             val response = try {
-                kotlinx.coroutines.withTimeout(30000) { // 30s timeout
+                kotlinx.coroutines.withTimeout(45000) { // 45s timeout for longer gen
                     generativeModel.generateContent(promptText)
                 }
             } catch (e: Exception) {
-                throw Exception("Coach is busy thinking. Please try again.")
+                throw Exception("Coach is busy planning your session. Please try again.")
             }
             
             val jsonStr = response.text ?: throw Exception("AI response empty")
             val cleanJson = jsonStr.trim().removeSurrounding("```json", "```").trim()
             
-            val json = JSONObject(cleanJson)
-            val result = ExerciseRec(
-                name = json.getString("name"),
-                targetMuscle = json.getString("targetMuscle"),
-                bodyPart = json.getString("bodyPart"),
-                equipment = json.getString("equipment"),
-                instructions = mutableListOf<String>().apply {
-                    val arr = json.getJSONArray("instructions")
-                    for (i in 0 until arr.length()) add(arr.getString(i))
-                },
-                reason = json.getString("reason"),
-                gifUrl = json.optString("gifUrl", ""),
-                ageExplanation = json.optString("ageExplanation", ""),
-                genderNote = json.optString("genderNote", ""),
-                motivationalMessage = json.optString("motivationalMessage", ""),
-                estimatedCalories = json.optInt("estimatedCalories", 100),
-                recommendedDuration = json.optString("recommendedDuration", "15 mins")
-            )
+            val results = mutableListOf<ExerciseRec>()
+            
+            try {
+                // Try parsing as Array first
+                val jsonArray = JSONArray(cleanJson)
+                for (i in 0 until jsonArray.length()) {
+                    val json = jsonArray.getJSONObject(i)
+                    results.add(parseExerciseJson(json))
+                }
+            } catch (e: Exception) {
+                // Fallback: Try parsing single object if AI messed up and make it a list of 1
+                try {
+                    val json = JSONObject(cleanJson)
+                    results.add(parseExerciseJson(json))
+                } catch (e2: Exception) {
+                    throw e // Re-throw original array error or a new one
+                }
+            }
+            
+            // ENSURE AT LEAST 3 EXERCISES - fill with fallback if needed
+            if (results.size < 3 && availableExercises.isNotEmpty()) {
+                val fallbackExercises = availableExercises.shuffled()
+                var index = 0
+                while (results.size < 3 && index < fallbackExercises.size) {
+                    val fallback = fallbackExercises[index]
+                    // Avoid duplicates
+                    if (results.none { it.name.equals(fallback.name, ignoreCase = true) }) {
+                        results.add(ExerciseRec(
+                            name = fallback.name,
+                            targetMuscle = "Full Body",
+                            bodyPart = "Multiple",
+                            equipment = "body weight",
+                            instructions = listOf("Follow the demonstration", "Maintain proper form", "Breathe steadily"),
+                            reason = "Great exercise for your fitness goals!",
+                            benefits = "Helps improve strength, flexibility, and overall fitness for a ${age}-year-old ${gender}.",
+                            gifUrl = fallback.path,
+                            ageExplanation = "Suitable for age $age with proper form",
+                            genderNote = "Beneficial for $gender",
+                            motivationalMessage = "You've got this! 💪",
+                            estimatedCalories = 100,
+                            recommendedDuration = "15 mins"
+                        ))
+                    }
+                    index++
+                }
+                Log.d(TAG, "Added ${3 - results.size + (3 - results.size)} fallback exercises to reach 3")
+            }
 
-            Result.success(result)
+            Result.success(results)
 
         } catch (e: Exception) {
             Log.e(TAG, "Error: ${e.message}", e)
             Result.failure(e)
         }
+    }
+
+    private fun parseExerciseJson(json: JSONObject): ExerciseRec {
+        val name = json.getString("name")
+        
+        // Smart GIF lookup with multiple strategies:
+        // 1. Try exact match (case-insensitive)
+        // 2. Try name without parentheses (e.g., "Cat (Yoga Pose)" -> "Cat")
+        // 3. Try partial match (if name contains a key from the map)
+        val nameLower = name.lowercase()
+        var resolvedGifUrl = exerciseGifMap[nameLower] ?: ""
+        
+        if (resolvedGifUrl.isEmpty()) {
+            // Strategy 2: Remove parenthetical suffix
+            val nameWithoutParens = name.substringBefore("(").trim().lowercase()
+            resolvedGifUrl = exerciseGifMap[nameWithoutParens] ?: ""
+        }
+        
+        if (resolvedGifUrl.isEmpty()) {
+            // Strategy 3: Check if any key is contained in the name
+            for ((key, path) in exerciseGifMap) {
+                if (nameLower.contains(key) || key.contains(nameLower.substringBefore("(").trim())) {
+                    resolvedGifUrl = path
+                    break
+                }
+            }
+        }
+        
+        Log.d(TAG, "Resolved GIF for '$name' -> '$resolvedGifUrl'")
+        
+        return ExerciseRec(
+            name = name,
+            targetMuscle = json.optString("targetMuscle", ""),
+            bodyPart = json.optString("bodyPart", ""),
+            equipment = json.optString("equipment", "body weight"),
+            instructions = mutableListOf<String>().apply {
+                val arr = json.optJSONArray("instructions") ?: JSONArray()
+                for (i in 0 until arr.length()) add(arr.getString(i))
+            },
+            reason = json.optString("reason", ""),
+            benefits = json.optString("benefits", "Great for your overall health!"),
+            gifUrl = resolvedGifUrl, // Use the looked-up path, not AI response
+            ageExplanation = json.optString("ageExplanation", ""),
+            genderNote = json.optString("genderNote", ""),
+            motivationalMessage = json.optString("motivationalMessage", ""),
+            estimatedCalories = json.optInt("estimatedCalories", 100),
+            recommendedDuration = json.optString("recommendedDuration", "15 mins")
+        )
     }
 
     private fun loadSmartExerciseSample(gender: String, age: Int, isOnPeriod: Boolean, limit: Int): String {
@@ -305,4 +500,5 @@ class AIExerciseRecommendationService private constructor(private val context: C
             "[]"
         }
     }
+
 }

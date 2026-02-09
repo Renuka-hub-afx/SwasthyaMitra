@@ -585,8 +585,8 @@ class homepage : AppCompatActivity() {
                 val total = totalResult.getOrDefault(0)
                 val goal = goalResult.getOrDefault(2500)
                 
-                // Format: "1250 / 2500 ml"
-                 tvWaterTotal.text = "$total / $goal ml"
+                // Format: Just show total to match "Big Value" design of Steps/Workouts
+                 tvWaterTotal.text = "$total ml"
             } else {
                  tvWaterTotal.text = "0 ml"
             }
@@ -716,76 +716,90 @@ class homepage : AppCompatActivity() {
                 }
 
                 val service = com.example.swasthyamitra.ai.AIExerciseRecommendationService.getInstance(this@homepage)
-                val result = service.getExerciseRecommendation(burnedFromSteps)
+                val result = service.getExerciseRecommendation(stepCalories = burnedFromSteps)
                 
-                result.onSuccess { rec ->
-                    currentRecommendedExercise = rec
-
-                    // Save recommendation for stickiness
-                    val exerciseMap = hashMapOf(
-                        "name" to rec.name,
-                        "targetMuscle" to rec.targetMuscle,
-                        "bodyPart" to rec.bodyPart,
-                        "equipment" to rec.equipment,
-                        "instructions" to rec.instructions,
-                        "reason" to rec.reason,
-                        "estimatedCalories" to rec.estimatedCalories,
-                        "recommendedDuration" to rec.recommendedDuration
-                    )
+                result.onSuccess { recList ->
+                    // Just take the first one for Homepage "Quick Goal"
+                    val rec = recList.firstOrNull()
                     
-                    firestore.collection("users").document(userId)
-                        .update("currentDailyExercise", exerciseMap, "lastExerciseDate", today)
-                        .await()
-
-                    runOnUiThread {
-                        tvRecExerciseName.text = rec.name
-                        tvRecTargetMuscle.text = "Target: ${rec.targetMuscle}"
-                        tvRecReason.text = rec.reason
-                        tvExerciseCalories.text = "🔥 ~${rec.estimatedCalories} kcal"
-                        tvExerciseDuration.text = "⏱️ ${rec.recommendedDuration}"
+                    if (rec != null) {
+                        currentRecommendedExercise = rec
+    
+                        // Save recommendation for stickiness (just saving the first one)
+                        val exerciseMap = hashMapOf(
+                            "name" to rec.name,
+                            "targetMuscle" to rec.targetMuscle,
+                            "bodyPart" to rec.bodyPart,
+                            "equipment" to rec.equipment,
+                            "instructions" to rec.instructions,
+                            "reason" to rec.reason,
+                            "benefits" to rec.benefits, // Save benefits
+                            "estimatedCalories" to rec.estimatedCalories,
+                            "recommendedDuration" to rec.recommendedDuration
+                        )
                         
-                        // Display GIF if available
-                        if (rec.gifUrl.isNotEmpty()) {
-                            try {
-                                com.bumptech.glide.Glide.with(this@homepage)
-                                    .load("file:///android_asset/${rec.gifUrl}")
-                                    .into(ivExerciseGif)
-                                ivExerciseGif.visibility = android.view.View.VISIBLE
-                            } catch (e: Exception) {
-                                Log.e("Homepage", "Error loading GIF: ${e.message}")
+                        firestore.collection("users").document(userId)
+                            .update("currentDailyExercise", exerciseMap, "lastExerciseDate", today)
+                            .await()
+    
+                        runOnUiThread {
+                            tvRecExerciseName.text = rec.name
+                            tvRecTargetMuscle.text = "Target: ${rec.targetMuscle}"
+                            
+                            // Richer text for Homepage too
+                            tvRecReason.text = "${rec.reason}\n\n💡 Benefit: ${rec.benefits}"
+                            
+                            tvExerciseCalories.text = "🔥 ~${rec.estimatedCalories} kcal"
+                            tvExerciseDuration.text = "⏱️ ${rec.recommendedDuration}"
+                            
+                            // Display GIF if available
+                            if (rec.gifUrl.isNotEmpty()) {
+                                try {
+                                    com.bumptech.glide.Glide.with(this@homepage)
+                                        .load("file:///android_asset/${rec.gifUrl}")
+                                        .into(ivExerciseGif)
+                                    ivExerciseGif.visibility = android.view.View.VISIBLE
+                                } catch (e: Exception) {
+                                    Log.e("Homepage", "Error loading GIF: ${e.message}")
+                                    ivExerciseGif.visibility = android.view.View.GONE
+                                }
+                            } else {
                                 ivExerciseGif.visibility = android.view.View.GONE
                             }
-                        } else {
-                            ivExerciseGif.visibility = android.view.View.GONE
+                            
+                            // Display age explanation
+                            if (rec.ageExplanation.isNotEmpty()) {
+                                tvAgeExplanation.text = "💡 Age ${profile["age"]}: ${rec.ageExplanation}"
+                                tvAgeExplanation.visibility = android.view.View.VISIBLE
+                            } else {
+                                tvAgeExplanation.visibility = android.view.View.GONE
+                            }
+                            
+                            // Display gender-specific benefits
+                            if (rec.genderNote.isNotEmpty()) {
+                                tvGenderNote.text = "✨ ${rec.genderNote}"
+                                tvGenderNote.visibility = android.view.View.VISIBLE
+                            } else {
+                                tvGenderNote.visibility = android.view.View.GONE
+                            }
+                            
+                            // Display motivational message (Period Mode)
+                            if (rec.motivationalMessage.isNotEmpty()) {
+                                tvMotivationalMessage.text = rec.motivationalMessage
+                                tvMotivationalMessage.visibility = android.view.View.VISIBLE
+                            } else {
+                                tvMotivationalMessage.visibility = android.view.View.GONE
+                            }
+                            
+                            cardAiExercise.visibility = View.VISIBLE
+                            btnRegenerateExercise.isEnabled = true
                         }
-                        
-                        // Display age explanation
-                        if (rec.ageExplanation.isNotEmpty()) {
-                            tvAgeExplanation.text = "💡 Age ${profile["age"]}: ${rec.ageExplanation}"
-                            tvAgeExplanation.visibility = android.view.View.VISIBLE
-                        } else {
-                            tvAgeExplanation.visibility = android.view.View.GONE
+                    } else {
+                         runOnUiThread {
+                            cardAiExercise.visibility = View.GONE
                         }
-                        
-                        // Display gender-specific benefits
-                        if (rec.genderNote.isNotEmpty()) {
-                            tvGenderNote.text = "✨ ${rec.genderNote}"
-                            tvGenderNote.visibility = android.view.View.VISIBLE
-                        } else {
-                            tvGenderNote.visibility = android.view.View.GONE
-                        }
-                        
-                        // Display motivational message (Period Mode)
-                        if (rec.motivationalMessage.isNotEmpty()) {
-                            tvMotivationalMessage.text = rec.motivationalMessage
-                            tvMotivationalMessage.visibility = android.view.View.VISIBLE
-                        } else {
-                            tvMotivationalMessage.visibility = android.view.View.GONE
-                        }
-                        
-                        cardAiExercise.visibility = View.VISIBLE
-                        btnRegenerateExercise.isEnabled = true
                     }
+
                 }.onFailure {
                     currentRecommendedExercise = null
                     runOnUiThread {

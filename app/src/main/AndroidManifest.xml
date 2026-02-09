@@ -168,7 +168,7 @@
 
         <activity
             android:name=".BadgesActivity"
-            android:exported="false"
+            android:exported="true"
             android:screenOrientation="portrait" />
 
         <activity

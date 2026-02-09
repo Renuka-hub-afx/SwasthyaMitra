@@ -115,8 +115,21 @@ service cloud.firestore {
         (request.resource == null || request.resource.data.userId == request.auth.uid);
     }
 
-    // User Preferences - users can only access their own preferences
+    // User Preferences
     match /user_preferences/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Fix for usage in WorkoutDashboardActivity (exercise_logs vs exerciseLogs)
+    match /exercise_logs/{logId} {
+      allow read: if request.auth != null;
+      allow write, delete: if request.auth != null && 
+        (resource == null || resource.data.userId == request.auth.uid) &&
+        (request.resource == null || request.resource.data.userId == request.auth.uid);
+    }
+    
+    // Fix for MoodRepository accessing subcollection
+    match /users/{userId}/mood_logs/{logId} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
     }
   }

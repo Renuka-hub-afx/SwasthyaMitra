@@ -11,7 +11,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.example.swasthyamitra.ai.AIMoodRecommendationService
+// import com.example.swasthyamitra.ai.AIMoodRecommendationService
 import com.example.swasthyamitra.auth.FirebaseAuthHelper
 import com.example.swasthyamitra.models.MoodData
 import com.example.swasthyamitra.repository.MoodRepository
@@ -33,7 +33,7 @@ class MoodRecommendationActivity : AppCompatActivity() {
 
     private lateinit var moodData: MoodData
     private lateinit var repo: MoodRepository
-    private lateinit var aiService: AIMoodRecommendationService
+    // private lateinit var aiService: AIMoodRecommendationService // Removed
     private lateinit var authHelper: FirebaseAuthHelper
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -41,7 +41,7 @@ class MoodRecommendationActivity : AppCompatActivity() {
         setContentView(R.layout.activity_mood_recommendation)
 
         repo = MoodRepository()
-        aiService = AIMoodRecommendationService(this)
+        // aiService = AIMoodRecommendationService(this) // Removed
         authHelper = FirebaseAuthHelper(this)
 
         val moodJson = intent.getStringExtra("MOOD_DATA")
@@ -105,35 +105,10 @@ class MoodRecommendationActivity : AppCompatActivity() {
     }
 
     private fun fetchRecommendations() {
-        lifecycleScope.launch {
-            try {
-                val userId = moodData.userId
-                val userProfileResult = authHelper.getUserData(userId)
-                val userGoalResult = authHelper.getUserGoal(userId)
-                
-                val profile = userProfileResult.getOrDefault(emptyMap()).toMutableMap()
-                val goal = userGoalResult.getOrDefault(emptyMap())
-                profile.putAll(goal)
-
-                val recResult = aiService.getMoodBasedRecommendations(moodData, profile)
-                
-                recResult.onSuccess { recs ->
-                    findViewById<LinearLayout>(R.id.layout_loading).visibility = View.GONE
-                    findViewById<LinearLayout>(R.id.layout_recommendations).visibility = View.VISIBLE
-                    
-                    findViewById<TextView>(R.id.tv_food_rec).text = recs.foodRecommendation
-                    findViewById<TextView>(R.id.tv_exercise_rec).text = recs.exerciseRecommendation
-                    findViewById<TextView>(R.id.tv_tip_rec).text = recs.wellnessTip
-                }.onFailure {
-                     findViewById<LinearLayout>(R.id.layout_loading).visibility = View.GONE
-                     Toast.makeText(this@MoodRecommendationActivity, "Could not generate AI recommendations", Toast.LENGTH_SHORT).show()
-                }
-
-            } catch (e: Exception) {
-                Log.e("MoodRec", "Error", e)
-                findViewById<LinearLayout>(R.id.layout_loading).visibility = View.GONE
-            }
-        }
+       // AI Recommendations have been moved to Workout Dashboard
+       // Hiding the section
+       findViewById<LinearLayout>(R.id.layout_loading).visibility = View.GONE
+       findViewById<LinearLayout>(R.id.layout_recommendations).visibility = View.GONE
     }
 
     private fun setupHistory() {

@@ -57,9 +57,7 @@ class ProgressActivity : AppCompatActivity() {
         tvHistoryEmpty = findViewById(R.id.tv_history_empty)
         rvHistory.layoutManager = LinearLayoutManager(this)
 
-        findViewById<androidx.appcompat.widget.Toolbar>(R.id.toolbar).apply {
-            setNavigationOnClickListener { finish() }
-        }
+        findViewById<View>(R.id.btnBack).setOnClickListener { finish() }
         
         findViewById<View>(R.id.viewDetailedReportButton)?.setOnClickListener { showChartsView() }
         
@@ -93,8 +91,8 @@ class ProgressActivity : AppCompatActivity() {
                     // Calculate Weekly Stats (Workouts & Calories Burned)
                     val (workouts, calories) = calculateWeeklyStats(data.workoutHistory)
                     
-                    weeklyWorkoutsText.text = "$workouts workouts"
-                    weeklyCaloriesText.text = "$calories kcal"
+                    weeklyWorkoutsText.text = "$workouts"
+                    weeklyCaloriesText.text = "$calories"
                 }
             }
 

@@ -1,0 +1,3501 @@
+Person_ID,Day,Exercise_Type,Duration_Minutes,Calories_Burned
+1,Monday,Strength Training,27,297
+1,Tuesday,Elliptical,55,440
+1,Wednesday,Walking,31,341
+1,Thursday,Boxing,46,414
+1,Friday,Spin Class,57,456
+1,Saturday,Tennis,82,656
+1,Sunday,Basketball,43,473
+2,Monday,Volleyball,63,693
+2,Tuesday,Deadlifts,39,390
+2,Wednesday,Leg Press,82,492
+2,Thursday,Leg Press,46,506
+2,Friday,Mountain Climbers,93,651
+2,Saturday,Sit-ups,29,319
+2,Sunday,Burpees,113,791
+3,Monday,Rowing,144,1584
+3,Tuesday,CrossFit,84,672
+3,Wednesday,Sprinting,117,1404
+3,Thursday,Elliptical,86,860
+3,Friday,Yoga,99,1089
+3,Saturday,Skating,146,1022
+3,Sunday,Battle Ropes,85,850
+4,Monday,Push-ups,32,256
+4,Tuesday,Jumping Jacks,22,198
+4,Wednesday,Strength Training,118,826
+4,Thursday,Strength Training,82,574
+4,Friday,Football,89,534
+4,Saturday,Yoga,20,240
+4,Sunday,Kickboxing,21,231
+5,Monday,Rugby,80,960
+5,Tuesday,Resistance Band Workout,130,910
+5,Wednesday,Skipping Rope,40,320
+5,Thursday,Walking,56,336
+5,Friday,Aerobics,136,1224
+5,Saturday,Battle Ropes,150,1350
+5,Sunday,Leg Press,47,423
+6,Monday,Tennis,52,364
+6,Tuesday,Squats,30,360
+6,Wednesday,Mountain Climbers,118,1180
+6,Thursday,Boxing,71,497
+6,Friday,Squats,53,424
+6,Saturday,Skipping Rope,133,1330
+6,Sunday,Table Tennis,71,639
+7,Monday,Pilates,87,1044
+7,Tuesday,Volleyball,28,252
+7,Wednesday,Kettlebell Workout,128,1024
+7,Thursday,Leg Press,88,792
+7,Friday,Basketball,118,1062
+7,Saturday,Strength Training,86,1032
+7,Sunday,Crunches,133,1064
+8,Monday,Lunges,36,288
+8,Tuesday,Bench Press,114,1368
+8,Wednesday,Lunges,71,568
+8,Thursday,Football,39,468
+8,Friday,HIIT,143,1001
+8,Saturday,Rock Climbing,65,780
+8,Sunday,Shoulder Press,133,1463
+9,Monday,Pull-ups,78,936
+9,Tuesday,Skipping Rope,58,406
+9,Wednesday,Core Training,106,1166
+9,Thursday,Leg Press,74,740
+9,Friday,Leg Press,147,1176
+9,Saturday,Skating,88,880
+9,Sunday,Kettlebell Workout,26,182
+10,Monday,Kickboxing,140,1260
+10,Tuesday,Elliptical,143,1144
+10,Wednesday,Bench Press,41,451
+10,Thursday,HIIT,54,324
+10,Friday,Handball,134,804
+10,Saturday,Elliptical,80,480
+10,Sunday,Hiking,44,264
+11,Monday,Plank,106,848
+11,Tuesday,Kettlebell Workout,133,1197
+11,Wednesday,Strength Training,51,357
+11,Thursday,Plank,128,1152
+11,Friday,Football,22,132
+11,Saturday,Jumping Jacks,88,792
+11,Sunday,Spin Class,27,270
+12,Monday,Boxing,136,1088
+12,Tuesday,Pull-ups,56,504
+12,Wednesday,Tennis,42,420
+12,Thursday,Sit-ups,72,432
+12,Friday,Boxing,120,1200
+12,Saturday,Battle Ropes,128,1280
+12,Sunday,Leg Press,117,702
+13,Monday,Mobility Drills,54,324
+13,Tuesday,Stair Climber,86,860
+13,Wednesday,Treadmill,81,810
+13,Thursday,Kickboxing,81,648
+13,Friday,Basketball,123,1230
+13,Saturday,Sit-ups,90,540
+13,Sunday,Stretching,94,940
+14,Monday,Spin Class,26,286
+14,Tuesday,Kettlebell Workout,84,840
+14,Wednesday,Sprinting,114,684
+14,Thursday,Boxing,82,984
+14,Friday,CrossFit,144,864
+14,Saturday,Squats,150,1200
+14,Sunday,Burpees,84,672
+15,Monday,Crunches,45,540
+15,Tuesday,Pilates,135,1080
+15,Wednesday,Battle Ropes,30,240
+15,Thursday,Handball,113,1356
+15,Friday,Kickboxing,44,440
+15,Saturday,Spin Class,146,1752
+15,Sunday,Aerobics,44,396
+16,Monday,Skating,24,144
+16,Tuesday,Squats,41,328
+16,Wednesday,Skating,35,280
+16,Thursday,Yoga,28,224
+16,Friday,Bench Press,63,693
+16,Saturday,Lunges,79,474
+16,Sunday,Battle Ropes,132,1452
+17,Monday,Mountain Climbers,31,217
+17,Tuesday,Football,118,1180
+17,Wednesday,Table Tennis,50,500
+17,Thursday,Table Tennis,115,690
+17,Friday,Badminton,57,456
+17,Saturday,Pull-ups,132,924
+17,Sunday,Push-ups,25,200
+18,Monday,Deadlifts,51,408
+18,Tuesday,Jumping Jacks,24,144
+18,Wednesday,Spin Class,132,1056
+18,Thursday,Kettlebell Workout,85,1020
+18,Friday,Crunches,52,364
+18,Saturday,HIIT,136,816
+18,Sunday,Core Training,131,1310
+19,Monday,Battle Ropes,31,310
+19,Tuesday,Walking,42,504
+19,Wednesday,Badminton,113,1017
+19,Thursday,Badminton,96,960
+19,Friday,Pull-ups,82,492
+19,Saturday,Core Training,142,1420
+19,Sunday,Crunches,42,420
+20,Monday,Lunges,128,1280
+20,Tuesday,Treadmill,63,504
+20,Wednesday,HIIT,40,240
+20,Thursday,Plank,42,294
+20,Friday,Aerobics,119,1428
+20,Saturday,Table Tennis,35,210
+20,Sunday,Plank,144,1152
+21,Monday,Battle Ropes,65,390
+21,Tuesday,Yoga,143,858
+21,Wednesday,Dancing,26,234
+21,Thursday,Sprinting,69,759
+21,Friday,Walking,93,837
+21,Saturday,Rock Climbing,80,480
+21,Sunday,CrossFit,121,1210
+22,Monday,Rock Climbing,105,945
+22,Tuesday,Walking,131,1179
+22,Wednesday,Dancing,126,1008
+22,Thursday,Running,71,568
+22,Friday,Badminton,60,660
+22,Saturday,Bench Press,51,408
+22,Sunday,Pilates,90,540
+23,Monday,Shoulder Press,77,539
+23,Tuesday,Pilates,95,570
+23,Wednesday,Aerobics,84,504
+23,Thursday,Elliptical,101,1111
+23,Friday,Running,87,1044
+23,Saturday,Rowing,99,792
+23,Sunday,Spin Class,78,936
+24,Monday,Cycling,109,763
+24,Tuesday,Yoga,103,1133
+24,Wednesday,Yoga,67,804
+24,Thursday,Skating,142,1704
+24,Friday,Mountain Climbers,66,528
+24,Saturday,Badminton,128,1152
+24,Sunday,Burpees,76,760
+25,Monday,Sit-ups,35,385
+25,Tuesday,Zumba,51,306
+25,Wednesday,Resistance Band Workout,65,585
+25,Thursday,Badminton,117,1287
+25,Friday,Core Training,47,517
+25,Saturday,Boxing,108,1080
+25,Sunday,Aerobics,117,936
+26,Monday,Sit-ups,57,342
+26,Tuesday,Sprinting,88,968
+26,Wednesday,Resistance Band Workout,54,594
+26,Thursday,Leg Press,85,765
+26,Friday,Strength Training,102,918
+26,Saturday,Treadmill,51,357
+26,Sunday,Crunches,42,378
+27,Monday,Martial Arts,77,616
+27,Tuesday,Basketball,23,230
+27,Wednesday,Shoulder Press,67,469
+27,Thursday,Shoulder Press,94,564
+27,Friday,Battle Ropes,75,750
+27,Saturday,Pilates,39,468
+27,Sunday,Pull-ups,30,360
+28,Monday,Aerobics,25,275
+28,Tuesday,Surfing,126,1008
+28,Wednesday,Badminton,97,679
+28,Thursday,Deadlifts,114,798
+28,Friday,Kickboxing,22,264
+28,Saturday,Mobility Drills,28,168
+28,Sunday,Zumba,145,1450
+29,Monday,Crunches,110,1320
+29,Tuesday,Strength Training,148,1776
+29,Wednesday,Aerobics,117,702
+29,Thursday,Yoga,105,1155
+29,Friday,HIIT,147,1176
+29,Saturday,Football,25,275
+29,Sunday,Running,123,1476
+30,Monday,Stretching,73,584
+30,Tuesday,Pilates,21,210
+30,Wednesday,Leg Press,42,252
+30,Thursday,Volleyball,104,1144
+30,Friday,Hiking,52,520
+30,Saturday,Cycling,23,207
+30,Sunday,Burpees,97,679
+31,Monday,Zumba,20,160
+31,Tuesday,Crunches,105,945
+31,Wednesday,Sprinting,112,1232
+31,Thursday,Volleyball,108,648
+31,Friday,Handball,62,682
+31,Saturday,Treadmill,59,472
+31,Sunday,Deadlifts,76,684
+32,Monday,Dancing,115,1150
+32,Tuesday,Hiking,143,858
+32,Wednesday,Zumba,71,852
+32,Thursday,Battle Ropes,46,552
+32,Friday,Deadlifts,31,310
+32,Saturday,Walking,104,832
+32,Sunday,Rock Climbing,22,220
+33,Monday,Handball,76,760
+33,Tuesday,Table Tennis,136,1496
+33,Wednesday,Aerobics,150,1800
+33,Thursday,Stretching,142,994
+33,Friday,Stretching,57,342
+33,Saturday,Pull-ups,31,217
+33,Sunday,CrossFit,76,608
+34,Monday,Kettlebell Workout,147,1176
+34,Tuesday,Core Training,114,1254
+34,Wednesday,Burpees,85,680
+34,Thursday,Elliptical,79,711
+34,Friday,Elliptical,23,207
+34,Saturday,Sit-ups,123,1230
+34,Sunday,Treadmill,81,648
+35,Monday,Boxing,22,176
+35,Tuesday,Skipping Rope,84,924
+35,Wednesday,Aerobics,30,210
+35,Thursday,Core Training,67,804
+35,Friday,Core Training,106,954
+35,Saturday,Cycling,55,550
+35,Sunday,Boxing,72,864
+36,Monday,Basketball,73,803
+36,Tuesday,Plank,28,168
+36,Wednesday,Handball,68,816
+36,Thursday,Spin Class,23,230
+36,Friday,Plank,86,516
+36,Saturday,Handball,102,918
+36,Sunday,Resistance Band Workout,147,1764
+37,Monday,Powerlifting,123,738
+37,Tuesday,Volleyball,46,460
+37,Wednesday,Mountain Climbers,125,750
+37,Thursday,Yoga,50,550
+37,Friday,Pilates,23,207
+37,Saturday,Martial Arts,95,950
+37,Sunday,Hiking,23,253
+38,Monday,Pull-ups,80,880
+38,Tuesday,Dancing,121,1089
+38,Wednesday,Shoulder Press,95,855
+38,Thursday,Crunches,70,560
+38,Friday,Martial Arts,61,488
+38,Saturday,Spin Class,47,376
+38,Sunday,Resistance Band Workout,110,770
+39,Monday,Yoga,118,1416
+39,Tuesday,Skating,149,1341
+39,Wednesday,Spin Class,135,1350
+39,Thursday,Mobility Drills,47,423
+39,Friday,Aerobics,149,1639
+39,Saturday,HIIT,50,600
+39,Sunday,Table Tennis,69,759
+40,Monday,Swimming,104,624
+40,Tuesday,HIIT,70,490
+40,Wednesday,Rock Climbing,98,980
+40,Thursday,Volleyball,66,462
+40,Friday,Zumba,72,504
+40,Saturday,Yoga,108,1296
+40,Sunday,Elliptical,57,399
+41,Monday,Powerlifting,51,459
+41,Tuesday,Shoulder Press,148,1628
+41,Wednesday,Pilates,123,1230
+41,Thursday,Kickboxing,71,426
+41,Friday,Yoga,77,847
+41,Saturday,Stair Climber,58,464
+41,Sunday,Yoga,107,856
+42,Monday,Plank,133,1463
+42,Tuesday,Treadmill,26,234
+42,Wednesday,Burpees,95,1045
+42,Thursday,Leg Press,92,920
+42,Friday,Handball,116,1044
+42,Saturday,Dancing,144,864
+42,Sunday,Basketball,128,1536
+43,Monday,Mobility Drills,138,1380
+43,Tuesday,Deadlifts,122,1464
+43,Wednesday,Shoulder Press,41,451
+43,Thursday,Burpees,112,1232
+43,Friday,Treadmill,139,1668
+43,Saturday,Spin Class,126,882
+43,Sunday,Basketball,107,749
+44,Monday,Volleyball,25,150
+44,Tuesday,Pilates,27,243
+44,Wednesday,HIIT,24,288
+44,Thursday,Strength Training,91,1092
+44,Friday,Jumping Jacks,113,1017
+44,Saturday,Rock Climbing,22,242
+44,Sunday,Rowing,58,638
+45,Monday,Table Tennis,73,438
+45,Tuesday,Bench Press,147,1176
+45,Wednesday,Stair Climber,121,1210
+45,Thursday,Tennis,118,1062
+45,Friday,Running,129,1290
+45,Saturday,Powerlifting,32,384
+45,Sunday,Pilates,78,702
+46,Monday,Core Training,135,810
+46,Tuesday,Shoulder Press,141,1410
+46,Wednesday,CrossFit,134,1608
+46,Thursday,Treadmill,148,1332
+46,Friday,Rowing,91,546
+46,Saturday,Boxing,52,416
+46,Sunday,Kickboxing,139,1390
+47,Monday,Stair Climber,124,992
+47,Tuesday,Basketball,145,870
+47,Wednesday,Pull-ups,92,644
+47,Thursday,Volleyball,52,312
+47,Friday,Football,69,414
+47,Saturday,Stair Climber,60,480
+47,Sunday,Football,150,1800
+48,Monday,Handball,95,1140
+48,Tuesday,Shoulder Press,25,225
+48,Wednesday,Boxing,116,696
+48,Thursday,Stretching,100,1200
+48,Friday,Sit-ups,138,1242
+48,Saturday,Sprinting,46,552
+48,Sunday,Rock Climbing,63,567
+49,Monday,Walking,73,584
+49,Tuesday,Deadlifts,146,1314
+49,Wednesday,Basketball,122,1464
+49,Thursday,Yoga,25,175
+49,Friday,Volleyball,143,1573
+49,Saturday,Aerobics,99,891
+49,Sunday,Badminton,143,1287
+50,Monday,Kickboxing,34,340
+50,Tuesday,Boxing,135,945
+50,Wednesday,Leg Press,26,234
+50,Thursday,Rock Climbing,133,1596
+50,Friday,Battle Ropes,51,408
+50,Saturday,Rock Climbing,126,1512
+50,Sunday,Surfing,107,1070
+51,Monday,Leg Press,28,224
+51,Tuesday,Cycling,148,1184
+51,Wednesday,Hiking,133,1463
+51,Thursday,Kettlebell Workout,140,1540
+51,Friday,Handball,49,441
+51,Saturday,Skating,130,1430
+51,Sunday,Elliptical,129,774
+52,Monday,Crunches,27,162
+52,Tuesday,Squats,139,1251
+52,Wednesday,Handball,95,950
+52,Thursday,Skating,35,245
+52,Friday,Treadmill,28,336
+52,Saturday,Deadlifts,121,1089
+52,Sunday,Mountain Climbers,62,496
+53,Monday,Rugby,38,266
+53,Tuesday,Battle Ropes,55,550
+53,Wednesday,Battle Ropes,80,640
+53,Thursday,Walking,72,576
+53,Friday,Core Training,49,539
+53,Saturday,Dancing,74,592
+53,Sunday,Badminton,55,440
+54,Monday,CrossFit,119,1309
+54,Tuesday,Plank,124,1488
+54,Wednesday,Sprinting,63,441
+54,Thursday,Burpees,21,168
+54,Friday,Sit-ups,28,168
+54,Saturday,Spin Class,49,441
+54,Sunday,Rock Climbing,46,276
+55,Monday,Leg Press,125,1250
+55,Tuesday,Lunges,62,620
+55,Wednesday,Skating,119,1190
+55,Thursday,Stair Climber,22,154
+55,Friday,Powerlifting,45,270
+55,Saturday,Kettlebell Workout,89,1068
+55,Sunday,Mobility Drills,24,192
+56,Monday,Surfing,59,413
+56,Tuesday,Spin Class,43,301
+56,Wednesday,Football,90,990
+56,Thursday,Basketball,47,470
+56,Friday,Plank,32,256
+56,Saturday,Crunches,29,319
+56,Sunday,Hiking,50,400
+57,Monday,Shoulder Press,120,1440
+57,Tuesday,Aerobics,74,888
+57,Wednesday,Tennis,116,1160
+57,Thursday,Table Tennis,46,368
+57,Friday,Basketball,27,243
+57,Saturday,Kettlebell Workout,58,522
+57,Sunday,Core Training,144,1152
+58,Monday,Bench Press,140,840
+58,Tuesday,Spin Class,118,944
+58,Wednesday,Push-ups,31,310
+58,Thursday,Hiking,79,869
+58,Friday,Lunges,113,904
+58,Saturday,Rowing,109,654
+58,Sunday,Table Tennis,54,648
+59,Monday,Mobility Drills,87,1044
+59,Tuesday,Boxing,39,351
+59,Wednesday,Plank,88,792
+59,Thursday,Treadmill,135,1080
+59,Friday,Strength Training,145,1305
+59,Saturday,HIIT,29,232
+59,Sunday,Badminton,81,891
+60,Monday,Pilates,130,1040
+60,Tuesday,Shoulder Press,71,710
+60,Wednesday,Spin Class,128,1536
+60,Thursday,Jumping Jacks,43,258
+60,Friday,Plank,118,1180
+60,Saturday,Crunches,38,418
+60,Sunday,Tennis,143,1287
+61,Monday,Boxing,37,259
+61,Tuesday,Pull-ups,73,438
+61,Wednesday,Pilates,119,952
+61,Thursday,Burpees,141,1269
+61,Friday,Rugby,92,644
+61,Saturday,Strength Training,141,1551
+61,Sunday,Strength Training,77,539
+62,Monday,Martial Arts,61,488
+62,Tuesday,Elliptical,25,300
+62,Wednesday,Rowing,56,504
+62,Thursday,Surfing,78,780
+62,Friday,Swimming,55,605
+62,Saturday,Rowing,90,990
+62,Sunday,Mobility Drills,90,540
+63,Monday,Spin Class,93,1116
+63,Tuesday,HIIT,140,1120
+63,Wednesday,Aerobics,42,504
+63,Thursday,Jumping Jacks,25,150
+63,Friday,Stretching,86,860
+63,Saturday,Kettlebell Workout,121,1452
+63,Sunday,Martial Arts,74,444
+64,Monday,Running,133,1064
+64,Tuesday,Basketball,133,931
+64,Wednesday,Strength Training,52,312
+64,Thursday,HIIT,127,762
+64,Friday,Skipping Rope,39,468
+64,Saturday,Squats,85,595
+64,Sunday,Rock Climbing,65,390
+65,Monday,Battle Ropes,79,632
+65,Tuesday,Surfing,36,360
+65,Wednesday,Rock Climbing,122,976
+65,Thursday,Powerlifting,148,1480
+65,Friday,Zumba,47,517
+65,Saturday,Stair Climber,29,232
+65,Sunday,Pull-ups,85,680
+66,Monday,Yoga,33,264
+66,Tuesday,Running,46,276
+66,Wednesday,Mountain Climbers,44,264
+66,Thursday,Basketball,50,300
+66,Friday,Tennis,99,990
+66,Saturday,Stair Climber,53,530
+66,Sunday,Boxing,142,852
+67,Monday,Leg Press,40,480
+67,Tuesday,Kickboxing,127,762
+67,Wednesday,Kettlebell Workout,26,312
+67,Thursday,Rowing,31,279
+67,Friday,Yoga,126,1008
+67,Saturday,Battle Ropes,81,810
+67,Sunday,Cycling,59,590
+68,Monday,Burpees,144,1296
+68,Tuesday,HIIT,32,320
+68,Wednesday,CrossFit,120,840
+68,Thursday,Burpees,120,960
+68,Friday,Skating,67,402
+68,Saturday,Lunges,80,800
+68,Sunday,Resistance Band Workout,23,230
+69,Monday,Hiking,51,357
+69,Tuesday,Lunges,147,1470
+69,Wednesday,Burpees,84,1008
+69,Thursday,Tennis,133,1064
+69,Friday,Mobility Drills,84,756
+69,Saturday,Volleyball,121,968
+69,Sunday,Hiking,86,516
+70,Monday,Leg Press,114,1026
+70,Tuesday,Strength Training,64,384
+70,Wednesday,Powerlifting,84,588
+70,Thursday,Powerlifting,31,372
+70,Friday,Mobility Drills,103,1133
+70,Saturday,Powerlifting,139,973
+70,Sunday,Mobility Drills,126,1260
+71,Monday,Sit-ups,39,468
+71,Tuesday,Elliptical,95,665
+71,Wednesday,Squats,41,410
+71,Thursday,Battle Ropes,73,438
+71,Friday,Powerlifting,143,1573
+71,Saturday,Volleyball,113,1356
+71,Sunday,Handball,57,684
+72,Monday,Skating,115,1380
+72,Tuesday,Deadlifts,94,752
+72,Wednesday,Rugby,23,184
+72,Thursday,Core Training,136,1224
+72,Friday,Zumba,80,640
+72,Saturday,Cycling,81,810
+72,Sunday,Rugby,80,560
+73,Monday,Dancing,80,800
+73,Tuesday,Jumping Jacks,140,1680
+73,Wednesday,Badminton,69,621
+73,Thursday,Badminton,83,664
+73,Friday,CrossFit,24,144
+73,Saturday,Running,79,474
+73,Sunday,Hiking,104,624
+74,Monday,Running,130,1040
+74,Tuesday,Hiking,58,464
+74,Wednesday,Swimming,77,539
+74,Thursday,Skating,33,363
+74,Friday,Stretching,135,1080
+74,Saturday,Boxing,64,448
+74,Sunday,Mobility Drills,120,1440
+75,Monday,Core Training,78,546
+75,Tuesday,Stair Climber,31,372
+75,Wednesday,Stretching,144,1728
+75,Thursday,Core Training,23,138
+75,Friday,Jumping Jacks,43,301
+75,Saturday,Yoga,77,924
+75,Sunday,Resistance Band Workout,34,238
+76,Monday,Stair Climber,111,999
+76,Tuesday,Cycling,55,550
+76,Wednesday,Cycling,32,288
+76,Thursday,Stretching,53,636
+76,Friday,Stretching,76,912
+76,Saturday,Burpees,85,935
+76,Sunday,Badminton,146,876
+77,Monday,Swimming,142,1704
+77,Tuesday,Rock Climbing,83,830
+77,Wednesday,Powerlifting,49,588
+77,Thursday,Tennis,23,161
+77,Friday,Volleyball,40,440
+77,Saturday,Rock Climbing,132,1584
+77,Sunday,Sit-ups,50,550
+78,Monday,Rock Climbing,131,786
+78,Tuesday,CrossFit,34,204
+78,Wednesday,Cycling,89,534
+78,Thursday,Skipping Rope,21,231
+78,Friday,Battle Ropes,128,896
+78,Saturday,Bench Press,107,642
+78,Sunday,Crunches,56,448
+79,Monday,Plank,93,1023
+79,Tuesday,Tennis,117,1287
+79,Wednesday,Pull-ups,91,546
+79,Thursday,Cycling,46,552
+79,Friday,Squats,81,648
+79,Saturday,Treadmill,94,1034
+79,Sunday,Squats,127,1016
+80,Monday,Leg Press,46,368
+80,Tuesday,Pull-ups,106,954
+80,Wednesday,Football,47,282
+80,Thursday,Strength Training,33,363
+80,Friday,Dancing,127,1397
+80,Saturday,Squats,32,288
+80,Sunday,Shoulder Press,51,510
+81,Monday,Spin Class,118,1062
+81,Tuesday,Volleyball,40,440
+81,Wednesday,Surfing,141,1269
+81,Thursday,Basketball,125,1000
+81,Friday,Handball,144,1440
+81,Saturday,Table Tennis,37,370
+81,Sunday,Boxing,127,889
+82,Monday,Stretching,112,784
+82,Tuesday,Walking,145,1015
+82,Wednesday,Table Tennis,50,450
+82,Thursday,Dancing,128,1408
+82,Friday,Push-ups,120,840
+82,Saturday,HIIT,89,534
+82,Sunday,Leg Press,93,651
+83,Monday,Pull-ups,92,644
+83,Tuesday,Core Training,130,1040
+83,Wednesday,Aerobics,104,728
+83,Thursday,Jumping Jacks,88,792
+83,Friday,Core Training,76,684
+83,Saturday,Bench Press,122,1464
+83,Sunday,Sprinting,47,470
+84,Monday,Rowing,30,240
+84,Tuesday,HIIT,67,804
+84,Wednesday,Skating,91,637
+84,Thursday,Leg Press,98,1176
+84,Friday,Yoga,71,710
+84,Saturday,Mountain Climbers,84,588
+84,Sunday,Sit-ups,103,618
+85,Monday,Yoga,114,684
+85,Tuesday,Core Training,43,516
+85,Wednesday,Resistance Band Workout,35,385
+85,Thursday,Pull-ups,90,990
+85,Friday,Pilates,93,1116
+85,Saturday,Tennis,130,780
+85,Sunday,Skipping Rope,94,1034
+86,Monday,Plank,62,682
+86,Tuesday,Hiking,80,880
+86,Wednesday,Table Tennis,134,1072
+86,Thursday,Plank,145,870
+86,Friday,Sprinting,113,1356
+86,Saturday,Plank,26,286
+86,Sunday,Burpees,39,429
+87,Monday,Hiking,100,700
+87,Tuesday,Dancing,93,1023
+87,Wednesday,Bench Press,79,553
+87,Thursday,Crunches,48,384
+87,Friday,Skipping Rope,62,682
+87,Saturday,Zumba,31,372
+87,Sunday,Stretching,114,912
+88,Monday,Spin Class,53,424
+88,Tuesday,Treadmill,83,747
+88,Wednesday,Strength Training,133,1197
+88,Thursday,Pilates,29,174
+88,Friday,Handball,102,918
+88,Saturday,Pull-ups,125,1125
+88,Sunday,Treadmill,60,660
+89,Monday,Football,81,810
+89,Tuesday,Battle Ropes,88,704
+89,Wednesday,Spin Class,130,780
+89,Thursday,Plank,62,558
+89,Friday,Cycling,142,1136
+89,Saturday,Jumping Jacks,70,630
+89,Sunday,Martial Arts,129,774
+90,Monday,Leg Press,104,624
+90,Tuesday,Plank,84,756
+90,Wednesday,Battle Ropes,108,1080
+90,Thursday,Elliptical,26,260
+90,Friday,Rock Climbing,55,385
+90,Saturday,Walking,117,1404
+90,Sunday,Swimming,132,924
+91,Monday,Strength Training,141,1551
+91,Tuesday,Running,79,632
+91,Wednesday,Handball,77,924
+91,Thursday,Powerlifting,132,1188
+91,Friday,Stair Climber,71,497
+91,Saturday,Stair Climber,80,880
+91,Sunday,Skating,131,1572
+92,Monday,Surfing,143,1144
+92,Tuesday,Running,125,1000
+92,Wednesday,Volleyball,132,1188
+92,Thursday,Hiking,133,1463
+92,Friday,Strength Training,87,870
+92,Saturday,Kickboxing,137,1233
+92,Sunday,Rugby,82,902
+93,Monday,Jumping Jacks,80,800
+93,Tuesday,Running,143,1144
+93,Wednesday,Kickboxing,46,414
+93,Thursday,Sit-ups,66,660
+93,Friday,Sprinting,128,768
+93,Saturday,Stretching,132,1584
+93,Sunday,Rugby,121,1210
+94,Monday,Aerobics,29,348
+94,Tuesday,Skipping Rope,144,1152
+94,Wednesday,Martial Arts,82,574
+94,Thursday,Cycling,124,992
+94,Friday,Running,40,280
+94,Saturday,Elliptical,118,1298
+94,Sunday,Handball,44,528
+95,Monday,Stair Climber,130,1560
+95,Tuesday,Elliptical,132,1320
+95,Wednesday,Running,140,1120
+95,Thursday,Pull-ups,127,1397
+95,Friday,Push-ups,85,935
+95,Saturday,Battle Ropes,132,1320
+95,Sunday,Leg Press,101,1111
+96,Monday,Hiking,49,490
+96,Tuesday,Elliptical,106,742
+96,Wednesday,Football,28,196
+96,Thursday,Volleyball,55,385
+96,Friday,CrossFit,27,324
+96,Saturday,Tennis,105,1050
+96,Sunday,Tennis,143,1716
+97,Monday,Kickboxing,126,1260
+97,Tuesday,Swimming,67,402
+97,Wednesday,Table Tennis,126,1260
+97,Thursday,Sit-ups,57,399
+97,Friday,Burpees,76,760
+97,Saturday,Bench Press,48,384
+97,Sunday,HIIT,26,234
+98,Monday,Pull-ups,42,252
+98,Tuesday,Aerobics,105,840
+98,Wednesday,Badminton,142,1562
+98,Thursday,Table Tennis,122,1342
+98,Friday,Walking,108,1080
+98,Saturday,Jumping Jacks,84,588
+98,Sunday,Zumba,51,408
+99,Monday,Stair Climber,82,738
+99,Tuesday,Martial Arts,139,1668
+99,Wednesday,Tennis,110,1100
+99,Thursday,CrossFit,47,329
+99,Friday,Core Training,138,1656
+99,Saturday,Sprinting,110,660
+99,Sunday,Hiking,45,450
+100,Monday,Plank,92,736
+100,Tuesday,Running,145,1450
+100,Wednesday,CrossFit,29,290
+100,Thursday,Strength Training,25,275
+100,Friday,Kettlebell Workout,87,696
+100,Saturday,Pull-ups,31,248
+100,Sunday,Yoga,74,740
+101,Monday,CrossFit,148,1036
+101,Tuesday,Volleyball,61,427
+101,Wednesday,Kettlebell Workout,73,803
+101,Thursday,Treadmill,115,1035
+101,Friday,Table Tennis,117,1170
+101,Saturday,Shoulder Press,29,261
+101,Sunday,Strength Training,96,768
+102,Monday,Pilates,38,380
+102,Tuesday,Cycling,106,1272
+102,Wednesday,Resistance Band Workout,65,780
+102,Thursday,Sprinting,108,1188
+102,Friday,Pilates,118,1062
+102,Saturday,Sprinting,49,539
+102,Sunday,Yoga,38,228
+103,Monday,Resistance Band Workout,59,472
+103,Tuesday,Rowing,135,1350
+103,Wednesday,Deadlifts,46,552
+103,Thursday,Pilates,150,1500
+103,Friday,Volleyball,36,432
+103,Saturday,Bench Press,39,468
+103,Sunday,Deadlifts,56,448
+104,Monday,Aerobics,148,1036
+104,Tuesday,Crunches,81,972
+104,Wednesday,Skipping Rope,139,1668
+104,Thursday,Shoulder Press,109,981
+104,Friday,Squats,41,328
+104,Saturday,Rock Climbing,61,366
+104,Sunday,Basketball,113,1243
+105,Monday,Shoulder Press,67,603
+105,Tuesday,Handball,92,644
+105,Wednesday,Badminton,114,1026
+105,Thursday,Push-ups,124,744
+105,Friday,Zumba,44,440
+105,Saturday,Burpees,43,258
+105,Sunday,Plank,32,224
+106,Monday,Sit-ups,103,618
+106,Tuesday,Rock Climbing,127,1143
+106,Wednesday,Martial Arts,100,1200
+106,Thursday,Handball,133,1596
+106,Friday,Stair Climber,134,1206
+106,Saturday,Burpees,126,756
+106,Sunday,Deadlifts,113,904
+107,Monday,Leg Press,46,506
+107,Tuesday,Jumping Jacks,116,1160
+107,Wednesday,CrossFit,26,182
+107,Thursday,CrossFit,59,649
+107,Friday,Skating,38,380
+107,Saturday,Volleyball,140,1540
+107,Sunday,Table Tennis,69,690
+108,Monday,Stair Climber,27,270
+108,Tuesday,CrossFit,52,364
+108,Wednesday,Mobility Drills,114,912
+108,Thursday,Rowing,131,1572
+108,Friday,Elliptical,108,1080
+108,Saturday,Stair Climber,87,1044
+108,Sunday,Cycling,40,240
+109,Monday,Kickboxing,98,1078
+109,Tuesday,Pull-ups,45,315
+109,Wednesday,CrossFit,133,1197
+109,Thursday,Pilates,57,513
+109,Friday,Lunges,150,900
+109,Saturday,Rowing,46,322
+109,Sunday,Jumping Jacks,138,1380
+110,Monday,Shoulder Press,122,1342
+110,Tuesday,Push-ups,130,910
+110,Wednesday,Pilates,131,1441
+110,Thursday,Deadlifts,132,1320
+110,Friday,Powerlifting,61,610
+110,Saturday,Strength Training,35,385
+110,Sunday,Mobility Drills,134,1608
+111,Monday,Jumping Jacks,52,624
+111,Tuesday,Skating,124,1116
+111,Wednesday,Mobility Drills,134,1474
+111,Thursday,Skating,23,276
+111,Friday,Dancing,83,830
+111,Saturday,Skipping Rope,111,666
+111,Sunday,Football,122,976
+112,Monday,Swimming,107,856
+112,Tuesday,Leg Press,87,1044
+112,Wednesday,Shoulder Press,129,903
+112,Thursday,Bench Press,115,1035
+112,Friday,Pull-ups,121,1331
+112,Saturday,Pilates,84,588
+112,Sunday,Treadmill,23,138
+113,Monday,Shoulder Press,100,1200
+113,Tuesday,Kickboxing,84,672
+113,Wednesday,Badminton,58,638
+113,Thursday,Walking,119,1428
+113,Friday,Sprinting,134,1340
+113,Saturday,Plank,75,825
+113,Sunday,Battle Ropes,130,780
+114,Monday,Badminton,102,612
+114,Tuesday,Rock Climbing,75,825
+114,Wednesday,Kickboxing,55,550
+114,Thursday,Elliptical,60,600
+114,Friday,Yoga,36,432
+114,Saturday,Volleyball,95,855
+114,Sunday,Shoulder Press,25,150
+115,Monday,Dancing,82,902
+115,Tuesday,Sit-ups,65,455
+115,Wednesday,Dancing,49,294
+115,Thursday,Dancing,102,1224
+115,Friday,Battle Ropes,40,240
+115,Saturday,Deadlifts,93,744
+115,Sunday,Pull-ups,73,438
+116,Monday,Stair Climber,85,935
+116,Tuesday,Deadlifts,126,882
+116,Wednesday,Football,55,660
+116,Thursday,Pilates,124,1364
+116,Friday,Basketball,139,1251
+116,Saturday,Stretching,45,540
+116,Sunday,Basketball,97,1164
+117,Monday,Yoga,36,360
+117,Tuesday,Stretching,73,657
+117,Wednesday,Elliptical,83,996
+117,Thursday,Plank,64,512
+117,Friday,Surfing,146,876
+117,Saturday,Mountain Climbers,35,385
+117,Sunday,Kickboxing,135,1350
+118,Monday,Handball,37,296
+118,Tuesday,Rugby,98,980
+118,Wednesday,Skipping Rope,77,539
+118,Thursday,Lunges,129,1419
+118,Friday,Shoulder Press,144,1728
+118,Saturday,Tennis,108,1188
+118,Sunday,Aerobics,38,342
+119,Monday,Battle Ropes,61,488
+119,Tuesday,Skipping Rope,21,210
+119,Wednesday,Crunches,118,1416
+119,Thursday,Stair Climber,118,1062
+119,Friday,Skating,92,644
+119,Saturday,Crunches,64,384
+119,Sunday,Powerlifting,146,1168
+120,Monday,Powerlifting,29,232
+120,Tuesday,Resistance Band Workout,148,888
+120,Wednesday,Walking,140,1120
+120,Thursday,Elliptical,91,819
+120,Friday,Elliptical,49,294
+120,Saturday,Swimming,137,1507
+120,Sunday,Push-ups,139,1529
+121,Monday,Kickboxing,131,1441
+121,Tuesday,Skipping Rope,32,288
+121,Wednesday,Volleyball,91,819
+121,Thursday,Mobility Drills,130,1040
+121,Friday,Skipping Rope,26,208
+121,Saturday,Kickboxing,113,904
+121,Sunday,Shoulder Press,109,872
+122,Monday,Tennis,45,360
+122,Tuesday,Cycling,138,1656
+122,Wednesday,Football,114,912
+122,Thursday,Surfing,85,1020
+122,Friday,Plank,66,660
+122,Saturday,Sprinting,146,1460
+122,Sunday,Pull-ups,118,944
+123,Monday,Stair Climber,111,888
+123,Tuesday,Strength Training,149,1192
+123,Wednesday,Table Tennis,50,400
+123,Thursday,Treadmill,138,828
+123,Friday,Running,136,1360
+123,Saturday,Spin Class,101,606
+123,Sunday,Resistance Band Workout,81,891
+124,Monday,Handball,67,469
+124,Tuesday,Table Tennis,53,583
+124,Wednesday,Shoulder Press,77,539
+124,Thursday,Battle Ropes,150,1200
+124,Friday,Stretching,124,992
+124,Saturday,Skipping Rope,36,252
+124,Sunday,Zumba,84,1008
+125,Monday,Powerlifting,66,660
+125,Tuesday,Kettlebell Workout,81,567
+125,Wednesday,HIIT,102,612
+125,Thursday,Treadmill,60,540
+125,Friday,Table Tennis,120,1080
+125,Saturday,Resistance Band Workout,138,1242
+125,Sunday,HIIT,58,406
+126,Monday,Martial Arts,92,1012
+126,Tuesday,Squats,72,504
+126,Wednesday,Crunches,99,1089
+126,Thursday,Hiking,43,301
+126,Friday,Sprinting,40,480
+126,Saturday,Jumping Jacks,119,1309
+126,Sunday,Walking,117,1053
+127,Monday,Running,76,532
+127,Tuesday,Table Tennis,112,1344
+127,Wednesday,Hiking,62,620
+127,Thursday,Cycling,116,812
+127,Friday,Rock Climbing,24,240
+127,Saturday,Crunches,112,1008
+127,Sunday,Cycling,98,588
+128,Monday,Zumba,117,1053
+128,Tuesday,Cycling,97,873
+128,Wednesday,Volleyball,83,664
+128,Thursday,Basketball,72,720
+128,Friday,Sprinting,21,147
+128,Saturday,Spin Class,48,384
+128,Sunday,HIIT,86,774
+129,Monday,Kickboxing,63,693
+129,Tuesday,Resistance Band Workout,32,192
+129,Wednesday,Dancing,141,1551
+129,Thursday,Kettlebell Workout,130,780
+129,Friday,CrossFit,39,312
+129,Saturday,Kettlebell Workout,96,672
+129,Sunday,Core Training,112,1120
+130,Monday,Elliptical,49,343
+130,Tuesday,Hiking,133,1064
+130,Wednesday,Yoga,34,204
+130,Thursday,Yoga,130,1170
+130,Friday,Mobility Drills,31,372
+130,Saturday,Football,72,864
+130,Sunday,Squats,120,720
+131,Monday,Mobility Drills,120,1320
+131,Tuesday,Martial Arts,90,630
+131,Wednesday,Battle Ropes,130,1300
+131,Thursday,Swimming,26,234
+131,Friday,Shoulder Press,129,1290
+131,Saturday,Zumba,90,1080
+131,Sunday,Plank,70,560
+132,Monday,Mobility Drills,54,540
+132,Tuesday,Rowing,59,413
+132,Wednesday,Zumba,146,1460
+132,Thursday,Mobility Drills,77,924
+132,Friday,Kickboxing,40,320
+132,Saturday,Mountain Climbers,56,560
+132,Sunday,Sprinting,106,1166
+133,Monday,Surfing,102,1020
+133,Tuesday,Rugby,127,762
+133,Wednesday,Swimming,140,1400
+133,Thursday,Kickboxing,27,189
+133,Friday,Badminton,26,286
+133,Saturday,Pull-ups,129,1419
+133,Sunday,Hiking,70,560
+134,Monday,Squats,122,1220
+134,Tuesday,Basketball,103,1133
+134,Wednesday,Handball,28,224
+134,Thursday,Skating,50,550
+134,Friday,Yoga,82,492
+134,Saturday,Battle Ropes,50,300
+134,Sunday,Cycling,49,588
+135,Monday,Squats,79,869
+135,Tuesday,Treadmill,44,308
+135,Wednesday,Shoulder Press,63,567
+135,Thursday,Handball,36,432
+135,Friday,Sprinting,111,888
+135,Saturday,Burpees,50,550
+135,Sunday,Mobility Drills,148,1184
+136,Monday,Core Training,116,928
+136,Tuesday,Basketball,108,756
+136,Wednesday,Stair Climber,88,792
+136,Thursday,CrossFit,116,1276
+136,Friday,Table Tennis,67,469
+136,Saturday,Football,44,528
+136,Sunday,Lunges,94,658
+137,Monday,Powerlifting,108,864
+137,Tuesday,Push-ups,60,600
+137,Wednesday,Mobility Drills,56,392
+137,Thursday,Table Tennis,73,438
+137,Friday,Football,109,654
+137,Saturday,CrossFit,40,360
+137,Sunday,Running,104,728
+138,Monday,Push-ups,147,1176
+138,Tuesday,Sprinting,146,876
+138,Wednesday,Volleyball,98,882
+138,Thursday,Leg Press,57,342
+138,Friday,Skating,25,175
+138,Saturday,Lunges,91,910
+138,Sunday,Zumba,113,1243
+139,Monday,Skating,38,228
+139,Tuesday,Spin Class,119,952
+139,Wednesday,Skipping Rope,89,712
+139,Thursday,Leg Press,95,760
+139,Friday,Squats,55,660
+139,Saturday,Skipping Rope,150,1350
+139,Sunday,Push-ups,53,318
+140,Monday,Powerlifting,120,1200
+140,Tuesday,Pull-ups,150,1650
+140,Wednesday,Running,29,290
+140,Thursday,Basketball,150,1650
+140,Friday,Mountain Climbers,120,840
+140,Saturday,CrossFit,131,1310
+140,Sunday,Lunges,26,286
+141,Monday,Leg Press,32,384
+141,Tuesday,Volleyball,61,427
+141,Wednesday,Tennis,143,858
+141,Thursday,Pilates,66,726
+141,Friday,Leg Press,76,608
+141,Saturday,Pull-ups,76,532
+141,Sunday,Elliptical,34,408
+142,Monday,Leg Press,100,1100
+142,Tuesday,Stair Climber,39,273
+142,Wednesday,Kettlebell Workout,58,348
+142,Thursday,Lunges,107,1284
+142,Friday,Strength Training,79,790
+142,Saturday,Crunches,96,768
+142,Sunday,Football,67,737
+143,Monday,Jumping Jacks,61,488
+143,Tuesday,HIIT,39,273
+143,Wednesday,Leg Press,64,448
+143,Thursday,Skating,39,273
+143,Friday,Yoga,124,992
+143,Saturday,Bench Press,135,810
+143,Sunday,Treadmill,105,1050
+144,Monday,Squats,84,1008
+144,Tuesday,Burpees,75,600
+144,Wednesday,Martial Arts,103,1236
+144,Thursday,Spin Class,138,1104
+144,Friday,Sit-ups,149,1043
+144,Saturday,Kettlebell Workout,142,1562
+144,Sunday,Squats,106,742
+145,Monday,Bench Press,28,280
+145,Tuesday,Battle Ropes,101,808
+145,Wednesday,Mountain Climbers,147,1323
+145,Thursday,Badminton,54,486
+145,Friday,Kettlebell Workout,113,1017
+145,Saturday,HIIT,50,400
+145,Sunday,Martial Arts,23,184
+146,Monday,Mobility Drills,35,350
+146,Tuesday,Yoga,106,848
+146,Wednesday,Spin Class,85,595
+146,Thursday,Mountain Climbers,95,855
+146,Friday,Skipping Rope,49,539
+146,Saturday,Plank,52,468
+146,Sunday,Deadlifts,111,999
+147,Monday,Dancing,83,664
+147,Tuesday,Battle Ropes,93,930
+147,Wednesday,Skipping Rope,53,318
+147,Thursday,Aerobics,39,429
+147,Friday,Running,143,1287
+147,Saturday,Sprinting,100,900
+147,Sunday,Shoulder Press,106,954
+148,Monday,Rowing,145,1015
+148,Tuesday,Walking,124,1488
+148,Wednesday,Strength Training,111,666
+148,Thursday,Surfing,135,810
+148,Friday,Hiking,76,836
+148,Saturday,Volleyball,77,924
+148,Sunday,Handball,46,552
+149,Monday,Rock Climbing,70,700
+149,Tuesday,Treadmill,54,432
+149,Wednesday,Tennis,131,1048
+149,Thursday,Bench Press,22,242
+149,Friday,Squats,54,432
+149,Saturday,Rock Climbing,147,1764
+149,Sunday,Rowing,83,664
+150,Monday,Hiking,23,184
+150,Tuesday,Powerlifting,91,910
+150,Wednesday,Skating,149,1490
+150,Thursday,Cycling,43,258
+150,Friday,Martial Arts,133,798
+150,Saturday,Kickboxing,37,296
+150,Sunday,Running,85,510
+151,Monday,Battle Ropes,33,297
+151,Tuesday,Powerlifting,118,1062
+151,Wednesday,Rowing,96,672
+151,Thursday,Jumping Jacks,94,658
+151,Friday,Shoulder Press,108,1188
+151,Saturday,Skipping Rope,41,246
+151,Sunday,Surfing,110,660
+152,Monday,Strength Training,34,408
+152,Tuesday,Sprinting,116,1160
+152,Wednesday,Zumba,106,742
+152,Thursday,Treadmill,24,240
+152,Friday,Pull-ups,121,1089
+152,Saturday,Surfing,70,840
+152,Sunday,Battle Ropes,60,720
+153,Monday,Deadlifts,29,348
+153,Tuesday,Skating,143,1430
+153,Wednesday,CrossFit,72,504
+153,Thursday,Leg Press,133,1330
+153,Friday,Dancing,105,840
+153,Saturday,Plank,106,1060
+153,Sunday,Hiking,65,780
+154,Monday,Sprinting,34,204
+154,Tuesday,Tennis,117,819
+154,Wednesday,Cycling,83,581
+154,Thursday,Walking,137,959
+154,Friday,Yoga,93,744
+154,Saturday,Resistance Band Workout,78,546
+154,Sunday,Kettlebell Workout,63,378
+155,Monday,Lunges,77,539
+155,Tuesday,Core Training,49,294
+155,Wednesday,Squats,145,1015
+155,Thursday,Deadlifts,64,576
+155,Friday,Stretching,61,366
+155,Saturday,Football,146,1460
+155,Sunday,Bench Press,130,1560
+156,Monday,HIIT,131,1179
+156,Tuesday,Core Training,77,847
+156,Wednesday,Jumping Jacks,148,1036
+156,Thursday,HIIT,54,648
+156,Friday,Mobility Drills,103,1236
+156,Saturday,Yoga,74,666
+156,Sunday,Elliptical,33,264
+157,Monday,Jumping Jacks,117,1404
+157,Tuesday,Leg Press,31,279
+157,Wednesday,Strength Training,81,648
+157,Thursday,Hiking,99,891
+157,Friday,Resistance Band Workout,127,889
+157,Saturday,Yoga,147,882
+157,Sunday,Hiking,110,660
+158,Monday,Battle Ropes,122,1342
+158,Tuesday,Walking,65,650
+158,Wednesday,Elliptical,54,594
+158,Thursday,Battle Ropes,78,858
+158,Friday,Basketball,70,770
+158,Saturday,Kickboxing,139,1112
+158,Sunday,Bench Press,147,1764
+159,Monday,Aerobics,39,312
+159,Tuesday,Skipping Rope,128,1024
+159,Wednesday,Push-ups,103,1236
+159,Thursday,Pilates,124,992
+159,Friday,Sit-ups,30,330
+159,Saturday,Jumping Jacks,56,448
+159,Sunday,Handball,27,324
+160,Monday,Martial Arts,58,406
+160,Tuesday,Mobility Drills,46,414
+160,Wednesday,Cycling,40,480
+160,Thursday,Mountain Climbers,148,1184
+160,Friday,Jumping Jacks,66,660
+160,Saturday,Rugby,101,707
+160,Sunday,Bench Press,124,992
+161,Monday,Aerobics,71,639
+161,Tuesday,Swimming,102,1122
+161,Wednesday,Crunches,42,462
+161,Thursday,Aerobics,115,805
+161,Friday,Volleyball,71,568
+161,Saturday,Cycling,123,1353
+161,Sunday,Push-ups,101,808
+162,Monday,Rowing,90,540
+162,Tuesday,Table Tennis,40,280
+162,Wednesday,Basketball,23,138
+162,Thursday,Treadmill,92,1104
+162,Friday,Powerlifting,137,1644
+162,Saturday,Stretching,129,1419
+162,Sunday,Push-ups,121,968
+163,Monday,Skating,54,486
+163,Tuesday,Treadmill,60,420
+163,Wednesday,Battle Ropes,80,560
+163,Thursday,Jumping Jacks,28,252
+163,Friday,Resistance Band Workout,121,1210
+163,Saturday,CrossFit,119,1071
+163,Sunday,Battle Ropes,116,928
+164,Monday,Deadlifts,72,576
+164,Tuesday,Resistance Band Workout,146,1752
+164,Wednesday,Lunges,44,484
+164,Thursday,Swimming,36,288
+164,Friday,Rowing,98,1078
+164,Saturday,Deadlifts,105,1155
+164,Sunday,Sit-ups,74,740
+165,Monday,Skipping Rope,131,1441
+165,Tuesday,Deadlifts,87,870
+165,Wednesday,Mountain Climbers,46,322
+165,Thursday,Surfing,27,189
+165,Friday,Martial Arts,41,328
+165,Saturday,Rowing,75,525
+165,Sunday,Sprinting,42,294
+166,Monday,Kettlebell Workout,119,1190
+166,Tuesday,Running,116,1160
+166,Wednesday,Tennis,81,486
+166,Thursday,Volleyball,35,280
+166,Friday,HIIT,77,462
+166,Saturday,Battle Ropes,110,1100
+166,Sunday,Yoga,49,294
+167,Monday,Skipping Rope,76,836
+167,Tuesday,Basketball,109,872
+167,Wednesday,Basketball,100,1100
+167,Thursday,Treadmill,130,1170
+167,Friday,CrossFit,45,270
+167,Saturday,Sprinting,91,819
+167,Sunday,Plank,65,585
+168,Monday,Skating,102,1020
+168,Tuesday,Rugby,109,763
+168,Wednesday,Strength Training,107,749
+168,Thursday,Table Tennis,121,1331
+168,Friday,Mountain Climbers,25,200
+168,Saturday,Sprinting,68,408
+168,Sunday,Cycling,118,1180
+169,Monday,Aerobics,107,1177
+169,Tuesday,Rugby,71,497
+169,Wednesday,Volleyball,85,765
+169,Thursday,Rugby,99,693
+169,Friday,Handball,109,1199
+169,Saturday,Yoga,44,308
+169,Sunday,Tennis,60,420
+170,Monday,Kickboxing,103,721
+170,Tuesday,Treadmill,25,175
+170,Wednesday,Core Training,136,1088
+170,Thursday,Stretching,55,385
+170,Friday,CrossFit,116,696
+170,Saturday,Kettlebell Workout,78,702
+170,Sunday,Badminton,137,1233
+171,Monday,Cycling,133,1064
+171,Tuesday,Handball,31,279
+171,Wednesday,Powerlifting,140,1680
+171,Thursday,Strength Training,147,1323
+171,Friday,Running,24,288
+171,Saturday,Rugby,47,376
+171,Sunday,Burpees,33,330
+172,Monday,Deadlifts,82,984
+172,Tuesday,Tennis,90,1080
+172,Wednesday,Basketball,84,588
+172,Thursday,Surfing,140,840
+172,Friday,Handball,50,550
+172,Saturday,Deadlifts,99,990
+172,Sunday,Burpees,102,918
+173,Monday,Rugby,99,594
+173,Tuesday,Plank,76,456
+173,Wednesday,Hiking,40,440
+173,Thursday,Sprinting,39,234
+173,Friday,CrossFit,148,888
+173,Saturday,Dancing,57,570
+173,Sunday,Cycling,62,620
+174,Monday,Squats,92,644
+174,Tuesday,Rowing,49,294
+174,Wednesday,Plank,93,1116
+174,Thursday,Badminton,126,1386
+174,Friday,Stretching,36,216
+174,Saturday,Swimming,74,888
+174,Sunday,Leg Press,105,1050
+175,Monday,Football,115,805
+175,Tuesday,Jumping Jacks,139,1251
+175,Wednesday,Strength Training,44,440
+175,Thursday,Shoulder Press,96,672
+175,Friday,Strength Training,46,322
+175,Saturday,Boxing,93,1116
+175,Sunday,Mobility Drills,66,726
+176,Monday,Aerobics,102,816
+176,Tuesday,Surfing,134,938
+176,Wednesday,Bench Press,83,747
+176,Thursday,Dancing,60,540
+176,Friday,Yoga,63,567
+176,Saturday,Aerobics,57,399
+176,Sunday,Spin Class,20,240
+177,Monday,Surfing,105,1050
+177,Tuesday,Resistance Band Workout,79,948
+177,Wednesday,Walking,21,147
+177,Thursday,Battle Ropes,61,732
+177,Friday,Jumping Jacks,134,1072
+177,Saturday,Badminton,105,630
+177,Sunday,Yoga,142,1562
+178,Monday,Pull-ups,71,781
+178,Tuesday,Sit-ups,150,1650
+178,Wednesday,Rugby,90,720
+178,Thursday,CrossFit,68,816
+178,Friday,Cycling,44,264
+178,Saturday,Sit-ups,88,880
+178,Sunday,Volleyball,93,744
+179,Monday,Stretching,38,342
+179,Tuesday,Squats,43,430
+179,Wednesday,Pilates,47,329
+179,Thursday,Shoulder Press,143,1430
+179,Friday,Walking,49,588
+179,Saturday,Treadmill,26,312
+179,Sunday,Leg Press,117,1053
+180,Monday,Stair Climber,140,1260
+180,Tuesday,Dancing,35,210
+180,Wednesday,CrossFit,62,558
+180,Thursday,Mountain Climbers,69,552
+180,Friday,Powerlifting,37,370
+180,Saturday,Shoulder Press,21,126
+180,Sunday,Burpees,83,830
+181,Monday,HIIT,97,582
+181,Tuesday,Lunges,76,912
+181,Wednesday,Pull-ups,119,1190
+181,Thursday,Stretching,73,511
+181,Friday,Stair Climber,119,1309
+181,Saturday,Pull-ups,100,600
+181,Sunday,Stair Climber,142,994
+182,Monday,Strength Training,49,294
+182,Tuesday,Running,69,483
+182,Wednesday,Swimming,147,1617
+182,Thursday,Deadlifts,78,936
+182,Friday,Yoga,20,180
+182,Saturday,Football,106,954
+182,Sunday,Powerlifting,114,1140
+183,Monday,Aerobics,40,480
+183,Tuesday,Jumping Jacks,137,1370
+183,Wednesday,Plank,90,540
+183,Thursday,Badminton,90,540
+183,Friday,Sprinting,95,760
+183,Saturday,Badminton,90,990
+183,Sunday,Swimming,150,1650
+184,Monday,Basketball,61,427
+184,Tuesday,Hiking,126,1134
+184,Wednesday,Football,108,1296
+184,Thursday,Pull-ups,95,665
+184,Friday,Core Training,60,720
+184,Saturday,Mobility Drills,138,1380
+184,Sunday,Badminton,72,432
+185,Monday,Boxing,109,763
+185,Tuesday,Kettlebell Workout,136,952
+185,Wednesday,Cycling,61,427
+185,Thursday,Spin Class,52,468
+185,Friday,Dancing,72,432
+185,Saturday,Football,90,990
+185,Sunday,Aerobics,83,747
+186,Monday,Shoulder Press,103,1133
+186,Tuesday,Tennis,88,792
+186,Wednesday,Handball,140,840
+186,Thursday,Deadlifts,118,826
+186,Friday,Surfing,23,276
+186,Saturday,Running,37,407
+186,Sunday,Powerlifting,122,732
+187,Monday,Squats,93,1023
+187,Tuesday,Rock Climbing,63,630
+187,Wednesday,Aerobics,123,1353
+187,Thursday,Stair Climber,83,747
+187,Friday,Handball,140,1540
+187,Saturday,Tennis,124,1364
+187,Sunday,Rowing,61,366
+188,Monday,Pilates,116,812
+188,Tuesday,Deadlifts,43,430
+188,Wednesday,Stair Climber,128,1152
+188,Thursday,Powerlifting,36,432
+188,Friday,Powerlifting,21,147
+188,Saturday,Squats,39,312
+188,Sunday,Badminton,124,744
+189,Monday,Hiking,111,1332
+189,Tuesday,Shoulder Press,43,473
+189,Wednesday,Bench Press,26,260
+189,Thursday,Yoga,84,924
+189,Friday,Treadmill,89,623
+189,Saturday,Table Tennis,111,1221
+189,Sunday,Lunges,120,960
+190,Monday,Strength Training,72,792
+190,Tuesday,Yoga,81,891
+190,Wednesday,Pull-ups,133,931
+190,Thursday,Volleyball,75,750
+190,Friday,Handball,22,242
+190,Saturday,Tennis,53,530
+190,Sunday,Mountain Climbers,130,1040
+191,Monday,Yoga,142,1278
+191,Tuesday,Running,76,684
+191,Wednesday,Swimming,25,225
+191,Thursday,Hiking,112,896
+191,Friday,Deadlifts,106,1272
+191,Saturday,Resistance Band Workout,59,354
+191,Sunday,Surfing,61,610
+192,Monday,Surfing,99,990
+192,Tuesday,Resistance Band Workout,25,225
+192,Wednesday,Boxing,46,552
+192,Thursday,Aerobics,106,954
+192,Friday,Mountain Climbers,114,912
+192,Saturday,Table Tennis,30,210
+192,Sunday,Kettlebell Workout,79,711
+193,Monday,Kickboxing,48,384
+193,Tuesday,CrossFit,33,264
+193,Wednesday,Jumping Jacks,124,744
+193,Thursday,Stair Climber,148,888
+193,Friday,Core Training,70,420
+193,Saturday,Kettlebell Workout,94,752
+193,Sunday,Core Training,140,1400
+194,Monday,Pull-ups,35,350
+194,Tuesday,Skipping Rope,91,819
+194,Wednesday,Stair Climber,89,1068
+194,Thursday,Lunges,103,927
+194,Friday,Yoga,147,1176
+194,Saturday,Rowing,131,1179
+194,Sunday,Leg Press,141,1692
+195,Monday,Stair Climber,89,801
+195,Tuesday,Martial Arts,106,1272
+195,Wednesday,Kickboxing,142,1278
+195,Thursday,Stretching,74,740
+195,Friday,Running,123,1476
+195,Saturday,Walking,83,498
+195,Sunday,Strength Training,110,1320
+196,Monday,Tennis,53,318
+196,Tuesday,Badminton,50,300
+196,Wednesday,Rock Climbing,97,582
+196,Thursday,Sprinting,25,300
+196,Friday,Dancing,89,979
+196,Saturday,Squats,26,156
+196,Sunday,Walking,132,1320
+197,Monday,Elliptical,63,630
+197,Tuesday,Kettlebell Workout,91,910
+197,Wednesday,Elliptical,33,264
+197,Thursday,Walking,65,585
+197,Friday,Boxing,66,396
+197,Saturday,Aerobics,100,800
+197,Sunday,Dancing,114,912
+198,Monday,Table Tennis,122,976
+198,Tuesday,Skating,93,651
+198,Wednesday,Zumba,115,1150
+198,Thursday,Stretching,124,992
+198,Friday,Handball,94,1128
+198,Saturday,Dancing,32,384
+198,Sunday,Pull-ups,80,960
+199,Monday,Core Training,107,1070
+199,Tuesday,Cycling,93,930
+199,Wednesday,Rugby,118,1180
+199,Thursday,Crunches,103,721
+199,Friday,Sprinting,95,570
+199,Saturday,Badminton,33,198
+199,Sunday,Strength Training,126,1386
+200,Monday,Zumba,44,484
+200,Tuesday,Plank,20,140
+200,Wednesday,Cycling,27,324
+200,Thursday,Bench Press,81,648
+200,Friday,Crunches,31,186
+200,Saturday,CrossFit,47,329
+200,Sunday,Mobility Drills,145,1450
+201,Monday,Volleyball,122,976
+201,Tuesday,Zumba,47,470
+201,Wednesday,Yoga,142,994
+201,Thursday,Cycling,133,1330
+201,Friday,Mountain Climbers,99,693
+201,Saturday,Stair Climber,23,161
+201,Sunday,Bench Press,66,528
+202,Monday,Stair Climber,74,740
+202,Tuesday,Hiking,128,768
+202,Wednesday,Dancing,148,888
+202,Thursday,Walking,40,440
+202,Friday,Swimming,20,240
+202,Saturday,Basketball,120,1320
+202,Sunday,Core Training,138,1104
+203,Monday,Running,136,1224
+203,Tuesday,Strength Training,107,1070
+203,Wednesday,Burpees,106,1272
+203,Thursday,HIIT,62,744
+203,Friday,Surfing,95,570
+203,Saturday,Aerobics,71,852
+203,Sunday,Powerlifting,76,608
+204,Monday,Resistance Band Workout,104,624
+204,Tuesday,Resistance Band Workout,147,1470
+204,Wednesday,HIIT,110,880
+204,Thursday,Shoulder Press,47,564
+204,Friday,Running,49,588
+204,Saturday,Table Tennis,93,930
+204,Sunday,Pull-ups,34,238
+205,Monday,Spin Class,138,1242
+205,Tuesday,Boxing,118,1298
+205,Wednesday,Spin Class,116,1044
+205,Thursday,Leg Press,111,1332
+205,Friday,Hiking,27,162
+205,Saturday,Martial Arts,132,1188
+205,Sunday,Hiking,36,216
+206,Monday,Aerobics,88,528
+206,Tuesday,Swimming,130,1170
+206,Wednesday,Zumba,103,618
+206,Thursday,Crunches,108,864
+206,Friday,Battle Ropes,75,675
+206,Saturday,Strength Training,92,552
+206,Sunday,CrossFit,101,707
+207,Monday,Tennis,36,252
+207,Tuesday,Stair Climber,103,1236
+207,Wednesday,Pull-ups,69,483
+207,Thursday,Tennis,98,980
+207,Friday,Squats,62,744
+207,Saturday,Rugby,67,670
+207,Sunday,Sprinting,114,1026
+208,Monday,Martial Arts,64,704
+208,Tuesday,Bench Press,135,945
+208,Wednesday,Running,150,1650
+208,Thursday,Pilates,106,636
+208,Friday,Zumba,21,126
+208,Saturday,Tennis,116,1160
+208,Sunday,Pull-ups,60,720
+209,Monday,CrossFit,64,640
+209,Tuesday,Elliptical,104,624
+209,Wednesday,Table Tennis,114,912
+209,Thursday,HIIT,92,828
+209,Friday,Hiking,127,1397
+209,Saturday,Spin Class,55,495
+209,Sunday,Leg Press,123,738
+210,Monday,Battle Ropes,105,735
+210,Tuesday,Rowing,135,945
+210,Wednesday,CrossFit,143,1573
+210,Thursday,Martial Arts,69,690
+210,Friday,Table Tennis,48,336
+210,Saturday,Sprinting,21,147
+210,Sunday,Jumping Jacks,79,790
+211,Monday,Spin Class,66,594
+211,Tuesday,Volleyball,62,496
+211,Wednesday,Martial Arts,91,1001
+211,Thursday,Handball,25,275
+211,Friday,Plank,91,1092
+211,Saturday,Hiking,91,728
+211,Sunday,Elliptical,73,730
+212,Monday,Pilates,57,399
+212,Tuesday,Stair Climber,74,666
+212,Wednesday,Elliptical,132,1056
+212,Thursday,Rock Climbing,128,1408
+212,Friday,Stair Climber,62,558
+212,Saturday,Badminton,71,781
+212,Sunday,Crunches,121,1452
+213,Monday,HIIT,70,560
+213,Tuesday,Sit-ups,25,225
+213,Wednesday,Shoulder Press,142,1136
+213,Thursday,Hiking,47,376
+213,Friday,Stair Climber,113,678
+213,Saturday,Table Tennis,140,840
+213,Sunday,Deadlifts,140,1120
+214,Monday,Running,142,1278
+214,Tuesday,Yoga,74,444
+214,Wednesday,Jumping Jacks,91,728
+214,Thursday,Resistance Band Workout,134,1474
+214,Friday,Yoga,43,473
+214,Saturday,Sprinting,134,938
+214,Sunday,Lunges,45,315
+215,Monday,Martial Arts,111,888
+215,Tuesday,Running,84,840
+215,Wednesday,Powerlifting,77,770
+215,Thursday,Treadmill,147,1323
+215,Friday,Handball,61,366
+215,Saturday,Kickboxing,110,990
+215,Sunday,Skating,33,264
+216,Monday,Skating,57,456
+216,Tuesday,Swimming,101,707
+216,Wednesday,Push-ups,21,252
+216,Thursday,Skating,38,228
+216,Friday,Mobility Drills,43,516
+216,Saturday,Hiking,131,917
+216,Sunday,Rowing,56,560
+217,Monday,HIIT,121,968
+217,Tuesday,Stair Climber,42,462
+217,Wednesday,Burpees,120,1200
+217,Thursday,Kettlebell Workout,89,801
+217,Friday,Jumping Jacks,124,1364
+217,Saturday,Handball,74,444
+217,Sunday,Surfing,90,630
+218,Monday,Kickboxing,33,330
+218,Tuesday,Yoga,146,1460
+218,Wednesday,Deadlifts,147,1029
+218,Thursday,Powerlifting,92,552
+218,Friday,Walking,59,413
+218,Saturday,Zumba,129,1161
+218,Sunday,Stair Climber,69,414
+219,Monday,Lunges,131,1441
+219,Tuesday,Powerlifting,29,203
+219,Wednesday,HIIT,147,1176
+219,Thursday,Crunches,33,264
+219,Friday,Handball,26,234
+219,Saturday,Resistance Band Workout,69,414
+219,Sunday,Strength Training,121,1210
+220,Monday,Football,54,540
+220,Tuesday,Shoulder Press,143,1573
+220,Wednesday,Elliptical,97,873
+220,Thursday,Skipping Rope,89,979
+220,Friday,Plank,21,168
+220,Saturday,Hiking,100,700
+220,Sunday,Squats,28,308
+221,Monday,Football,146,1168
+221,Tuesday,Football,83,664
+221,Wednesday,Hiking,123,861
+221,Thursday,Sit-ups,70,770
+221,Friday,Swimming,104,624
+221,Saturday,Push-ups,37,444
+221,Sunday,Squats,103,1236
+222,Monday,Football,76,684
+222,Tuesday,Mountain Climbers,135,945
+222,Wednesday,Jumping Jacks,107,1284
+222,Thursday,Pull-ups,148,1036
+222,Friday,Pilates,121,1331
+222,Saturday,Running,122,1220
+222,Sunday,Pull-ups,128,896
+223,Monday,Powerlifting,106,954
+223,Tuesday,Dancing,98,588
+223,Wednesday,Basketball,86,602
+223,Thursday,Shoulder Press,25,175
+223,Friday,CrossFit,118,1298
+223,Saturday,Swimming,124,1116
+223,Sunday,Basketball,24,192
+224,Monday,Badminton,143,1144
+224,Tuesday,Leg Press,21,252
+224,Wednesday,Cycling,114,798
+224,Thursday,Zumba,97,873
+224,Friday,Powerlifting,24,264
+224,Saturday,Stair Climber,127,1524
+224,Sunday,Burpees,50,500
+225,Monday,Push-ups,112,1120
+225,Tuesday,Swimming,88,968
+225,Wednesday,Battle Ropes,52,312
+225,Thursday,Boxing,91,728
+225,Friday,Table Tennis,85,1020
+225,Saturday,Treadmill,87,522
+225,Sunday,Handball,80,560
+226,Monday,Kettlebell Workout,29,261
+226,Tuesday,Crunches,42,420
+226,Wednesday,Mobility Drills,119,1428
+226,Thursday,Mobility Drills,82,738
+226,Friday,Aerobics,32,288
+226,Saturday,Crunches,91,910
+226,Sunday,Resistance Band Workout,142,994
+227,Monday,Shoulder Press,127,1270
+227,Tuesday,Football,44,528
+227,Wednesday,Tennis,79,948
+227,Thursday,Zumba,75,525
+227,Friday,Resistance Band Workout,118,944
+227,Saturday,Tennis,72,576
+227,Sunday,Treadmill,82,574
+228,Monday,Push-ups,86,688
+228,Tuesday,Rugby,109,1199
+228,Wednesday,Zumba,46,322
+228,Thursday,Basketball,113,1356
+228,Friday,Swimming,111,1110
+228,Saturday,Plank,22,132
+228,Sunday,Badminton,74,518
+229,Monday,Pull-ups,125,1500
+229,Tuesday,Jumping Jacks,88,704
+229,Wednesday,Boxing,112,784
+229,Thursday,Treadmill,56,448
+229,Friday,Push-ups,119,1190
+229,Saturday,Tennis,79,474
+229,Sunday,Cycling,107,1177
+230,Monday,Rock Climbing,47,517
+230,Tuesday,Mobility Drills,25,200
+230,Wednesday,Burpees,120,1440
+230,Thursday,Kickboxing,22,132
+230,Friday,Yoga,78,780
+230,Saturday,Battle Ropes,27,216
+230,Sunday,Basketball,111,1332
+231,Monday,Pull-ups,60,480
+231,Tuesday,Running,45,315
+231,Wednesday,Walking,114,1140
+231,Thursday,Pilates,30,270
+231,Friday,Volleyball,31,341
+231,Saturday,Hiking,99,891
+231,Sunday,HIIT,96,672
+232,Monday,Powerlifting,81,567
+232,Tuesday,Rowing,146,1168
+232,Wednesday,Stretching,87,1044
+232,Thursday,Boxing,128,896
+232,Friday,Skating,56,504
+232,Saturday,Rowing,39,234
+232,Sunday,Handball,74,444
+233,Monday,Hiking,90,1080
+233,Tuesday,Hiking,20,220
+233,Wednesday,Rowing,93,1116
+233,Thursday,Plank,129,1161
+233,Friday,HIIT,96,864
+233,Saturday,Crunches,80,880
+233,Sunday,Jumping Jacks,123,1107
+234,Monday,Yoga,33,297
+234,Tuesday,Basketball,125,1375
+234,Wednesday,Badminton,141,846
+234,Thursday,Boxing,35,315
+234,Friday,Yoga,81,729
+234,Saturday,Aerobics,121,968
+234,Sunday,Sprinting,122,1342
+235,Monday,Cycling,35,420
+235,Tuesday,Elliptical,55,660
+235,Wednesday,Squats,40,360
+235,Thursday,Push-ups,73,803
+235,Friday,Pull-ups,118,708
+235,Saturday,Cycling,114,1140
+235,Sunday,Lunges,145,1015
+236,Monday,Stretching,128,896
+236,Tuesday,Resistance Band Workout,41,246
+236,Wednesday,Aerobics,77,924
+236,Thursday,Rowing,21,252
+236,Friday,Spin Class,31,186
+236,Saturday,Table Tennis,66,792
+236,Sunday,Martial Arts,22,176
+237,Monday,Resistance Band Workout,90,810
+237,Tuesday,Basketball,41,287
+237,Wednesday,Swimming,131,1572
+237,Thursday,Strength Training,47,470
+237,Friday,Rowing,45,540
+237,Saturday,Mountain Climbers,67,402
+237,Sunday,Handball,21,126
+238,Monday,Aerobics,72,720
+238,Tuesday,Pull-ups,103,824
+238,Wednesday,Mountain Climbers,143,1287
+238,Thursday,Walking,143,1287
+238,Friday,Dancing,119,1428
+238,Saturday,Badminton,129,1161
+238,Sunday,Rock Climbing,66,528
+239,Monday,Dancing,33,363
+239,Tuesday,Rugby,61,488
+239,Wednesday,Rock Climbing,24,192
+239,Thursday,Pull-ups,95,665
+239,Friday,Stretching,107,1070
+239,Saturday,Jumping Jacks,142,1562
+239,Sunday,Table Tennis,115,1035
+240,Monday,Treadmill,44,484
+240,Tuesday,Leg Press,74,740
+240,Wednesday,Jumping Jacks,53,583
+240,Thursday,Plank,46,552
+240,Friday,Sprinting,99,792
+240,Saturday,Sprinting,86,946
+240,Sunday,Bench Press,22,242
+241,Monday,HIIT,93,558
+241,Tuesday,Tennis,75,900
+241,Wednesday,Pull-ups,44,484
+241,Thursday,Surfing,40,480
+241,Friday,Sprinting,68,612
+241,Saturday,HIIT,23,230
+241,Sunday,Core Training,51,459
+242,Monday,Skipping Rope,67,536
+242,Tuesday,Sit-ups,51,612
+242,Wednesday,CrossFit,134,804
+242,Thursday,Plank,61,671
+242,Friday,Running,47,470
+242,Saturday,Core Training,124,1488
+242,Sunday,Bench Press,93,930
+243,Monday,Core Training,143,1430
+243,Tuesday,Shoulder Press,122,1220
+243,Wednesday,CrossFit,27,324
+243,Thursday,Yoga,28,308
+243,Friday,Kickboxing,83,913
+243,Saturday,Shoulder Press,120,1440
+243,Sunday,Rock Climbing,62,372
+244,Monday,Sit-ups,112,1120
+244,Tuesday,Dancing,131,1441
+244,Wednesday,Walking,28,308
+244,Thursday,Push-ups,111,999
+244,Friday,Treadmill,87,783
+244,Saturday,Tennis,144,1152
+244,Sunday,Stair Climber,57,570
+245,Monday,Treadmill,123,1230
+245,Tuesday,Shoulder Press,42,294
+245,Wednesday,Swimming,115,920
+245,Thursday,Kettlebell Workout,37,259
+245,Friday,Aerobics,51,357
+245,Saturday,Push-ups,115,1035
+245,Sunday,CrossFit,139,834
+246,Monday,Powerlifting,115,690
+246,Tuesday,Plank,56,336
+246,Wednesday,Walking,114,684
+246,Thursday,Crunches,101,909
+246,Friday,Kickboxing,38,266
+246,Saturday,Resistance Band Workout,30,240
+246,Sunday,Stretching,65,780
+247,Monday,Martial Arts,130,1560
+247,Tuesday,Cycling,128,1152
+247,Wednesday,HIIT,147,1029
+247,Thursday,Handball,37,407
+247,Friday,Skating,50,450
+247,Saturday,Aerobics,83,830
+247,Sunday,Handball,78,468
+248,Monday,Mountain Climbers,145,1305
+248,Tuesday,Martial Arts,42,420
+248,Wednesday,Table Tennis,120,720
+248,Thursday,Skating,145,1595
+248,Friday,Sprinting,94,846
+248,Saturday,Core Training,137,1644
+248,Sunday,Cycling,79,869
+249,Monday,Running,56,448
+249,Tuesday,Skipping Rope,29,174
+249,Wednesday,Rugby,107,856
+249,Thursday,Treadmill,86,602
+249,Friday,Stretching,144,1584
+249,Saturday,Crunches,129,1161
+249,Sunday,Squats,39,468
+250,Monday,Boxing,53,583
+250,Tuesday,Skating,62,496
+250,Wednesday,Pull-ups,69,828
+250,Thursday,Boxing,39,468
+250,Friday,Pull-ups,117,936
+250,Saturday,Dancing,27,297
+250,Sunday,Treadmill,68,612
+251,Monday,Stretching,120,1200
+251,Tuesday,Rock Climbing,98,1176
+251,Wednesday,Martial Arts,48,336
+251,Thursday,CrossFit,126,1512
+251,Friday,Leg Press,105,945
+251,Saturday,Mobility Drills,24,240
+251,Sunday,Zumba,54,378
+252,Monday,Basketball,67,402
+252,Tuesday,Stair Climber,36,252
+252,Wednesday,Tennis,44,396
+252,Thursday,Bench Press,55,495
+252,Friday,HIIT,131,1572
+252,Saturday,Surfing,82,492
+252,Sunday,Cycling,69,552
+253,Monday,Sit-ups,88,1056
+253,Tuesday,Kickboxing,47,282
+253,Wednesday,Kickboxing,125,1250
+253,Thursday,Sit-ups,107,1070
+253,Friday,Resistance Band Workout,74,444
+253,Saturday,Squats,26,234
+253,Sunday,Running,48,528
+254,Monday,Resistance Band Workout,133,1596
+254,Tuesday,Mountain Climbers,48,528
+254,Wednesday,Walking,101,808
+254,Thursday,Treadmill,94,564
+254,Friday,Shoulder Press,29,290
+254,Saturday,Pilates,59,354
+254,Sunday,Leg Press,83,830
+255,Monday,Skipping Rope,53,530
+255,Tuesday,Core Training,101,808
+255,Wednesday,Dancing,78,624
+255,Thursday,Rugby,21,126
+255,Friday,Hiking,114,912
+255,Saturday,Burpees,64,576
+255,Sunday,Spin Class,25,200
+256,Monday,Plank,69,828
+256,Tuesday,Battle Ropes,58,348
+256,Wednesday,Dancing,144,1152
+256,Thursday,Crunches,74,518
+256,Friday,HIIT,54,648
+256,Saturday,Handball,131,1048
+256,Sunday,Dancing,146,1022
+257,Monday,Pilates,132,1056
+257,Tuesday,Handball,66,396
+257,Wednesday,Running,81,486
+257,Thursday,Powerlifting,48,480
+257,Friday,Deadlifts,94,564
+257,Saturday,Kickboxing,27,162
+257,Sunday,Stretching,31,372
+258,Monday,Swimming,79,948
+258,Tuesday,Spin Class,75,900
+258,Wednesday,Surfing,145,1450
+258,Thursday,Dancing,26,182
+258,Friday,Core Training,121,1331
+258,Saturday,Stretching,37,444
+258,Sunday,Stretching,79,948
+259,Monday,Running,144,1584
+259,Tuesday,Stair Climber,29,174
+259,Wednesday,Kettlebell Workout,145,1015
+259,Thursday,Cycling,22,132
+259,Friday,Pilates,106,848
+259,Saturday,Squats,45,270
+259,Sunday,Skipping Rope,95,1140
+260,Monday,Deadlifts,98,686
+260,Tuesday,CrossFit,70,560
+260,Wednesday,Stair Climber,125,875
+260,Thursday,Volleyball,75,750
+260,Friday,Stretching,135,945
+260,Saturday,Pull-ups,66,660
+260,Sunday,Pull-ups,146,1022
+261,Monday,Martial Arts,45,450
+261,Tuesday,Leg Press,81,486
+261,Wednesday,CrossFit,70,630
+261,Thursday,Rowing,32,384
+261,Friday,Rock Climbing,65,520
+261,Saturday,Rowing,43,301
+261,Sunday,Table Tennis,112,1008
+262,Monday,Core Training,142,994
+262,Tuesday,Kickboxing,75,450
+262,Wednesday,Volleyball,82,574
+262,Thursday,Cycling,67,670
+262,Friday,Surfing,43,430
+262,Saturday,Elliptical,143,1430
+262,Sunday,HIIT,51,408
+263,Monday,Zumba,97,679
+263,Tuesday,Pull-ups,133,1463
+263,Wednesday,Stair Climber,62,372
+263,Thursday,Rock Climbing,28,252
+263,Friday,Crunches,121,726
+263,Saturday,Powerlifting,111,666
+263,Sunday,Walking,114,798
+264,Monday,Walking,30,210
+264,Tuesday,Hiking,139,1112
+264,Wednesday,Swimming,67,536
+264,Thursday,CrossFit,124,868
+264,Friday,CrossFit,89,801
+264,Saturday,Running,119,952
+264,Sunday,Rugby,124,1488
+265,Monday,Jumping Jacks,29,290
+265,Tuesday,Sit-ups,138,1656
+265,Wednesday,Stretching,136,1360
+265,Thursday,Deadlifts,36,216
+265,Friday,Basketball,73,511
+265,Saturday,Dancing,67,737
+265,Sunday,Bench Press,36,324
+266,Monday,Dancing,42,336
+266,Tuesday,Basketball,143,1144
+266,Wednesday,Skating,89,712
+266,Thursday,Strength Training,94,1034
+266,Friday,Squats,128,1536
+266,Saturday,Mountain Climbers,101,1010
+266,Sunday,Bench Press,141,1551
+267,Monday,Aerobics,127,1270
+267,Tuesday,Dancing,75,825
+267,Wednesday,Dancing,60,600
+267,Thursday,Kickboxing,125,750
+267,Friday,Zumba,26,260
+267,Saturday,Spin Class,73,657
+267,Sunday,Elliptical,55,660
+268,Monday,Volleyball,101,808
+268,Tuesday,HIIT,97,776
+268,Wednesday,Hiking,145,1160
+268,Thursday,Push-ups,66,396
+268,Friday,Leg Press,138,1104
+268,Saturday,Pull-ups,137,1644
+268,Sunday,Rock Climbing,142,1704
+269,Monday,Plank,95,760
+269,Tuesday,Running,23,276
+269,Wednesday,Basketball,80,720
+269,Thursday,Kettlebell Workout,21,189
+269,Friday,Powerlifting,82,820
+269,Saturday,Resistance Band Workout,54,378
+269,Sunday,Crunches,45,450
+270,Monday,Rowing,60,720
+270,Tuesday,Sit-ups,118,708
+270,Wednesday,Basketball,94,940
+270,Thursday,Volleyball,105,945
+270,Friday,Skating,85,765
+270,Saturday,Powerlifting,137,1096
+270,Sunday,CrossFit,145,1305
+271,Monday,HIIT,131,1048
+271,Tuesday,Running,98,1078
+271,Wednesday,Strength Training,146,1606
+271,Thursday,Rock Climbing,128,1280
+271,Friday,HIIT,147,1323
+271,Saturday,Rowing,140,1540
+271,Sunday,Kickboxing,38,456
+272,Monday,Shoulder Press,121,968
+272,Tuesday,Plank,80,640
+272,Wednesday,Walking,75,900
+272,Thursday,Resistance Band Workout,139,1529
+272,Friday,Kettlebell Workout,53,477
+272,Saturday,Strength Training,53,318
+272,Sunday,Kettlebell Workout,79,948
+273,Monday,Skating,67,469
+273,Tuesday,Pilates,107,1177
+273,Wednesday,Lunges,34,204
+273,Thursday,Leg Press,45,450
+273,Friday,Mobility Drills,115,1380
+273,Saturday,Burpees,108,864
+273,Sunday,Bench Press,21,231
+274,Monday,Cycling,122,854
+274,Tuesday,Martial Arts,33,396
+274,Wednesday,CrossFit,132,1320
+274,Thursday,Kickboxing,147,1176
+274,Friday,Plank,84,1008
+274,Saturday,Strength Training,39,273
+274,Sunday,Core Training,43,301
+275,Monday,Yoga,61,732
+275,Tuesday,Deadlifts,32,288
+275,Wednesday,Crunches,32,288
+275,Thursday,Battle Ropes,132,1188
+275,Friday,Sprinting,46,552
+275,Saturday,Skating,27,270
+275,Sunday,Pull-ups,137,959
+276,Monday,Plank,65,455
+276,Tuesday,Rugby,24,288
+276,Wednesday,Football,143,1573
+276,Thursday,Table Tennis,89,801
+276,Friday,Plank,33,297
+276,Saturday,Crunches,150,1350
+276,Sunday,Crunches,36,216
+277,Monday,Handball,58,638
+277,Tuesday,Table Tennis,101,606
+277,Wednesday,HIIT,112,784
+277,Thursday,Swimming,107,1284
+277,Friday,Rowing,77,693
+277,Saturday,Yoga,121,968
+277,Sunday,Swimming,33,363
+278,Monday,Badminton,83,664
+278,Tuesday,Football,127,1270
+278,Wednesday,Kickboxing,142,1420
+278,Thursday,Martial Arts,56,448
+278,Friday,Skipping Rope,89,712
+278,Saturday,Core Training,78,858
+278,Sunday,Surfing,75,675
+279,Monday,Rowing,65,390
+279,Tuesday,Skipping Rope,120,720
+279,Wednesday,Skipping Rope,115,690
+279,Thursday,Elliptical,58,638
+279,Friday,Squats,33,330
+279,Saturday,Badminton,98,588
+279,Sunday,Football,85,850
+280,Monday,Mountain Climbers,59,590
+280,Tuesday,Lunges,59,649
+280,Wednesday,Table Tennis,113,791
+280,Thursday,Boxing,36,216
+280,Friday,Squats,30,330
+280,Saturday,Football,138,966
+280,Sunday,Walking,81,567
+281,Monday,Shoulder Press,70,560
+281,Tuesday,Martial Arts,135,1215
+281,Wednesday,Jumping Jacks,90,990
+281,Thursday,Burpees,108,1080
+281,Friday,Spin Class,92,1012
+281,Saturday,Basketball,26,312
+281,Sunday,Squats,33,264
+282,Monday,Boxing,32,320
+282,Tuesday,Shoulder Press,128,1280
+282,Wednesday,Swimming,99,693
+282,Thursday,Rock Climbing,52,520
+282,Friday,Burpees,94,1034
+282,Saturday,Leg Press,106,636
+282,Sunday,Hiking,110,990
+283,Monday,Strength Training,96,576
+283,Tuesday,Plank,66,792
+283,Wednesday,Skating,83,498
+283,Thursday,Bench Press,110,1320
+283,Friday,Pull-ups,123,1353
+283,Saturday,Mountain Climbers,147,1617
+283,Sunday,Mountain Climbers,38,304
+284,Monday,Dancing,83,913
+284,Tuesday,Resistance Band Workout,90,900
+284,Wednesday,Hiking,63,441
+284,Thursday,Battle Ropes,72,648
+284,Friday,Spin Class,34,408
+284,Saturday,Zumba,40,480
+284,Sunday,Core Training,107,1177
+285,Monday,Battle Ropes,40,440
+285,Tuesday,Rugby,47,564
+285,Wednesday,Pilates,94,564
+285,Thursday,Crunches,141,1269
+285,Friday,Leg Press,139,1668
+285,Saturday,Aerobics,113,791
+285,Sunday,Boxing,97,679
+286,Monday,Crunches,37,222
+286,Tuesday,Walking,122,1220
+286,Wednesday,Handball,49,294
+286,Thursday,Rock Climbing,86,602
+286,Friday,Battle Ropes,110,660
+286,Saturday,Jumping Jacks,82,492
+286,Sunday,Martial Arts,86,946
+287,Monday,Battle Ropes,78,936
+287,Tuesday,Crunches,112,1344
+287,Wednesday,Boxing,136,1496
+287,Thursday,Jumping Jacks,60,480
+287,Friday,Mobility Drills,66,462
+287,Saturday,Powerlifting,99,693
+287,Sunday,Rowing,35,350
+288,Monday,Strength Training,45,450
+288,Tuesday,Pilates,44,352
+288,Wednesday,Leg Press,131,1572
+288,Thursday,Resistance Band Workout,123,861
+288,Friday,Pull-ups,94,1034
+288,Saturday,Deadlifts,27,243
+288,Sunday,Jumping Jacks,128,1024
+289,Monday,Tennis,71,568
+289,Tuesday,Rock Climbing,39,468
+289,Wednesday,Powerlifting,97,582
+289,Thursday,Zumba,32,224
+289,Friday,Table Tennis,109,872
+289,Saturday,Rugby,123,1107
+289,Sunday,Kickboxing,146,1752
+290,Monday,Sit-ups,145,1160
+290,Tuesday,Rugby,34,340
+290,Wednesday,Crunches,30,360
+290,Thursday,Shoulder Press,76,836
+290,Friday,Battle Ropes,97,970
+290,Saturday,Walking,69,621
+290,Sunday,Lunges,147,882
+291,Monday,Powerlifting,27,297
+291,Tuesday,Sprinting,37,296
+291,Wednesday,Squats,117,1170
+291,Thursday,Jumping Jacks,145,1015
+291,Friday,CrossFit,50,600
+291,Saturday,Burpees,20,200
+291,Sunday,Rugby,123,984
+292,Monday,Sprinting,56,560
+292,Tuesday,Surfing,35,350
+292,Wednesday,Yoga,103,1236
+292,Thursday,Jumping Jacks,82,574
+292,Friday,CrossFit,70,840
+292,Saturday,Burpees,75,675
+292,Sunday,Jumping Jacks,108,648
+293,Monday,Football,65,715
+293,Tuesday,Squats,145,870
+293,Wednesday,Yoga,95,950
+293,Thursday,Plank,34,306
+293,Friday,Powerlifting,123,1107
+293,Saturday,Martial Arts,62,744
+293,Sunday,Rugby,117,819
+294,Monday,Rugby,58,522
+294,Tuesday,Core Training,57,399
+294,Wednesday,Squats,69,759
+294,Thursday,Kettlebell Workout,120,1320
+294,Friday,CrossFit,102,816
+294,Saturday,Burpees,46,368
+294,Sunday,Basketball,123,861
+295,Monday,Handball,140,1680
+295,Tuesday,Handball,121,968
+295,Wednesday,Pilates,126,756
+295,Thursday,Table Tennis,137,822
+295,Friday,Cycling,106,1060
+295,Saturday,Table Tennis,58,580
+295,Sunday,Bench Press,62,620
+296,Monday,Handball,90,810
+296,Tuesday,Core Training,51,459
+296,Wednesday,Boxing,123,738
+296,Thursday,Pull-ups,100,800
+296,Friday,Tennis,95,570
+296,Saturday,Kickboxing,95,570
+296,Sunday,Sprinting,94,564
+297,Monday,Burpees,120,720
+297,Tuesday,Tennis,38,380
+297,Wednesday,Walking,70,420
+297,Thursday,Stretching,124,1240
+297,Friday,Core Training,84,588
+297,Saturday,Walking,127,1016
+297,Sunday,Skipping Rope,112,784
+298,Monday,Yoga,31,186
+298,Tuesday,Pilates,101,1111
+298,Wednesday,Zumba,119,833
+298,Thursday,Elliptical,80,800
+298,Friday,Push-ups,64,576
+298,Saturday,Volleyball,61,366
+298,Sunday,Sprinting,87,957
+299,Monday,Pull-ups,38,228
+299,Tuesday,Kickboxing,136,1496
+299,Wednesday,Mountain Climbers,78,624
+299,Thursday,Hiking,79,553
+299,Friday,Swimming,83,830
+299,Saturday,Elliptical,82,738
+299,Sunday,Lunges,138,828
+300,Monday,Jumping Jacks,141,987
+300,Tuesday,Lunges,95,570
+300,Wednesday,Squats,79,474
+300,Thursday,Running,150,1050
+300,Friday,Dancing,23,276
+300,Saturday,Stretching,67,536
+300,Sunday,Mobility Drills,150,1650
+301,Monday,Mountain Climbers,51,612
+301,Tuesday,Swimming,56,392
+301,Wednesday,Badminton,56,392
+301,Thursday,Volleyball,134,1340
+301,Friday,Mobility Drills,61,427
+301,Saturday,Core Training,54,432
+301,Sunday,Push-ups,62,558
+302,Monday,Running,116,1276
+302,Tuesday,Resistance Band Workout,43,430
+302,Wednesday,Badminton,42,378
+302,Thursday,Boxing,80,960
+302,Friday,Rugby,76,684
+302,Saturday,Bench Press,74,666
+302,Sunday,Rugby,41,451
+303,Monday,Yoga,99,594
+303,Tuesday,Skating,51,408
+303,Wednesday,Mountain Climbers,39,429
+303,Thursday,Football,120,840
+303,Friday,Treadmill,22,176
+303,Saturday,Aerobics,98,1078
+303,Sunday,Mobility Drills,41,328
+304,Monday,Dancing,40,480
+304,Tuesday,Sprinting,40,240
+304,Wednesday,Table Tennis,29,348
+304,Thursday,Aerobics,85,1020
+304,Friday,Stair Climber,34,204
+304,Saturday,Crunches,132,1320
+304,Sunday,Walking,70,490
+305,Monday,Rock Climbing,78,624
+305,Tuesday,Rock Climbing,138,966
+305,Wednesday,Hiking,52,416
+305,Thursday,Mountain Climbers,50,400
+305,Friday,Martial Arts,53,636
+305,Saturday,Mobility Drills,130,910
+305,Sunday,Running,92,1104
+306,Monday,Elliptical,24,144
+306,Tuesday,HIIT,57,684
+306,Wednesday,Kettlebell Workout,84,840
+306,Thursday,Plank,116,928
+306,Friday,Swimming,123,1476
+306,Saturday,Pull-ups,106,1060
+306,Sunday,Shoulder Press,138,966
+307,Monday,Spin Class,28,252
+307,Tuesday,Rowing,121,968
+307,Wednesday,Dancing,135,945
+307,Thursday,Swimming,47,470
+307,Friday,Rugby,34,340
+307,Saturday,Shoulder Press,42,294
+307,Sunday,Bench Press,108,1188
+308,Monday,Surfing,83,996
+308,Tuesday,Surfing,127,1270
+308,Wednesday,Squats,70,490
+308,Thursday,Leg Press,131,1048
+308,Friday,Volleyball,42,504
+308,Saturday,Football,121,1210
+308,Sunday,Martial Arts,131,1572
+309,Monday,Rock Climbing,61,366
+309,Tuesday,Burpees,49,392
+309,Wednesday,HIIT,59,531
+309,Thursday,Yoga,132,1188
+309,Friday,Basketball,59,413
+309,Saturday,Cycling,52,416
+309,Sunday,Spin Class,52,364
+310,Monday,Resistance Band Workout,56,448
+310,Tuesday,Burpees,77,924
+310,Wednesday,Spin Class,69,552
+310,Thursday,Surfing,94,564
+310,Friday,Surfing,83,996
+310,Saturday,Lunges,48,432
+310,Sunday,Yoga,113,791
+311,Monday,Plank,96,672
+311,Tuesday,Push-ups,21,210
+311,Wednesday,Volleyball,77,847
+311,Thursday,Dancing,143,1287
+311,Friday,Core Training,67,402
+311,Saturday,Elliptical,63,567
+311,Sunday,Tennis,85,850
+312,Monday,Battle Ropes,31,248
+312,Tuesday,Kickboxing,148,1776
+312,Wednesday,Basketball,81,972
+312,Thursday,Squats,137,1096
+312,Friday,Plank,113,1243
+312,Saturday,Badminton,105,1050
+312,Sunday,Burpees,143,1287
+313,Monday,Sprinting,135,1215
+313,Tuesday,Strength Training,135,945
+313,Wednesday,Sprinting,37,222
+313,Thursday,Cycling,137,1096
+313,Friday,Shoulder Press,55,495
+313,Saturday,Deadlifts,51,306
+313,Sunday,Rugby,96,864
+314,Monday,Dancing,89,1068
+314,Tuesday,Zumba,21,210
+314,Wednesday,Mobility Drills,51,459
+314,Thursday,Rock Climbing,102,816
+314,Friday,Lunges,125,1000
+314,Saturday,Aerobics,45,450
+314,Sunday,Pull-ups,101,606
+315,Monday,Jumping Jacks,61,671
+315,Tuesday,Push-ups,69,759
+315,Wednesday,Jumping Jacks,66,594
+315,Thursday,Rugby,135,1620
+315,Friday,Volleyball,56,336
+315,Saturday,Deadlifts,140,1260
+315,Sunday,Hiking,108,1188
+316,Monday,Plank,20,200
+316,Tuesday,Battle Ropes,50,400
+316,Wednesday,Squats,24,192
+316,Thursday,Jumping Jacks,43,258
+316,Friday,Running,70,840
+316,Saturday,Football,58,406
+316,Sunday,Rowing,125,875
+317,Monday,Martial Arts,85,510
+317,Tuesday,Yoga,61,427
+317,Wednesday,Kickboxing,59,531
+317,Thursday,Kettlebell Workout,110,880
+317,Friday,CrossFit,37,407
+317,Saturday,Martial Arts,134,1206
+317,Sunday,Pilates,40,240
+318,Monday,Shoulder Press,68,816
+318,Tuesday,Lunges,130,780
+318,Wednesday,Mountain Climbers,116,1392
+318,Thursday,Burpees,101,1111
+318,Friday,Kickboxing,103,1236
+318,Saturday,Skating,70,420
+318,Sunday,Bench Press,39,312
+319,Monday,Swimming,97,582
+319,Tuesday,Stair Climber,100,1000
+319,Wednesday,Squats,44,396
+319,Thursday,Rock Climbing,114,912
+319,Friday,Kettlebell Workout,109,981
+319,Saturday,Core Training,130,1170
+319,Sunday,Kickboxing,140,980
+320,Monday,Surfing,86,1032
+320,Tuesday,Dancing,29,174
+320,Wednesday,Walking,55,660
+320,Thursday,Boxing,115,1380
+320,Friday,Deadlifts,98,1078
+320,Saturday,CrossFit,24,192
+320,Sunday,Walking,104,1248
+321,Monday,Badminton,45,315
+321,Tuesday,Aerobics,72,864
+321,Wednesday,CrossFit,53,636
+321,Thursday,Spin Class,66,594
+321,Friday,Skipping Rope,62,744
+321,Saturday,Hiking,102,1020
+321,Sunday,Badminton,132,1452
+322,Monday,Sit-ups,48,528
+322,Tuesday,Bench Press,20,180
+322,Wednesday,Core Training,26,156
+322,Thursday,Surfing,135,1620
+322,Friday,Tennis,28,168
+322,Saturday,Badminton,123,984
+322,Sunday,Mountain Climbers,108,1296
+323,Monday,Squats,106,1166
+323,Tuesday,Walking,103,1030
+323,Wednesday,Surfing,87,522
+323,Thursday,Rock Climbing,125,750
+323,Friday,Leg Press,62,434
+323,Saturday,Rock Climbing,37,407
+323,Sunday,Surfing,90,540
+324,Monday,CrossFit,136,1224
+324,Tuesday,Pull-ups,139,1112
+324,Wednesday,Strength Training,34,306
+324,Thursday,Kettlebell Workout,21,210
+324,Friday,Push-ups,84,504
+324,Saturday,CrossFit,142,1136
+324,Sunday,Table Tennis,140,1400
+325,Monday,Boxing,43,301
+325,Tuesday,Resistance Band Workout,97,1067
+325,Wednesday,Table Tennis,123,1476
+325,Thursday,Handball,55,440
+325,Friday,Sit-ups,60,480
+325,Saturday,Running,120,960
+325,Sunday,Battle Ropes,130,1040
+326,Monday,Running,90,1080
+326,Tuesday,Lunges,76,608
+326,Wednesday,Cycling,58,522
+326,Thursday,Hiking,30,300
+326,Friday,Walking,102,612
+326,Saturday,Pilates,96,1056
+326,Sunday,Core Training,94,1128
+327,Monday,Dancing,123,738
+327,Tuesday,Walking,65,585
+327,Wednesday,Zumba,137,959
+327,Thursday,CrossFit,67,603
+327,Friday,Martial Arts,136,1496
+327,Saturday,Pull-ups,80,960
+327,Sunday,Treadmill,76,456
+328,Monday,Zumba,76,912
+328,Tuesday,Cycling,144,1152
+328,Wednesday,Mobility Drills,80,720
+328,Thursday,Surfing,110,1210
+328,Friday,Surfing,67,402
+328,Saturday,Sit-ups,30,210
+328,Sunday,Rock Climbing,131,1310
+329,Monday,Leg Press,119,952
+329,Tuesday,Aerobics,41,492
+329,Wednesday,Bench Press,43,258
+329,Thursday,Pull-ups,140,840
+329,Friday,Mountain Climbers,49,539
+329,Saturday,Running,108,648
+329,Sunday,Hiking,98,686
+330,Monday,Mobility Drills,134,804
+330,Tuesday,Squats,71,781
+330,Wednesday,Push-ups,32,224
+330,Thursday,Deadlifts,63,756
+330,Friday,Battle Ropes,143,1001
+330,Saturday,Stretching,50,350
+330,Sunday,Stretching,115,1380
+331,Monday,Spin Class,57,456
+331,Tuesday,Mountain Climbers,77,616
+331,Wednesday,Elliptical,149,1192
+331,Thursday,Kettlebell Workout,61,671
+331,Friday,Spin Class,110,880
+331,Saturday,Cycling,36,396
+331,Sunday,Stair Climber,40,400
+332,Monday,Zumba,45,405
+332,Tuesday,Battle Ropes,125,1125
+332,Wednesday,Walking,119,1309
+332,Thursday,Treadmill,65,390
+332,Friday,Rugby,104,936
+332,Saturday,Core Training,47,423
+332,Sunday,Elliptical,56,504
+333,Monday,Lunges,62,558
+333,Tuesday,Aerobics,142,1278
+333,Wednesday,Elliptical,21,168
+333,Thursday,Jumping Jacks,143,1144
+333,Friday,Core Training,140,980
+333,Saturday,Hiking,73,438
+333,Sunday,Mobility Drills,74,666
+334,Monday,Powerlifting,28,168
+334,Tuesday,Battle Ropes,30,180
+334,Wednesday,Squats,73,803
+334,Thursday,Rugby,43,516
+334,Friday,Stair Climber,128,1152
+334,Saturday,Aerobics,21,252
+334,Sunday,Strength Training,30,270
+335,Monday,Sit-ups,77,616
+335,Tuesday,Skipping Rope,150,1050
+335,Wednesday,Pilates,52,468
+335,Thursday,Mobility Drills,29,203
+335,Friday,Deadlifts,86,688
+335,Saturday,Crunches,50,300
+335,Sunday,HIIT,79,790
+336,Monday,Treadmill,137,822
+336,Tuesday,CrossFit,29,261
+336,Wednesday,Push-ups,132,924
+336,Thursday,Spin Class,149,1490
+336,Friday,Stretching,112,672
+336,Saturday,Cycling,22,154
+336,Sunday,Deadlifts,149,1639
+337,Monday,Walking,74,666
+337,Tuesday,Volleyball,81,891
+337,Wednesday,Burpees,73,803
+337,Thursday,Table Tennis,137,1370
+337,Friday,Strength Training,41,246
+337,Saturday,Hiking,128,1536
+337,Sunday,Lunges,65,455
+338,Monday,Kettlebell Workout,129,1290
+338,Tuesday,Rock Climbing,57,570
+338,Wednesday,Boxing,49,490
+338,Thursday,Pilates,48,384
+338,Friday,Resistance Band Workout,119,952
+338,Saturday,Hiking,125,1375
+338,Sunday,Skipping Rope,119,1309
+339,Monday,Basketball,23,207
+339,Tuesday,Kickboxing,122,732
+339,Wednesday,Shoulder Press,93,744
+339,Thursday,Rowing,107,1177
+339,Friday,Badminton,34,340
+339,Saturday,Leg Press,25,275
+339,Sunday,Martial Arts,27,162
+340,Monday,HIIT,29,348
+340,Tuesday,Spin Class,141,1269
+340,Wednesday,Kickboxing,34,340
+340,Thursday,CrossFit,122,976
+340,Friday,Jumping Jacks,87,783
+340,Saturday,Zumba,119,952
+340,Sunday,Stretching,31,217
+341,Monday,Tennis,128,896
+341,Tuesday,Pull-ups,89,712
+341,Wednesday,Crunches,148,1332
+341,Thursday,Stretching,34,306
+341,Friday,Plank,105,1260
+341,Saturday,Surfing,50,500
+341,Sunday,Pilates,85,935
+342,Monday,Tennis,49,392
+342,Tuesday,Sit-ups,115,805
+342,Wednesday,Push-ups,124,868
+342,Thursday,HIIT,27,270
+342,Friday,CrossFit,81,648
+342,Saturday,Sit-ups,85,1020
+342,Sunday,Bench Press,67,804
+343,Monday,Spin Class,142,1278
+343,Tuesday,Swimming,130,1430
+343,Wednesday,CrossFit,67,804
+343,Thursday,Walking,121,847
+343,Friday,Resistance Band Workout,117,819
+343,Saturday,Treadmill,66,462
+343,Sunday,CrossFit,62,682
+344,Monday,Martial Arts,149,1043
+344,Tuesday,Core Training,105,1155
+344,Wednesday,Surfing,94,658
+344,Thursday,Handball,106,848
+344,Friday,Crunches,141,1410
+344,Saturday,Skipping Rope,60,600
+344,Sunday,Stair Climber,102,918
+345,Monday,Martial Arts,82,902
+345,Tuesday,Walking,57,456
+345,Wednesday,Volleyball,55,660
+345,Thursday,Volleyball,41,451
+345,Friday,Rock Climbing,58,464
+345,Saturday,Jumping Jacks,136,1360
+345,Sunday,Skipping Rope,144,1728
+346,Monday,Stair Climber,137,822
+346,Tuesday,Sprinting,116,1392
+346,Wednesday,Skipping Rope,131,1179
+346,Thursday,Push-ups,25,200
+346,Friday,Swimming,26,260
+346,Saturday,Volleyball,58,522
+346,Sunday,Powerlifting,79,553
+347,Monday,Yoga,109,872
+347,Tuesday,Boxing,89,534
+347,Wednesday,Battle Ropes,136,1360
+347,Thursday,Skipping Rope,43,344
+347,Friday,Sprinting,34,306
+347,Saturday,Rugby,141,1551
+347,Sunday,Leg Press,112,896
+348,Monday,Plank,109,1090
+348,Tuesday,Leg Press,123,1107
+348,Wednesday,Bench Press,38,228
+348,Thursday,CrossFit,102,918
+348,Friday,Volleyball,71,497
+348,Saturday,Squats,53,424
+348,Sunday,Strength Training,123,1476
+349,Monday,Battle Ropes,103,1030
+349,Tuesday,Powerlifting,127,762
+349,Wednesday,Rowing,136,1360
+349,Thursday,Kettlebell Workout,44,440
+349,Friday,Squats,48,384
+349,Saturday,Powerlifting,39,390
+349,Sunday,Mountain Climbers,73,803
+350,Monday,Aerobics,24,168
+350,Tuesday,Surfing,54,486
+350,Wednesday,Pull-ups,113,1130
+350,Thursday,Lunges,131,1441
+350,Friday,Plank,34,272
+350,Saturday,Core Training,114,1254
+350,Sunday,Martial Arts,108,1296
+351,Monday,Plank,85,1020
+351,Tuesday,Yoga,113,1243
+351,Wednesday,Yoga,32,192
+351,Thursday,Leg Press,129,1419
+351,Friday,Squats,148,1036
+351,Saturday,Sit-ups,77,616
+351,Sunday,Pull-ups,36,288
+352,Monday,Jumping Jacks,40,480
+352,Tuesday,Kettlebell Workout,135,1485
+352,Wednesday,Strength Training,52,468
+352,Thursday,Swimming,54,648
+352,Friday,Football,70,700
+352,Saturday,Rock Climbing,113,791
+352,Sunday,Lunges,42,420
+353,Monday,Push-ups,48,528
+353,Tuesday,Rugby,23,276
+353,Wednesday,Table Tennis,148,1332
+353,Thursday,Jumping Jacks,59,472
+353,Friday,Pull-ups,60,360
+353,Saturday,Elliptical,84,672
+353,Sunday,HIIT,93,1023
+354,Monday,Boxing,39,273
+354,Tuesday,Resistance Band Workout,41,369
+354,Wednesday,Lunges,61,549
+354,Thursday,Yoga,48,384
+354,Friday,Lunges,132,1584
+354,Saturday,Pilates,57,570
+354,Sunday,Mobility Drills,129,1548
+355,Monday,Shoulder Press,116,1276
+355,Tuesday,Kickboxing,35,385
+355,Wednesday,Basketball,133,931
+355,Thursday,CrossFit,57,456
+355,Friday,Mountain Climbers,43,516
+355,Saturday,Sit-ups,20,240
+355,Sunday,Jumping Jacks,149,894
+356,Monday,HIIT,104,624
+356,Tuesday,Martial Arts,70,420
+356,Wednesday,Battle Ropes,59,590
+356,Thursday,Table Tennis,137,959
+356,Friday,Deadlifts,139,834
+356,Saturday,Rugby,141,1692
+356,Sunday,Running,85,850
+357,Monday,CrossFit,128,1408
+357,Tuesday,Skipping Rope,59,472
+357,Wednesday,Martial Arts,84,1008
+357,Thursday,Kickboxing,121,1452
+357,Friday,Rugby,88,968
+357,Saturday,HIIT,55,495
+357,Sunday,Zumba,139,1251
+358,Monday,Surfing,146,1606
+358,Tuesday,Tennis,144,864
+358,Wednesday,Lunges,123,1230
+358,Thursday,Stair Climber,51,306
+358,Friday,Resistance Band Workout,73,876
+358,Saturday,Plank,30,270
+358,Sunday,Rugby,68,476
+359,Monday,Rowing,28,280
+359,Tuesday,Stretching,60,660
+359,Wednesday,Basketball,105,945
+359,Thursday,Jumping Jacks,47,423
+359,Friday,Rock Climbing,30,300
+359,Saturday,Squats,49,588
+359,Sunday,Rugby,102,714
+360,Monday,Resistance Band Workout,67,804
+360,Tuesday,Kettlebell Workout,47,423
+360,Wednesday,Push-ups,117,1053
+360,Thursday,Deadlifts,137,1507
+360,Friday,Cycling,31,341
+360,Saturday,Rowing,70,420
+360,Sunday,Spin Class,87,783
+361,Monday,Stair Climber,101,707
+361,Tuesday,Yoga,128,1536
+361,Wednesday,Badminton,81,567
+361,Thursday,Crunches,84,924
+361,Friday,Surfing,125,1500
+361,Saturday,Rock Climbing,132,924
+361,Sunday,Swimming,26,286
+362,Monday,Plank,84,756
+362,Tuesday,Surfing,105,840
+362,Wednesday,Squats,72,504
+362,Thursday,Elliptical,132,1188
+362,Friday,Volleyball,71,497
+362,Saturday,Kettlebell Workout,57,456
+362,Sunday,Rowing,58,696
+363,Monday,Stair Climber,89,1068
+363,Tuesday,Core Training,119,952
+363,Wednesday,Rugby,115,1265
+363,Thursday,Elliptical,147,1617
+363,Friday,Pull-ups,62,744
+363,Saturday,Treadmill,36,252
+363,Sunday,Rowing,61,488
+364,Monday,Skipping Rope,80,560
+364,Tuesday,Spin Class,109,981
+364,Wednesday,Rugby,102,714
+364,Thursday,Battle Ropes,55,550
+364,Friday,Strength Training,120,720
+364,Saturday,Crunches,119,952
+364,Sunday,Shoulder Press,105,945
+365,Monday,Martial Arts,65,585
+365,Tuesday,Jumping Jacks,124,1364
+365,Wednesday,Core Training,52,520
+365,Thursday,Martial Arts,97,776
+365,Friday,Boxing,116,928
+365,Saturday,Swimming,100,1000
+365,Sunday,Skipping Rope,121,1331
+366,Monday,Volleyball,33,297
+366,Tuesday,Strength Training,123,738
+366,Wednesday,Crunches,73,803
+366,Thursday,Sit-ups,114,684
+366,Friday,Rock Climbing,81,891
+366,Saturday,Resistance Band Workout,80,960
+366,Sunday,Martial Arts,55,440
+367,Monday,Surfing,66,660
+367,Tuesday,Hiking,121,1452
+367,Wednesday,Jumping Jacks,63,693
+367,Thursday,Pull-ups,87,957
+367,Friday,Kettlebell Workout,49,392
+367,Saturday,Skating,35,210
+367,Sunday,Tennis,107,1070
+368,Monday,CrossFit,62,496
+368,Tuesday,Football,43,344
+368,Wednesday,Elliptical,72,648
+368,Thursday,HIIT,47,423
+368,Friday,Yoga,87,957
+368,Saturday,Kickboxing,116,696
+368,Sunday,Football,111,1332
+369,Monday,Badminton,75,450
+369,Tuesday,Hiking,25,300
+369,Wednesday,Burpees,63,504
+369,Thursday,Lunges,36,396
+369,Friday,Running,34,374
+369,Saturday,Mountain Climbers,70,490
+369,Sunday,Rugby,31,217
+370,Monday,Rugby,40,440
+370,Tuesday,Mobility Drills,125,750
+370,Wednesday,Sit-ups,117,1404
+370,Thursday,Sprinting,60,540
+370,Friday,Push-ups,119,1428
+370,Saturday,Bench Press,59,590
+370,Sunday,CrossFit,121,1089
+371,Monday,Lunges,73,584
+371,Tuesday,Volleyball,25,250
+371,Wednesday,Swimming,33,264
+371,Thursday,Crunches,90,1080
+371,Friday,Martial Arts,93,1023
+371,Saturday,Plank,112,1120
+371,Sunday,Rowing,142,1136
+372,Monday,Skating,143,1716
+372,Tuesday,Kickboxing,52,624
+372,Wednesday,Plank,128,1280
+372,Thursday,Kettlebell Workout,135,1485
+372,Friday,Push-ups,91,910
+372,Saturday,Zumba,28,308
+372,Sunday,Squats,116,696
+373,Monday,Swimming,142,1136
+373,Tuesday,Football,58,522
+373,Wednesday,Battle Ropes,67,670
+373,Thursday,Crunches,142,1562
+373,Friday,Rugby,77,693
+373,Saturday,Plank,145,1160
+373,Sunday,Spin Class,36,216
+374,Monday,Powerlifting,65,715
+374,Tuesday,Treadmill,141,846
+374,Wednesday,HIIT,35,385
+374,Thursday,Stretching,37,407
+374,Friday,Football,75,750
+374,Saturday,Rugby,79,553
+374,Sunday,Battle Ropes,54,378
+375,Monday,Kettlebell Workout,125,1250
+375,Tuesday,Surfing,26,312
+375,Wednesday,Martial Arts,137,959
+375,Thursday,Bench Press,30,330
+375,Friday,Stretching,147,1764
+375,Saturday,Hiking,23,207
+375,Sunday,Battle Ropes,138,828
+376,Monday,Jumping Jacks,28,308
+376,Tuesday,Basketball,30,330
+376,Wednesday,Sit-ups,108,1188
+376,Thursday,Elliptical,139,1251
+376,Friday,Burpees,148,1036
+376,Saturday,Skating,141,1128
+376,Sunday,Rowing,145,1595
+377,Monday,Basketball,63,378
+377,Tuesday,CrossFit,46,368
+377,Wednesday,Tennis,104,936
+377,Thursday,Aerobics,99,891
+377,Friday,CrossFit,38,456
+377,Saturday,Hiking,86,946
+377,Sunday,Walking,142,1420
+378,Monday,Pilates,89,979
+378,Tuesday,Table Tennis,62,620
+378,Wednesday,Resistance Band Workout,96,576
+378,Thursday,Martial Arts,85,765
+378,Friday,Martial Arts,56,392
+378,Saturday,Kickboxing,130,1300
+378,Sunday,Burpees,105,630
+379,Monday,Tennis,50,450
+379,Tuesday,Crunches,87,870
+379,Wednesday,Yoga,148,1184
+379,Thursday,Rugby,72,576
+379,Friday,Handball,84,672
+379,Saturday,Treadmill,86,688
+379,Sunday,Burpees,104,936
+380,Monday,Jumping Jacks,46,552
+380,Tuesday,Powerlifting,66,660
+380,Wednesday,Kickboxing,64,448
+380,Thursday,Stretching,83,498
+380,Friday,Burpees,36,216
+380,Saturday,HIIT,34,306
+380,Sunday,Martial Arts,107,1177
+381,Monday,Surfing,62,496
+381,Tuesday,Football,123,1353
+381,Wednesday,Sprinting,149,1639
+381,Thursday,Core Training,75,675
+381,Friday,Powerlifting,106,1166
+381,Saturday,Stretching,57,684
+381,Sunday,Core Training,57,627
+382,Monday,Mobility Drills,142,1562
+382,Tuesday,Bench Press,139,973
+382,Wednesday,Sit-ups,129,903
+382,Thursday,Resistance Band Workout,27,243
+382,Friday,Basketball,132,1188
+382,Saturday,Rugby,91,819
+382,Sunday,Zumba,130,1430
+383,Monday,Rugby,89,1068
+383,Tuesday,Push-ups,105,630
+383,Wednesday,Running,50,450
+383,Thursday,Surfing,44,264
+383,Friday,Hiking,63,756
+383,Saturday,Stair Climber,28,196
+383,Sunday,Leg Press,29,232
+384,Monday,Pull-ups,139,1390
+384,Tuesday,Skating,123,1476
+384,Wednesday,Kettlebell Workout,56,392
+384,Thursday,Pilates,110,660
+384,Friday,CrossFit,40,480
+384,Saturday,Strength Training,146,1168
+384,Sunday,Football,20,240
+385,Monday,Skipping Rope,94,752
+385,Tuesday,Tennis,62,682
+385,Wednesday,Burpees,82,984
+385,Thursday,Hiking,145,1740
+385,Friday,Push-ups,144,1440
+385,Saturday,Plank,135,1350
+385,Sunday,Rowing,94,1128
+386,Monday,Burpees,89,534
+386,Tuesday,Zumba,87,1044
+386,Wednesday,Volleyball,20,120
+386,Thursday,Resistance Band Workout,149,1639
+386,Friday,Football,104,936
+386,Saturday,Pull-ups,150,1650
+386,Sunday,Push-ups,107,1070
+387,Monday,Battle Ropes,49,539
+387,Tuesday,Pilates,98,980
+387,Wednesday,Powerlifting,50,450
+387,Thursday,Rock Climbing,25,300
+387,Friday,Cycling,101,808
+387,Saturday,Badminton,24,264
+387,Sunday,Zumba,129,1290
+388,Monday,Swimming,59,649
+388,Tuesday,Stretching,35,420
+388,Wednesday,Dancing,58,638
+388,Thursday,Hiking,115,1265
+388,Friday,Spin Class,98,588
+388,Saturday,Mountain Climbers,67,469
+388,Sunday,Hiking,145,1160
+389,Monday,Strength Training,135,1485
+389,Tuesday,Spin Class,58,522
+389,Wednesday,CrossFit,111,1332
+389,Thursday,CrossFit,76,684
+389,Friday,Sprinting,147,1323
+389,Saturday,Hiking,88,880
+389,Sunday,Cycling,98,588
+390,Monday,Surfing,45,270
+390,Tuesday,Cycling,96,576
+390,Wednesday,Burpees,123,984
+390,Thursday,Badminton,114,1254
+390,Friday,Lunges,133,1596
+390,Saturday,Volleyball,94,564
+390,Sunday,Mobility Drills,92,644
+391,Monday,Volleyball,116,1044
+391,Tuesday,Football,114,798
+391,Wednesday,Volleyball,70,630
+391,Thursday,Sit-ups,66,528
+391,Friday,Kettlebell Workout,97,873
+391,Saturday,Aerobics,132,924
+391,Sunday,Battle Ropes,130,1560
+392,Monday,Core Training,78,780
+392,Tuesday,Basketball,67,670
+392,Wednesday,Pull-ups,82,656
+392,Thursday,Rowing,121,1452
+392,Friday,Running,118,1180
+392,Saturday,Kettlebell Workout,52,416
+392,Sunday,Treadmill,71,568
+393,Monday,Zumba,87,522
+393,Tuesday,Lunges,147,1470
+393,Wednesday,Stair Climber,102,1020
+393,Thursday,Powerlifting,29,319
+393,Friday,HIIT,144,1440
+393,Saturday,CrossFit,99,990
+393,Sunday,Stair Climber,39,234
+394,Monday,Walking,80,880
+394,Tuesday,Sit-ups,47,423
+394,Wednesday,Squats,48,336
+394,Thursday,Dancing,21,126
+394,Friday,Hiking,123,738
+394,Saturday,Rock Climbing,104,936
+394,Sunday,Shoulder Press,142,1278
+395,Monday,Walking,130,1040
+395,Tuesday,Powerlifting,99,693
+395,Wednesday,Lunges,51,612
+395,Thursday,Handball,114,1140
+395,Friday,Zumba,121,1331
+395,Saturday,Squats,107,749
+395,Sunday,Bench Press,41,328
+396,Monday,Pull-ups,97,873
+396,Tuesday,Mountain Climbers,21,126
+396,Wednesday,Basketball,118,1298
+396,Thursday,Swimming,100,800
+396,Friday,Rugby,37,370
+396,Saturday,Badminton,70,700
+396,Sunday,Table Tennis,129,774
+397,Monday,Pilates,70,840
+397,Tuesday,CrossFit,45,360
+397,Wednesday,Martial Arts,48,288
+397,Thursday,Stair Climber,122,1342
+397,Friday,Rugby,116,1044
+397,Saturday,Aerobics,41,369
+397,Sunday,Battle Ropes,142,994
+398,Monday,Stretching,148,1628
+398,Tuesday,Battle Ropes,124,1116
+398,Wednesday,Stair Climber,34,306
+398,Thursday,Swimming,68,612
+398,Friday,Plank,45,540
+398,Saturday,Deadlifts,20,120
+398,Sunday,Mobility Drills,42,420
+399,Monday,Jumping Jacks,34,272
+399,Tuesday,Treadmill,63,504
+399,Wednesday,Bench Press,138,828
+399,Thursday,Basketball,69,414
+399,Friday,Running,140,1400
+399,Saturday,Elliptical,108,756
+399,Sunday,Hiking,105,630
+400,Monday,Mountain Climbers,61,488
+400,Tuesday,Strength Training,106,1166
+400,Wednesday,Rock Climbing,103,721
+400,Thursday,Swimming,113,678
+400,Friday,Rugby,57,456
+400,Saturday,Mountain Climbers,85,850
+400,Sunday,Hiking,120,840
+401,Monday,Sprinting,62,434
+401,Tuesday,Spin Class,48,288
+401,Wednesday,Mountain Climbers,148,1480
+401,Thursday,Squats,128,896
+401,Friday,Rowing,51,459
+401,Saturday,Martial Arts,124,1488
+401,Sunday,Stretching,24,216
+402,Monday,Swimming,124,992
+402,Tuesday,Dancing,130,1560
+402,Wednesday,Squats,25,225
+402,Thursday,Running,73,584
+402,Friday,Plank,128,1024
+402,Saturday,Cycling,125,1250
+402,Sunday,Volleyball,43,301
+403,Monday,Kettlebell Workout,76,912
+403,Tuesday,Sprinting,82,574
+403,Wednesday,Sit-ups,132,1452
+403,Thursday,Rowing,42,336
+403,Friday,Football,33,231
+403,Saturday,Core Training,89,1068
+403,Sunday,Walking,23,276
+404,Monday,Rock Climbing,54,378
+404,Tuesday,Spin Class,93,930
+404,Wednesday,Running,136,952
+404,Thursday,Handball,48,480
+404,Friday,Table Tennis,24,192
+404,Saturday,Skating,112,672
+404,Sunday,Mountain Climbers,93,744
+405,Monday,Tennis,110,1210
+405,Tuesday,Strength Training,73,511
+405,Wednesday,Spin Class,28,168
+405,Thursday,Burpees,103,1030
+405,Friday,Skipping Rope,62,496
+405,Saturday,Burpees,61,366
+405,Sunday,Shoulder Press,58,464
+406,Monday,Martial Arts,107,642
+406,Tuesday,Elliptical,82,656
+406,Wednesday,Walking,66,462
+406,Thursday,Burpees,110,1100
+406,Friday,Lunges,102,1020
+406,Saturday,Bench Press,68,544
+406,Sunday,Crunches,66,660
+407,Monday,Zumba,57,456
+407,Tuesday,Deadlifts,84,756
+407,Wednesday,Boxing,142,1704
+407,Thursday,Pilates,95,1045
+407,Friday,Elliptical,134,804
+407,Saturday,Kickboxing,25,175
+407,Sunday,Burpees,43,473
+408,Monday,Kettlebell Workout,39,351
+408,Tuesday,Powerlifting,103,1133
+408,Wednesday,Zumba,27,189
+408,Thursday,Table Tennis,93,837
+408,Friday,Basketball,40,480
+408,Saturday,Burpees,126,756
+408,Sunday,Pilates,105,1155
+409,Monday,Kickboxing,122,1220
+409,Tuesday,Handball,86,688
+409,Wednesday,Pilates,62,496
+409,Thursday,Volleyball,39,234
+409,Friday,Badminton,20,240
+409,Saturday,Leg Press,74,888
+409,Sunday,Squats,88,792
+410,Monday,CrossFit,73,730
+410,Tuesday,Push-ups,113,1017
+410,Wednesday,Aerobics,63,378
+410,Thursday,Spin Class,50,400
+410,Friday,Powerlifting,121,1331
+410,Saturday,Shoulder Press,66,462
+410,Sunday,Pilates,112,896
+411,Monday,Rugby,33,198
+411,Tuesday,Martial Arts,138,828
+411,Wednesday,Leg Press,89,623
+411,Thursday,Badminton,75,525
+411,Friday,Stair Climber,112,784
+411,Saturday,Volleyball,127,1143
+411,Sunday,Kickboxing,58,522
+412,Monday,Table Tennis,82,820
+412,Tuesday,Mobility Drills,34,238
+412,Wednesday,Pull-ups,77,539
+412,Thursday,Aerobics,57,627
+412,Friday,Kickboxing,150,1350
+412,Saturday,CrossFit,83,913
+412,Sunday,CrossFit,99,990
+413,Monday,Aerobics,125,750
+413,Tuesday,Kickboxing,67,469
+413,Wednesday,Yoga,87,609
+413,Thursday,Battle Ropes,63,567
+413,Friday,Walking,89,801
+413,Saturday,Spin Class,65,455
+413,Sunday,Burpees,49,588
+414,Monday,Lunges,62,434
+414,Tuesday,Shoulder Press,66,792
+414,Wednesday,Mountain Climbers,61,488
+414,Thursday,Walking,31,217
+414,Friday,Table Tennis,39,351
+414,Saturday,Football,25,175
+414,Sunday,Walking,117,702
+415,Monday,Treadmill,109,654
+415,Tuesday,Core Training,116,1044
+415,Wednesday,Battle Ropes,124,868
+415,Thursday,Rowing,92,828
+415,Friday,Pull-ups,29,319
+415,Saturday,Walking,51,357
+415,Sunday,Surfing,134,1608
+416,Monday,Mountain Climbers,126,1008
+416,Tuesday,Stair Climber,54,648
+416,Wednesday,Pilates,87,870
+416,Thursday,Badminton,70,700
+416,Friday,Hiking,73,438
+416,Saturday,Martial Arts,32,256
+416,Sunday,Skipping Rope,48,336
+417,Monday,Lunges,115,1035
+417,Tuesday,Strength Training,21,147
+417,Wednesday,Shoulder Press,21,147
+417,Thursday,Yoga,132,1584
+417,Friday,Deadlifts,101,1212
+417,Saturday,Sit-ups,98,1078
+417,Sunday,Stair Climber,101,909
+418,Monday,Mountain Climbers,101,1111
+418,Tuesday,Running,97,679
+418,Wednesday,Badminton,148,1332
+418,Thursday,Basketball,24,288
+418,Friday,Badminton,72,720
+418,Saturday,Lunges,64,576
+418,Sunday,Sit-ups,109,981
+419,Monday,Deadlifts,101,1111
+419,Tuesday,Zumba,126,1134
+419,Wednesday,Crunches,128,896
+419,Thursday,Handball,68,544
+419,Friday,Kettlebell Workout,83,830
+419,Saturday,Skipping Rope,142,1420
+419,Sunday,Lunges,81,891
+420,Monday,Stair Climber,23,253
+420,Tuesday,Jumping Jacks,134,1474
+420,Wednesday,Lunges,132,1188
+420,Thursday,Basketball,57,627
+420,Friday,Pull-ups,51,357
+420,Saturday,HIIT,141,987
+420,Sunday,Strength Training,110,990
+421,Monday,Handball,64,640
+421,Tuesday,Running,96,960
+421,Wednesday,Cycling,92,920
+421,Thursday,Rock Climbing,109,654
+421,Friday,Shoulder Press,88,704
+421,Saturday,Kickboxing,109,1308
+421,Sunday,Football,85,765
+422,Monday,Walking,141,987
+422,Tuesday,Kickboxing,59,708
+422,Wednesday,Powerlifting,83,996
+422,Thursday,Lunges,128,1024
+422,Friday,Skating,30,300
+422,Saturday,Mountain Climbers,92,920
+422,Sunday,Jumping Jacks,92,828
+423,Monday,CrossFit,73,803
+423,Tuesday,Swimming,21,210
+423,Wednesday,Deadlifts,57,342
+423,Thursday,Powerlifting,108,1296
+423,Friday,Bench Press,64,640
+423,Saturday,Deadlifts,98,784
+423,Sunday,Rowing,122,1464
+424,Monday,Skipping Rope,103,1236
+424,Tuesday,Mobility Drills,61,427
+424,Wednesday,Sit-ups,35,350
+424,Thursday,Deadlifts,59,708
+424,Friday,Running,89,979
+424,Saturday,Core Training,52,520
+424,Sunday,Stair Climber,134,1340
+425,Monday,Pilates,57,627
+425,Tuesday,Walking,116,1392
+425,Wednesday,Table Tennis,111,777
+425,Thursday,Shoulder Press,47,564
+425,Friday,Core Training,40,440
+425,Saturday,Pull-ups,21,252
+425,Sunday,Yoga,136,1360
+426,Monday,Zumba,76,532
+426,Tuesday,Stair Climber,133,1064
+426,Wednesday,Core Training,138,966
+426,Thursday,Mountain Climbers,44,264
+426,Friday,Pilates,27,216
+426,Saturday,Sprinting,105,945
+426,Sunday,Squats,74,518
+427,Monday,Boxing,35,385
+427,Tuesday,Martial Arts,140,980
+427,Wednesday,Mountain Climbers,61,732
+427,Thursday,Handball,131,786
+427,Friday,Kettlebell Workout,82,984
+427,Saturday,Mobility Drills,90,990
+427,Sunday,Zumba,44,396
+428,Monday,Burpees,94,658
+428,Tuesday,Aerobics,115,1380
+428,Wednesday,Core Training,34,238
+428,Thursday,Badminton,145,1740
+428,Friday,Powerlifting,95,855
+428,Saturday,HIIT,125,1125
+428,Sunday,Sprinting,131,1572
+429,Monday,Stair Climber,52,572
+429,Tuesday,Dancing,34,204
+429,Wednesday,Battle Ropes,114,1026
+429,Thursday,Pull-ups,127,1524
+429,Friday,Jumping Jacks,127,1143
+429,Saturday,Squats,63,630
+429,Sunday,Sprinting,24,192
+430,Monday,Aerobics,104,1040
+430,Tuesday,Core Training,57,570
+430,Wednesday,Push-ups,64,512
+430,Thursday,Yoga,74,444
+430,Friday,Walking,149,894
+430,Saturday,Stair Climber,121,1210
+430,Sunday,Boxing,25,150
+431,Monday,Shoulder Press,101,909
+431,Tuesday,Kickboxing,86,1032
+431,Wednesday,Hiking,140,840
+431,Thursday,Cycling,90,990
+431,Friday,Skipping Rope,126,882
+431,Saturday,Powerlifting,87,957
+431,Sunday,Yoga,114,1254
+432,Monday,Bench Press,141,1269
+432,Tuesday,Strength Training,130,1560
+432,Wednesday,Pull-ups,42,504
+432,Thursday,Lunges,95,1140
+432,Friday,Crunches,123,1353
+432,Saturday,Rugby,150,1800
+432,Sunday,Sit-ups,135,1620
+433,Monday,Stair Climber,70,630
+433,Tuesday,Resistance Band Workout,81,891
+433,Wednesday,Bench Press,48,432
+433,Thursday,Martial Arts,57,399
+433,Friday,Push-ups,33,231
+433,Saturday,Rugby,41,451
+433,Sunday,Lunges,32,384
+434,Monday,Rowing,125,1250
+434,Tuesday,Surfing,126,1512
+434,Wednesday,Yoga,119,1071
+434,Thursday,Burpees,21,210
+434,Friday,Kickboxing,97,582
+434,Saturday,Pilates,26,312
+434,Sunday,Strength Training,28,336
+435,Monday,Battle Ropes,22,198
+435,Tuesday,HIIT,49,588
+435,Wednesday,Badminton,20,220
+435,Thursday,HIIT,93,558
+435,Friday,Volleyball,39,429
+435,Saturday,Aerobics,142,1704
+435,Sunday,Kickboxing,136,1360
+436,Monday,Crunches,142,1420
+436,Tuesday,Burpees,109,1308
+436,Wednesday,Football,85,680
+436,Thursday,Sprinting,72,864
+436,Friday,Bench Press,101,909
+436,Saturday,Push-ups,69,621
+436,Sunday,Aerobics,33,330
+437,Monday,Badminton,26,286
+437,Tuesday,Elliptical,67,402
+437,Wednesday,Spin Class,135,1215
+437,Thursday,Swimming,112,1008
+437,Friday,Kickboxing,56,336
+437,Saturday,Hiking,22,242
+437,Sunday,Boxing,111,666
+438,Monday,Running,120,960
+438,Tuesday,Handball,65,780
+438,Wednesday,Zumba,60,720
+438,Thursday,Plank,60,480
+438,Friday,Bench Press,29,174
+438,Saturday,Handball,110,990
+438,Sunday,Handball,130,780
+439,Monday,Stretching,58,464
+439,Tuesday,Basketball,142,994
+439,Wednesday,Rugby,142,1278
+439,Thursday,Push-ups,35,315
+439,Friday,Basketball,43,516
+439,Saturday,Core Training,132,1320
+439,Sunday,Sit-ups,75,750
+440,Monday,Jumping Jacks,128,1152
+440,Tuesday,Running,129,1419
+440,Wednesday,Spin Class,96,1056
+440,Thursday,Treadmill,150,900
+440,Friday,Crunches,130,780
+440,Saturday,Tennis,72,504
+440,Sunday,Rugby,61,366
+441,Monday,Dancing,130,1560
+441,Tuesday,Sprinting,54,432
+441,Wednesday,Pull-ups,43,258
+441,Thursday,Mountain Climbers,30,180
+441,Friday,Push-ups,35,420
+441,Saturday,Boxing,101,1010
+441,Sunday,Cycling,147,1764
+442,Monday,HIIT,31,279
+442,Tuesday,Lunges,117,1287
+442,Wednesday,Squats,147,1764
+442,Thursday,Strength Training,39,234
+442,Friday,Rock Climbing,120,960
+442,Saturday,Elliptical,58,638
+442,Sunday,Elliptical,32,256
+443,Monday,Deadlifts,63,693
+443,Tuesday,Plank,46,322
+443,Wednesday,Bench Press,119,1071
+443,Thursday,Jumping Jacks,70,700
+443,Friday,Zumba,140,1680
+443,Saturday,Pilates,77,539
+443,Sunday,Pull-ups,105,1155
+444,Monday,Rugby,130,1040
+444,Tuesday,Skating,51,612
+444,Wednesday,Stretching,71,852
+444,Thursday,Dancing,132,792
+444,Friday,Spin Class,81,972
+444,Saturday,Spin Class,44,352
+444,Sunday,Basketball,65,455
+445,Monday,Sit-ups,115,1380
+445,Tuesday,Dancing,136,1496
+445,Wednesday,Push-ups,140,980
+445,Thursday,Boxing,90,990
+445,Friday,Elliptical,149,1192
+445,Saturday,Tennis,112,784
+445,Sunday,Lunges,140,1540
+446,Monday,Running,139,834
+446,Tuesday,Rock Climbing,46,552
+446,Wednesday,CrossFit,125,1500
+446,Thursday,Rowing,141,846
+446,Friday,Skating,93,1116
+446,Saturday,Yoga,34,272
+446,Sunday,Tennis,44,528
+447,Monday,Hiking,136,1360
+447,Tuesday,Rock Climbing,130,1430
+447,Wednesday,Spin Class,63,504
+447,Thursday,Surfing,25,250
+447,Friday,Yoga,89,1068
+447,Saturday,Running,86,946
+447,Sunday,Elliptical,43,387
+448,Monday,Push-ups,145,1015
+448,Tuesday,Leg Press,104,624
+448,Wednesday,Battle Ropes,115,1035
+448,Thursday,Resistance Band Workout,39,429
+448,Friday,Spin Class,139,1668
+448,Saturday,Burpees,51,306
+448,Sunday,Badminton,112,1232
+449,Monday,CrossFit,69,690
+449,Tuesday,Jumping Jacks,108,1188
+449,Wednesday,Battle Ropes,103,721
+449,Thursday,Resistance Band Workout,94,658
+449,Friday,Rugby,128,1152
+449,Saturday,Sprinting,128,1280
+449,Sunday,Aerobics,139,1251
+450,Monday,Bench Press,52,572
+450,Tuesday,Sprinting,67,536
+450,Wednesday,Cycling,57,684
+450,Thursday,Crunches,97,582
+450,Friday,CrossFit,50,350
+450,Saturday,Walking,39,273
+450,Sunday,Walking,47,282
+451,Monday,Volleyball,31,341
+451,Tuesday,Kickboxing,48,480
+451,Wednesday,Pilates,23,276
+451,Thursday,Skipping Rope,111,999
+451,Friday,Rugby,44,264
+451,Saturday,Bench Press,139,834
+451,Sunday,Volleyball,136,1632
+452,Monday,Push-ups,131,917
+452,Tuesday,Strength Training,134,1206
+452,Wednesday,Bench Press,136,1496
+452,Thursday,Sit-ups,46,506
+452,Friday,Badminton,147,1323
+452,Saturday,Kettlebell Workout,56,560
+452,Sunday,Core Training,24,240
+453,Monday,Strength Training,131,917
+453,Tuesday,Dancing,66,726
+453,Wednesday,Badminton,129,1548
+453,Thursday,Football,90,630
+453,Friday,Badminton,96,864
+453,Saturday,HIIT,130,910
+453,Sunday,Kickboxing,80,480
+454,Monday,Dancing,104,1040
+454,Tuesday,Plank,108,972
+454,Wednesday,Handball,142,994
+454,Thursday,Dancing,91,637
+454,Friday,Basketball,145,1450
+454,Saturday,Squats,90,1080
+454,Sunday,Football,36,324
+455,Monday,Skating,95,855
+455,Tuesday,Crunches,48,288
+455,Wednesday,Bench Press,96,960
+455,Thursday,Lunges,25,150
+455,Friday,Burpees,110,1100
+455,Saturday,Stair Climber,62,558
+455,Sunday,Treadmill,120,720
+456,Monday,Shoulder Press,67,603
+456,Tuesday,Boxing,94,658
+456,Wednesday,Sit-ups,116,696
+456,Thursday,Mountain Climbers,21,126
+456,Friday,Leg Press,56,504
+456,Saturday,Battle Ropes,148,888
+456,Sunday,Mountain Climbers,89,890
+457,Monday,Rugby,94,940
+457,Tuesday,Rock Climbing,25,200
+457,Wednesday,Stretching,71,639
+457,Thursday,CrossFit,123,861
+457,Friday,Boxing,58,406
+457,Saturday,Boxing,93,651
+457,Sunday,Mountain Climbers,112,1008
+458,Monday,Handball,22,220
+458,Tuesday,Kettlebell Workout,59,590
+458,Wednesday,Squats,49,392
+458,Thursday,Football,121,847
+458,Friday,Stair Climber,55,605
+458,Saturday,Table Tennis,26,156
+458,Sunday,Dancing,44,440
+459,Monday,Zumba,120,1440
+459,Tuesday,Football,120,720
+459,Wednesday,Core Training,59,590
+459,Thursday,Mountain Climbers,148,1480
+459,Friday,Rock Climbing,130,780
+459,Saturday,Rugby,66,396
+459,Sunday,CrossFit,104,936
+460,Monday,Lunges,56,504
+460,Tuesday,Jumping Jacks,106,742
+460,Wednesday,Burpees,87,696
+460,Thursday,HIIT,115,1265
+460,Friday,Swimming,27,324
+460,Saturday,Plank,70,420
+460,Sunday,Treadmill,125,1125
+461,Monday,Volleyball,91,1001
+461,Tuesday,Elliptical,118,1062
+461,Wednesday,Walking,33,297
+461,Thursday,Elliptical,56,504
+461,Friday,Sprinting,97,1164
+461,Saturday,Pull-ups,138,1380
+461,Sunday,Sprinting,58,638
+462,Monday,Elliptical,119,1071
+462,Tuesday,Swimming,141,1692
+462,Wednesday,Stair Climber,29,174
+462,Thursday,Burpees,148,1628
+462,Friday,Walking,76,836
+462,Saturday,Crunches,68,612
+462,Sunday,Strength Training,34,238
+463,Monday,Zumba,74,666
+463,Tuesday,Basketball,119,714
+463,Wednesday,Sit-ups,69,414
+463,Thursday,Kettlebell Workout,118,1062
+463,Friday,Kickboxing,59,649
+463,Saturday,Shoulder Press,111,999
+463,Sunday,Rugby,25,275
+464,Monday,Treadmill,82,656
+464,Tuesday,Elliptical,99,693
+464,Wednesday,Shoulder Press,72,792
+464,Thursday,Lunges,124,868
+464,Friday,HIIT,116,812
+464,Saturday,Football,24,264
+464,Sunday,Dancing,21,147
+465,Monday,Treadmill,101,1010
+465,Tuesday,Football,111,999
+465,Wednesday,Mountain Climbers,81,648
+465,Thursday,Martial Arts,108,756
+465,Friday,Tennis,137,1233
+465,Saturday,Sit-ups,86,946
+465,Sunday,Core Training,42,504
+466,Monday,Pull-ups,36,432
+466,Tuesday,Push-ups,134,1474
+466,Wednesday,Resistance Band Workout,122,1220
+466,Thursday,Football,132,924
+466,Friday,Strength Training,127,1524
+466,Saturday,Strength Training,69,414
+466,Sunday,CrossFit,61,732
+467,Monday,Basketball,134,1340
+467,Tuesday,Crunches,149,1639
+467,Wednesday,Swimming,150,1050
+467,Thursday,Spin Class,27,324
+467,Friday,Stair Climber,149,1341
+467,Saturday,Handball,91,546
+467,Sunday,Badminton,30,330
+468,Monday,Shoulder Press,77,770
+468,Tuesday,Volleyball,101,606
+468,Wednesday,Elliptical,149,1788
+468,Thursday,Jumping Jacks,37,259
+468,Friday,Bench Press,73,584
+468,Saturday,Squats,60,480
+468,Sunday,Burpees,76,684
+469,Monday,Leg Press,31,341
+469,Tuesday,Skipping Rope,123,738
+469,Wednesday,Jumping Jacks,40,320
+469,Thursday,Stretching,148,1480
+469,Friday,Core Training,62,682
+469,Saturday,Core Training,59,354
+469,Sunday,Zumba,23,230
+470,Monday,Kettlebell Workout,92,1012
+470,Tuesday,Mountain Climbers,74,814
+470,Wednesday,Sprinting,102,714
+470,Thursday,Sit-ups,104,1248
+470,Friday,Leg Press,109,654
+470,Saturday,Pilates,130,910
+470,Sunday,Football,56,336
+471,Monday,Battle Ropes,52,416
+471,Tuesday,Swimming,116,1160
+471,Wednesday,Shoulder Press,77,462
+471,Thursday,Rock Climbing,42,420
+471,Friday,Badminton,85,680
+471,Saturday,Tennis,105,735
+471,Sunday,Walking,149,894
+472,Monday,Plank,135,1350
+472,Tuesday,Push-ups,34,408
+472,Wednesday,Leg Press,130,1560
+472,Thursday,Leg Press,139,1251
+472,Friday,Strength Training,44,308
+472,Saturday,Surfing,51,612
+472,Sunday,Table Tennis,86,1032
+473,Monday,Yoga,125,1500
+473,Tuesday,Zumba,92,1104
+473,Wednesday,Martial Arts,106,1060
+473,Thursday,Basketball,85,935
+473,Friday,Pull-ups,60,720
+473,Saturday,Stair Climber,77,616
+473,Sunday,Shoulder Press,137,1096
+474,Monday,Powerlifting,139,1390
+474,Tuesday,Zumba,33,231
+474,Wednesday,Strength Training,29,232
+474,Thursday,Pull-ups,85,935
+474,Friday,Spin Class,124,868
+474,Saturday,Zumba,145,1015
+474,Sunday,Stair Climber,42,462
+475,Monday,HIIT,127,1524
+475,Tuesday,Deadlifts,94,1128
+475,Wednesday,Boxing,45,495
+475,Thursday,Skating,107,1284
+475,Friday,Bench Press,63,378
+475,Saturday,Mobility Drills,28,280
+475,Sunday,Aerobics,118,1298
+476,Monday,Leg Press,45,315
+476,Tuesday,Volleyball,87,696
+476,Wednesday,Pull-ups,30,360
+476,Thursday,Pull-ups,23,230
+476,Friday,Shoulder Press,66,660
+476,Saturday,Treadmill,34,408
+476,Sunday,Running,79,790
+477,Monday,Yoga,39,429
+477,Tuesday,Push-ups,122,1098
+477,Wednesday,Rugby,144,1728
+477,Thursday,Battle Ropes,82,984
+477,Friday,Zumba,120,960
+477,Saturday,Elliptical,96,1056
+477,Sunday,Rowing,57,513
+478,Monday,Kettlebell Workout,54,432
+478,Tuesday,Jumping Jacks,119,952
+478,Wednesday,Hiking,96,1152
+478,Thursday,HIIT,97,1067
+478,Friday,Sit-ups,89,801
+478,Saturday,Walking,21,252
+478,Sunday,Kettlebell Workout,128,768
+479,Monday,Table Tennis,51,561
+479,Tuesday,Sit-ups,63,567
+479,Wednesday,Stretching,116,812
+479,Thursday,Sit-ups,145,1595
+479,Friday,Pilates,21,126
+479,Saturday,Jumping Jacks,97,1164
+479,Sunday,Strength Training,60,660
+480,Monday,Treadmill,116,1276
+480,Tuesday,Pull-ups,22,154
+480,Wednesday,Treadmill,137,1096
+480,Thursday,Sprinting,96,672
+480,Friday,Martial Arts,121,1210
+480,Saturday,Push-ups,77,616
+480,Sunday,Walking,118,708
+481,Monday,Pull-ups,121,968
+481,Tuesday,Strength Training,117,1053
+481,Wednesday,Treadmill,79,790
+481,Thursday,Squats,21,147
+481,Friday,Surfing,50,600
+481,Saturday,Bench Press,36,432
+481,Sunday,Sit-ups,136,1088
+482,Monday,Surfing,148,1628
+482,Tuesday,Martial Arts,84,756
+482,Wednesday,Resistance Band Workout,61,732
+482,Thursday,Dancing,30,300
+482,Friday,Walking,92,644
+482,Saturday,Rowing,35,350
+482,Sunday,Powerlifting,133,798
+483,Monday,Bench Press,42,462
+483,Tuesday,Tennis,99,1089
+483,Wednesday,Spin Class,56,672
+483,Thursday,Stair Climber,47,423
+483,Friday,Handball,71,710
+483,Saturday,Sit-ups,37,222
+483,Sunday,Table Tennis,49,441
+484,Monday,Skating,20,240
+484,Tuesday,Core Training,83,498
+484,Wednesday,Strength Training,47,564
+484,Thursday,Rugby,107,1070
+484,Friday,Surfing,147,1617
+484,Saturday,Tennis,73,584
+484,Sunday,Treadmill,106,954
+485,Monday,Dancing,27,216
+485,Tuesday,Elliptical,142,1704
+485,Wednesday,Shoulder Press,44,484
+485,Thursday,Skipping Rope,31,217
+485,Friday,Basketball,137,1507
+485,Saturday,Zumba,47,282
+485,Sunday,Aerobics,123,861
+486,Monday,Burpees,97,776
+486,Tuesday,Handball,92,552
+486,Wednesday,Handball,49,392
+486,Thursday,Kettlebell Workout,49,294
+486,Friday,Rock Climbing,114,684
+486,Saturday,Core Training,50,450
+486,Sunday,Lunges,33,198
+487,Monday,Rock Climbing,21,168
+487,Tuesday,Skipping Rope,44,352
+487,Wednesday,Cycling,67,804
+487,Thursday,Shoulder Press,89,712
+487,Friday,Cycling,113,678
+487,Saturday,Skating,140,1260
+487,Sunday,Hiking,131,786
+488,Monday,Pilates,129,774
+488,Tuesday,Stretching,97,873
+488,Wednesday,Squats,74,814
+488,Thursday,CrossFit,90,630
+488,Friday,Zumba,70,770
+488,Saturday,Tennis,97,776
+488,Sunday,Mountain Climbers,98,784
+489,Monday,Kickboxing,96,672
+489,Tuesday,Pilates,91,1092
+489,Wednesday,Skipping Rope,61,549
+489,Thursday,Table Tennis,66,462
+489,Friday,Pull-ups,138,1656
+489,Saturday,Zumba,115,1150
+489,Sunday,Crunches,48,480
+490,Monday,Elliptical,136,1224
+490,Tuesday,Powerlifting,55,605
+490,Wednesday,Rock Climbing,59,531
+490,Thursday,Dancing,76,456
+490,Friday,Tennis,105,1260
+490,Saturday,Sprinting,93,1023
+490,Sunday,Resistance Band Workout,136,1496
+491,Monday,Boxing,120,1440
+491,Tuesday,Skating,84,924
+491,Wednesday,Plank,52,468
+491,Thursday,Push-ups,101,1212
+491,Friday,Bench Press,131,1441
+491,Saturday,Shoulder Press,99,792
+491,Sunday,Boxing,76,608
+492,Monday,Squats,46,322
+492,Tuesday,Powerlifting,120,1200
+492,Wednesday,Spin Class,137,1507
+492,Thursday,Badminton,117,1170
+492,Friday,Zumba,139,1529
+492,Saturday,Spin Class,108,864
+492,Sunday,Aerobics,45,450
+493,Monday,Mobility Drills,103,618
+493,Tuesday,Spin Class,58,580
+493,Wednesday,Basketball,115,1265
+493,Thursday,Leg Press,100,600
+493,Friday,Elliptical,36,432
+493,Saturday,Pilates,54,540
+493,Sunday,Crunches,47,564
+494,Monday,Handball,73,876
+494,Tuesday,HIIT,36,324
+494,Wednesday,Rock Climbing,66,726
+494,Thursday,Dancing,68,748
+494,Friday,Table Tennis,131,1572
+494,Saturday,Surfing,74,740
+494,Sunday,Sit-ups,36,432
+495,Monday,Powerlifting,24,192
+495,Tuesday,Burpees,131,786
+495,Wednesday,Battle Ropes,88,704
+495,Thursday,Mountain Climbers,24,192
+495,Friday,Jumping Jacks,94,1128
+495,Saturday,Zumba,116,812
+495,Sunday,Stretching,122,1098
+496,Monday,Yoga,44,396
+496,Tuesday,Battle Ropes,96,1056
+496,Wednesday,Push-ups,54,378
+496,Thursday,Aerobics,113,678
+496,Friday,Martial Arts,148,1332
+496,Saturday,Handball,108,864
+496,Sunday,Strength Training,117,1170
+497,Monday,Spin Class,78,468
+497,Tuesday,Walking,77,462
+497,Wednesday,Spin Class,112,896
+497,Thursday,Mountain Climbers,127,762
+497,Friday,Aerobics,74,666
+497,Saturday,Crunches,129,1419
+497,Sunday,Handball,38,228
+498,Monday,Elliptical,119,833
+498,Tuesday,Skating,42,336
+498,Wednesday,Shoulder Press,134,1206
+498,Thursday,Plank,75,675
+498,Friday,Dancing,91,637
+498,Saturday,Elliptical,96,576
+498,Sunday,Shoulder Press,150,1350
+499,Monday,Pilates,56,392
+499,Tuesday,Crunches,131,786
+499,Wednesday,Mobility Drills,54,648
+499,Thursday,Spin Class,88,1056
+499,Friday,Sprinting,103,618
+499,Saturday,Pilates,84,504
+499,Sunday,Lunges,43,516
+500,Monday,CrossFit,47,282
+500,Tuesday,Stretching,89,534
+500,Wednesday,Lunges,141,1551
+500,Thursday,Volleyball,26,208
+500,Friday,Resistance Band Workout,121,847
+500,Saturday,Squats,40,480
+500,Sunday,CrossFit,75,450
