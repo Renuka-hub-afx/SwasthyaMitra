@@ -1,136 +1,175 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    
-    // Users collection - each user can only access their own document
-    match /users/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
-    }
-    
-    // Goals collection - Broad Read for authenticated users to fix queries 
-    match /goals/{goalId} {
-      allow read: if request.auth != null;
-      allow write, delete: if request.auth != null && 
-        (resource == null || resource.data.userId == request.auth.uid) &&
-        (request.resource == null || request.resource.data.userId == request.auth.uid);
-    }
-    
-    // Food Logs collection - Broad Read for authenticated users
-    match /foodLogs/{logId} {
-      allow read: if request.auth != null;
-      allow write, delete: if request.auth != null && 
-        (resource == null || resource.data.userId == request.auth.uid) &&
-        (request.resource == null || request.resource.data.userId == request.auth.uid);
-    }
-    
-    // Workouts collection
-    match /workouts/{workoutId} {
-      allow read: if request.auth != null;
-      allow write, delete: if request.auth != null && 
-        (resource == null || resource.data.userId == request.auth.uid) &&
-        (request.resource == null || request.resource.data.userId == request.auth.uid);
+
+    // Helper: check signed-in
+    function isSignedIn() {
+      return request.auth != null;
     }
 
-    // Challenges collection - allow creation and participation
-    match /challenges/{challengeId} {
-      allow create: if request.auth != null;
-      allow read: if request.auth != null;
-      allow update: if request.auth != null && (
-        resource.data.creatorId == request.auth.uid || 
-        resource.data.opponentId == request.auth.uid ||
-        resource.data.opponentId == ""
+    // Helper: check if this request is acting on behalf of the authenticated user
+    // For creates, resource is null and request.resource should carry userId
+    function isOwnerByUserIdField(userIdField) {
+      return isSignedIn() && (
+        // existing document - reads/updates/deletes
+        (resource != null && resource.data[userIdField] == request.auth.uid) ||
+        // creating/updating - ensure incoming doc has matching userId
+        (request.resource != null && request.resource.data[userIdField] == request.auth.uid)
       );
-      allow delete: if request.auth != null && resource.data.creatorId == request.auth.uid;
     }
 
-    // Exercise Logs
-    match /exerciseLogs/{logId} { 
-      allow read: if request.auth != null;
-      allow write, delete: if request.auth != null && 
-        (resource == null || resource.data.userId == request.auth.uid) &&
-        (request.resource == null || request.resource.data.userId == request.auth.uid); 
+    // Helper: allow list (query) only when client filters by userId == auth.uid
+    function userIdQueryIsLimitedToOwn(userIdField) {
+      return isSignedIn() &&
+             request.query != null &&
+             // require a where filter on userIdField equal to the authenticated uid
+             request.query.where(userIdField, '==', request.auth.uid);
     }
 
-    // Weight Logs
-    match /weightLogs/{logId} { 
-      allow read: if request.auth != null;
-      allow write, delete: if request.auth != null && 
-        (resource == null || resource.data.userId == request.auth.uid) &&
-        (request.resource == null || request.resource.data.userId == request.auth.uid); 
+    // -------------------- Users --------------------
+    // Each user document is owned by that user. Only the user may read/update their profile.
+    match /users/{userId} {
+      allow create: if isSignedIn() && request.auth.uid == userId &&
+                    // basic server-side validation: userId field must match
+                    (request.resource.data.userId == request.auth.uid || !('userId' in request.resource.data));
+      allow read: if isSignedIn() && request.auth.uid == userId;
+      allow update, delete: if isSignedIn() && request.auth.uid == userId;
+
+      // Subcollections under users (e.g., foodLogs, mood_logs) - owner-only access
+      match /{sub=**} {
+        // If subcollection documents include a userId field, enforce it; otherwise, match by parent path owner
+        allow read, write: if isSignedIn() && request.auth.uid == userId &&
+          (request.resource == null || !('userId' in request.resource.data) || request.resource.data.userId == request.auth.uid);
+      }
     }
 
-    match /mealHistory/{mealId} { 
-      allow read: if request.auth != null;
-      allow write, delete: if request.auth != null && 
-        (resource == null || resource.data.userId == request.auth.uid) &&
-        (request.resource == null || request.resource.data.userId == request.auth.uid); 
+    // -------------------- Per-user top-level collections --------------------
+    // Collections that store a 'userId' field: allow only the owner to create/read/update/delete
+
+    // Food logs (also exists as users/{userId}/foodLogs in code) - protect both places
+    match /foodLogs/{logId} {
+      allow get: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow list: if userIdQueryIsLimitedToOwn('userId');
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if isSignedIn() && resource.data.userId == request.auth.uid && request.resource.data.userId == request.auth.uid;
     }
 
-    match /recommendations/{recId} { 
-      allow read: if request.auth != null && resource.data.userId == request.auth.uid; 
-      allow write: if false; // Only Cloud Functions/Admin can write
+    match /users/{userId}/foodLogs/{logId} {
+      allow read, write: if isSignedIn() && request.auth.uid == userId;
     }
 
-    match /festivalCalendar/{eventId} { 
-      allow read: if request.auth != null; 
+    // Exercise logs (two variants used in code)
+    match /exerciseLogs/{logId} {
+      allow get: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow list: if userIdQueryIsLimitedToOwn('userId');
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if isSignedIn() && resource.data.userId == request.auth.uid && request.resource.data.userId == request.auth.uid;
     }
 
-    match /notifications/{notifId} { 
-      allow read: if request.auth != null && resource.data.userId == request.auth.uid;
-      allow write, delete: if request.auth != null && 
-        (resource == null || resource.data.userId == request.auth.uid) &&
-        (request.resource == null || request.resource.data.userId == request.auth.uid); 
-    }
-
-    // Meal Feedback
-    match /meal_feedback/{feedbackId} {
-      allow read: if request.auth != null;
-      allow write, delete: if request.auth != null && 
-        (resource == null || resource.data.userId == request.auth.uid) &&
-        (request.resource == null || request.resource.data.userId == request.auth.uid);
-    }
-
-    // AI Generated Plans
-    match /ai_generated_plans/{planId} {
-      allow read: if request.auth != null && resource.data.userId == request.auth.uid;
-      allow write: if request.auth != null && 
-        (resource == null || resource.data.userId == request.auth.uid) &&
-        (request.resource == null || request.resource.data.userId == request.auth.uid);
-      allow delete: if request.auth != null && resource.data.userId == request.auth.uid;
-    }
-
-    // Water Logs
-    match /waterLogs/{logId} {
-      allow read: if request.auth != null;
-      allow write, delete: if request.auth != null && 
-        (resource == null || resource.data.userId == request.auth.uid) &&
-        (request.resource == null || request.resource.data.userId == request.auth.uid);
-    }
-
-    // Moods collection - allow read/write for own data
-    match /moods/{moodId} {
-      allow read: if request.auth != null;
-      allow write, delete: if request.auth != null && 
-        (resource == null || resource.data.userId == request.auth.uid) &&
-        (request.resource == null || request.resource.data.userId == request.auth.uid);
-    }
-
-    // User Preferences
-    match /user_preferences/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
-    }
-
-    // Fix for usage in WorkoutDashboardActivity (exercise_logs vs exerciseLogs)
     match /exercise_logs/{logId} {
-      allow read: if request.auth != null;
-      allow write, delete: if request.auth != null && 
-        (resource == null || resource.data.userId == request.auth.uid) &&
-        (request.resource == null || request.resource.data.userId == request.auth.uid);
+      allow get: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow list: if userIdQueryIsLimitedToOwn('userId');
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if isSignedIn() && resource.data.userId == request.auth.uid && request.resource.data.userId == request.auth.uid;
     }
-    
-    // Fix for MoodRepository accessing subcollection
+
+    // Weight logs
+    match /weightLogs/{logId} {
+      allow get: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow list: if userIdQueryIsLimitedToOwn('userId');
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if isSignedIn() && resource.data.userId == request.auth.uid && request.resource.data.userId == request.auth.uid;
+    }
+
+    // Water logs
+    match /waterLogs/{logId} {
+      allow get: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow list: if userIdQueryIsLimitedToOwn('userId');
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if isSignedIn() && resource.data.userId == request.auth.uid && request.resource.data.userId == request.auth.uid;
+    }
+
+    // Notifications - owner only
+    match /notifications/{notifId} {
+      allow get: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow list: if userIdQueryIsLimitedToOwn('userId');
+      // allow server to create notifications for users by using admin SDK (no client write)
+      allow create: if false;
+      allow update, delete: if isSignedIn() && resource.data.userId == request.auth.uid && request.resource.data.userId == request.auth.uid;
+    }
+
+    // Meal feedback (users submit feedback)
+    match /meal_feedback/{feedbackId} {
+      allow get: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow list: if userIdQueryIsLimitedToOwn('userId');
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if isSignedIn() && resource.data.userId == request.auth.uid && request.resource.data.userId == request.auth.uid;
+    }
+
+    // AI generated plans - private to user
+    match /ai_generated_plans/{planId} {
+      allow get: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow list: if userIdQueryIsLimitedToOwn('userId');
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if isSignedIn() && resource.data.userId == request.auth.uid && request.resource.data.userId == request.auth.uid;
+    }
+
+    // Recommendations - read-only for user (written by server/cloud functions)
+    match /recommendations/{recId} {
+      allow get: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow list: if userIdQueryIsLimitedToOwn('userId');
+      allow create, update, delete: if false; // only server/admin
+    }
+
+    // Goals - each goal includes userId; only owner may read/write
+    match /goals/{goalId} {
+      allow get: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow list: if userIdQueryIsLimitedToOwn('userId');
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if isSignedIn() && resource.data.userId == request.auth.uid && request.resource.data.userId == request.auth.uid;
+    }
+
+    // Workouts - app may read workouts (public), but only admins/server can write
+    match /workouts/{workoutId} {
+      allow read: if isSignedIn();
+      allow list: if isSignedIn();
+      allow create, update, delete: if false; // populate from backend / admin only
+    }
+
+    // Meal history (top-level)
+    match /mealHistory/{mealId} {
+      allow get: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow list: if userIdQueryIsLimitedToOwn('userId');
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if isSignedIn() && resource.data.userId == request.auth.uid && request.resource.data.userId == request.auth.uid;
+    }
+
+    // Festival calendar - public read for authenticated users
+    match /festivalCalendar/{eventId} {
+      allow get, list: if isSignedIn();
+      allow create, update, delete: if false; // admin only
+    }
+
+    // User preferences document
+    match /user_preferences/{userId} {
+      allow read, write: if isSignedIn() && request.auth.uid == userId;
+    }
+
+    // Moods top-level (if used) and nested mood_logs under users
+    match /moods/{moodId} {
+      allow get: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow list: if userIdQueryIsLimitedToOwn('userId');
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if isSignedIn() && resource.data.userId == request.auth.uid && request.resource.data.userId == request.auth.uid;
+    }
+
     match /users/{userId}/mood_logs/{logId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+      allow read, write: if isSignedIn() && request.auth.uid == userId;
+    }
+
+    // Fallback: deny everything else by default
+    match /{document=**} {
+      allow read, write: if false;
     }
   }
 }
