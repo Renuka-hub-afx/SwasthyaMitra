@@ -1,0 +1,40 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="300dp"
+    android:height="300dp"
+    android:viewportWidth="300"
+    android:viewportHeight="300">
+    <!-- Neck -->
+    <path
+        android:fillColor="#F3D2B5"
+        android:pathData="M130,200 L130,240 L170,240 L170,200 Z"/>
+    <!-- Ears -->
+    <path
+        android:fillColor="#F3D2B5"
+        android:pathData="M80,140 Q70,150 80,170 M220,140 Q230,150 220,170"/>
+    <!-- Face Shape -->
+    <path
+        android:fillColor="#F3D2B5"
+        android:pathData="M90,100 C90,50 210,50 210,100 L210,160 C210,210 90,210 90,160 Z"/>
+    <!-- Nose -->
+    <path
+        android:fillColor="#E0B090"
+        android:pathData="M148,160 L152,160 L150,170 Z"/>
+    <!-- Smile -->
+    <path
+        android:strokeColor="#D88686"
+        android:strokeWidth="3"
+        android:strokeLineCap="round"
+        android:pathData="M135,185 Q150,195 165,185"/>
+    <path
+        android:fillColor="#E57373"
+        android:pathData="M145,188 Q150,192 155,188 Z"/>
+    <!-- Blush -->
+    <path
+        android:fillColor="#F8BBD0"
+        android:fillAlpha="0.6"
+        android:pathData="M110,160 m-10,0 a10,10 0 1,1 20,0 a10,10 0 1,1 -20,0" />
+    <path
+        android:fillColor="#F8BBD0"
+        android:fillAlpha="0.6"
+        android:pathData="M190,160 m-10,0 a10,10 0 1,1 20,0 a10,10 0 1,1 -20,0" />
+</vector>

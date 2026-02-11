@@ -1,115 +1,84 @@
 rules_version = '2';
+
 service cloud.firestore {
   match /databases/{database}/documents {
     
-    // Users collection - each user can only access their own document
+    // ==================== HELPER FUNCTIONS ====================
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    function ownsResource() {
+      return isAuthenticated() && resource.data.userId == request.auth.uid;
+    }
+    
+    function willOwnResource() {
+      return isAuthenticated() && request.resource.data.userId == request.auth.uid;
+    }
+    
+    // ==================== USERS COLLECTION ====================
+    // Main user profile - only owner can access
     match /users/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+      allow read, write: if isOwner(userId);
+      
+      // Subcollections (mood_logs, foodLogs, weightLogs, etc. stored under user)
+      match /{allSubcollections=**} {
+        allow read, write: if isOwner(userId);
+      }
     }
     
-    // Goals collection - Broad Read for authenticated users to fix queries 
+    // ==================== TOP-LEVEL COLLECTIONS ====================
+    
+    // Goals - Updated to allow ProfileActivity to find and update user goals
     match /goals/{goalId} {
-      allow read: if request.auth != null;
-      allow write, delete: if request.auth != null && 
-        (resource == null || resource.data.userId == request.auth.uid) &&
-        (request.resource == null || request.resource.data.userId == request.auth.uid);
+      allow read: if isAuthenticated();
+      allow create: if willOwnResource();
+      allow update: if ownsResource() && willOwnResource();
+      allow delete: if ownsResource();
     }
     
-    // Food Logs collection - Broad Read for authenticated users
-    match /foodLogs/{logId} {
-      allow read: if request.auth != null;
-      allow write, delete: if request.auth != null && 
-        (resource == null || resource.data.userId == request.auth.uid) &&
-        (request.resource == null || request.resource.data.userId == request.auth.uid);
-    }
-    
-    // Workouts collection
-    match /workouts/{workoutId} {
-      allow read: if request.auth != null;
-      allow write, delete: if request.auth != null && 
-        (resource == null || resource.data.userId == request.auth.uid) &&
-        (request.resource == null || request.resource.data.userId == request.auth.uid);
-    }
-
-    // Challenges collection - allow creation and participation
-    match /challenges/{challengeId} {
-      allow create: if request.auth != null;
-      allow read: if request.auth != null;
-      allow update: if request.auth != null && (
-        resource.data.creatorId == request.auth.uid || 
-        resource.data.opponentId == request.auth.uid ||
-        resource.data.opponentId == ""
-      );
-      allow delete: if request.auth != null && resource.data.creatorId == request.auth.uid;
-    }
-
-    // Exercise Logs
-    match /exerciseLogs/{logId} { 
-      allow read: if request.auth != null;
-      allow write, delete: if request.auth != null && 
-        (resource == null || resource.data.userId == request.auth.uid) &&
-        (request.resource == null || request.resource.data.userId == request.auth.uid); 
+    // Water Logs
+    match /waterLogs/{logId} {
+      allow read: if isAuthenticated() && (resource.data.userId == request.auth.uid || request.query.limit <= 100);
+      allow create: if willOwnResource();
+      allow update, delete: if ownsResource() && willOwnResource();
     }
 
     // Weight Logs
-    match /weightLogs/{logId} { 
-      allow read: if request.auth != null;
-      allow write, delete: if request.auth != null && 
-        (resource == null || resource.data.userId == request.auth.uid) &&
-        (request.resource == null || request.resource.data.userId == request.auth.uid); 
+    match /weightLogs/{logId} {
+      allow read: if isAuthenticated();
+      allow create: if willOwnResource();
+      allow update, delete: if ownsResource() && willOwnResource();
     }
-
-    match /mealHistory/{mealId} { 
-      allow read: if request.auth != null;
-      allow write, delete: if request.auth != null && 
-        (resource == null || resource.data.userId == request.auth.uid) &&
-        (request.resource == null || request.resource.data.userId == request.auth.uid); 
+    
+    // Exercise Logs
+    match /exerciseLogs/{logId} {
+      allow read: if isAuthenticated();
+      allow create: if willOwnResource();
+      allow update, delete: if ownsResource() && willOwnResource();
     }
-
-    match /recommendations/{recId} { 
-      allow read: if request.auth != null && resource.data.userId == request.auth.uid; 
-      allow write: if false; // Only Cloud Functions/Admin can write
+    
+    match /exercise_logs/{logId} {
+      allow read: if isAuthenticated();
+      allow create: if willOwnResource();
+      allow update, delete: if ownsResource() && willOwnResource();
     }
-
-    match /festivalCalendar/{eventId} { 
-      allow read: if request.auth != null; 
-    }
-
-    match /notifications/{notifId} { 
-      allow read: if request.auth != null && resource.data.userId == request.auth.uid;
-      allow write, delete: if request.auth != null && 
-        (resource == null || resource.data.userId == request.auth.uid) &&
-        (request.resource == null || request.resource.data.userId == request.auth.uid); 
-    }
-
-    // Meal Feedback
-    match /meal_feedback/{feedbackId} {
-      allow read: if request.auth != null;
-      allow write, delete: if request.auth != null && 
-        (resource == null || resource.data.userId == request.auth.uid) &&
-        (request.resource == null || request.resource.data.userId == request.auth.uid);
-    }
-
+    
     // AI Generated Plans
     match /ai_generated_plans/{planId} {
-      allow read: if request.auth != null && resource.data.userId == request.auth.uid;
-      allow write: if request.auth != null && 
-        (resource == null || resource.data.userId == request.auth.uid) &&
-        (request.resource == null || request.resource.data.userId == request.auth.uid);
-      allow delete: if request.auth != null && resource.data.userId == request.auth.uid;
+      allow read: if ownsResource();
+      allow create: if willOwnResource();
+      allow update, delete: if ownsResource() && willOwnResource();
     }
-
-    // Water Logs
-    match /waterLogs/{logId} {
-      allow read: if request.auth != null;
-      allow write, delete: if request.auth != null && 
-        (resource == null || resource.data.userId == request.auth.uid) &&
-        (request.resource == null || request.resource.data.userId == request.auth.uid);
-    }
-
-    // User Preferences
-    match /user_preferences/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+    
+    // Default Deny
+    match /{document=**} {
+      allow read, write: if false;
     }
   }
 }

@@ -3,7 +3,6 @@ package com.example.swasthyamitra
 import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
-
 import android.view.View
 import android.widget.TextView
 import android.widget.Toast
@@ -11,18 +10,11 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.example.swasthyamitra.adapters.HistoryAdapter
-import com.example.swasthyamitra.adapters.HistoryItem
 import com.example.swasthyamitra.auth.FirebaseAuthHelper
-
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
-
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
-import kotlinx.coroutines.withContext
-
-import androidx.core.graphics.drawable.toDrawable
+import com.google.firebase.database.ValueEventListener
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -32,16 +24,13 @@ class ProgressActivity : AppCompatActivity() {
     private lateinit var authHelper: FirebaseAuthHelper
     private var userId: String = ""
 
-    // UI Components for Original Dashboard
+    // UI Components
     private lateinit var weeklyCaloriesText: TextView
     private lateinit var weeklyWorkoutsText: TextView
     private lateinit var currentStreakText: TextView
     private lateinit var longestStreakText: TextView
     private lateinit var rvHistory: RecyclerView
     private lateinit var tvHistoryEmpty: TextView
-
-    // Data
-    private var weeklyStats: List<DailyStat> = emptyList()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -56,8 +45,7 @@ class ProgressActivity : AppCompatActivity() {
         }
 
         initializeViews()
-        setupListeners()
-        loadData()
+        loadProgressData()
     }
 
     private fun initializeViews() {
@@ -70,203 +58,97 @@ class ProgressActivity : AppCompatActivity() {
         tvHistoryEmpty = findViewById(R.id.tv_history_empty)
         rvHistory.layoutManager = LinearLayoutManager(this)
 
-        findViewById<androidx.appcompat.widget.Toolbar>(R.id.toolbar).apply {
-            setNavigationOnClickListener { finish() }
+        findViewById<View>(R.id.btnBack).setOnClickListener { finish() }
+        
+        findViewById<View>(R.id.viewDetailedReportButton)?.setOnClickListener { showChartsView() }
+        
+        // Progress Roadmap Click Listeners
+        findViewById<View>(R.id.roadmapItemWeight)?.setOnClickListener { 
+            startActivity(Intent(this, WeightProgressActivity::class.java))
         }
-    }
-
-    private fun setupListeners() {
-        findViewById<View>(R.id.row_weight_charts).setOnClickListener {
-             // Open Insights Activity as it is the new home for charts
-            try {
-                startActivity(Intent(this, InsightsActivity::class.java))
-            } catch (_: Exception) {
-                 Toast.makeText(this, "Charts not ready", Toast.LENGTH_SHORT).show()
-             }
+        findViewById<View>(R.id.roadmapItemBadges)?.setOnClickListener { 
+            startActivity(Intent(this, BadgesActivity::class.java))
+        }
+        findViewById<View>(R.id.roadmapItemHistory)?.setOnClickListener { 
+            startActivity(Intent(this, HistoryActivity::class.java))
         }
         
-        findViewById<View>(R.id.row_achievements).setOnClickListener {
-             startActivity(Intent(this, GamificationActivity::class.java))
-        }
 
-        findViewById<View>(R.id.viewDetailedReportButton).setOnClickListener {
-             showHistoryDialog()
-        }
     }
 
-    private fun loadData() {
-        lifecycleScope.launch {
-            try {
-                weeklyStats = getWeeklyStats()
-                updateDashboardUI(weeklyStats)
+    private fun loadProgressData() {
+        // 1. Load User Statistics (Streaks, Workouts, Calories) from Firebase Realtime Database
+        val db = FirebaseDatabase.getInstance("https://swasthyamitra-c0899-default-rtdb.asia-southeast1.firebasedatabase.app").reference
+        val userRef = db.child("users").child(userId)
+
+        // Use addValueEventListener for real-time updates
+        userRef.addValueEventListener(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                val data = snapshot.getValue(FitnessData::class.java) ?: FitnessData()
                 
-                // Load Daily History list for the bottom card
-                val historyItems = loadRecentHistoryItems(1) // Just today for the main screen log
-                setupHistoryList(historyItems)
-                
-            } catch (e: Exception) {
-                e.printStackTrace()
-                Toast.makeText(this@ProgressActivity, "Error loading data", Toast.LENGTH_SHORT).show()
-            }
-        }
-    }
+                runOnUiThread {
+                    // Update Streak
+                    currentStreakText.text = "${data.streak} days"
+                    longestStreakText.text = "${data.streak} days" 
 
-    private fun updateDashboardUI(stats: List<DailyStat>) {
-        val totalCalories = stats.sumOf { it.calories }
-        val sessions = stats.count { it.workoutCalories > 0 }
-        
-        weeklyCaloriesText.text = getString(R.string.kcal_suffix, totalCalories)
-        weeklyWorkoutsText.text = getString(R.string.count_only, sessions)
-        
-        // Calculate streak
-        val streak = calculateStreak(stats)
-        currentStreakText.text = getString(R.string.days_suffix, streak)
-        
-        // Best Streak (Placeholder or fetch from DB)
-        longestStreakText.text = getString(R.string.days_suffix, streak) // Using current for now
-    }
-
-    private fun calculateStreak(stats: List<DailyStat>): Int {
-        var streak = 0
-        // Iterate reversed (Today -> Backwards)
-        for (i in stats.indices.reversed()) {
-            if (stats[i].calories > 0 || stats[i].workoutCalories > 0) {
-                streak++
-            } else {
-                // If it's today and 0, don't break yet? Logic: strictly consecutive days
-                // If today is empty, streak is 0 unless we count yesterday.
-                // Simple logic: consecutive days with activity ending at today or yesterday
-                if (i == stats.lastIndex) continue // Skip today if empty? No, strict streak.
-                break 
-            }
-        }
-        return streak
-    }
-
-    private fun setupHistoryList(items: List<HistoryItem>) {
-        if (items.isEmpty()) {
-            tvHistoryEmpty.visibility = View.VISIBLE
-            rvHistory.visibility = View.GONE
-        } else {
-            tvHistoryEmpty.visibility = View.GONE
-            rvHistory.visibility = View.VISIBLE
-            rvHistory.adapter = HistoryAdapter(items)
-        }
-    }
-
-    // Data Structures
-    data class DailyStat(val date: String, val calories: Int, val workoutCalories: Int)
-
-    // Data Fetching Helper
-    private suspend fun getWeeklyStats(): List<DailyStat> {
-        return withContext(Dispatchers.IO) {
-            val stats = mutableListOf<DailyStat>()
-            val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-            
-            // 1. Prepare dates
-            val dates = mutableListOf<String>()
-            val cal = Calendar.getInstance()
-            cal.add(Calendar.DAY_OF_YEAR, -6)
-            repeat(7) {
-                dates.add(dateFormat.format(cal.time))
-                cal.add(Calendar.DAY_OF_YEAR, 1)
-            }
-            
-            val foodLogs = authHelper.getRecentFoodLogs(userId, 7)
-            
-            dates.forEach { dateKey ->
-                val dailyCalories = foodLogs.filter { it.date == dateKey }.sumOf { it.calories }
-                stats.add(DailyStat(dateKey, dailyCalories, 0)) // Placeholder 0 for workout cal for now
-            }
-            stats
-        }
-    }
-
-    private suspend fun loadRecentHistoryItems(days: Int): List<HistoryItem> {
-        return withContext(Dispatchers.IO) {
-            val allItems = mutableListOf<HistoryItem>()
-            val groupedItems = mutableListOf<HistoryItem>()
-            
-            val foodLogs = authHelper.getRecentFoodLogs(userId, days)
-            foodLogs.forEach { log ->
-                allItems.add(HistoryItem.FoodItem(
-                    name = log.foodName,
-                    mealType = log.mealType,
-                    calories = log.calories,
-                    protein = log.protein,
-                    carbs = log.carbs,
-                    fat = log.fat,
-                    timestamp = log.timestamp
-                ))
-            }
-            
-            // Fetch Workouts (from Realtime Database)
-            try {
-               val db = FirebaseDatabase.getInstance("https://swasthyamitra-c0899-default-rtdb.asia-southeast1.firebasedatabase.app").reference
-               val snapshot = db.child("users").child(userId).child("workoutHistory").get().await()
-               val cutoff = System.currentTimeMillis() - (days * 24 * 60 * 60 * 1000L)
-               
-               snapshot.children.forEach { child ->
-                   val ts = child.child("timestamp").getValue(Long::class.java) ?: 0L
-                   if (ts >= cutoff) {
-                       val category = child.child("category").getValue(String::class.java) ?: "Workout"
-                       allItems.add(HistoryItem.ExerciseItem(
-                           name = category.replaceFirstChar { it.uppercase() },
-                           durationMinutes = child.child("duration").getValue(Int::class.java) ?: 0,
-                           calories = child.child("caloriesBurned").getValue(Int::class.java) ?: 0,
-                           type = "Workout",
-                           timestamp = ts
-                       ))
-                   }
-               }
-            } catch (_: Exception) {}
-
-            val sortedList = allItems.sortedByDescending { it.timestamp }
-            
-            if (sortedList.isNotEmpty()) {
-                val dateFormat = SimpleDateFormat("EEEE, d MMM", Locale.getDefault())
-                var currentDate = ""
-                
-                sortedList.forEach { item ->
-                    val date = dateFormat.format(Date(item.timestamp))
-                    if (date != currentDate) {
-                        currentDate = date
-                        groupedItems.add(HistoryItem.HeaderItem(date, item.timestamp))
-                    }
-                    groupedItems.add(item)
+                    // Calculate Weekly Stats (Workouts & Calories Burned)
+                    val (workouts, calories) = calculateWeeklyStats(data.workoutHistory)
+                    
+                    weeklyWorkoutsText.text = "$workouts"
+                    weeklyCaloriesText.text = "$calories"
                 }
             }
-            groupedItems
-        }
+
+            override fun onCancelled(error: DatabaseError) {
+                Toast.makeText(this@ProgressActivity, "Failed to load stats: ${error.message}", Toast.LENGTH_SHORT).show()
+            }
+        })
     }
-    
-    private fun showHistoryDialog() {
-        val dialog = android.app.Dialog(this)
-        dialog.setContentView(R.layout.dialog_history)
-        dialog.window?.setBackgroundDrawable(Color.TRANSPARENT.toDrawable())
-        val width = (resources.displayMetrics.widthPixels * 0.95).toInt()
-        dialog.window?.setLayout(width, android.view.ViewGroup.LayoutParams.WRAP_CONTENT)
+
+    private fun calculateWeeklyStats(history: Map<String, WorkoutSession>): Pair<Int, Int> {
+        val calendar = Calendar.getInstance()
+        // Reset to start of current week (e.g., last 7 days)
+        calendar.add(Calendar.DAY_OF_YEAR, -7)
+        val oneWeekAgo = calendar.timeInMillis
         
-        val recyclerView: RecyclerView = dialog.findViewById(R.id.dialogHistoryRecyclerView)
-        recyclerView.layoutManager = LinearLayoutManager(this)
-        
-        lifecycleScope.launch {
-            try {
-                val items = loadRecentHistoryItems(7) // Load last 7 days for report
-                if (items.isEmpty()) {
-                    Toast.makeText(this@ProgressActivity, "No recent history found", Toast.LENGTH_SHORT).show()
+        var workoutCount = 0
+        var caloriesBurned = 0
+        val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+
+        for (session in history.values) {
+             try {
+                // If session has a timestamp, use it. If not, parse the date string.
+                val sessionTime = if (session.timestamp > 0) {
+                    session.timestamp
                 } else {
-                    recyclerView.adapter = HistoryAdapter(items)
+                    dateFormat.parse(session.date)?.time ?: 0L
+                }
+
+                if (sessionTime > oneWeekAgo && session.completed) {
+                    workoutCount++
+                    // Fix for legacy data: If calories not saved, estimate based on duration (~6 kcal/min)
+                    val burned = if (session.caloriesBurned > 0) {
+                        session.caloriesBurned
+                    } else {
+                        session.duration * 6
+                    }
+                    caloriesBurned += burned
                 }
             } catch (e: Exception) {
-                e.printStackTrace()
-                Toast.makeText(this@ProgressActivity, "Error fetching report details", Toast.LENGTH_SHORT).show()
+                continue
             }
         }
-        
-        dialog.findViewById<android.widget.Button>(R.id.btnCloseHistory).setOnClickListener {
-            dialog.dismiss()
+        return Pair(workoutCount, caloriesBurned)
+    }
+
+    private fun showChartsView() {
+        // Check if DetailedReportActivity exists, else fix or use placeholder
+        try {
+            startActivity(Intent(this, DetailedReportActivity::class.java))
+        } catch (e: Exception) {
+            Toast.makeText(this, "Detailed Report coming soon!", Toast.LENGTH_SHORT).show()
         }
-        dialog.show()
     }
 }
+    
+

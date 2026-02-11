@@ -262,17 +262,17 @@
                             android:maxLines="1"
                             android:textColor="#2196F3"/>
 
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Water"
-                            android:textSize="13sp"
-                            android:textColor="#666666"
-                            android:layout_marginTop="4dp"/>
-
                     </LinearLayout>
 
                 </LinearLayout>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="Water"
+                    android:textColor="#666666"
+                    android:textSize="13sp" />
 
             </LinearLayout>
 
@@ -473,6 +473,132 @@
                     android:textSize="13sp"
                     android:textColor="#666666"
                     android:gravity="center"/>
+
+            </LinearLayout>
+
+        </androidx.cardview.widget.CardView>
+
+        <!-- Mood Tracking Card -->
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="18dp"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="2dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="20dp"
+                android:background="@android:color/white">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="How are you feeling? ✨"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:textColor="#333333"/>
+
+                    <TextView
+                        android:id="@+id/tv_view_mood_details"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Details"
+                        android:textColor="#7B2CBF"
+                        android:textSize="14sp"
+                        android:clickable="true"
+                        android:focusable="true"/>
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginTop="16dp"
+                    android:gravity="center"
+                    android:weightSum="5">
+
+                    <LinearLayout
+                        android:id="@+id/btn_mood_happy"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:gravity="center"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:background="?attr/selectableItemBackgroundBorderless">
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="😊" android:textSize="24sp"/>
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Happy" android:textSize="10sp" android:textColor="#666666"/>
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/btn_mood_calm"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:gravity="center"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:background="?attr/selectableItemBackgroundBorderless">
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="😌" android:textSize="24sp"/>
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Calm" android:textSize="10sp" android:textColor="#666666"/>
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/btn_mood_tired"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:gravity="center"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:background="?attr/selectableItemBackgroundBorderless">
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="😴" android:textSize="24sp"/>
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Tired" android:textSize="10sp" android:textColor="#666666"/>
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/btn_mood_sad"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:gravity="center"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:background="?attr/selectableItemBackgroundBorderless">
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="😔" android:textSize="24sp"/>
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Sad" android:textSize="10sp" android:textColor="#666666"/>
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/btn_mood_stressed"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:gravity="center"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:background="?attr/selectableItemBackgroundBorderless">
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="😫" android:textSize="24sp"/>
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Stressed" android:textSize="10sp" android:textColor="#666666"/>
+                    </LinearLayout>
+
+                </LinearLayout>
 
             </LinearLayout>
 
@@ -798,37 +924,46 @@
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/btn_log_rec_exercise"
-                        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                        style="@style/Widget.MaterialComponents.Button.UnelevatedButton"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="Log Activity"
-                        app:strokeColor="#E91E63"
-                        android:textColor="#E91E63"
-                        android:layout_marginEnd="8dp"/>
+                        android:layout_weight="1.2"
+                        android:text="I Did It! 🎉"
+                        android:textSize="11sp"
+                        android:textStyle="bold"
+                        app:cornerRadius="8dp"
+                        app:backgroundTint="#E91E63"/>
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/btn_regenerate_exercise"
+                        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="0.8"
+                        android:layout_marginStart="4dp"
+                        android:text="Maybe Later"
+                        android:textSize="11sp"
+                        android:textStyle="bold"
+                        app:cornerRadius="8dp"
+                        app:strokeColor="#E91E63"
+                        app:rippleColor="#FCE4EC"/>
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btn_view_exercise_details"
                         style="@style/Widget.MaterialComponents.Button.TextButton"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Try Another"
-                        android:textColor="#888888"/>
+                        android:layout_marginStart="4dp"
+                        android:text="Show Me How 👀"
+                        android:textColor="#E91E63"
+                        android:textSize="11sp"
+                        android:textStyle="bold"/>
 
                 </LinearLayout>
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btn_view_exercise_details"
-                    style="@style/Widget.MaterialComponents.Button.TextButton"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="View Step-by-Step Guide"
-                    android:textColor="#2196F3"/>
 
             </LinearLayout>
 
         </androidx.cardview.widget.CardView>
-
 
 
         <!-- Quick Actions -->
@@ -921,6 +1056,37 @@
                 android:textStyle="bold"
                 app:backgroundTint="@null"
                 app:cornerRadius="8dp" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:weightSum="2"
+            android:layout_marginBottom="20dp">
+
+            <!-- AI Rasoi Button -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/card_ai_pantry"
+                style="@style/Widget.MaterialComponents.Button.UnelevatedButton"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="4dp"
+                android:layout_weight="1"
+                android:background="@drawable/button_background"
+                android:text="🍳\nAI RASOI"
+                android:textColor="#FFFFFF"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                app:backgroundTint="@null"
+                app:cornerRadius="8dp" />
+
+            <View
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:layout_marginStart="4dp"/>
 
         </LinearLayout>
 

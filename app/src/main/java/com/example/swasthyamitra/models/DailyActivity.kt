@@ -4,5 +4,5 @@ data class DailyActivity(
     val date: String = "",
     val steps: Int = 0,
     val calories: Int = 0,
-    val workout: String = ""
+    val workout: String = "" // e.g. "Yoga", "HIIT"
 )

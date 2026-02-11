@@ -26,7 +26,9 @@ class MainActivity : AppCompatActivity() {
             val application = application as? UserApplication
             if (application != null) {
                 authHelper = application.authHelper
-                // Check if user is already logged in
+                // PERSISTENT LOGIN: Check if user is already logged in
+                // If logged in, skip welcome screen and go directly to homepage
+                // This ensures users don't need to login repeatedly
                 checkAutoLogin()
             } else {
                 // UserApplication not initialized, show welcome screen
@@ -42,18 +44,22 @@ class MainActivity : AppCompatActivity() {
     private fun checkAutoLogin() {
         try {
             if (::authHelper.isInitialized && authHelper.isUserLoggedIn()) {
-                // User is logged in, check profile completion before navigating
+                // User is logged in, check profile completion status
                 val userId = authHelper.getCurrentUser()?.uid
                 if (userId != null) {
+                    Log.d("MainActivity", "User already logged in with ID: $userId, checking profile completion")
+                    // Use the existing validation logic to determine navigation
                     checkProfileAndNavigate(userId)
                 } else {
+                    Log.d("MainActivity", "User logged in but no UID found")
                     showWelcomeScreen()
                 }
             } else {
+                Log.d("MainActivity", "No user logged in, showing welcome screen")
                 showWelcomeScreen()
             }
         } catch (e: Exception) {
-            e.printStackTrace()
+            Log.e("MainActivity", "Error in checkAutoLogin: ${e.message}", e)
             showWelcomeScreen()
         }
     }

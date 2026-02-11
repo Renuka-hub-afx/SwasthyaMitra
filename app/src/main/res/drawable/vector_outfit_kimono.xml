@@ -1,0 +1,18 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="300dp"
+    android:height="300dp"
+    android:viewportWidth="300"
+    android:viewportHeight="300">
+    <!-- Kimono Base (Red/Pink) -->
+    <path
+        android:fillColor="#EF5350"
+        android:pathData="M70,240 L110,200 L110,220 L130,220 L130,200 L170,200 L170,220 L190,220 L190,200 L230,240 L230,300 L70,300 Z"/>
+    <!-- Collar (Teal) -->
+    <path
+        android:fillColor="#80CBC4"
+        android:pathData="M110,200 L150,260 L190,200 L170,200 L150,230 L130,200 Z"/>
+     <!-- Inner Collar (White) -->
+    <path
+        android:fillColor="#FFF9C4"
+        android:pathData="M120,200 L150,240 L180,200 L170,200 L150,225 L130,200 Z"/>
+</vector>

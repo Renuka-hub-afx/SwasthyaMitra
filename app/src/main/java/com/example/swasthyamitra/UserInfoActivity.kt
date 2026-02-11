@@ -36,8 +36,8 @@ class UserInfoActivity : AppCompatActivity() {
         }
         authHelper = application.authHelper
 
-        // Retrieve User ID passed from LoginActivity
-        userId = intent.getStringExtra("USER_ID") ?: ""
+        // Retrieve User ID passed from LoginActivity or from current session
+        userId = intent.getStringExtra("USER_ID") ?: authHelper.getCurrentUser()?.uid ?: ""
         if (userId.isEmpty()) {
             Toast.makeText(this, "User ID missing. Please login again.", Toast.LENGTH_LONG).show()
             finish()

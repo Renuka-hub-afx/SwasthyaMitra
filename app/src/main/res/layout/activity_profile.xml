@@ -107,6 +107,18 @@
                     android:textSize="20sp"
                     android:textStyle="bold" />
 
+                <EditText
+                    android:id="@+id/userNameEdit"
+                    android:layout_width="200dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:gravity="center"
+                    android:inputType="textPersonName"
+                    android:textColor="#1D1617"
+                    android:textSize="20sp"
+                    android:textStyle="bold"
+                    android:visibility="gone" />
+
                 <TextView
                     android:id="@+id/userEmailText"
                     android:layout_width="wrap_content"
@@ -139,6 +151,7 @@
             android:layout_marginHorizontal="24dp"
             android:layout_marginTop="16dp"
             android:background="@drawable/rounded_white_background"
+            android:backgroundTint="#FFFFFF"
             android:orientation="vertical"
             android:padding="20dp"
             app:layout_constraintTop_toBottomOf="@id/tvPersonalInfoHeader">
@@ -160,6 +173,14 @@
                     android:text="23 years"
                     android:textColor="#1D1617"
                     android:textStyle="bold" />
+                <EditText
+                    android:id="@+id/userAgeEdit"
+                    android:layout_width="60dp"
+                    android:layout_height="wrap_content"
+                    android:inputType="number"
+                    android:visibility="gone"
+                    android:textSize="14sp"/>
+
             </LinearLayout>
 
             <View android:layout_width="match_parent" android:layout_height="16dp"/>
@@ -181,6 +202,12 @@
                     android:text="Male"
                     android:textColor="#1D1617"
                     android:textStyle="bold" />
+                <Spinner
+                    android:id="@+id/userGenderSpinner"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:visibility="gone" />
+
             </LinearLayout>
 
             <View android:layout_width="match_parent" android:layout_height="16dp"/>
@@ -202,6 +229,14 @@
                     android:text="179.0 cm"
                     android:textColor="#1D1617"
                     android:textStyle="bold" />
+                <EditText
+                    android:id="@+id/userHeightEdit"
+                    android:layout_width="60dp"
+                    android:layout_height="wrap_content"
+                    android:inputType="numberDecimal"
+                    android:visibility="gone"
+                    android:textSize="14sp"/>
+
             </LinearLayout>
 
             <View android:layout_width="match_parent" android:layout_height="16dp"/>
@@ -223,6 +258,14 @@
                     android:text="85.0 kg"
                     android:textColor="#1D1617"
                     android:textStyle="bold" />
+                <EditText
+                    android:id="@+id/userWeightEdit"
+                    android:layout_width="60dp"
+                    android:layout_height="wrap_content"
+                    android:inputType="numberDecimal"
+                    android:visibility="gone"
+                    android:textSize="14sp"/>
+
             </LinearLayout>
 
             <View android:layout_width="match_parent" android:layout_height="16dp"/>
@@ -349,6 +392,7 @@
             android:layout_marginHorizontal="24dp"
             android:layout_marginTop="16dp"
             android:background="@drawable/rounded_white_background"
+            android:backgroundTint="#FFFFFF"
             android:padding="20dp"
             app:layout_constraintTop_toBottomOf="@id/tvGoalsHeader">
 
@@ -374,6 +418,19 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/lblGoalWeight" />
 
+            <EditText
+                android:id="@+id/userGoalWeightEdit"
+                android:layout_width="80dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:inputType="numberDecimal"
+                android:textColor="#9C27B0"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:visibility="gone"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/lblGoalWeight" />
+
             <ImageView
                 android:id="@+id/editGoalWeightButton"
                 android:layout_width="32dp"
@@ -386,16 +443,23 @@
                 app:layout_constraintTop_toTopOf="parent"
                 app:tint="#9C27B0" />
 
+            <androidx.constraintlayout.widget.Barrier
+                android:id="@+id/barrierGoalWeight"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:barrierDirection="bottom"
+                app:constraint_referenced_ids="goalWeightText,userGoalWeightEdit" />
+
             <TextView
                 android:id="@+id/lblCalorie"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="24dp"
+                android:layout_marginTop="16dp"
                 android:text="Daily Calorie Goal"
                 android:textColor="#7B6F72"
                 android:textSize="12sp"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/goalWeightText" />
+                app:layout_constraintTop_toBottomOf="@id/barrierGoalWeight" />
 
             <TextView
                 android:id="@+id/goalCaloriesText"
@@ -406,6 +470,19 @@
                 android:textColor="#9C27B0"
                 android:textSize="18sp"
                 android:textStyle="bold"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/lblCalorie" />
+
+            <EditText
+                android:id="@+id/userGoalCaloriesEdit"
+                android:layout_width="100dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:inputType="number"
+                android:textColor="#9C27B0"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:visibility="gone"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/lblCalorie" />
 

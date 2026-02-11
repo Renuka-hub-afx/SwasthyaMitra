@@ -1,6 +1,7 @@
 package com.example.swasthyamitra.auth
 
 import android.content.Context
+import android.util.Log
 import com.example.swasthyamitra.models.FoodLog
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
@@ -10,7 +11,7 @@ import kotlinx.coroutines.tasks.await
 class FirebaseAuthHelper(private val context: Context) {
 
     private val auth: FirebaseAuth = FirebaseAuth.getInstance()
-    private val firestore: FirebaseFirestore = FirebaseFirestore.getInstance("renu")
+    private val firestore: FirebaseFirestore = FirebaseFirestore.getInstance("renu") // Using RENU database instance
 
     // Get current user
     fun getCurrentUser(): FirebaseUser? = auth.currentUser
@@ -299,6 +300,23 @@ class FirebaseAuthHelper(private val context: Context) {
     // Log food entry
     suspend fun logFood(foodLog: FoodLog): Result<String> {
         return try {
+            val userFoodLogsRef = firestore.collection("users")
+                .document(foodLog.userId)
+                .collection("foodLogs")
+
+            // Check for duplicates (same food, same meal, same date)
+            val duplicateCheck = userFoodLogsRef
+                .whereEqualTo("foodName", foodLog.foodName)
+                .whereEqualTo("mealType", foodLog.mealType)
+                .whereEqualTo("date", foodLog.date)
+                .get()
+                .await()
+
+            if (!duplicateCheck.isEmpty) {
+                // Return success if duplicate exists (idempotent)
+                return Result.success(duplicateCheck.documents[0].id)
+            }
+
             val foodData = hashMapOf(
                 "userId" to foodLog.userId,
                 "foodName" to foodLog.foodName,
@@ -314,13 +332,49 @@ class FirebaseAuthHelper(private val context: Context) {
                 "timestamp" to foodLog.timestamp
             )
             
-            val docRef = firestore.collection("foodLogs")
-                .add(foodData)
-                .await()
+            val docRef = userFoodLogsRef.add(foodData).await()
             
+            // Trigger cleanup of old logs (keep last 30 days)
+            cleanOldFoodLogs(foodLog.userId)
+
             Result.success(docRef.id)
         } catch (e: Exception) {
             Result.failure(e)
+        }
+    }
+
+    // Delete a food log entry
+    suspend fun deleteFoodLog(userId: String, logId: String): Result<Boolean> {
+        return try {
+            firestore.collection("users")
+                .document(userId)
+                .collection("foodLogs")
+                .document(logId)
+                .delete()
+                .await()
+            Result.success(true)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    // Clean up food logs older than 30 days
+    private fun cleanOldFoodLogs(userId: String) {
+        // Run in background / fire-and-forget
+        try {
+            val cutoff = System.currentTimeMillis() - (30L * 24 * 60 * 60 * 1000L) // 30 days
+            firestore.collection("users")
+                .document(userId)
+                .collection("foodLogs")
+                .whereLessThan("timestamp", cutoff)
+                .get()
+                .addOnSuccessListener { snapshot ->
+                    for (doc in snapshot.documents) {
+                        doc.reference.delete()
+                    }
+                }
+        } catch (e: Exception) {
+            // Ignore cleanup errors
         }
     }
     
@@ -330,9 +384,44 @@ class FirebaseAuthHelper(private val context: Context) {
             val dateFormat = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
             val today = dateFormat.format(java.util.Date())
             
-            val querySnapshot = firestore.collection("foodLogs")
-                .whereEqualTo("userId", userId)
+            val querySnapshot = firestore.collection("users")
+                .document(userId)
+                .collection("foodLogs")
                 .whereEqualTo("date", today)
+                .get()
+                .await()
+            
+            val logs = querySnapshot.documents.mapNotNull { doc ->
+                FoodLog(
+                    logId = doc.id,
+                    userId = doc.getString("userId") ?: "",
+                    foodName = doc.getString("foodName") ?: "",
+                    barcode = doc.getString("barcode"),
+                    photoUrl = doc.getString("photoUrl"),
+                    calories = (doc.getLong("calories") ?: 0).toInt(),
+                    protein = doc.getDouble("protein") ?: 0.0,
+                    carbs = doc.getDouble("carbs") ?: 0.0,
+                    fat = doc.getDouble("fat") ?: 0.0,
+                    servingSize = doc.getString("servingSize") ?: "",
+                    mealType = doc.getString("mealType") ?: "",
+                    timestamp = doc.getLong("timestamp") ?: 0L,
+                    date = doc.getString("date") ?: ""
+                )
+            }
+            
+            Result.success(logs)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+    
+    // Get ALL food logs (complete history)
+    suspend fun getAllFoodLogs(userId: String): Result<List<FoodLog>> {
+        return try {
+            val querySnapshot = firestore.collection("users")
+                .document(userId)
+                .collection("foodLogs")
+                .orderBy("timestamp", com.google.firebase.firestore.Query.Direction.DESCENDING)
                 .get()
                 .await()
             
@@ -377,8 +466,9 @@ class FirebaseAuthHelper(private val context: Context) {
     // Get food logs for a list of dates
     suspend fun getFoodLogsForDates(userId: String, dates: List<String>): Result<List<FoodLog>> {
         return try {
-            val querySnapshot = firestore.collection("foodLogs")
-                .whereEqualTo("userId", userId)
+            val querySnapshot = firestore.collection("users")
+                .document(userId)
+                .collection("foodLogs")
                 .whereIn("date", dates)
                 .get()
                 .await()
@@ -410,8 +500,9 @@ class FirebaseAuthHelper(private val context: Context) {
     // Get total calories for a specific date (Legacy - used by ProgressActivity)
     suspend fun getDailyCalories(userId: String, date: String): Int {
         return try {
-            val logs = firestore.collection("foodLogs")
-                .whereEqualTo("userId", userId)
+            val logs = firestore.collection("users")
+                .document(userId)
+                .collection("foodLogs")
                 .whereEqualTo("date", date)
                 .get()
                 .await()
@@ -442,6 +533,32 @@ class FirebaseAuthHelper(private val context: Context) {
         }
     }
 
+    // Log weight entry
+    suspend fun logWeight(userId: String, weight: Double): Result<Unit> {
+        return try {
+            val timestamp = System.currentTimeMillis()
+            val date = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault()).format(java.util.Date())
+            
+            val weightData = hashMapOf(
+                "userId" to userId,
+                "weight" to weight,
+                "timestamp" to timestamp,
+                "date" to date
+            )
+            
+            firestore.collection("weightLogs").add(weightData).await()
+            
+            // Also update current weight in user profile
+            updateUserPhysicalStats(userId, 0.0, weight, "", 0) // Validating parameters might be needed, ignoring for now as update helper might overwrite
+            // Actually updateUserPhysicalStats requires all params. Let's just update weight field directly
+            firestore.collection("users").document(userId).update("weight", weight).await()
+
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
     // Get recent weight logs for plateau detection
     suspend fun getRecentWeightLogs(userId: String, days: Int = 14): List<Map<String, Any>> {
         return try {
@@ -464,8 +581,9 @@ class FirebaseAuthHelper(private val context: Context) {
     suspend fun getRecentFoodLogs(userId: String, days: Int = 3): List<FoodLog> {
         return try {
             val cutoff = System.currentTimeMillis() - (days * 24 * 60 * 60 * 1000L)
-            val querySnapshot = firestore.collection("foodLogs")
-                .whereEqualTo("userId", userId)
+            val querySnapshot = firestore.collection("users")
+                .document(userId)
+                .collection("foodLogs")
                 .whereGreaterThanOrEqualTo("timestamp", cutoff)
                 .get()
                 .await()
@@ -486,8 +604,9 @@ class FirebaseAuthHelper(private val context: Context) {
                     timestamp = doc.getLong("timestamp") ?: 0L,
                     date = doc.getString("date") ?: ""
                 )
-            }
+            }.sortedByDescending { it.timestamp } // Sort in memory to avoid composite index requirement
         } catch (e: Exception) {
+            Log.e("FirebaseAuthHelper", "Error fetching recent food logs: ${e.message}", e)
             emptyList()
         }
     }

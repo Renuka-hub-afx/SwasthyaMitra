@@ -40,21 +40,21 @@ class homepage : AppCompatActivity() {
     private lateinit var pbCarbs: ProgressBar
     private lateinit var pbFats: ProgressBar
 
-    // AI Recommendation UI
-    private lateinit var cardAiExercise: androidx.cardview.widget.CardView
-    private lateinit var tvRecExerciseName: TextView
-    private lateinit var tvRecTargetMuscle: TextView
-    private lateinit var tvRecReason: TextView
-    private lateinit var btnViewExerciseDetails: MaterialButton
-    private lateinit var btnLogRecExercise: MaterialButton
-    private lateinit var btnRegenerateExercise: MaterialButton
-    private lateinit var ivExerciseGif: android.widget.ImageView
-    private lateinit var tvAgeExplanation: TextView
-    private lateinit var tvGenderNote: TextView
-    private lateinit var tvMotivationalMessage: TextView
-    private lateinit var tvExerciseCalories: TextView
-    private lateinit var tvExerciseDuration: TextView
-    private var currentRecommendedExercise: com.example.swasthyamitra.ai.AIExerciseRecommendationService.ExerciseRec? = null
+    // AI Recommendation UI - MOVED TO WORKOUT DASHBOARD
+    // private lateinit var cardAiExercise: androidx.cardview.widget.CardView
+    // private lateinit var tvRecExerciseName: TextView
+    // private lateinit var tvRecTargetMuscle: TextView
+    // private lateinit var tvRecReason: TextView
+    // private lateinit var btnViewExerciseDetails: MaterialButton
+    // private lateinit var btnLogRecExercise: MaterialButton
+    // private lateinit var btnRegenerateExercise: MaterialButton
+    // private lateinit var ivExerciseGif: android.widget.ImageView
+    // private lateinit var tvAgeExplanation: TextView
+    // private lateinit var tvGenderNote: TextView
+    // private lateinit var tvMotivationalMessage: TextView
+    // private lateinit var tvExerciseCalories: TextView
+    // private lateinit var tvExerciseDuration: TextView
+    // private var currentRecommendedExercise: com.example.swasthyamitra.ai.AIExerciseRecommendationService.ExerciseRec? = null
 
     private lateinit var menuHome: LinearLayout
     private lateinit var menuProgress: LinearLayout
@@ -123,20 +123,26 @@ class homepage : AppCompatActivity() {
         cardWaterSummary = findViewById(R.id.card_water_summary)
         tvWaterTotal = findViewById(R.id.tv_water_total)
 
-        cardAiExercise = findViewById(R.id.card_ai_exercise)
-        tvRecExerciseName = findViewById(R.id.tv_rec_exercise_name)
-        tvRecTargetMuscle = findViewById(R.id.tv_rec_target_muscle)
-        tvRecReason = findViewById(R.id.tv_rec_reason)
-        btnViewExerciseDetails = findViewById(R.id.btn_view_exercise_details)
-        btnLogRecExercise = findViewById(R.id.btn_log_rec_exercise)
-        btnRegenerateExercise = findViewById(R.id.btn_regenerate_exercise)
+        // cardAiExercise = findViewById(R.id.card_ai_exercise)
+        // tvRecExerciseName = findViewById(R.id.tv_rec_exercise_name)
+        // tvRecTargetMuscle = findViewById(R.id.tv_rec_target_muscle)
+        // tvRecReason = findViewById(R.id.tv_rec_reason)
+        // btnViewExerciseDetails = findViewById(R.id.btn_view_exercise_details)
+        // btnLogRecExercise = findViewById(R.id.btn_log_rec_exercise)
+        // btnRegenerateExercise = findViewById(R.id.btn_regenerate_exercise)
+        
+        val tvViewDetails: TextView = findViewById(R.id.tv_view_details)
+        tvViewDetails.setOnClickListener {
+            startActivity(Intent(this, FoodLogActivity::class.java))
+        }
+
         chipPeriodMode = findViewById(R.id.chip_period_mode)
-        ivExerciseGif = findViewById(R.id.iv_exercise_gif)
-        tvAgeExplanation = findViewById(R.id.tv_age_explanation)
-        tvGenderNote = findViewById(R.id.tv_gender_note)
-        tvMotivationalMessage = findViewById(R.id.tv_motivational_message)
-        tvExerciseCalories = findViewById(R.id.tv_exercise_calories)
-        tvExerciseDuration = findViewById(R.id.tv_exercise_duration)
+        // ivExerciseGif = findViewById(R.id.iv_exercise_gif)
+        // tvAgeExplanation = findViewById(R.id.tv_age_explanation)
+        // tvGenderNote = findViewById(R.id.tv_gender_note)
+        // tvMotivationalMessage = findViewById(R.id.tv_motivational_message)
+        // tvExerciseCalories = findViewById(R.id.tv_exercise_calories)
+        // tvExerciseDuration = findViewById(R.id.tv_exercise_duration)
         
         // Initialize calorie balance UI
         tvCaloriesIn = findViewById(R.id.tv_calories_in)
@@ -161,6 +167,8 @@ class homepage : AppCompatActivity() {
             }
         }
         stepManager.start()
+        
+
 
         cardWorkout.setOnClickListener {
             val intent = Intent(this, WorkoutDashboardActivity::class.java)
@@ -187,7 +195,7 @@ class homepage : AppCompatActivity() {
                     
                     // Trigger AI refreshes for specialized mode
                     updateAICoachMessage()
-                    updateAIExerciseRecommendation()
+                    // updateAIExerciseRecommendation()
                     
                     val status = if (isChecked) "activated 🌸" else "deactivated"
                     Toast.makeText(this@homepage, "Period Mode $status", Toast.LENGTH_SHORT).show()
@@ -218,27 +226,92 @@ class homepage : AppCompatActivity() {
             startActivity(intent)
         }
 
-        btnViewExerciseDetails.setOnClickListener {
-            showExerciseGuideDialog()
+        // Setup AI Rasoi (Smart Pantry)
+        val cardAiRasoi: MaterialButton? = findViewById(R.id.card_ai_pantry)
+        cardAiRasoi?.setOnClickListener {
+            val intent = Intent(this, SmartPantryActivity::class.java)
+            startActivity(intent)
         }
 
-        btnLogRecExercise.setOnClickListener {
-            logRecommendedExercise()
+        // btnViewExerciseDetails.setOnClickListener {
+        //     showExerciseGuideDialog()
+        // }
+
+        // btnLogRecExercise.setOnClickListener {
+        //     logRecommendedExercise()
+        // }
+
+        // btnRegenerateExercise.setOnClickListener {
+        //     lifecycleScope.launch {
+        //         try {
+        //             // Clear existing recommendation to force new generation
+        //             firestore.collection("users").document(userId)
+        //                 .update("currentDailyExercise", null, "lastExerciseDate", null)
+        //                 .await()
+        //             updateAIExerciseRecommendation()
+        //         } catch (e: Exception) {
+        //             Log.e("Homepage", "Error skipping exercise", e)
+        //         }
+        //     }
+        // }
+
+        findViewById<TextView>(R.id.tv_view_mood_details).setOnClickListener {
+            val intent = Intent(this, MoodRecommendationActivity::class.java)
+            startActivity(intent)
         }
 
-        btnRegenerateExercise.setOnClickListener {
-            lifecycleScope.launch {
-                try {
-                    // Clear existing recommendation to force new generation
-                    firestore.collection("users").document(userId)
-                        .update("currentDailyExercise", null, "lastExerciseDate", null)
-                        .await()
-                    updateAIExerciseRecommendation()
-                } catch (e: Exception) {
-                    Log.e("Homepage", "Error skipping exercise", e)
-                }
+        setupMoodTracking()
+    }
+
+    private fun setupMoodTracking() {
+        val moods: Map<Int, String> = mapOf(
+            R.id.btn_mood_happy to "Happy",
+            R.id.btn_mood_calm to "Calm",
+            R.id.btn_mood_tired to "Tired",
+            R.id.btn_mood_sad to "Sad",
+            R.id.btn_mood_stressed to "Stressed"
+        )
+
+        moods.forEach { (id, mood) ->
+            findViewById<LinearLayout>(id).setOnClickListener {
+                handleMoodSelection(mood)
             }
         }
+        
+
+    }
+
+    private fun handleMoodSelection(mood: String) {
+        // 1. Local Analysis
+        val analyzer = com.example.swasthyamitra.ai.LocalMoodAnalyzer()
+        val analysis = analyzer.analyze(mood)
+
+        // 2. Create Data Object
+        val moodData = com.example.swasthyamitra.models.MoodData(
+            userId = userId,
+            mood = mood,
+            intensity = analysis.intensity,
+            energy = analysis.energy,
+            suggestion = analysis.suggestion,
+            timestamp = System.currentTimeMillis(),
+            date = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault()).format(java.util.Date())
+        )
+
+        // 3. Save to Repository (Background)
+        val repo = com.example.swasthyamitra.repository.MoodRepository()
+        lifecycleScope.launch {
+            repo.saveMood(userId, moodData)
+            
+            // 4. Update Coach Message Immediately (Offline Fallback)
+            runOnUiThread {
+                tvCoachMessage.text = "I notice you're feeling $mood. ${analysis.suggestion}"
+            }
+        }
+
+        // 5. Navigate to Recommendation Page
+        val intent = Intent(this, MoodRecommendationActivity::class.java)
+        intent.putExtra("MOOD_DATA", com.google.gson.Gson().toJson(moodData))
+        startActivity(intent)
     }
 
     private fun showCustomWaterAddDialog() {
@@ -282,7 +355,7 @@ class homepage : AppCompatActivity() {
             displayWorkoutStatus()
             displayWaterStatus()
             updateAICoachMessage()
-            updateAIExerciseRecommendation()
+            // updateAIExerciseRecommendation()
             updateCalorieBalance()
             updateCalorieBalance()
         }
@@ -296,6 +369,14 @@ class homepage : AppCompatActivity() {
                     userName = userData["name"] as? String ?: "User"
                     tvUserName.text = "Hello, $userName!"
                     
+                    val avatarId = userData["selected_avatar_id"] as? String
+                    if (avatarId != null) {
+                        val avatarResId = getAvatarDrawable(avatarId)
+                        if (avatarResId != 0) {
+                            findViewById<android.widget.ImageView>(R.id.iv_user_profile).setImageResource(avatarResId)
+                        }
+                    }
+
                     // Load Period Mode status
                     isOnPeriod = userData["isOnPeriod"] as? Boolean ?: false
                     chipPeriodMode.isChecked = isOnPeriod
@@ -510,8 +591,8 @@ class homepage : AppCompatActivity() {
                 val total = totalResult.getOrDefault(0)
                 val goal = goalResult.getOrDefault(2500)
                 
-                // Format: "1250 / 2500 ml"
-                 tvWaterTotal.text = "$total / $goal ml"
+                // Format: Just show total to match "Big Value" design of Steps/Workouts
+                 tvWaterTotal.text = "$total ml"
             } else {
                  tvWaterTotal.text = "0 ml"
             }
@@ -563,7 +644,7 @@ class homepage : AppCompatActivity() {
         }
     }
 
-    private fun updateAIExerciseRecommendation() {
+/*    private fun updateAIExerciseRecommendation() {
         lifecycleScope.launch {
             try {
                 // 0. Check if it's time to show the recommendation
@@ -575,10 +656,10 @@ class homepage : AppCompatActivity() {
                 val currentHour = calendar.get(java.util.Calendar.HOUR_OF_DAY)
                 
                 val isTimeMatch = when(preferredTime) {
-                    "Morning" -> currentHour in 5..11
+                    "Morning" -> currentHour in 4..11
                     "Afternoon" -> currentHour in 12..16
                     "Evening" -> currentHour in 17..20
-                    "Night" -> currentHour in 21..23 || currentHour in 0..4
+                    "Night" -> currentHour in 21..23 || currentHour in 0..3
                     else -> true
                 }
 
@@ -641,76 +722,90 @@ class homepage : AppCompatActivity() {
                 }
 
                 val service = com.example.swasthyamitra.ai.AIExerciseRecommendationService.getInstance(this@homepage)
-                val result = service.getExerciseRecommendation(burnedFromSteps)
+                val result = service.getExerciseRecommendation(stepCalories = burnedFromSteps)
                 
-                result.onSuccess { rec ->
-                    currentRecommendedExercise = rec
-
-                    // Save recommendation for stickiness
-                    val exerciseMap = hashMapOf(
-                        "name" to rec.name,
-                        "targetMuscle" to rec.targetMuscle,
-                        "bodyPart" to rec.bodyPart,
-                        "equipment" to rec.equipment,
-                        "instructions" to rec.instructions,
-                        "reason" to rec.reason,
-                        "estimatedCalories" to rec.estimatedCalories,
-                        "recommendedDuration" to rec.recommendedDuration
-                    )
+                result.onSuccess { recList ->
+                    // Just take the first one for Homepage "Quick Goal"
+                    val rec = recList.firstOrNull()
                     
-                    firestore.collection("users").document(userId)
-                        .update("currentDailyExercise", exerciseMap, "lastExerciseDate", today)
-                        .await()
-
-                    runOnUiThread {
-                        tvRecExerciseName.text = rec.name
-                        tvRecTargetMuscle.text = "Target: ${rec.targetMuscle}"
-                        tvRecReason.text = rec.reason
-                        tvExerciseCalories.text = "🔥 ~${rec.estimatedCalories} kcal"
-                        tvExerciseDuration.text = "⏱️ ${rec.recommendedDuration}"
+                    if (rec != null) {
+                        currentRecommendedExercise = rec
+    
+                        // Save recommendation for stickiness (just saving the first one)
+                        val exerciseMap = hashMapOf(
+                            "name" to rec.name,
+                            "targetMuscle" to rec.targetMuscle,
+                            "bodyPart" to rec.bodyPart,
+                            "equipment" to rec.equipment,
+                            "instructions" to rec.instructions,
+                            "reason" to rec.reason,
+                            "benefits" to rec.benefits, // Save benefits
+                            "estimatedCalories" to rec.estimatedCalories,
+                            "recommendedDuration" to rec.recommendedDuration
+                        )
                         
-                        // Display GIF if available
-                        if (rec.gifUrl.isNotEmpty()) {
-                            try {
-                                com.bumptech.glide.Glide.with(this@homepage)
-                                    .load("file:///android_asset/${rec.gifUrl}")
-                                    .into(ivExerciseGif)
-                                ivExerciseGif.visibility = android.view.View.VISIBLE
-                            } catch (e: Exception) {
-                                Log.e("Homepage", "Error loading GIF: ${e.message}")
+                        firestore.collection("users").document(userId)
+                            .update("currentDailyExercise", exerciseMap, "lastExerciseDate", today)
+                            .await()
+    
+                        runOnUiThread {
+                            tvRecExerciseName.text = rec.name
+                            tvRecTargetMuscle.text = "Target: ${rec.targetMuscle}"
+                            
+                            // Richer text for Homepage too
+                            tvRecReason.text = "${rec.reason}\n\n💡 Benefit: ${rec.benefits}"
+                            
+                            tvExerciseCalories.text = "🔥 ~${rec.estimatedCalories} kcal"
+                            tvExerciseDuration.text = "⏱️ ${rec.recommendedDuration}"
+                            
+                            // Display GIF if available
+                            if (rec.gifUrl.isNotEmpty()) {
+                                try {
+                                    com.bumptech.glide.Glide.with(this@homepage)
+                                        .load("file:///android_asset/${rec.gifUrl}")
+                                        .into(ivExerciseGif)
+                                    ivExerciseGif.visibility = android.view.View.VISIBLE
+                                } catch (e: Exception) {
+                                    Log.e("Homepage", "Error loading GIF: ${e.message}")
+                                    ivExerciseGif.visibility = android.view.View.GONE
+                                }
+                            } else {
                                 ivExerciseGif.visibility = android.view.View.GONE
                             }
-                        } else {
-                            ivExerciseGif.visibility = android.view.View.GONE
+                            
+                            // Display age explanation
+                            if (rec.ageExplanation.isNotEmpty()) {
+                                tvAgeExplanation.text = "💡 Age ${profile["age"]}: ${rec.ageExplanation}"
+                                tvAgeExplanation.visibility = android.view.View.VISIBLE
+                            } else {
+                                tvAgeExplanation.visibility = android.view.View.GONE
+                            }
+                            
+                            // Display gender-specific benefits
+                            if (rec.genderNote.isNotEmpty()) {
+                                tvGenderNote.text = "✨ ${rec.genderNote}"
+                                tvGenderNote.visibility = android.view.View.VISIBLE
+                            } else {
+                                tvGenderNote.visibility = android.view.View.GONE
+                            }
+                            
+                            // Display motivational message (Period Mode)
+                            if (rec.motivationalMessage.isNotEmpty()) {
+                                tvMotivationalMessage.text = rec.motivationalMessage
+                                tvMotivationalMessage.visibility = android.view.View.VISIBLE
+                            } else {
+                                tvMotivationalMessage.visibility = android.view.View.GONE
+                            }
+                            
+                            cardAiExercise.visibility = View.VISIBLE
+                            btnRegenerateExercise.isEnabled = true
                         }
-                        
-                        // Display age explanation
-                        if (rec.ageExplanation.isNotEmpty()) {
-                            tvAgeExplanation.text = "💡 Age ${profile["age"]}: ${rec.ageExplanation}"
-                            tvAgeExplanation.visibility = android.view.View.VISIBLE
-                        } else {
-                            tvAgeExplanation.visibility = android.view.View.GONE
+                    } else {
+                         runOnUiThread {
+                            cardAiExercise.visibility = View.GONE
                         }
-                        
-                        // Display gender-specific benefits
-                        if (rec.genderNote.isNotEmpty()) {
-                            tvGenderNote.text = "✨ ${rec.genderNote}"
-                            tvGenderNote.visibility = android.view.View.VISIBLE
-                        } else {
-                            tvGenderNote.visibility = android.view.View.GONE
-                        }
-                        
-                        // Display motivational message (Period Mode)
-                        if (rec.motivationalMessage.isNotEmpty()) {
-                            tvMotivationalMessage.text = rec.motivationalMessage
-                            tvMotivationalMessage.visibility = android.view.View.VISIBLE
-                        } else {
-                            tvMotivationalMessage.visibility = android.view.View.GONE
-                        }
-                        
-                        cardAiExercise.visibility = View.VISIBLE
-                        btnRegenerateExercise.isEnabled = true
                     }
+
                 }.onFailure {
                     currentRecommendedExercise = null
                     runOnUiThread {
@@ -800,6 +895,16 @@ class homepage : AppCompatActivity() {
         builder.show()
     }
 
+*/
+    private fun getAvatarDrawable(avatarId: String): Int {
+        val resName = avatarId.replace("_", "")
+        return try {
+            resources.getIdentifier(resName, "drawable", packageName)
+        } catch (e: Exception) {
+            0
+        }
+    }
+
     private fun navigateToLogin() {
         val intent = Intent(this, LoginActivity::class.java)
         intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
@@ -846,8 +951,9 @@ class homepage : AppCompatActivity() {
     
     private suspend fun calculateCaloriesIn(date: String): Int {
         return try {
-            val foodLogs = firestore.collection("foodLogs")
-                .whereEqualTo("userId", userId)
+            val foodLogs = firestore.collection("users")
+                .document(userId)
+                .collection("foodLogs")
                 .whereEqualTo("date", date)
                 .get()
                 .await()
@@ -933,4 +1039,6 @@ class homepage : AppCompatActivity() {
         }
         tvCalorieStatus.text = statusMessage
     }
+    
+
 }

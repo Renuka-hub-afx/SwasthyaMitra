@@ -32,7 +32,7 @@ class InsertGoalActivity : AppCompatActivity() {
         }
         authHelper = helper
 
-        userId = intent.getStringExtra("USER_ID") ?: ""
+        userId = intent.getStringExtra("USER_ID") ?: authHelper.getCurrentUser()?.uid ?: ""
         if (userId.isEmpty()) {
             Toast.makeText(this, "Error: User ID missing", Toast.LENGTH_SHORT).show()
             finish()

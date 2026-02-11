@@ -24,7 +24,7 @@ class StreakDetailsActivity : AppCompatActivity() {
     
     private var fitnessData: FitnessData? = null
     private var viewMode: String = "STREAK" // Default to streak view
-    private var currentCalendar: Calendar = Calendar.getInstance()
+    private var displayCalendar: Calendar = Calendar.getInstance()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -67,31 +67,39 @@ class StreakDetailsActivity : AppCompatActivity() {
         val streak = fitnessData?.streak ?: 0
         tvCurrentStreak.text = "$streak Days"
         
-        setupCalendarNavigation()
-        generateCalendarForCurrentMonth()
-    }
-    
-    private fun setupCalendarNavigation() {
+        // Show navigation buttons
+        btnPrevMonth.visibility = android.view.View.VISIBLE
+        btnNextMonth.visibility = android.view.View.VISIBLE
+        
+        // Listeners
         btnPrevMonth.setOnClickListener {
-            currentCalendar.add(Calendar.MONTH, -1)
-            generateCalendarForCurrentMonth()
+            displayCalendar.add(Calendar.MONTH, -1)
+            generateCalendar()
         }
         
         btnNextMonth.setOnClickListener {
             val today = Calendar.getInstance()
             // Check if adding a month would exceed current month
-            val nextMonthCheck = currentCalendar.clone() as Calendar
+            val nextMonthCheck = displayCalendar.clone() as Calendar
             nextMonthCheck.add(Calendar.MONTH, 1)
             
             if (nextMonthCheck.get(Calendar.YEAR) < today.get(Calendar.YEAR) ||
                 (nextMonthCheck.get(Calendar.YEAR) == today.get(Calendar.YEAR) && 
                  nextMonthCheck.get(Calendar.MONTH) <= today.get(Calendar.MONTH))) {
                  
-                currentCalendar.add(Calendar.MONTH, 1)
-                generateCalendarForCurrentMonth()
+                displayCalendar.add(Calendar.MONTH, 1)
+                generateCalendar()
             }
         }
+        
+        // Reset to current month initially
+        displayCalendar = Calendar.getInstance()
+        displayCalendar.set(Calendar.DAY_OF_MONTH, 1)
+        
+        generateCalendar()
     }
+    
+
 
     private fun setupShieldUI() {
         // Update header to show "Shield Details"
@@ -101,7 +109,7 @@ class StreakDetailsActivity : AppCompatActivity() {
         val shields = fitnessData?.shields ?: 0
         tvCurrentStreak.text = "$shields Shields"
         
-        // Hide arrows for Shield view
+        // Hide navigation buttons for Shield view
         btnPrevMonth.visibility = android.view.View.GONE
         btnNextMonth.visibility = android.view.View.GONE
         
@@ -153,15 +161,13 @@ class StreakDetailsActivity : AppCompatActivity() {
         tvMonthYear.text = "Maximum: 10 shields"
     }
 
-    private fun generateCalendarForCurrentMonth() {
+    private fun generateCalendar() {
         calendarGrid.removeAllViews()
+        calendarGrid.columnCount = 7
 
-        val calendar = currentCalendar.clone() as Calendar
-        // Set to first day of the month
-        calendar.set(Calendar.DAY_OF_MONTH, 1)
-
-        val currentMonth = calendar.get(Calendar.MONTH)
-        val currentYear = calendar.get(Calendar.YEAR)
+        // Ensure we are working with correct month
+        val currentMonth = displayCalendar.get(Calendar.MONTH)
+        val currentYear = displayCalendar.get(Calendar.YEAR)
         
         // Disable next button if future
         val today = Calendar.getInstance()
@@ -171,14 +177,17 @@ class StreakDetailsActivity : AppCompatActivity() {
         
         // Update Title
         val monthFormat = SimpleDateFormat("MMMM yyyy", Locale.getDefault())
-        tvMonthYear.text = monthFormat.format(calendar.time)
+        tvMonthYear.text = monthFormat.format(displayCalendar.time)
 
-        // Get day of week for the 1st (Sun=1, Mon=2, ...)
-        val firstDayOfWeek = calendar.get(Calendar.DAY_OF_WEEK)
-        // Offset (if Sun is 1, and we want 0 empty cells before Sun, offset is 0. If Mon=2, offset is 1)
+        // Get day of week for the 1st
+        val tempCal = displayCalendar.clone() as Calendar
+        tempCal.set(Calendar.DAY_OF_MONTH, 1)
+        
+        val firstDayOfWeek = tempCal.get(Calendar.DAY_OF_WEEK)
+        // Offset (Sun=1 -> 0, Mon=2 -> 1, etc.)
         val offset = firstDayOfWeek - 1
 
-        val daysInMonth = calendar.getActualMaximum(Calendar.DAY_OF_MONTH)
+        val daysInMonth = tempCal.getActualMaximum(Calendar.DAY_OF_MONTH)
 
         // Add empty views for offset
         for (i in 0 until offset) {
@@ -196,14 +205,12 @@ class StreakDetailsActivity : AppCompatActivity() {
 
         // Generate Day Views
         for (day in 1..daysInMonth) {
-            // Reconstruct full date string for this day
-            calendar.set(Calendar.DAY_OF_MONTH, day)
-            val dateStr = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(calendar.time)
+            tempCal.set(Calendar.DAY_OF_MONTH, day)
+            val dateStr = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(tempCal.time)
             
             val isCompleted = history[dateStr] == true
             val isToday = dateStr == todayDateStr
-            // Check if future
-            val isFuture = calendar.time.after(Date()) && !isToday
+            val isFuture = tempCal.time.after(Date()) && !isToday
 
             val dayView = createDayView(day, isCompleted, isToday, isFuture)
             calendarGrid.addView(dayView)

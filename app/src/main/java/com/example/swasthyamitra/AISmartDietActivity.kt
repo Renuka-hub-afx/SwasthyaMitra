@@ -67,6 +67,7 @@ class AISmartDietActivity : AppCompatActivity() {
 
             checkMetabolicStatus()
             setupMealActionButtons()
+            setupShareButton()
         } catch (e: Throwable) {
              e.printStackTrace()
              AlertDialog.Builder(this)
@@ -368,5 +369,53 @@ class AISmartDietActivity : AppCompatActivity() {
         findViewById<LinearLayout>(R.id.layoutLunchActions).visibility = View.VISIBLE
         findViewById<LinearLayout>(R.id.layoutDinnerActions).visibility = View.VISIBLE
         findViewById<LinearLayout>(R.id.layoutSnacksActions).visibility = View.VISIBLE
+    }
+
+    private fun setupShareButton() {
+        findViewById<com.google.android.material.floatingactionbutton.FloatingActionButton>(R.id.fabShare).setOnClickListener {
+            shareDietPlanToWhatsApp()
+        }
+    }
+
+    private fun shareDietPlanToWhatsApp() {
+        val plan = currentPlan
+        if (plan == null) {
+            Toast.makeText(this, "Please generate a diet plan first!", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val sb = StringBuilder()
+        sb.append("📅 *My Diet Plan for Today*\n\n")
+
+        sb.append("🍳 *Breakfast*\n")
+        sb.append("• ${plan.breakfast.item}\n")
+        sb.append("• ${plan.breakfast.calories} kcal | ${plan.breakfast.protein} protein\n\n")
+
+        sb.append("🥗 *Lunch*\n")
+        sb.append("• ${plan.lunch.item}\n")
+        sb.append("• ${plan.lunch.calories} kcal | ${plan.lunch.protein} protein\n\n")
+
+        sb.append("🍽️ *Dinner*\n")
+        sb.append("• ${plan.dinner.item}\n")
+        sb.append("• ${plan.dinner.calories} kcal | ${plan.dinner.protein} protein\n\n")
+        
+        sb.append("🍎 *Snack*\n")
+        sb.append("• ${plan.snack.item}\n")
+        sb.append("• ${plan.snack.calories} kcal | ${plan.snack.protein} protein\n\n")
+
+        sb.append("💡 *Tip:* ${plan.dailyTip}\n\n")
+        sb.append("Sent via SwasthyaMitra 🌿")
+
+        val message = sb.toString()
+        
+        try {
+            val url = "https://wa.me/?text=${java.net.URLEncoder.encode(message, "UTF-8")}"
+            val intent = android.content.Intent(android.content.Intent.ACTION_VIEW)
+            intent.data = android.net.Uri.parse(url)
+            startActivity(intent)
+        } catch (e: Exception) {
+            Toast.makeText(this, "WhatsApp not installed or error opening", Toast.LENGTH_SHORT).show()
+            e.printStackTrace()
+        }
     }
 }
