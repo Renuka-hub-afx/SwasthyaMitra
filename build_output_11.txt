@@ -1,0 +1,187 @@
+WARNING: A restricted method in java.lang.System has been called
+WARNING: java.lang.System::load has been called by net.rubygrapefruit.platform.internal.NativeLibraryLoader in an unnamed module (file:/C:/Users/shrut/.gradle/wrapper/dists/gradle-9.1.0-bin/9agqghryom9wkf8r80qlhnts3/gradle-9.1.0/lib/native-platform-0.22-milestone-28.jar)
+WARNING: Use --enable-native-access=ALL-UNNAMED to avoid a warning for callers in this module
+WARNING: Restricted methods will be blocked in a future release unless native access is enabled
+
+
+> Configure project :app
+WARNING: The option setting 'android.usesSdkInManifest.disallowed=false' is deprecated.
+The current default is 'true'.
+It will be removed in version 10.0 of the Android Gradle plugin.
+WARNING: The option setting 'android.sdk.defaultTargetSdkToCompileSdkIfUnset=false' is deprecated.
+The current default is 'true'.
+It will be removed in version 10.0 of the Android Gradle plugin.
+WARNING: The option setting 'android.enableAppCompileTimeRClass=false' is deprecated.
+The current default is 'true'.
+It will be removed in version 10.0 of the Android Gradle plugin.
+WARNING: The option setting 'android.builtInKotlin=false' is deprecated.
+The current default is 'true'.
+It will be removed in version 10.0 of the Android Gradle plugin.
+WARNING: The option setting 'android.newDsl=false' is deprecated.
+The current default is 'true'.
+It will be removed in version 10.0 of the Android Gradle plugin.
+WARNING: The option setting 'android.r8.optimizedResourceShrinking=false' is deprecated.
+The current default is 'true'.
+It will be removed in version 10.0 of the Android Gradle plugin.
+WARNING: The option setting 'android.defaults.buildfeatures.resvalues=true' is deprecated.
+The current default is 'false'.
+It will be removed in version 10.0 of the Android Gradle plugin.
+WARNING: The option setting 'android.dependency.excludeLibraryComponentsFromConstraints=true' is deprecated.
+The current default is 'false'.
+It will be removed in version 10.0 of the Android Gradle plugin.
+Following can be set instead to achieve a similar behaviour.
+    android.dependency.useConstraints=false
+
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preDebugBuild UP-TO-DATE
+> Task :app:mergeDebugNativeDebugMetadata NO-SOURCE
+> Task :app:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :app:dataBindingMergeDependencyArtifactsDebug UP-TO-DATE
+> Task :app:generateDebugResValues UP-TO-DATE
+> Task :app:generateDebugResources
+> Task :app:processDebugGoogleServices UP-TO-DATE
+> Task :app:packageDebugResources
+> Task :app:processDebugNavigationResources
+> Task :app:generateDebugBuildConfig UP-TO-DATE
+> Task :app:checkDebugAarMetadata UP-TO-DATE
+> Task :app:compileDebugNavigationResources UP-TO-DATE
+> Task :app:mapDebugSourceSetPaths
+> Task :app:createDebugCompatibleScreenManifests
+> Task :app:extractDeepLinksDebug UP-TO-DATE
+> Task :app:processDebugMainManifest
+> Task :app:processDebugManifest
+> Task :app:parseDebugLocalResources
+> Task :app:mergeDebugResources
+> Task :app:javaPreCompileDebug UP-TO-DATE
+> Task :app:dataBindingGenBaseClassesDebug
+> Task :app:generateDebugAssets UP-TO-DATE
+> Task :app:mergeDebugAssets
+> Task :app:desugarDebugFileDependencies UP-TO-DATE
+> Task :app:checkDebugDuplicateClasses UP-TO-DATE
+> Task :app:mergeExtDexDebug UP-TO-DATE
+> Task :app:mergeLibDexDebug UP-TO-DATE
+> Task :app:compressDebugAssets
+> Task :app:mergeDebugJniLibFolders UP-TO-DATE
+> Task :app:mergeDebugNativeLibs UP-TO-DATE
+> Task :app:stripDebugDebugSymbols UP-TO-DATE
+> Task :app:validateSigningDebug UP-TO-DATE
+> Task :app:writeDebugAppMetadata UP-TO-DATE
+> Task :app:writeDebugSigningConfigVersions UP-TO-DATE
+> Task :app:processDebugManifestForPackage
+> Task :app:processDebugResources
+
+> Task :app:compileDebugKotlin
+e: file:///C:/Users/shrut/AndroidStudioProjects/SwasthyaMitra/app/src/main/java/com/example/swasthyamitra/AISmartDietActivity.kt:26:48 Unresolved reference 'MealPlan'.
+e: file:///C:/Users/shrut/AndroidStudioProjects/SwasthyaMitra/app/src/main/java/com/example/swasthyamitra/AISmartDietActivity.kt:86:56 Unresolved reference 'breakfast'.
+e: file:///C:/Users/shrut/AndroidStudioProjects/SwasthyaMitra/app/src/main/java/com/example/swasthyamitra/AISmartDietActivity.kt:89:56 Unresolved reference 'breakfast'.
+e: file:///C:/Users/shrut/AndroidStudioProjects/SwasthyaMitra/app/src/main/java/com/example/swasthyamitra/AISmartDietActivity.kt:92:54 Unresolved reference 'breakfast'.
+e: file:///C:/Users/shrut/AndroidStudioProjects/SwasthyaMitra/app/src/main/java/com/example/swasthyamitra/AISmartDietActivity.kt:97:52 Unresolved reference 'lunch'.
+e: file:///C:/Users/shrut/AndroidStudioProjects/SwasthyaMitra/app/src/main/java/com/example/swasthyamitra/AISmartDietActivity.kt:100:52 Unresolved reference 'lunch'.
+e: file:///C:/Users/shrut/AndroidStudioProjects/SwasthyaMitra/app/src/main/java/com/example/swasthyamitra/AISmartDietActivity.kt:103:50 Unresolved reference 'lunch'.
+e: file:///C:/Users/shrut/AndroidStudioProjects/SwasthyaMitra/app/src/main/java/com/example/swasthyamitra/AISmartDietActivity.kt:108:53 Unresolved reference 'dinner'.
+e: file:///C:/Users/shrut/AndroidStudioProjects/SwasthyaMitra/app/src/main/java/com/example/swasthyamitra/AISmartDietActivity.kt:111:53 Unresolved reference 'dinner'.
+e: file:///C:/Users/shrut/AndroidStudioProjects/SwasthyaMitra/app/src/main/java/com/example/swasthyamitra/AISmartDietActivity.kt:114:51 Unresolved reference 'dinner'.
+e: file:///C:/Users/shrut/AndroidStudioProjects/SwasthyaMitra/app/src/main/java/com/example/swasthyamitra/AISmartDietActivity.kt:119:52 Unresolved reference 'snack'.
+e: file:///C:/Users/shrut/AndroidStudioProjects/SwasthyaMitra/app/src/main/java/com/example/swasthyamitra/AISmartDietActivity.kt:122:52 Unresolved reference 'snack'.
+e: file:///C:/Users/shrut/AndroidStudioProjects/SwasthyaMitra/app/src/main/java/com/example/swasthyamitra/AISmartDietActivity.kt:125:50 Unresolved reference 'snack'.
+e: file:///C:/Users/shrut/AndroidStudioProjects/SwasthyaMitra/app/src/main/java/com/example/swasthyamitra/AISmartDietActivity.kt:129:76 Unresolved reference 'MealRec'.
+e: file:///C:/Users/shrut/AndroidStudioProjects/SwasthyaMitra/app/src/main/java/com/example/swasthyamitra/AISmartDietActivity.kt:140:54 Unresolved reference 'item'.
+e: file:///C:/Users/shrut/AndroidStudioProjects/SwasthyaMitra/app/src/main/java/com/example/swasthyamitra/AISmartDietActivity.kt:148:82 Unresolved reference 'item'.
+e: file:///C:/Users/shrut/AndroidStudioProjects/SwasthyaMitra/app/src/main/java/com/example/swasthyamitra/AISmartDietActivity.kt:155:66 Unresolved reference 'MealRec'.
+e: file:///C:/Users/shrut/AndroidStudioProjects/SwasthyaMitra/app/src/main/java/com/example/swasthyamitra/AISmartDietActivity.kt:164:37 Unresolved reference 'protein'.
+e: file:///C:/Users/shrut/AndroidStudioProjects/SwasthyaMitra/app/src/main/java/com/example/swasthyamitra/AISmartDietActivity.kt:168:36 Unresolved reference 'item'.
+e: file:///C:/Users/shrut/AndroidStudioProjects/SwasthyaMitra/app/src/main/java/com/example/swasthyamitra/AISmartDietActivity.kt:169:36 Unresolved reference 'calories'.
+e: file:///C:/Users/shrut/AndroidStudioProjects/SwasthyaMitra/app/src/main/java/com/example/swasthyamitra/AISmartDietActivity.kt:180:57 Unresolved reference 'item'.
+e: file:///C:/Users/shrut/AndroidStudioProjects/SwasthyaMitra/app/src/main/java/com/example/swasthyamitra/AISmartDietActivity.kt:253:56 Unresolved reference 'copy'.
+e: file:///C:/Users/shrut/AndroidStudioProjects/SwasthyaMitra/app/src/main/java/com/example/swasthyamitra/AISmartDietActivity.kt:257:56 Unresolved reference 'copy'.
+e: file:///C:/Users/shrut/AndroidStudioProjects/SwasthyaMitra/app/src/main/java/com/example/swasthyamitra/AISmartDietActivity.kt:261:56 Unresolved reference 'copy'.
+e: file:///C:/Users/shrut/AndroidStudioProjects/SwasthyaMitra/app/src/main/java/com/example/swasthyamitra/AISmartDietActivity.kt:265:56 Unresolved reference 'copy'.
+e: file:///C:/Users/shrut/AndroidStudioProjects/SwasthyaMitra/app/src/main/java/com/example/swasthyamitra/AISmartDietActivity.kt:298:56 Unresolved reference 'copy'.
+e: file:///C:/Users/shrut/AndroidStudioProjects/SwasthyaMitra/app/src/main/java/com/example/swasthyamitra/AISmartDietActivity.kt:298:103 Unresolved reference 'MealPlan'.
+e: file:///C:/Users/shrut/AndroidStudioProjects/SwasthyaMitra/app/src/main/java/com/example/swasthyamitra/AISmartDietActivity.kt:300:59 Unresolved reference 'MealRec'.
+e: file:///C:/Users/shrut/AndroidStudioProjects/SwasthyaMitra/app/src/main/java/com/example/swasthyamitra/AISmartDietActivity.kt:301:59 Unresolved reference 'MealRec'.
+e: file:///C:/Users/shrut/AndroidStudioProjects/SwasthyaMitra/app/src/main/java/com/example/swasthyamitra/AISmartDietActivity.kt:302:60 Unresolved reference 'MealRec'.
+e: file:///C:/Users/shrut/AndroidStudioProjects/SwasthyaMitra/app/src/main/java/com/example/swasthyamitra/AISmartDietActivity.kt:308:56 Unresolved reference 'copy'.
+e: file:///C:/Users/shrut/AndroidStudioProjects/SwasthyaMitra/app/src/main/java/com/example/swasthyamitra/AISmartDietActivity.kt:308:99 Unresolved reference 'MealPlan'.
+e: file:///C:/Users/shrut/AndroidStudioProjects/SwasthyaMitra/app/src/main/java/com/example/swasthyamitra/AISmartDietActivity.kt:309:63 Unresolved reference 'MealRec'.
+e: file:///C:/Users/shrut/AndroidStudioProjects/SwasthyaMitra/app/src/main/java/com/example/swasthyamitra/AISmartDietActivity.kt:311:59 Unresolved reference 'MealRec'.
+e: file:///C:/Users/shrut/AndroidStudioProjects/SwasthyaMitra/app/src/main/java/com/example/swasthyamitra/AISmartDietActivity.kt:312:60 Unresolved reference 'MealRec'.
+e: file:///C:/Users/shrut/AndroidStudioProjects/SwasthyaMitra/app/src/main/java/com/example/swasthyamitra/AISmartDietActivity.kt:318:56 Unresolved reference 'copy'.
+e: file:///C:/Users/shrut/AndroidStudioProjects/SwasthyaMitra/app/src/main/java/com/example/swasthyamitra/AISmartDietActivity.kt:318:100 Unresolved reference 'MealPlan'.
+e: file:///C:/Users/shrut/AndroidStudioProjects/SwasthyaMitra/app/src/main/java/com/example/swasthyamitra/AISmartDietActivity.kt:319:63 Unresolved reference 'MealRec'.
+e: file:///C:/Users/shrut/AndroidStudioProjects/SwasthyaMitra/app/src/main/java/com/example/swasthyamitra/AISmartDietActivity.kt:320:59 Unresolved reference 'MealRec'.
+e: file:///C:/Users/shrut/AndroidStudioProjects/SwasthyaMitra/app/src/main/java/com/example/swasthyamitra/AISmartDietActivity.kt:321:59 Unresolved reference 'MealRec'.
+e: file:///C:/Users/shrut/AndroidStudioProjects/SwasthyaMitra/app/src/main/java/com/example/swasthyamitra/AISmartDietActivity.kt:328:56 Unresolved reference 'copy'.
+e: file:///C:/Users/shrut/AndroidStudioProjects/SwasthyaMitra/app/src/main/java/com/example/swasthyamitra/AISmartDietActivity.kt:328:99 Unresolved reference 'MealPlan'.
+e: file:///C:/Users/shrut/AndroidStudioProjects/SwasthyaMitra/app/src/main/java/com/example/swasthyamitra/AISmartDietActivity.kt:329:63 Unresolved reference 'MealRec'.
+e: file:///C:/Users/shrut/AndroidStudioProjects/SwasthyaMitra/app/src/main/java/com/example/swasthyamitra/AISmartDietActivity.kt:330:59 Unresolved reference 'MealRec'.
+e: file:///C:/Users/shrut/AndroidStudioProjects/SwasthyaMitra/app/src/main/java/com/example/swasthyamitra/AISmartDietActivity.kt:332:60 Unresolved reference 'MealRec'.
+e: file:///C:/Users/shrut/AndroidStudioProjects/SwasthyaMitra/app/src/main/java/com/example/swasthyamitra/AISmartDietActivity.kt:353:50 Unresolved reference 'MealPlan'.
+e: file:///C:/Users/shrut/AndroidStudioProjects/SwasthyaMitra/app/src/main/java/com/example/swasthyamitra/AISmartDietActivity.kt:354:43 Unresolved reference 'dailyTip'.
+e: file:///C:/Users/shrut/AndroidStudioProjects/SwasthyaMitra/app/src/main/java/com/example/swasthyamitra/AISmartDietActivity.kt:356:76 Unresolved reference 'breakfast'.
+e: file:///C:/Users/shrut/AndroidStudioProjects/SwasthyaMitra/app/src/main/java/com/example/swasthyamitra/AISmartDietActivity.kt:357:68 Unresolved reference 'lunch'.
+e: file:///C:/Users/shrut/AndroidStudioProjects/SwasthyaMitra/app/src/main/java/com/example/swasthyamitra/AISmartDietActivity.kt:358:70 Unresolved reference 'dinner'.
+e: file:///C:/Users/shrut/AndroidStudioProjects/SwasthyaMitra/app/src/main/java/com/example/swasthyamitra/AISmartDietActivity.kt:359:70 Unresolved reference 'snack'.
+e: file:///C:/Users/shrut/AndroidStudioProjects/SwasthyaMitra/app/src/main/java/com/example/swasthyamitra/AISmartDietActivity.kt:362:91 Unresolved reference 'MealRec'.
+e: file:///C:/Users/shrut/AndroidStudioProjects/SwasthyaMitra/app/src/main/java/com/example/swasthyamitra/AISmartDietActivity.kt:363:55 Unresolved reference 'item'.
+e: file:///C:/Users/shrut/AndroidStudioProjects/SwasthyaMitra/app/src/main/java/com/example/swasthyamitra/AISmartDietActivity.kt:364:61 Unresolved reference 'calories'.
+e: file:///C:/Users/shrut/AndroidStudioProjects/SwasthyaMitra/app/src/main/java/com/example/swasthyamitra/AISmartDietActivity.kt:364:85 Unresolved reference 'protein'.
+e: file:///C:/Users/shrut/AndroidStudioProjects/SwasthyaMitra/app/src/main/java/com/example/swasthyamitra/AISmartDietActivity.kt:391:29 Unresolved reference 'breakfast'.
+e: file:///C:/Users/shrut/AndroidStudioProjects/SwasthyaMitra/app/src/main/java/com/example/swasthyamitra/AISmartDietActivity.kt:392:29 Unresolved reference 'breakfast'.
+e: file:///C:/Users/shrut/AndroidStudioProjects/SwasthyaMitra/app/src/main/java/com/example/swasthyamitra/AISmartDietActivity.kt:392:63 Unresolved reference 'breakfast'.
+e: file:///C:/Users/shrut/AndroidStudioProjects/SwasthyaMitra/app/src/main/java/com/example/swasthyamitra/AISmartDietActivity.kt:395:29 Unresolved reference 'lunch'.
+e: file:///C:/Users/shrut/AndroidStudioProjects/SwasthyaMitra/app/src/main/java/com/example/swasthyamitra/AISmartDietActivity.kt:396:29 Unresolved reference 'lunch'.
+e: file:///C:/Users/shrut/AndroidStudioProjects/SwasthyaMitra/app/src/main/java/com/example/swasthyamitra/AISmartDietActivity.kt:396:59 Unresolved reference 'lunch'.
+e: file:///C:/Users/shrut/AndroidStudioProjects/SwasthyaMitra/app/src/main/java/com/example/swasthyamitra/AISmartDietActivity.kt:399:29 Unresolved reference 'dinner'.
+e: file:///C:/Users/shrut/AndroidStudioProjects/SwasthyaMitra/app/src/main/java/com/example/swasthyamitra/AISmartDietActivity.kt:400:29 Unresolved reference 'dinner'.
+e: file:///C:/Users/shrut/AndroidStudioProjects/SwasthyaMitra/app/src/main/java/com/example/swasthyamitra/AISmartDietActivity.kt:400:60 Unresolved reference 'dinner'.
+e: file:///C:/Users/shrut/AndroidStudioProjects/SwasthyaMitra/app/src/main/java/com/example/swasthyamitra/AISmartDietActivity.kt:403:29 Unresolved reference 'snack'.
+e: file:///C:/Users/shrut/AndroidStudioProjects/SwasthyaMitra/app/src/main/java/com/example/swasthyamitra/AISmartDietActivity.kt:404:29 Unresolved reference 'snack'.
+e: file:///C:/Users/shrut/AndroidStudioProjects/SwasthyaMitra/app/src/main/java/com/example/swasthyamitra/AISmartDietActivity.kt:404:59 Unresolved reference 'snack'.
+e: file:///C:/Users/shrut/AndroidStudioProjects/SwasthyaMitra/app/src/main/java/com/example/swasthyamitra/AISmartDietActivity.kt:406:37 Unresolved reference 'dailyTip'.
+e: file:///C:/Users/shrut/AndroidStudioProjects/SwasthyaMitra/app/src/main/java/com/example/swasthyamitra/ProgressActivity.kt:57:39 Unresolved reference 'rv_history'.
+e: file:///C:/Users/shrut/AndroidStudioProjects/SwasthyaMitra/app/src/main/java/com/example/swasthyamitra/ProgressActivity.kt:58:44 Unresolved reference 'tv_history_empty'.
+e: file:///C:/Users/shrut/AndroidStudioProjects/SwasthyaMitra/app/src/main/java/com/example/swasthyamitra/homepage.kt:228:62 Unresolved reference 'card_ai_pantry'.
+e: file:///C:/Users/shrut/AndroidStudioProjects/SwasthyaMitra/app/src/main/java/com/example/swasthyamitra/homepage.kt:256:37 Unresolved reference 'tv_view_mood_details'.
+e: file:///C:/Users/shrut/AndroidStudioProjects/SwasthyaMitra/app/src/main/java/com/example/swasthyamitra/homepage.kt:265:21 Cannot infer type for this parameter. Specify it explicitly.
+e: file:///C:/Users/shrut/AndroidStudioProjects/SwasthyaMitra/app/src/main/java/com/example/swasthyamitra/homepage.kt:266:13 Argument type mismatch: actual type is 'Pair<uninferred A (of fun <A, B> A.to), uninferred B (of fun <A, B> A.to)>', but 'Pair<uninferred K (of fun <K, V> mapOf), uninferred V (of fun <K, V> mapOf)>' was expected.
+e: file:///C:/Users/shrut/AndroidStudioProjects/SwasthyaMitra/app/src/main/java/com/example/swasthyamitra/homepage.kt:266:18 Unresolved reference 'btn_mood_happy'.
+e: file:///C:/Users/shrut/AndroidStudioProjects/SwasthyaMitra/app/src/main/java/com/example/swasthyamitra/homepage.kt:266:33 Cannot infer type for this parameter. Specify it explicitly.
+e: file:///C:/Users/shrut/AndroidStudioProjects/SwasthyaMitra/app/src/main/java/com/example/swasthyamitra/homepage.kt:267:13 Argument type mismatch: actual type is 'Pair<uninferred A (of fun <A, B> A.to), uninferred B (of fun <A, B> A.to)>', but 'Pair<uninferred K (of fun <K, V> mapOf), uninferred V (of fun <K, V> mapOf)>' was expected.
+e: file:///C:/Users/shrut/AndroidStudioProjects/SwasthyaMitra/app/src/main/java/com/example/swasthyamitra/homepage.kt:267:18 Unresolved reference 'btn_mood_calm'.
+e: file:///C:/Users/shrut/AndroidStudioProjects/SwasthyaMitra/app/src/main/java/com/example/swasthyamitra/homepage.kt:267:32 Cannot infer type for this parameter. Specify it explicitly.
+e: file:///C:/Users/shrut/AndroidStudioProjects/SwasthyaMitra/app/src/main/java/com/example/swasthyamitra/homepage.kt:268:13 Argument type mismatch: actual type is 'Pair<uninferred A (of fun <A, B> A.to), uninferred B (of fun <A, B> A.to)>', but 'Pair<uninferred K (of fun <K, V> mapOf), uninferred V (of fun <K, V> mapOf)>' was expected.
+e: file:///C:/Users/shrut/AndroidStudioProjects/SwasthyaMitra/app/src/main/java/com/example/swasthyamitra/homepage.kt:268:18 Unresolved reference 'btn_mood_tired'.
+e: file:///C:/Users/shrut/AndroidStudioProjects/SwasthyaMitra/app/src/main/java/com/example/swasthyamitra/homepage.kt:268:33 Cannot infer type for this parameter. Specify it explicitly.
+e: file:///C:/Users/shrut/AndroidStudioProjects/SwasthyaMitra/app/src/main/java/com/example/swasthyamitra/homepage.kt:269:13 Argument type mismatch: actual type is 'Pair<uninferred A (of fun <A, B> A.to), uninferred B (of fun <A, B> A.to)>', but 'Pair<uninferred K (of fun <K, V> mapOf), uninferred V (of fun <K, V> mapOf)>' was expected.
+e: file:///C:/Users/shrut/AndroidStudioProjects/SwasthyaMitra/app/src/main/java/com/example/swasthyamitra/homepage.kt:269:18 Unresolved reference 'btn_mood_sad'.
+e: file:///C:/Users/shrut/AndroidStudioProjects/SwasthyaMitra/app/src/main/java/com/example/swasthyamitra/homepage.kt:269:31 Cannot infer type for this parameter. Specify it explicitly.
+e: file:///C:/Users/shrut/AndroidStudioProjects/SwasthyaMitra/app/src/main/java/com/example/swasthyamitra/homepage.kt:270:13 Argument type mismatch: actual type is 'Pair<uninferred A (of fun <A, B> A.to), uninferred B (of fun <A, B> A.to)>', but 'Pair<uninferred K (of fun <K, V> mapOf), uninferred V (of fun <K, V> mapOf)>' was expected.
+e: file:///C:/Users/shrut/AndroidStudioProjects/SwasthyaMitra/app/src/main/java/com/example/swasthyamitra/homepage.kt:270:18 Unresolved reference 'btn_mood_stressed'.
+e: file:///C:/Users/shrut/AndroidStudioProjects/SwasthyaMitra/app/src/main/java/com/example/swasthyamitra/homepage.kt:270:36 Cannot infer type for this parameter. Specify it explicitly.
+
+> Task :app:compileDebugKotlin FAILED
+
+[Incubating] Problems report is available at: file:///C:/Users/shrut/AndroidStudioProjects/SwasthyaMitra/build/reports/problems/problems-report.html
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':app:compileDebugKotlin'.
+> A failure occurred while executing org.jetbrains.kotlin.compilerRunner.GradleCompilerRunnerWithWorkers$GradleKotlinCompilerWorkAction
+   > Compilation error. See log for more details
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to generate a Build Scan (Powered by Develocity).
+> Get more help at https://help.gradle.org.
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 10.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/9.1.0/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD FAILED in 20s
+33 actionable tasks: 15 executed, 18 up-to-date

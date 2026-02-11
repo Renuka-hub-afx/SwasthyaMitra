@@ -443,16 +443,23 @@
                 app:layout_constraintTop_toTopOf="parent"
                 app:tint="#9C27B0" />
 
+            <androidx.constraintlayout.widget.Barrier
+                android:id="@+id/barrierGoalWeight"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:barrierDirection="bottom"
+                app:constraint_referenced_ids="goalWeightText,userGoalWeightEdit" />
+
             <TextView
                 android:id="@+id/lblCalorie"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="24dp"
+                android:layout_marginTop="16dp"
                 android:text="Daily Calorie Goal"
                 android:textColor="#7B6F72"
                 android:textSize="12sp"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/goalWeightText" />
+                app:layout_constraintTop_toBottomOf="@id/barrierGoalWeight" />
 
             <TextView
                 android:id="@+id/goalCaloriesText"

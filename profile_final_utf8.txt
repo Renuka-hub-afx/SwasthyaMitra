@@ -1,0 +1,184 @@
+﻿./gradlew : WARNING: 
+A restricted method 
+in java.lang.System 
+has been called
+At line:1 char:18
++ ... gradlew clean; 
+./gradlew 
+assembleDebug > profi
+le_final_check.txt 
+2>&1
++                    
+~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~
+    + CategoryInfo   
+           : NotSpe  
+  cified: (WARNING   
+ : A rest...has b    
+een called:Strin    
+g) [], RemoteExc    
+eption
+    + FullyQualified 
+   ErrorId : Native  
+  CommandError
+ 
+WARNING: java.lang.Sy
+stem::load has been 
+called by net.rubygra
+pefruit.platform.inte
+rnal.NativeLibraryLoa
+der in an unnamed 
+module (file:/C:/User
+s/shrut/.gradle/wrapp
+er/dists/gradle-9.1.0
+-bin/9agqghryom9wkf8r
+80qlhnts3/gradle-9.1.
+0/lib/native-platform
+-0.22-milestone-28.ja
+r)
+WARNING: Use --enable
+-native-access=ALL-UN
+NAMED to avoid a 
+warning for callers 
+in this module
+WARNING: Restricted 
+methods will be 
+blocked in a future 
+release unless 
+native access is 
+enabled
+
+
+> Configure project :app
+WARNING: The option setting 'android.usesSdkInManifest.disallowed=false' is deprecated.
+The current default is 'true'.
+It will be removed in version 10.0 of the Android Gradle plugin.
+WARNING: The option setting 'android.sdk.defaultTargetSdkToCompileSdkIfUnset=false' is deprecated.
+The current default is 'true'.
+It will be removed in version 10.0 of the Android Gradle plugin.
+WARNING: The option setting 'android.enableAppCompileTimeRClass=false' is deprecated.
+The current default is 'true'.
+It will be removed in version 10.0 of the Android Gradle plugin.
+WARNING: The option setting 'android.builtInKotlin=false' is deprecated.
+The current default is 'true'.
+It will be removed in version 10.0 of the Android Gradle plugin.
+WARNING: The option setting 'android.newDsl=false' is deprecated.
+The current default is 'true'.
+It will be removed in version 10.0 of the Android Gradle plugin.
+WARNING: The option setting 'android.r8.optimizedResourceShrinking=false' is deprecated.
+The current default is 'true'.
+It will be removed in version 10.0 of the Android Gradle plugin.
+WARNING: The option setting 'android.defaults.buildfeatures.resvalues=true' is deprecated.
+The current default is 'false'.
+It will be removed in version 10.0 of the Android Gradle plugin.
+WARNING: The option setting 'android.dependency.excludeLibraryComponentsFromConstraints=true' is deprecated.
+The current default is 'false'.
+It will be removed in version 10.0 of the Android Gradle plugin.
+Following can be set instead to achieve a similar behaviour.
+    android.dependency.useConstraints=false
+
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preDebugBuild UP-TO-DATE
+> Task :app:mergeDebugNativeDebugMetadata NO-SOURCE
+> Task :app:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :app:dataBindingMergeDependencyArtifactsDebug
+> Task :app:generateDebugResValues
+> Task :app:generateDebugResources
+> Task :app:processDebugGoogleServices
+> Task :app:mergeDebugResources
+> Task :app:packageDebugResources
+> Task :app:processDebugNavigationResources
+> Task :app:generateDebugBuildConfig
+> Task :app:compileDebugNavigationResources
+> Task :app:mapDebugSourceSetPaths
+> Task :app:checkDebugAarMetadata
+> Task :app:createDebugCompatibleScreenManifests
+> Task :app:extractDeepLinksDebug
+> Task :app:parseDebugLocalResources
+> Task :app:processDebugMainManifest
+> Task :app:dataBindingGenBaseClassesDebug
+> Task :app:processDebugManifest
+> Task :app:generateDebugAssets UP-TO-DATE
+> Task :app:javaPreCompileDebug
+> Task :app:mergeDebugAssets
+> Task :app:processDebugManifestForPackage
+> Task :app:desugarDebugFileDependencies
+> Task :app:mergeDebugJniLibFolders
+> Task :app:validateSigningDebug
+> Task :app:writeDebugAppMetadata
+> Task :app:writeDebugSigningConfigVersions
+> Task :app:checkDebugDuplicateClasses
+> Task :app:mergeLibDexDebug
+> Task :app:mergeDebugNativeLibs
+
+> Task :app:stripDebugDebugSymbols
+Unable to strip the following libraries, packaging them as they are: libbarhopper_v3.so, libdatastore_shared_counter.so, libimage_processing_util_jni.so, libsurface_util_jni.so. Run with --info option to learn more.
+
+> Task :app:compressDebugAssets
+> Task :app:processDebugResources
+> Task :app:mergeExtDexDebug
+
+> Task :app:compileDebugKotlin
+w: file:///C:/Users/shrut/AndroidStudioProjects/SwasthyaMitra/app/src/main/java/com/example/swasthyamitra/AvatarCustomizationActivity.kt:152:13 Condition is always 'true'.
+w: file:///C:/Users/shrut/AndroidStudioProjects/SwasthyaMitra/app/src/main/java/com/example/swasthyamitra/DetailedReportActivity.kt:82:19 'fun setOnCheckedChangeListener(p0: ChipGroup.OnCheckedChangeListener?): Unit' is deprecated. Deprecated in Java.
+w: file:///C:/Users/shrut/AndroidStudioProjects/SwasthyaMitra/app/src/main/java/com/example/swasthyamitra/FoodPhotoCaptureActivity.kt:74:9 'fun startActivityForResult(intent: Intent, requestCode: Int): Unit' is deprecated. This method has been deprecated in favor of using the Activity Result API
+      which brings increased type safety via an {@link ActivityResultContract} and the prebuilt
+      contracts for common intents available in
+      {@link androidx.activity.result.contract.ActivityResultContracts}, provides hooks for
+      testing, and allow receiving results in separate, testable classes independent from your
+      activity. Use
+      {@link #registerForActivityResult(ActivityResultContract, ActivityResultCallback)}
+      passing in a {@link StartActivityForResult} object for the {@link ActivityResultContract}.
+w: file:///C:/Users/shrut/AndroidStudioProjects/SwasthyaMitra/app/src/main/java/com/example/swasthyamitra/FoodPhotoCaptureActivity.kt:79:9 'fun startActivityForResult(intent: Intent, requestCode: Int): Unit' is deprecated. This method has been deprecated in favor of using the Activity Result API
+      which brings increased type safety via an {@link ActivityResultContract} and the prebuilt
+      contracts for common intents available in
+      {@link androidx.activity.result.contract.ActivityResultContracts}, provides hooks for
+      testing, and allow receiving results in separate, testable classes independent from your
+      activity. Use
+      {@link #registerForActivityResult(ActivityResultContract, ActivityResultCallback)}
+      passing in a {@link StartActivityForResult} object for the {@link ActivityResultContract}.
+w: file:///C:/Users/shrut/AndroidStudioProjects/SwasthyaMitra/app/src/main/java/com/example/swasthyamitra/FoodPhotoCaptureActivity.kt:88:47 'fun get(p0: String!): Any?' is deprecated. Deprecated in Java.
+w: file:///C:/Users/shrut/AndroidStudioProjects/SwasthyaMitra/app/src/main/java/com/example/swasthyamitra/SafetyActivity.kt:267:46 'static fun getDefault(): SmsManager!' is deprecated. Deprecated in Java.
+w: file:///C:/Users/shrut/AndroidStudioProjects/SwasthyaMitra/app/src/main/java/com/example/swasthyamitra/SignupActivity.kt:123:26 Java type mismatch: inferred type is 'Date?', but 'Date' was expected.
+w: file:///C:/Users/shrut/AndroidStudioProjects/SwasthyaMitra/app/src/main/java/com/example/swasthyamitra/SmartPantryActivity.kt:213:9 'fun startActivityForResult(intent: Intent, requestCode: Int): Unit' is deprecated. This method has been deprecated in favor of using the Activity Result API
+      which brings increased type safety via an {@link ActivityResultContract} and the prebuilt
+      contracts for common intents available in
+      {@link androidx.activity.result.contract.ActivityResultContracts}, provides hooks for
+      testing, and allow receiving results in separate, testable classes independent from your
+      activity. Use
+      {@link #registerForActivityResult(ActivityResultContract, ActivityResultCallback)}
+      passing in a {@link StartActivityForResult} object for the {@link ActivityResultContract}.
+w: file:///C:/Users/shrut/AndroidStudioProjects/SwasthyaMitra/app/src/main/java/com/example/swasthyamitra/SmartPantryActivity.kt:218:9 'fun startActivityForResult(intent: Intent, requestCode: Int): Unit' is deprecated. This method has been deprecated in favor of using the Activity Result API
+      which brings increased type safety via an {@link ActivityResultContract} and the prebuilt
+      contracts for common intents available in
+      {@link androidx.activity.result.contract.ActivityResultContracts}, provides hooks for
+      testing, and allow receiving results in separate, testable classes independent from your
+      activity. Use
+      {@link #registerForActivityResult(ActivityResultContract, ActivityResultCallback)}
+      passing in a {@link StartActivityForResult} object for the {@link ActivityResultContract}.
+w: file:///C:/Users/shrut/AndroidStudioProjects/SwasthyaMitra/app/src/main/java/com/example/swasthyamitra/SmartPantryActivity.kt:227:47 'fun get(p0: String!): Any?' is deprecated. Deprecated in Java.
+w: file:///C:/Users/shrut/AndroidStudioProjects/SwasthyaMitra/app/src/main/java/com/example/swasthyamitra/StreakDetailsActivity.kt:35:30 'fun getSerializableExtra(p0: String!): Serializable?' is deprecated. Deprecated in Java.
+w: file:///C:/Users/shrut/AndroidStudioProjects/SwasthyaMitra/app/src/main/java/com/example/swasthyamitra/services/SafetyMonitorService.kt:51:29 'static fun getDefault(): SmsManager!' is deprecated. Deprecated in Java.
+
+> Task :app:compileDebugJavaWithJavac
+> Task :app:dexBuilderDebug
+> Task :app:processDebugJavaRes
+> Task :app:mergeDebugGlobalSynthetics
+> Task :app:mergeProjectDexDebug
+> Task :app:mergeDebugJavaResource
+> Task :app:packageDebug
+> Task :app:createDebugApkListingFileRedirect
+> Task :app:assembleDebug
+
+[Incubating] Problems report is available at: file:///C:/Users/shrut/AndroidStudioProjects/SwasthyaMitra/build/reports/problems/problems-report.html
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 10.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/9.1.0/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD SUCCESSFUL in 39s
+41 actionable tasks: 41 executed
+Consider enabling configuration cache to speed up this build: https://docs.gradle.org/9.1.0/userguide/configuration_cache_enabling.html
