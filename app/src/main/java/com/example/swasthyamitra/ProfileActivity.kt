@@ -48,10 +48,13 @@ class ProfileActivity : AppCompatActivity() {
     private lateinit var sharedPrefs: android.content.SharedPreferences
 
     // Edit Views
+    private lateinit var userGenderSpinner: Spinner
+    private lateinit var userNameEdit: EditText
     private lateinit var userAgeEdit: EditText
     private lateinit var userHeightEdit: EditText
     private lateinit var userWeightEdit: EditText
-    private lateinit var userGenderSpinner: Spinner
+    private lateinit var userGoalWeightEdit: EditText
+    private lateinit var userGoalCaloriesEdit: EditText
 
 
     private var isEditMode = false
@@ -105,6 +108,9 @@ class ProfileActivity : AppCompatActivity() {
         userHeightEdit = findViewById(R.id.userHeightEdit)
         userWeightEdit = findViewById(R.id.userWeightEdit)
         userGenderSpinner = findViewById(R.id.userGenderSpinner)
+        userNameEdit = findViewById(R.id.userNameEdit)
+        userGoalWeightEdit = findViewById(R.id.userGoalWeightEdit)
+        userGoalCaloriesEdit = findViewById(R.id.userGoalCaloriesEdit)
 
 
         setupGenderSpinner()
@@ -168,7 +174,7 @@ class ProfileActivity : AppCompatActivity() {
                     }
 
                     // Load user data from Firestore to keep it synced
-                    FirebaseFirestore.getInstance().collection("users")
+                    FirebaseFirestore.getInstance("renu").collection("users")
                         .document(userId)
                         .get()
                         .addOnSuccessListener { document ->
@@ -200,7 +206,7 @@ class ProfileActivity : AppCompatActivity() {
                             Toast.makeText(this@ProfileActivity, "Error loading profile: ${e.message}", Toast.LENGTH_SHORT).show()
                         }
 
-                    FirebaseFirestore.getInstance().collection("goals")
+                    FirebaseFirestore.getInstance("renu").collection("goals")
                         .whereEqualTo("userId", userId)
                         .limit(1)
                         .get()
@@ -264,14 +270,14 @@ class ProfileActivity : AppCompatActivity() {
     }
 
     private fun updateGoalWeight(newGoalWeight: Double) {
-        FirebaseFirestore.getInstance().collection("goals")
+        FirebaseFirestore.getInstance("renu").collection("goals")
             .whereEqualTo("userId", userId)
             .limit(1)
             .get()
             .addOnSuccessListener { querySnapshot ->
                 if (!querySnapshot.isEmpty) {
                     val goalDocId = querySnapshot.documents[0].id
-                    FirebaseFirestore.getInstance().collection("goals")
+                    FirebaseFirestore.getInstance("renu").collection("goals")
                         .document(goalDocId)
                         .update("targetWeight", newGoalWeight)
                         .addOnSuccessListener {
@@ -306,27 +312,42 @@ class ProfileActivity : AppCompatActivity() {
         userHeightEdit.visibility = editVisibility
         userWeightText.visibility = viewVisibility
         userWeightEdit.visibility = editVisibility
+        userNameText.visibility = viewVisibility
+        userNameEdit.visibility = editVisibility
+        goalWeightText.visibility = viewVisibility
+        userGoalWeightEdit.visibility = editVisibility
+        goalCaloriesText.visibility = viewVisibility
+        userGoalCaloriesEdit.visibility = editVisibility
+        editGoalWeightButton.visibility = viewVisibility
 
         editProfileButton.text = if (edit) "✅ Save Changes" else "✏️ Edit Profile"
 
         if (edit) {
             // Populate fields with current values
+            userNameEdit.setText(userNameText.text.toString())
             userAgeEdit.setText(userAgeText.text.toString().filter { it.isDigit() })
             userHeightEdit.setText(userHeightText.text.toString().filter { it.isDigit() || it == '.' })
             userWeightEdit.setText(userWeightText.text.toString().filter { it.isDigit() || it == '.' })
+            
+            userGoalWeightEdit.setText(goalWeightText.text.toString().filter { it.isDigit() || it == '.' })
+            userGoalCaloriesEdit.setText(goalCaloriesText.text.toString().filter { it.isDigit() })
+
             val genderIndex = genderOptions.indexOf(userGenderText.text.toString())
             if (genderIndex != -1) userGenderSpinner.setSelection(genderIndex)
         }
     }
 
     private fun saveProfileChanges() {
+        val name = userNameEdit.text.toString().trim()
         val ageStr = userAgeEdit.text.toString()
         val heightStr = userHeightEdit.text.toString()
         val weightStr = userWeightEdit.text.toString()
         val gender = userGenderSpinner.selectedItem.toString()
+        val goalWeightStr = userGoalWeightEdit.text.toString()
+        val goalCaloriesStr = userGoalCaloriesEdit.text.toString()
 
         // Validation
-        if (ageStr.isEmpty() || heightStr.isEmpty() || weightStr.isEmpty()) {
+        if (name.isEmpty() || ageStr.isEmpty() || heightStr.isEmpty() || weightStr.isEmpty() || goalWeightStr.isEmpty() || goalCaloriesStr.isEmpty()) {
             Toast.makeText(this, "Fields cannot be empty", Toast.LENGTH_SHORT).show()
             return
         }
@@ -334,22 +355,17 @@ class ProfileActivity : AppCompatActivity() {
         val age = ageStr.toIntOrNull() ?: 0
         val height = heightStr.toDoubleOrNull() ?: 0.0
         val weight = weightStr.toDoubleOrNull() ?: 0.0
+        val goalWeight = goalWeightStr.toDoubleOrNull() ?: 0.0
+        val goalCalories = goalCaloriesStr.toDoubleOrNull() ?: 0.0
 
         if (age !in 1..120) {
             Toast.makeText(this, "Please enter a realistic age", Toast.LENGTH_SHORT).show()
             return
         }
-        if (height !in 50.0..250.0) {
-            Toast.makeText(this, "Please enter a realistic height (50-250 cm)", Toast.LENGTH_SHORT).show()
-            return
-        }
-        if (weight !in 2.0..300.0) {
-            Toast.makeText(this, "Please enter a realistic weight (2-300 kg)", Toast.LENGTH_SHORT).show()
-            return
-        }
 
-        // Persistence: SharedPreferences
+        // SharedPreferences Persistence
         sharedPrefs.edit().apply {
+            putString("name", name)
             putInt("age", age)
             putString("gender", gender)
             putString("height", height.toString())
@@ -357,24 +373,55 @@ class ProfileActivity : AppCompatActivity() {
             apply()
         }
 
-        // Sync with Firestore
-        FirebaseFirestore.getInstance().collection("users")
-            .document(userId)
-            .update(mapOf(
-                "age" to age,
-                "gender" to gender,
-                "height" to height,
-                "weight" to weight
-            ))
+        // Firestore user collection update
+        val userUpdate = mapOf(
+            "name" to name,
+            "age" to age,
+            "gender" to gender,
+            "height" to height,
+            "weight" to weight
+        )
+
+        val firestore = FirebaseFirestore.getInstance("renu")
+        
+        firestore.collection("users").document(userId)
+            .update(userUpdate)
             .addOnSuccessListener {
-                Toast.makeText(this, "Profile updated successfully!", Toast.LENGTH_SHORT).show()
-                toggleEditMode(false)
-                loadUserProfile() // Refresh UI from data
+                // Now update goals collection
+                firestore.collection("goals")
+                    .whereEqualTo("userId", userId)
+                    .limit(1)
+                    .get()
+                    .addOnSuccessListener { querySnapshot ->
+                        if (!querySnapshot.isEmpty) {
+                            val goalDocId = querySnapshot.documents[0].id
+                            firestore.collection("goals")
+                                .document(goalDocId)
+                                .update(mapOf(
+                                    "targetWeight" to goalWeight,
+                                    "dailyCalories" to goalCalories,
+                                    "updatedAt" to com.google.firebase.Timestamp.now()
+                                ))
+                                .addOnSuccessListener {
+                                    Toast.makeText(this, "Profile Updated", Toast.LENGTH_SHORT).show()
+                                    toggleEditMode(false)
+                                    loadUserProfile()
+                                }
+                                .addOnFailureListener { e ->
+                                    Toast.makeText(this, "Goal Sync Failed: ${e.message}", Toast.LENGTH_SHORT).show()
+                                    toggleEditMode(false)
+                                    loadUserProfile()
+                                }
+                        } else {
+                            // Create goal document if it doesn't exist? (Optional, based on project logic)
+                            Toast.makeText(this, "Profile Updated (Goals skipped)", Toast.LENGTH_SHORT).show()
+                            toggleEditMode(false)
+                            loadUserProfile()
+                        }
+                    }
             }
             .addOnFailureListener { e ->
-                Toast.makeText(this, "Sync failed: ${e.message}, saved locally", Toast.LENGTH_SHORT).show()
-                toggleEditMode(false)
-                loadUserProfile()
+                Toast.makeText(this, "Sync failed: ${e.message}", Toast.LENGTH_SHORT).show()
             }
     }
 

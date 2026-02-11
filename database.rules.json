@@ -8,70 +8,27 @@
                     ".validate": "newData.hasChildren(['name', 'email'])"
                 },
                 "fitnessData": {
-                    ".validate": "newData.hasChildren(['lastActiveDate', 'streak', 'shields', 'steps', 'xp'])",
-                    "lastActiveDate": {
-                        ".validate": "newData.isString()"
-                    },
-                    "streak": {
-                        ".validate": "newData.isNumber()"
-                    },
-                    "shields": {
-                        ".validate": "newData.isNumber()"
-                    },
-                    "steps": {
-                        ".validate": "newData.isNumber()"
-                    },
-                    "xp": {
-                        ".validate": "newData.isNumber()"
-                    },
                     "completionHistory": {
                         "$date": {
                             ".validate": "newData.isBoolean()"
                         }
                     }
                 },
+                "completionHistory": {
+                    "$date": {
+                        ".validate": "newData.isBoolean()"
+                    }
+                },
                 "foodLogs": {
                     "$logId": {
-                        ".validate": "newData.hasChildren(['foodName', 'calories', 'protein', 'carbs', 'fat', 'timestamp'])",
-                        "calories": {
-                            ".validate": "newData.isNumber() && newData.val() >= 0"
-                        },
-                        "protein": {
-                            ".validate": "newData.isNumber() && newData.val() >= 0"
-                        },
-                        "carbs": {
-                            ".validate": "newData.isNumber() && newData.val() >= 0"
-                        },
-                        "fat": {
-                            ".validate": "newData.isNumber() && newData.val() >= 0"
-                        }
-                    }
-                },
-                "goals": {
-                    ".validate": "newData.hasChildren(['goalType', 'activityLevel', 'dietPreference'])"
-                },
-                "workouts": {
-                    "$workoutId": {
-                        ".validate": "newData.hasChildren(['date', 'duration', 'caloriesBurned'])"
-                    }
-                },
-                "insights": {
-                    "$insightId": {
-                        ".read": "$uid === auth.uid",
-                        ".write": "$uid === auth.uid"
+                        ".validate": "newData.hasChildren(['foodName', 'calories', 'timestamp'])"
                     }
                 }
             }
         },
         "challenges": {
-            "$challengeId": {
-                ".read": "auth != null",
-                ".write": "auth != null",
-                ".validate": "newData.hasChildren(['id', 'name', 'targetSteps', 'createdAt'])",
-                "targetSteps": {
-                    ".validate": "newData.isNumber() && newData.val() > 0"
-                }
-            }
+            ".read": "auth != null",
+            ".write": "auth != null"
         },
         "foodDatabase": {
             ".read": "auth != null",

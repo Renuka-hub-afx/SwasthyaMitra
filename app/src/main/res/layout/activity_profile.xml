@@ -418,6 +418,19 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/lblGoalWeight" />
 
+            <EditText
+                android:id="@+id/userGoalWeightEdit"
+                android:layout_width="80dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:inputType="numberDecimal"
+                android:textColor="#9C27B0"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:visibility="gone"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/lblGoalWeight" />
+
             <ImageView
                 android:id="@+id/editGoalWeightButton"
                 android:layout_width="32dp"
@@ -450,6 +463,19 @@
                 android:textColor="#9C27B0"
                 android:textSize="18sp"
                 android:textStyle="bold"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/lblCalorie" />
+
+            <EditText
+                android:id="@+id/userGoalCaloriesEdit"
+                android:layout_width="100dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:inputType="number"
+                android:textColor="#9C27B0"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:visibility="gone"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/lblCalorie" />
 

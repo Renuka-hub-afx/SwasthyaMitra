@@ -1,4 +1,4 @@
-package com.example.swasthyamitra.ai
+﻿package com.example.swasthyamitra.ai
 
 import android.content.Context
 import android.util.Log
@@ -18,7 +18,7 @@ import java.util.*
 class AIDietPlanService private constructor(private val context: Context) {
 
     private val authHelper = FirebaseAuthHelper(context)
-    private val firestore = com.google.firebase.firestore.FirebaseFirestore.getInstance("renu") // Using RENU database instance
+    private val firestore = com.google.firebase.firestore.FirebaseFirestore.getInstance("renu")
     private val TAG = "AIDietPlanService"
     
     // Memory Cache for Food Samples
@@ -102,14 +102,14 @@ class AIDietPlanService private constructor(private val context: Context) {
             val weightLogs = authHelper.getRecentWeightLogs(userId, 14)
             val recentMeals = authHelper.getRecentFoodLogs(userId, 7) // Fetch 7 days
             
-            Log.d(TAG, "📊 Fetched ${recentMeals.size} food logs from last 7 days")
+            Log.d(TAG, "ðŸ“Š Fetched ${recentMeals.size} food logs from last 7 days")
 
             val intensityFlag = if (exerciseLogs.any { it["intensity"] == "High" || it["type"] == "HIIT" }) "INTENSITY_HIGH" else "INTENSITY_NORMAL"
             val plateauFlag = detectPlateau(weightLogs)
             val distinctMeals = recentMeals.map { it.foodName }.distinct()
             val pastMealsList = distinctMeals.joinToString(", ")
             
-            Log.d(TAG, "🍽️ Distinct meals to avoid (${distinctMeals.size}): ${distinctMeals.take(10).joinToString(", ")}${if (distinctMeals.size > 10) "..." else ""}")
+            Log.d(TAG, "ðŸ½ï¸ Distinct meals to avoid (${distinctMeals.size}): ${distinctMeals.take(10).joinToString(", ")}${if (distinctMeals.size > 10) "..." else ""}")
 
             // 4. Get user preferences (disliked foods)
             val dislikedFoods = getUserPreferences(userId)
@@ -130,11 +130,11 @@ class AIDietPlanService private constructor(private val context: Context) {
             )
 
             // 8. Execute Vertex AI (Gemini 2.0 Flash)
-            Log.d(TAG, "⏱️ Starting AI generation...")
+            Log.d(TAG, "â±ï¸ Starting AI generation...")
             val startTime = System.currentTimeMillis()
             val plan = callGeminiAPI(promptText)
             val duration = (System.currentTimeMillis() - startTime) / 1000.0
-            Log.d(TAG, "✅ AI generation completed in ${String.format("%.1f", duration)}s")
+            Log.d(TAG, "âœ… AI generation completed in ${String.format("%.1f", duration)}s")
             
             // 8.5. Validate Dietary Compliance
             validateDietaryCompliance(plan, dietaryPreference).getOrElse {
@@ -164,8 +164,8 @@ class AIDietPlanService private constructor(private val context: Context) {
             val user = authHelper.getCurrentUser() ?: return@withContext Result.failure(Exception("User not logged in"))
             val userId = user.uid
 
-            Log.d(TAG, "🔄 Regenerating $mealType for user: $userId")
-            Log.d(TAG, "🚫 Excluded items from call: ${excludedItems.joinToString(", ")}")
+            Log.d(TAG, "ðŸ”„ Regenerating $mealType for user: $userId")
+            Log.d(TAG, "ðŸš« Excluded items from call: ${excludedItems.joinToString(", ")}")
 
             val profile = authHelper.getUserData(userId).getOrThrow()
             val goal = authHelper.getUserGoal(userId).getOrThrow()
@@ -187,11 +187,11 @@ class AIDietPlanService private constructor(private val context: Context) {
             
             // Get user preferences (disliked foods from Firestore)
             val userDislikedFoods = getUserPreferences(userId)
-            Log.d(TAG, "🚫 User's disliked foods: $userDislikedFoods")
+            Log.d(TAG, "ðŸš« User's disliked foods: $userDislikedFoods")
 
             // Combine excluded items with user's disliked foods
             val allExclusions = (excludedItems + userDislikedFoods.split(", ").filter { it.isNotBlank() }).distinct()
-            Log.d(TAG, "🚫 Total exclusions (${allExclusions.size}): ${allExclusions.joinToString(", ")}")
+            Log.d(TAG, "ðŸš« Total exclusions (${allExclusions.size}): ${allExclusions.joinToString(", ")}")
 
             val foodSample = if (dietaryPreference == "Vegan") {
                 loadVeganDataset(weight, height, allergies, 15) // Reduced from 30 to 15
@@ -223,7 +223,7 @@ class AIDietPlanService private constructor(private val context: Context) {
                 - Festival Context: $festivalNote
                 - Health Focus: Hydration (water intake) and $mealType timing.
                 
-                ⚠️ CRITICAL - DO NOT suggest these items (NEVER): $exclusionList
+                âš ï¸ CRITICAL - DO NOT suggest these items (NEVER): $exclusionList
                 Allergies to avoid: $allergies
                 
                 Available Foods:
@@ -254,7 +254,7 @@ class AIDietPlanService private constructor(private val context: Context) {
             var lastException: Exception? = null
             for (attempt in 1..2) {
                 try {
-                    Log.d(TAG, "🎲 Regenerate meal attempt $attempt for $mealType")
+                    Log.d(TAG, "ðŸŽ² Regenerate meal attempt $attempt for $mealType")
 
                     val response = kotlinx.coroutines.withTimeout(30000) {
                         generativeModel.generateContent(promptText)
@@ -281,7 +281,7 @@ class AIDietPlanService private constructor(private val context: Context) {
                         parseMeal(JSONObject(cleanJson))
                     }
                     
-                    Log.d(TAG, "✅ Generated new meal: ${meal.item}")
+                    Log.d(TAG, "âœ… Generated new meal: ${meal.item}")
 
                     // Track regeneration
                     trackFeedback(userId, meal.item, mealType, "New")
@@ -357,7 +357,7 @@ class AIDietPlanService private constructor(private val context: Context) {
         reason: String? = null
     ) = withContext(Dispatchers.IO) {
         try {
-            Log.d(TAG, "📝 Tracking feedback: userId=$userId, meal=$mealName, type=$mealType, action=$action")
+            Log.d(TAG, "ðŸ“ Tracking feedback: userId=$userId, meal=$mealName, type=$mealType, action=$action")
 
             val dateFormat = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
             val feedback = hashMapOf(
@@ -371,20 +371,20 @@ class AIDietPlanService private constructor(private val context: Context) {
             if (reason != null) feedback["reason"] = reason
 
             firestore.collection("meal_feedback").add(feedback).await()
-            Log.d(TAG, "✅ Feedback tracked successfully in meal_feedback collection")
+            Log.d(TAG, "âœ… Feedback tracked successfully in meal_feedback collection")
 
             // Update user preferences if skipped or ate
             if (action == "Skipped") {
-                Log.d(TAG, "⏭️ Action is 'Skipped' - updating user preferences to add disliked food")
+                Log.d(TAG, "â­ï¸ Action is 'Skipped' - updating user preferences to add disliked food")
                 updateUserPreferences(userId, mealName, isDisliked = true)
             } else if (action == "Ate") {
-                Log.d(TAG, "🍽️ Action is 'Ate' - updating user preferences to add favorite food")
+                Log.d(TAG, "ðŸ½ï¸ Action is 'Ate' - updating user preferences to add favorite food")
                 updateUserPreferences(userId, mealName, isDisliked = false)
             } else if (action == "New") {
-                Log.d(TAG, "🆕 Action is 'New' - no preference update needed")
+                Log.d(TAG, "ðŸ†• Action is 'New' - no preference update needed")
             }
         } catch (e: Exception) {
-            Log.e(TAG, "❌ Error tracking feedback: ${e.message}", e)
+            Log.e(TAG, "âŒ Error tracking feedback: ${e.message}", e)
             e.printStackTrace()
         }
     }
@@ -401,43 +401,43 @@ class AIDietPlanService private constructor(private val context: Context) {
 
     private suspend fun updateUserPreferences(userId: String, mealName: String, isDisliked: Boolean) {
         try {
-            Log.d(TAG, "🔄 Updating user preferences: userId=$userId, meal=$mealName, isDisliked=$isDisliked")
+            Log.d(TAG, "ðŸ”„ Updating user preferences: userId=$userId, meal=$mealName, isDisliked=$isDisliked")
 
             val docRef = firestore.collection("user_preferences").document(userId)
             val doc = docRef.get().await()
             
             if (!doc.exists()) {
-                Log.d(TAG, "📝 Creating new user_preferences document")
+                Log.d(TAG, "ðŸ“ Creating new user_preferences document")
                 docRef.set(hashMapOf(
                     "dislikedFoods" to if (isDisliked) listOf(mealName) else emptyList<String>(),
                     "favoriteFoods" to if (!isDisliked) listOf(mealName) else emptyList<String>(),
                     "lastUpdated" to com.google.firebase.firestore.FieldValue.serverTimestamp()
                 )).await()
-                Log.d(TAG, "✅ New preferences document created")
+                Log.d(TAG, "âœ… New preferences document created")
             } else {
-                Log.d(TAG, "📋 Updating existing user_preferences document")
+                Log.d(TAG, "ðŸ“‹ Updating existing user_preferences document")
                 val disliked = (doc.get("dislikedFoods") as? List<*>)?.mapNotNull { it as? String }?.toMutableList() ?: mutableListOf()
                 val favorites = (doc.get("favoriteFoods") as? List<*>)?.mapNotNull { it as? String }?.toMutableList() ?: mutableListOf()
 
-                Log.d(TAG, "📊 Current - Disliked: ${disliked.size}, Favorites: ${favorites.size}")
+                Log.d(TAG, "ðŸ“Š Current - Disliked: ${disliked.size}, Favorites: ${favorites.size}")
 
                 if (isDisliked) {
                     if (!disliked.contains(mealName)) {
                         disliked.add(mealName)
-                        Log.d(TAG, "➕ Added '$mealName' to disliked foods")
+                        Log.d(TAG, "âž• Added '$mealName' to disliked foods")
                     }
                     if (favorites.contains(mealName)) {
                         favorites.remove(mealName)
-                        Log.d(TAG, "➖ Removed '$mealName' from favorites")
+                        Log.d(TAG, "âž– Removed '$mealName' from favorites")
                     }
                 } else {
                     if (!favorites.contains(mealName)) {
                         favorites.add(mealName)
-                        Log.d(TAG, "➕ Added '$mealName' to favorites")
+                        Log.d(TAG, "âž• Added '$mealName' to favorites")
                     }
                     if (disliked.contains(mealName)) {
                         disliked.remove(mealName)
-                        Log.d(TAG, "➖ Removed '$mealName' from disliked")
+                        Log.d(TAG, "âž– Removed '$mealName' from disliked")
                     }
                 }
                 
@@ -447,10 +447,10 @@ class AIDietPlanService private constructor(private val context: Context) {
                     "lastUpdated" to com.google.firebase.firestore.FieldValue.serverTimestamp()
                 )).await()
 
-                Log.d(TAG, "✅ Preferences updated - Disliked: ${disliked.size}, Favorites: ${favorites.size}")
+                Log.d(TAG, "âœ… Preferences updated - Disliked: ${disliked.size}, Favorites: ${favorites.size}")
             }
         } catch (e: Exception) {
-            Log.e(TAG, "❌ Error updating preferences: ${e.message}", e)
+            Log.e(TAG, "âŒ Error updating preferences: ${e.message}", e)
             e.printStackTrace()
         }
     }
@@ -506,7 +506,7 @@ class AIDietPlanService private constructor(private val context: Context) {
             
             $dietaryRules
             
-            ⚠️ CRITICAL - AVOID REPETITION:
+            âš ï¸ CRITICAL - AVOID REPETITION:
             Recently eaten (DO NOT suggest ANY of these): $recentMealsText
             User dislikes (NEVER suggest): $dislikedFoods$groundingSection
             
@@ -647,7 +647,7 @@ class AIDietPlanService private constructor(private val context: Context) {
                 reason = "Protein-rich dinner for muscle recovery.",
                 tip = "Have dinner 2-3 hours before sleep."
             ),
-            dailyTip = "Stay hydrated and eat mindfully! 💧"
+            dailyTip = "Stay hydrated and eat mindfully! ðŸ’§"
         )
     }
 
@@ -849,10 +849,10 @@ class AIDietPlanService private constructor(private val context: Context) {
         }
         
         return if (violations.isNotEmpty()) {
-            Log.e(TAG, "❌ DIETARY VIOLATION DETECTED for $dietaryPreference user: $violations")
+            Log.e(TAG, "âŒ DIETARY VIOLATION DETECTED for $dietaryPreference user: $violations")
             Result.failure(Exception("AI suggested non-compliant food: ${violations.joinToString()}. This violates $dietaryPreference dietary restrictions. Please regenerate."))
         } else {
-            Log.d(TAG, "✅ Dietary compliance validated for $dietaryPreference user")
+            Log.d(TAG, "âœ… Dietary compliance validated for $dietaryPreference user")
             Result.success(mealPlan)
         }
     }
@@ -975,4 +975,21 @@ class AIDietPlanService private constructor(private val context: Context) {
             tip = json.optString("tip", "")
         )
     }
+
+    data class MealRec(
+        val item: String,
+        val calories: Int,
+        val protein: String,
+        val reason: String,
+        val tip: String = ""
+    )
+
+    data class MealPlan(
+        val breakfast: MealRec,
+        val lunch: MealRec,
+        val snack: MealRec,
+        val dinner: MealRec,
+        val postWorkout: MealRec? = null,
+        val dailyTip: String = ""
+    )
 }

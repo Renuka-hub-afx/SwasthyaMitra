@@ -94,7 +94,7 @@ class homepage : AppCompatActivity() {
             return
         }
         authHelper = application.authHelper
-        firestore = FirebaseFirestore.getInstance("renu") // Using RENU database instance
+        firestore = FirebaseFirestore.getInstance("renu")
 
         userId = intent.getStringExtra("USER_ID") ?: ""
 
@@ -262,7 +262,7 @@ class homepage : AppCompatActivity() {
     }
 
     private fun setupMoodTracking() {
-        val moods = mapOf(
+        val moods: Map<Int, String> = mapOf(
             R.id.btn_mood_happy to "Happy",
             R.id.btn_mood_calm to "Calm",
             R.id.btn_mood_tired to "Tired",
@@ -828,7 +828,7 @@ class homepage : AppCompatActivity() {
                 db.child("users").child(userId).child("completionHistory").child(today).setValue(true)
                 
                 // 2. Log full details in Firestore
-                val firestore = com.google.firebase.firestore.FirebaseFirestore.getInstance("renu") // Using RENU database instance
+                val firestore = com.google.firebase.firestore.FirebaseFirestore.getInstance("renu")
                 val logData = hashMapOf(
                     "userId" to userId,
                     "exerciseName" to exercise.name,

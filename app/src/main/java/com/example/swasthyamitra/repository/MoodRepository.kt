@@ -8,7 +8,7 @@ import kotlinx.coroutines.tasks.await
 
 class MoodRepository {
 
-    private val firestore = FirebaseFirestore.getInstance()
+    private val firestore = FirebaseFirestore.getInstance("renu")
     private val TAG = "MoodRepository"
 
     suspend fun saveMood(userId: String, moodData: MoodData): Result<Boolean> {

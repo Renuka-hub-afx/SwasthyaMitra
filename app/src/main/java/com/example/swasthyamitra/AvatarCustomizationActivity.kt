@@ -313,7 +313,7 @@ class AvatarCustomizationActivity : AppCompatActivity() {
         Toast.makeText(this, "Avatar updated", Toast.LENGTH_SHORT).show()
 
         // Background Sync
-        FirebaseFirestore.getInstance().collection("users").document(userId)
+        FirebaseFirestore.getInstance("renu").collection("users").document(userId)
             .update(updateMap)
             .addOnFailureListener {
                 // Optional log
