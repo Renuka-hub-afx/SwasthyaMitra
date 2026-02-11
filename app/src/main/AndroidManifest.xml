@@ -59,6 +59,11 @@
             android:hardwareAccelerated="true" />
 
         <activity
+            android:name=".ManualExerciseActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+
+        <activity
             android:name=".GamificationActivity"
             android:exported="false" />
 
@@ -224,9 +229,6 @@
             android:name=".notifications.WaterReminderReceiver"
             android:exported="false" />
 
-        <receiver
-            android:name=".reminders.ExerciseReminderReceiver"
-            android:exported="false" />
         <activity
             android:name=".DetailedReportActivity"
             android:exported="false"

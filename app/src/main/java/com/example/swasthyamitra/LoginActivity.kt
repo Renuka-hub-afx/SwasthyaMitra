@@ -161,15 +161,15 @@ class LoginActivity : AppCompatActivity() {
                                 }
                             }
                         }.onFailure {
-                            // If lifestyle check fails, assume no lifestyle and go to UserInfo
+                            Log.e("LoginActivity", "Lifestyle check failed, going to UserInfoActivity")
                             navigateToUserInfo(userId)
                         }
                     }.onFailure {
-                        // If goal check fails, assume no goal and redirect to UserInfo
+                        Log.e("LoginActivity", "Goal check failed, going to UserInfoActivity")
                         navigateToUserInfo(userId)
                     }
                 }.onFailure {
-                    // If user data fetch fails, start from beginning
+                    Log.e("LoginActivity", "User data fetch failed, going to UserInfoActivity")
                     navigateToUserInfo(userId)
                 }
             } catch (e: Exception) {

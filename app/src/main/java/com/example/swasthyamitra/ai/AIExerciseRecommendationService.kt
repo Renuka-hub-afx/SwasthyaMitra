@@ -37,13 +37,19 @@ class AIExerciseRecommendationService private constructor(private val context: C
         val equipment: String,
         val instructions: List<String>,
         val reason: String,
-        val benefits: String = "", // Added: Personalized benefits explanation
+        val benefits: String = "", // Personalized benefits explanation
         val gifUrl: String = "",
         val ageExplanation: String = "",
         val genderNote: String = "",
         val motivationalMessage: String = "",
         val estimatedCalories: Int = 0,
-        val recommendedDuration: String = "15 mins"
+        val recommendedDuration: String = "15 mins",
+        
+        // NEW: Enhanced fields for detailed explanations
+        val intensity: String = "light", // "light", "moderate", "high"
+        val goalAlignment: String = "", // How it helps their specific goal
+        val tips: List<String> = emptyList(), // Pro tips for better execution
+        val commonMistakes: List<String> = emptyList() // What to avoid
     )
     
     // Cache for exercise name -> GIF path mapping
@@ -70,8 +76,8 @@ class AIExerciseRecommendationService private constructor(private val context: C
         val isFemale = gender.equals("Female", ignoreCase = true)
         
         try {
-            // 1. Load GYM exercises for MALE or UNSPECIFIED users
-            if (isMale || (!isMale && !isFemale)) {
+            // 1. Load GYM exercises (exercisedb_v1_sample) - Available to ALL users
+            try {
                 val jsonString = context.assets.open("exercisedb_v1_sample/exercises.json").bufferedReader().use { it.readText() }
                 val jsonArray = org.json.JSONArray(jsonString)
                 
@@ -87,10 +93,12 @@ class AIExerciseRecommendationService private constructor(private val context: C
                     ))
                     gifMap[name.lowercase()] = gifPath
                 }
+            } catch (e: Exception) {
+                Log.e(TAG, "Error loading gym exercises", e)
             }
 
-            // 2. Load YOGA poses for FEMALE or UNSPECIFIED users
-            if (isFemale || (!isMale && !isFemale)) {
+            // 2. Load YOGA poses (exercise 2) - Available to ALL users
+            try {
                 val yogaPoses = context.assets.list("exercise 2") ?: emptyArray()
                 for (pose in yogaPoses) {
                     val files = context.assets.list("exercise 2/$pose") ?: emptyArray()
@@ -106,6 +114,8 @@ class AIExerciseRecommendationService private constructor(private val context: C
                         gifMap[pose.lowercase()] = imagePath
                     }
                 }
+            } catch (e: Exception) {
+                Log.e(TAG, "Error loading yoga exercises", e)
             }
             
             // 3. Load exercise types from exercise3.csv (for ALL users)
@@ -216,68 +226,71 @@ class AIExerciseRecommendationService private constructor(private val context: C
             }
 
             val promptText = """
-                You are a friendly Sports Scientist for the SwasthyaMitra app.
-                $periodConstraint
+                ### ✅ Final AI Prompt – Closed-Loop Exercise Recommendation System
 
-                **USER CONTEXT:**
-                - Mood: $mood
-                - Age: $age years old
-                - Gender: $gender
-                - Weight: $weight kg
-                - Current Goal: $goalType
-                - Period Status: ${if (isOnPeriod) "ON PERIOD 🌸" else "Normal"}
-                - Current Time: $timeOfDay
-                - Session Target: 3 Exercises (~45 mins total)
+                You are a certified **Sports Scientist and Fitness Coach AI**.
 
-                **METABOLIC STATUS:**
-                - Consumed: $consumed / $targetCalories kcal
-                - Burned (Steps): $stepCalories kcal
+                **User Details:**
+                * Age: **$age**
+                * Gender: **$gender**
+                * Weight: **$weight kg**
+                * Fitness Goal: **$goalType**
+                * Current Mood: **$mood**
+                * Period Status: **${if (isOnPeriod) "Active" else "Inactive"}**
+                * Today’s Calorie Intake: **$consumed kcal** / Target: $targetCalories
 
-                **TASK:**
-                Create a balanced workout session consisting of exactly **3 DISTINCT exercises**.
-                ⚠️ CRITICAL: You MUST choose ONLY from the "Available Exercises" list below.
-                ⚠️ Use the EXACT exercise name as written - DO NOT invent new names like "Push-ups" or "Squats".
-                ⚠️ Only choose exercises that appear in the list below.
-                
-                The sequence should be logical (e.g., Warmup -> Main -> Cool-down OR Upper -> Lower -> Core).
-                Each exercise should be ~15 minutes.
-
-                **MOOD GUIDANCE:**
-                - Sad/Depressed: Gentle, rhythmic items.
-                - Stressed/Anxious: Calming, focus-based items.
-                - Angry/Frustrated: Higher intensity.
-                - Happy/Energetic: Challenging items.
-                - Tired: Restorative.
-
-                **LOGIC RULES:**
-                ${if (isOnPeriod) """
-                1. COMFORT: Choose 3 exercises that feel good and don't cause discomfort
-                2. BENEFITS: Prioritize movements that ease cramps and boost mood
-                3. GENTLE: Stick to low-intensity
-                """ else """
-                1. DURATION: Each must be ~15 mins.
-                2. MATCH MOOD: Ensure the intensity matches $mood.
-                3. VARIETY: Do not repeat the same exercise type 3 times.
-                """}
-
-                📋 **Available Exercises (MUST choose from this list ONLY):**
+                **Available Exercises (Filtered Local Database):**
                 $simplifiedList
+                (Each exercise contains: name, target, bodyPart, gifUrl, instructions.)
 
-                **STRICT OUTPUT FORMAT (JSON ARRAY ONLY):**
+                ---
+
+                ### 🎯 Task
+
+                Generate a **complete workout session of 3 DISTINCT exercises** (~15 minutes each), arranged logically in sequence (Warm-up → Main Exercise → Finisher/Stretch).
+
+                ---
+
+                ### 🧠 Closed-Loop Logic Rules (MANDATORY)
+
+                1. If **Period Mode is ACTIVE**, suggest ONLY gentle, restorative, low-impact movements. Avoid HIIT, jumps, heavy core pressure, or inversions.
+                2. Adjust intensity based on **Mood**:
+                   * Sad / Low → Gentle, rhythmic, endorphin-boosting.
+                   * Angry / Energetic → High-intensity or strength-focused.
+                   * Stressed → Mobility + controlled breathing.
+                3. If calorie intake exceeds target ($targetCalories) → include calorie-burning cardio.
+                4. If calorie intake is low → avoid overtraining; suggest moderate intensity.
+                5. If Goal = Weight Loss → prioritize fat-burning efficiency.
+                6. If Goal = Muscle Gain → prioritize strength-based movements.
+                6. If Goal = Muscle Gain → prioritize strength-based movements.
+                7. Ensure exercises are age-appropriate and safe.
+                8. Include period-specific advice/tips ONLY if Period Status is Active. Otherwise, focus on general form.
+
+                ---
+
+                ### 📌 Output Format (Strict JSON Array)
+
+                Return a valid JSON Array containing exactly 3 exercise objects.
+                For each object, use this EXACT structure:
+
                 [
                     {
-                      "name": "EXACT name from Available Exercises list above",
-                      "targetMuscle": "...",
-                      "bodyPart": "...",
-                      "equipment": "...",
-                      "instructions": ["Step 1", "Step 2"],
-                      "reason": "Briefly why this fits the sequence.",
-                      "benefits": "Explain specific benefits for a $age-year-old $gender weighing $weight kg with goal '$goalType' and mood '$mood'. If on period, explain how it helps cramps/mood.",
-                      "ageExplanation": "Safety note for age $age",
-                      "genderNote": "Benefit for $gender",
-                      "motivationalMessage": "Short encouraging text.",
-                      "estimatedCalories": 120,
-                      "recommendedDuration": "15 mins"
+                      "name": "EXACT name from Available Exercises list",
+                      "targetMuscle": "Body part targeted",
+                      "bodyPart": "Broader body region",
+                      "equipment": "Required equipment or 'Bodyweight'",
+                      "instructions": ["Step 1...", "Step 2..."],
+                      "reason": "Why this fits the sequence and user's current state",
+                      "benefits": "Personalized benefits (3-4 lines) explaining importance for THIS ${age}yo ${gender}",
+                      "ageExplanation": "Safety note specific to age $age",
+                      "genderNote": "Specific benefit for $gender",
+                      "motivationalMessage": "Short motivational closing line for this exercise",
+                      "estimatedCalories": 150,
+                      "recommendedDuration": "15 mins",
+                      "intensity": "${if (isOnPeriod) "light" else "light, moderate, or high"}",
+                      "goalAlignment": "How this specific movement aids '$goalType'",
+                      "tips": ["Pro tip 1", "Pro tip 2"],
+                      "commonMistakes": ["Mistake 1", "Mistake 2"]
                     },
                     ... (Total 3 items)
                 ]
@@ -401,7 +414,19 @@ class AIExerciseRecommendationService private constructor(private val context: C
             genderNote = json.optString("genderNote", ""),
             motivationalMessage = json.optString("motivationalMessage", ""),
             estimatedCalories = json.optInt("estimatedCalories", 100),
-            recommendedDuration = json.optString("recommendedDuration", "15 mins")
+            recommendedDuration = json.optString("recommendedDuration", "15 mins"),
+            
+            // NEW: Enhanced fields
+            intensity = json.optString("intensity", "light"),
+            goalAlignment = json.optString("goalAlignment", "Supports your fitness journey"),
+            tips = mutableListOf<String>().apply {
+                val arr = json.optJSONArray("tips") ?: JSONArray()
+                for (i in 0 until arr.length()) add(arr.getString(i))
+            },
+            commonMistakes = mutableListOf<String>().apply {
+                val arr = json.optJSONArray("commonMistakes") ?: JSONArray()
+                for (i in 0 until arr.length()) add(arr.getString(i))
+            }
         )
     }
 

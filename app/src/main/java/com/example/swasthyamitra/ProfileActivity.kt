@@ -168,7 +168,7 @@ class ProfileActivity : AppCompatActivity() {
                     }
 
                     // Load user data from Firestore to keep it synced
-                    FirebaseFirestore.getInstance("renu").collection("users")
+                    FirebaseFirestore.getInstance("renu").collection("users") // Using RENU database instance
                         .document(userId)
                         .get()
                         .addOnSuccessListener { document ->
@@ -200,7 +200,7 @@ class ProfileActivity : AppCompatActivity() {
                             Toast.makeText(this@ProfileActivity, "Error loading profile: ${e.message}", Toast.LENGTH_SHORT).show()
                         }
 
-                    FirebaseFirestore.getInstance("renu").collection("goals")
+                    FirebaseFirestore.getInstance("renu").collection("goals") // Using RENU database instance
                         .whereEqualTo("userId", userId)
                         .limit(1)
                         .get()
@@ -234,10 +234,17 @@ class ProfileActivity : AppCompatActivity() {
     }
 
     private fun handleLogout() {
+        // Clear Firebase session
         FirebaseAuth.getInstance().signOut()
+        
+        // Clear any cached user data from SharedPreferences
+        val sharedPreferences = getSharedPreferences("UserPreferences", MODE_PRIVATE)
+        sharedPreferences.edit().clear().apply()
+        
         Toast.makeText(this, "Logged out successfully", Toast.LENGTH_SHORT).show()
 
-        val intent = Intent(this, LoginActivity::class.java)
+        // Navigate to MainActivity (which will show login)
+        val intent = Intent(this, MainActivity::class.java)
         intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         startActivity(intent)
         finish()
@@ -264,14 +271,14 @@ class ProfileActivity : AppCompatActivity() {
     }
 
     private fun updateGoalWeight(newGoalWeight: Double) {
-        FirebaseFirestore.getInstance("renu").collection("goals")
+        FirebaseFirestore.getInstance("renu").collection("goals") // Using RENU database instance
             .whereEqualTo("userId", userId)
             .limit(1)
             .get()
             .addOnSuccessListener { querySnapshot ->
                 if (!querySnapshot.isEmpty) {
                     val goalDocId = querySnapshot.documents[0].id
-                    FirebaseFirestore.getInstance("renu").collection("goals")
+                    FirebaseFirestore.getInstance("renu").collection("goals") // Using RENU database instance
                         .document(goalDocId)
                         .update("targetWeight", newGoalWeight)
                         .addOnSuccessListener {

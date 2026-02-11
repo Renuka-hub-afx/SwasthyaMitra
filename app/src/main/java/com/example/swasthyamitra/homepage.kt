@@ -39,21 +39,21 @@ class homepage : AppCompatActivity() {
     private lateinit var pbCarbs: ProgressBar
     private lateinit var pbFats: ProgressBar
 
-    // AI Recommendation UI
-    private lateinit var cardAiExercise: androidx.cardview.widget.CardView
-    private lateinit var tvRecExerciseName: TextView
-    private lateinit var tvRecTargetMuscle: TextView
-    private lateinit var tvRecReason: TextView
-    private lateinit var btnViewExerciseDetails: MaterialButton
-    private lateinit var btnLogRecExercise: MaterialButton
-    private lateinit var btnRegenerateExercise: MaterialButton
-    private lateinit var ivExerciseGif: android.widget.ImageView
-    private lateinit var tvAgeExplanation: TextView
-    private lateinit var tvGenderNote: TextView
-    private lateinit var tvMotivationalMessage: TextView
-    private lateinit var tvExerciseCalories: TextView
-    private lateinit var tvExerciseDuration: TextView
-    private var currentRecommendedExercise: com.example.swasthyamitra.ai.AIExerciseRecommendationService.ExerciseRec? = null
+    // AI Recommendation UI - MOVED TO WORKOUT DASHBOARD
+    // private lateinit var cardAiExercise: androidx.cardview.widget.CardView
+    // private lateinit var tvRecExerciseName: TextView
+    // private lateinit var tvRecTargetMuscle: TextView
+    // private lateinit var tvRecReason: TextView
+    // private lateinit var btnViewExerciseDetails: MaterialButton
+    // private lateinit var btnLogRecExercise: MaterialButton
+    // private lateinit var btnRegenerateExercise: MaterialButton
+    // private lateinit var ivExerciseGif: android.widget.ImageView
+    // private lateinit var tvAgeExplanation: TextView
+    // private lateinit var tvGenderNote: TextView
+    // private lateinit var tvMotivationalMessage: TextView
+    // private lateinit var tvExerciseCalories: TextView
+    // private lateinit var tvExerciseDuration: TextView
+    // private var currentRecommendedExercise: com.example.swasthyamitra.ai.AIExerciseRecommendationService.ExerciseRec? = null
 
     private lateinit var menuHome: LinearLayout
     private lateinit var menuProgress: LinearLayout
@@ -94,7 +94,7 @@ class homepage : AppCompatActivity() {
             return
         }
         authHelper = application.authHelper
-        firestore = FirebaseFirestore.getInstance("renu")
+        firestore = FirebaseFirestore.getInstance("renu") // Using RENU database instance
 
         userId = intent.getStringExtra("USER_ID") ?: ""
 
@@ -122,13 +122,13 @@ class homepage : AppCompatActivity() {
         cardWaterSummary = findViewById(R.id.card_water_summary)
         tvWaterTotal = findViewById(R.id.tv_water_total)
 
-        cardAiExercise = findViewById(R.id.card_ai_exercise)
-        tvRecExerciseName = findViewById(R.id.tv_rec_exercise_name)
-        tvRecTargetMuscle = findViewById(R.id.tv_rec_target_muscle)
-        tvRecReason = findViewById(R.id.tv_rec_reason)
-        btnViewExerciseDetails = findViewById(R.id.btn_view_exercise_details)
-        btnLogRecExercise = findViewById(R.id.btn_log_rec_exercise)
-        btnRegenerateExercise = findViewById(R.id.btn_regenerate_exercise)
+        // cardAiExercise = findViewById(R.id.card_ai_exercise)
+        // tvRecExerciseName = findViewById(R.id.tv_rec_exercise_name)
+        // tvRecTargetMuscle = findViewById(R.id.tv_rec_target_muscle)
+        // tvRecReason = findViewById(R.id.tv_rec_reason)
+        // btnViewExerciseDetails = findViewById(R.id.btn_view_exercise_details)
+        // btnLogRecExercise = findViewById(R.id.btn_log_rec_exercise)
+        // btnRegenerateExercise = findViewById(R.id.btn_regenerate_exercise)
         
         val tvViewDetails: TextView = findViewById(R.id.tv_view_details)
         tvViewDetails.setOnClickListener {
@@ -136,12 +136,12 @@ class homepage : AppCompatActivity() {
         }
 
         chipPeriodMode = findViewById(R.id.chip_period_mode)
-        ivExerciseGif = findViewById(R.id.iv_exercise_gif)
-        tvAgeExplanation = findViewById(R.id.tv_age_explanation)
-        tvGenderNote = findViewById(R.id.tv_gender_note)
-        tvMotivationalMessage = findViewById(R.id.tv_motivational_message)
-        tvExerciseCalories = findViewById(R.id.tv_exercise_calories)
-        tvExerciseDuration = findViewById(R.id.tv_exercise_duration)
+        // ivExerciseGif = findViewById(R.id.iv_exercise_gif)
+        // tvAgeExplanation = findViewById(R.id.tv_age_explanation)
+        // tvGenderNote = findViewById(R.id.tv_gender_note)
+        // tvMotivationalMessage = findViewById(R.id.tv_motivational_message)
+        // tvExerciseCalories = findViewById(R.id.tv_exercise_calories)
+        // tvExerciseDuration = findViewById(R.id.tv_exercise_duration)
         
         // Initialize calorie balance UI
         tvCaloriesIn = findViewById(R.id.tv_calories_in)
@@ -191,7 +191,7 @@ class homepage : AppCompatActivity() {
                     
                     // Trigger AI refreshes for specialized mode
                     updateAICoachMessage()
-                    updateAIExerciseRecommendation()
+                    // updateAIExerciseRecommendation()
                     
                     val status = if (isChecked) "activated 🌸" else "deactivated"
                     Toast.makeText(this@homepage, "Period Mode $status", Toast.LENGTH_SHORT).show()
@@ -229,27 +229,27 @@ class homepage : AppCompatActivity() {
             startActivity(intent)
         }
 
-        btnViewExerciseDetails.setOnClickListener {
-            showExerciseGuideDialog()
-        }
+        // btnViewExerciseDetails.setOnClickListener {
+        //     showExerciseGuideDialog()
+        // }
 
-        btnLogRecExercise.setOnClickListener {
-            logRecommendedExercise()
-        }
+        // btnLogRecExercise.setOnClickListener {
+        //     logRecommendedExercise()
+        // }
 
-        btnRegenerateExercise.setOnClickListener {
-            lifecycleScope.launch {
-                try {
-                    // Clear existing recommendation to force new generation
-                    firestore.collection("users").document(userId)
-                        .update("currentDailyExercise", null, "lastExerciseDate", null)
-                        .await()
-                    updateAIExerciseRecommendation()
-                } catch (e: Exception) {
-                    Log.e("Homepage", "Error skipping exercise", e)
-                }
-            }
-        }
+        // btnRegenerateExercise.setOnClickListener {
+        //     lifecycleScope.launch {
+        //         try {
+        //             // Clear existing recommendation to force new generation
+        //             firestore.collection("users").document(userId)
+        //                 .update("currentDailyExercise", null, "lastExerciseDate", null)
+        //                 .await()
+        //             updateAIExerciseRecommendation()
+        //         } catch (e: Exception) {
+        //             Log.e("Homepage", "Error skipping exercise", e)
+        //         }
+        //     }
+        // }
 
         findViewById<TextView>(R.id.tv_view_mood_details).setOnClickListener {
             val intent = Intent(this, MoodRecommendationActivity::class.java)
@@ -349,7 +349,7 @@ class homepage : AppCompatActivity() {
             displayWorkoutStatus()
             displayWaterStatus()
             updateAICoachMessage()
-            updateAIExerciseRecommendation()
+            // updateAIExerciseRecommendation()
             updateCalorieBalance()
             updateCalorieBalance()
         }
@@ -638,7 +638,7 @@ class homepage : AppCompatActivity() {
         }
     }
 
-    private fun updateAIExerciseRecommendation() {
+/*    private fun updateAIExerciseRecommendation() {
         lifecycleScope.launch {
             try {
                 // 0. Check if it's time to show the recommendation
@@ -824,7 +824,7 @@ class homepage : AppCompatActivity() {
                 db.child("users").child(userId).child("completionHistory").child(today).setValue(true)
                 
                 // 2. Log full details in Firestore
-                val firestore = com.google.firebase.firestore.FirebaseFirestore.getInstance("renu")
+                val firestore = com.google.firebase.firestore.FirebaseFirestore.getInstance("renu") // Using RENU database instance
                 val logData = hashMapOf(
                     "userId" to userId,
                     "exerciseName" to exercise.name,
@@ -889,6 +889,7 @@ class homepage : AppCompatActivity() {
         builder.show()
     }
 
+*/
     private fun getAvatarDrawable(avatarId: String): Int {
         val resName = avatarId.replace("_", "")
         return try {
@@ -944,8 +945,9 @@ class homepage : AppCompatActivity() {
     
     private suspend fun calculateCaloriesIn(date: String): Int {
         return try {
-            val foodLogs = firestore.collection("foodLogs")
-                .whereEqualTo("userId", userId)
+            val foodLogs = firestore.collection("users")
+                .document(userId)
+                .collection("foodLogs")
                 .whereEqualTo("date", date)
                 .get()
                 .await()

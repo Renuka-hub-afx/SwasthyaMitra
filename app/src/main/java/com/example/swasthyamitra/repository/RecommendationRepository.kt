@@ -16,7 +16,7 @@ import kotlinx.coroutines.tasks.await
  */
 class RecommendationRepository {
     
-    private val db = FirebaseFirestore.getInstance("renu")
+    private val db = FirebaseFirestore.getInstance("renu") // Using RENU database instance
     private val auth = FirebaseAuth.getInstance()
     
     private val recommendationsCollection = db.collection("recommendations")

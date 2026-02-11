@@ -16,6 +16,8 @@ class ExerciseNotificationHelper(private val context: Context) {
     private val NOTIFICATION_ID = 101
 
     fun showExerciseNotification(exerciseName: String? = null) {
+        // DISABLED per user request
+        /*
         createNotificationChannel()
 
         val intent = Intent(context, homepage::class.java).apply {
@@ -43,6 +45,7 @@ class ExerciseNotificationHelper(private val context: Context) {
 
         val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         notificationManager.notify(NOTIFICATION_ID, builder.build())
+        */
     }
 
     private fun createNotificationChannel() {

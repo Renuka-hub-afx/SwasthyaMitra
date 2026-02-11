@@ -131,7 +131,12 @@ class SmartPantryActivity : AppCompatActivity() {
     }
 
     private fun logRecipeToDiary(recipe: AIPantryService.RecipeResult) {
-        val authHelper = com.example.swasthyamitra.auth.FirebaseAuthHelper(this)
+        val application = application as? UserApplication
+        if (application == null) {
+            Toast.makeText(this, "Error: App not initialized", Toast.LENGTH_SHORT).show()
+            return
+        }
+        val authHelper = application.authHelper
         val user = authHelper.getCurrentUser()
         
         if (user == null) {
@@ -142,35 +147,42 @@ class SmartPantryActivity : AppCompatActivity() {
         binding.btnLogRecipe.isEnabled = false
         binding.btnLogRecipe.text = "Logging... ⏳"
 
-        val foodLog = hashMapOf(
-            "userId" to user.uid,
-            "foodName" to recipe.title,
-            "calories" to recipe.calories,
-            "protein" to recipe.protein,
-            "carbs" to recipe.carbs,
-            "fat" to recipe.fat,
-            "timestamp" to System.currentTimeMillis(),
-            "date" to java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault()).format(java.util.Date())
-        )
+        lifecycleScope.launch {
+            try {
+                 val foodLog = com.example.swasthyamitra.models.FoodLog(
+                    userId = user.uid,
+                    foodName = recipe.title,
+                    calories = recipe.calories,
+                    protein = recipe.protein.toDouble(),
+                    carbs = recipe.carbs.toDouble(),
+                    fat = recipe.fat.toDouble(),
+                    mealType = "Snack", // Defaulting to Snack for pantry recipes
+                    timestamp = System.currentTimeMillis(),
+                    date = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault()).format(java.util.Date()),
+                    servingSize = "1 serving",
+                    barcode = null,
+                    photoUrl = null
+                )
 
-        com.google.firebase.firestore.FirebaseFirestore.getInstance("renu")
-            .collection("foodLogs")
-            .add(foodLog)
-            .addOnSuccessListener {
-                Toast.makeText(this, "Logged to Diary! ✅", Toast.LENGTH_SHORT).show()
-                binding.btnLogRecipe.text = "Logged ✅"
+                val result = authHelper.logFood(foodLog)
                 
-                // Optional: Update completion history for engagement
-                updateCompletionHistory(user.uid)
-                
-                // Return to home after delay
-                binding.root.postDelayed({ finish() }, 1500)
-            }
-            .addOnFailureListener { e ->
+                result.onSuccess {
+                    binding.btnLogRecipe.text = "Logged ✅"
+                    Toast.makeText(this@SmartPantryActivity, "Logged to Diary! ✅", Toast.LENGTH_SHORT).show()
+                    
+                    // Return to home after delay
+                    binding.root.postDelayed({ finish() }, 1500)
+                }.onFailure { e ->
+                    binding.btnLogRecipe.isEnabled = true
+                    binding.btnLogRecipe.text = "Log to Diary 📖"
+                    Toast.makeText(this@SmartPantryActivity, "Failed to log: ${e.message}", Toast.LENGTH_SHORT).show()
+                }
+            } catch (e: Exception) {
                 binding.btnLogRecipe.isEnabled = true
-                binding.btnLogRecipe.text = "Log to My Diary 📖"
-                Toast.makeText(this, "Failed to log: ${e.message}", Toast.LENGTH_SHORT).show()
+                binding.btnLogRecipe.text = "Log to Diary 📖"
+                Toast.makeText(this@SmartPantryActivity, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
             }
+        }
     }
 
     private fun updateCompletionHistory(userId: String) {

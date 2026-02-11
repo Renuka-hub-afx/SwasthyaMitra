@@ -44,7 +44,7 @@ class LifestyleActivity : AppCompatActivity() {
         }
         authHelper = application.authHelper
 
-        userId = intent.getStringExtra("USER_ID") ?: ""
+        userId = intent.getStringExtra("USER_ID") ?: authHelper.getCurrentUser()?.uid ?: ""
         if (userId.isEmpty()) {
             Toast.makeText(this, "User ID missing. Please login again.", Toast.LENGTH_LONG).show()
             finish()
@@ -307,8 +307,8 @@ class LifestyleActivity : AppCompatActivity() {
                         )
 
                         result.onSuccess {
-                            // Schedule exercise reminder
-                            scheduleExerciseReminder(selectedPreferredTime)
+                            // Schedule exercise reminder - DISABLED
+                            // scheduleExerciseReminder(selectedPreferredTime)
 
                             Toast.makeText(
                                 this@LifestyleActivity, 
@@ -377,52 +377,5 @@ class LifestyleActivity : AppCompatActivity() {
         }
     }
 
-    private fun scheduleExerciseReminder(preferredTime: String) {
-        val alarmManager = getSystemService(android.content.Context.ALARM_SERVICE) as android.app.AlarmManager
-        val intent = android.content.Intent(this, com.example.swasthyamitra.reminders.ExerciseReminderReceiver::class.java)
-        val pendingIntent = android.app.PendingIntent.getBroadcast(
-            this, 1001, intent, 
-            android.app.PendingIntent.FLAG_IMMUTABLE or android.app.PendingIntent.FLAG_UPDATE_CURRENT
-        )
 
-        val calendar = java.util.Calendar.getInstance()
-        val hour = when (preferredTime) {
-            "Morning" -> 8
-            "Afternoon" -> 14
-            "Evening" -> 19
-            "Night" -> 21
-            else -> 8
-        }
-
-        calendar.set(java.util.Calendar.HOUR_OF_DAY, hour)
-        calendar.set(java.util.Calendar.MINUTE, 0)
-        calendar.set(java.util.Calendar.SECOND, 0)
-
-        // If time has already passed today, schedule for tomorrow
-        if (calendar.timeInMillis <= System.currentTimeMillis()) {
-            calendar.add(java.util.Calendar.DAY_OF_YEAR, 1)
-        }
-
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
-            if (alarmManager.canScheduleExactAlarms()) {
-                alarmManager.setExactAndAllowWhileIdle(
-                    android.app.AlarmManager.RTC_WAKEUP,
-                    calendar.timeInMillis,
-                    pendingIntent
-                )
-            } else {
-                alarmManager.setAndAllowWhileIdle(
-                    android.app.AlarmManager.RTC_WAKEUP,
-                    calendar.timeInMillis,
-                    pendingIntent
-                )
-            }
-        } else {
-            alarmManager.setAndAllowWhileIdle(
-                android.app.AlarmManager.RTC_WAKEUP,
-                calendar.timeInMillis,
-                pendingIntent
-            )
-        }
-    }
 }

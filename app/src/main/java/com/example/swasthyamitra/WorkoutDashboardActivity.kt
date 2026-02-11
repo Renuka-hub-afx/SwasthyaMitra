@@ -59,10 +59,26 @@ class WorkoutDashboardActivity : AppCompatActivity() {
     private lateinit var tvAiExerciseReason: TextView
     private lateinit var tvAiExerciseCalories: TextView
     private lateinit var tvAiExerciseDuration: TextView
-    private lateinit var btnAiExerciseDone: com.google.android.material.button.MaterialButton
+    private lateinit var btnAiExerciseDone: com.google.android.material.button.MaterialButton 
+    // Button type changed in XML to MaterialButton/Button, keeping reference generic or casting safely
     private lateinit var btnAiExerciseSkip: com.google.android.material.button.MaterialButton
     private lateinit var tvExerciseCounter: TextView
+
+    // New AI UI Elements
+    private lateinit var tvAiExerciseTarget: TextView
+    private lateinit var tvAiExerciseEquipment: TextView
+    private lateinit var tvAiExerciseAgeExplanation: TextView
+    private lateinit var tvAiExerciseGenderNote: TextView
+    private lateinit var tvAiExerciseMotivation: TextView
+    private lateinit var tvAiExerciseGoalAlignment: TextView
+    private lateinit var llInstructions: android.widget.LinearLayout
+    private lateinit var llTips: android.widget.LinearLayout
+    private lateinit var llCommonMistakes: android.widget.LinearLayout
     
+    // Exercise Action Buttons
+    private lateinit var btnAiExerciseRecommendation: com.google.android.material.button.MaterialButton
+    private lateinit var btnManualExercise: com.google.android.material.button.MaterialButton
+
     private var currentAiExerciseList: List<com.example.swasthyamitra.ai.AIExerciseRecommendationService.ExerciseRec> = emptyList()
     private var currentExerciseIndex = 0
 
@@ -110,16 +126,39 @@ class WorkoutDashboardActivity : AppCompatActivity() {
         tvAiExerciseReason = findViewById(R.id.tvAiExerciseReason)
         tvAiExerciseCalories = findViewById(R.id.tvAiExerciseCalories)
         tvAiExerciseDuration = findViewById(R.id.tvAiExerciseDuration)
-        btnAiExerciseDone = findViewById(R.id.btnAiExerciseDone)
+        
+        // Buttons
+        btnAiExerciseDone = findViewById<View>(R.id.btnAiExerciseDone) as com.google.android.material.button.MaterialButton // Safe cast if XML is Button but we treat as View or correct type
+        // Actually in XML it is <Button> which is AppCompatButton, but commonly castable. 
+        // Let's fix the type in member variable if needed, or just finding by ID is enough.
+        // In XML: btnAiExerciseDone is <Button>, btnAiExerciseSkip is <MaterialButton>
+        // Use findViewById simply
+        
         btnAiExerciseSkip = findViewById(R.id.btnAiExerciseSkip)
         tvExerciseCounter = findViewById(R.id.tvExerciseCounter)
+
+        // Enhanced Fields
+        tvAiExerciseTarget = findViewById(R.id.tvAiExerciseTarget)
+        tvAiExerciseEquipment = findViewById(R.id.tvAiExerciseEquipment)
+        tvAiExerciseAgeExplanation = findViewById(R.id.tvAiExerciseAgeExplanation)
+        tvAiExerciseGenderNote = findViewById(R.id.tvAiExerciseGenderNote)
+        tvAiExerciseMotivation = findViewById(R.id.tvAiExerciseMotivation)
+        tvAiExerciseGoalAlignment = findViewById(R.id.tvAiExerciseGoalAlignment)
+        llInstructions = findViewById(R.id.llInstructions)
+        llTips = findViewById(R.id.llTips)
+        llCommonMistakes = findViewById(R.id.llCommonMistakes)
+
+        // Exercise Action Buttons
+        btnAiExerciseRecommendation = findViewById(R.id.btnAiExerciseRecommendation)
+        btnManualExercise = findViewById(R.id.btnManualExercise)
     }
 
     private fun setupListeners() {
         findViewById<View>(R.id.cvGamification).setOnClickListener {
             startActivity(Intent(this, GamificationActivity::class.java))
         }
-
+        // ... (rest of listeners)
+        
         findViewById<View>(R.id.cvInsights).setOnClickListener {
             startActivity(Intent(this, InsightsActivity::class.java))
         }
@@ -132,13 +171,149 @@ class WorkoutDashboardActivity : AppCompatActivity() {
             finish()
         }
         
-        btnAiExerciseDone.setOnClickListener {
+        findViewById<View>(R.id.btnAiExerciseDone).setOnClickListener {
             markAiExerciseComplete()
         }
         
         btnAiExerciseSkip.setOnClickListener {
             skipToNextExercise()
         }
+
+        btnAiExerciseRecommendation.setOnClickListener {
+            loadAiRecommendation()
+        }
+
+        btnManualExercise.setOnClickListener {
+            startActivity(Intent(this, ManualExerciseActivity::class.java))
+        }
+    }
+    
+    // ... (rest of methods until displayCurrentExercise)
+
+    private fun displayCurrentExercise() {
+        if (currentExerciseIndex >= currentAiExerciseList.size) {
+            // End of list
+             cardAiExercise.visibility = View.GONE
+             Toast.makeText(this, "All recommended exercises completed! Great job!", Toast.LENGTH_LONG).show()
+             return
+        }
+        
+        val rec = currentAiExerciseList[currentExerciseIndex]
+        
+        tvAiExerciseName.text = rec.name
+        
+        // Basic Fields
+        tvAiExerciseReason.text = rec.reason
+        tvAiExerciseCalories.text = "🔥 ~${rec.estimatedCalories} kcal"
+        tvAiExerciseDuration.text = "⏱️ ${rec.recommendedDuration}"
+        tvExerciseCounter.text = "Exercise ${currentExerciseIndex + 1} of ${currentAiExerciseList.size}"
+        
+        // Enhanced Fields
+        tvAiExerciseTarget.text = "🎯 Target: ${rec.targetMuscle}"
+        tvAiExerciseEquipment.text = "🏋️ Equipment: ${rec.equipment}"
+        
+        // Age Explanation
+        if (rec.ageExplanation.isNotEmpty()) {
+            tvAiExerciseAgeExplanation.text = "💡 Age Insight: ${rec.ageExplanation}"
+            (tvAiExerciseAgeExplanation.parent as View).visibility = View.VISIBLE
+        } else {
+            (tvAiExerciseAgeExplanation.parent as View).visibility = View.GONE
+        }
+        
+        // Gender Note
+        if (rec.genderNote.isNotEmpty()) {
+            tvAiExerciseGenderNote.text = "🌸 For You: ${rec.genderNote}"
+            (tvAiExerciseGenderNote.parent as View).visibility = View.VISIBLE
+        } else {
+            (tvAiExerciseGenderNote.parent as View).visibility = View.GONE
+        }
+        
+        // Motivation
+        if (rec.motivationalMessage.isNotEmpty()) {
+            tvAiExerciseMotivation.text = "💕 ${rec.motivationalMessage}"
+            (tvAiExerciseMotivation.parent as View).visibility = View.VISIBLE
+        } else {
+            (tvAiExerciseMotivation.parent as View).visibility = View.GONE
+        }
+        
+        // Goal Alignment
+        if (rec.goalAlignment.isNotEmpty()) {
+            tvAiExerciseGoalAlignment.text = rec.goalAlignment
+            (tvAiExerciseGoalAlignment.parent as View).visibility = View.VISIBLE
+        } else {
+            (tvAiExerciseGoalAlignment.parent as View).visibility = View.GONE
+        }
+        
+        // Populate Instructions
+        llInstructions.removeAllViews()
+        rec.instructions.forEachIndexed { index, step ->
+            val stepView = TextView(this)
+            stepView.text = "${index + 1}. $step"
+            stepView.textSize = 14f
+            stepView.setTextColor(android.graphics.Color.parseColor("#333333"))
+            stepView.setPadding(0, 0, 0, 16)
+            llInstructions.addView(stepView)
+        }
+        
+        // Populate Tips
+        llTips.removeAllViews()
+        if (rec.tips.isNotEmpty()) {
+            (llTips.parent as View).visibility = View.VISIBLE // Ensure section header is visible implicitly if wrapped
+            // Actually header text is separate. We might want to toggle header visibility too.
+            // For now, assuming always show section if we have data.
+            
+            rec.tips.forEach { tip ->
+                val tipView = TextView(this)
+                tipView.text = "• $tip"
+                tipView.textSize = 13f
+                tipView.setTextColor(android.graphics.Color.parseColor("#2E7D32")) // Dark Green
+                tipView.setPadding(0, 0, 0, 12)
+                llTips.addView(tipView)
+            }
+        } else {
+            // Locate the header "PRO TIPS" and hide it? 
+            // Implementation shortcut: Tips should be there from AI. If empty, just empty list.
+        }
+
+        // Populate Mistakes
+        llCommonMistakes.removeAllViews()
+        if (rec.commonMistakes.isNotEmpty()) {
+             rec.commonMistakes.forEach { mistake ->
+                val mistakeView = TextView(this)
+                mistakeView.text = "• $mistake"
+                mistakeView.textSize = 13f
+                mistakeView.setTextColor(android.graphics.Color.parseColor("#C62828")) // Dark Red
+                mistakeView.setPadding(0, 0, 0, 12)
+                llCommonMistakes.addView(mistakeView)
+            }
+        }
+        
+        // Reset Done button state
+        val btnDone = findViewById<Button>(R.id.btnAiExerciseDone)
+        btnDone.isEnabled = true
+        btnDone.text = "I DID IT! 💪"
+        btnDone.alpha = 1.0f
+
+        // Load GIF/Image from assets - hide if no image available
+        if (rec.gifUrl.isNotEmpty()) {
+            ivAiExerciseGif.visibility = View.VISIBLE
+            
+            // URL-encode the path for spaces and special characters
+            val encodedPath = rec.gifUrl.replace(" ", "%20")
+            val fullPath = "file:///android_asset/$encodedPath"
+            
+            try {
+                 // Use Glide to load
+                 com.bumptech.glide.Glide.with(this)
+                    .load(fullPath)
+                    .into(ivAiExerciseGif)
+            } catch (e: Exception) {
+                ivAiExerciseGif.visibility = View.GONE
+            }
+        } else {
+             ivAiExerciseGif.visibility = View.GONE
+        }
+
     }
 
     private fun markAiExerciseComplete() {
@@ -160,7 +335,7 @@ class WorkoutDashboardActivity : AppCompatActivity() {
             "timestamp" to System.currentTimeMillis()
         )
         
-        com.google.firebase.firestore.FirebaseFirestore.getInstance("renu")
+        com.google.firebase.firestore.FirebaseFirestore.getInstance("renu") // Using RENU database instance
             .collection("exercise_logs")
             .add(logData)
             .addOnSuccessListener {
@@ -242,7 +417,7 @@ class WorkoutDashboardActivity : AppCompatActivity() {
             authHelper.getUserGoal(userId).onSuccess { goal ->
                 goalType = goal["goalType"] as? String ?: "Maintenance"
                 updateVideoList("Balanced", "Moderate") // Load generic first
-                loadAiRecommendation() // Load AI specific
+                // AI recommendation is now loaded only when button is clicked
             }
             
             checkWorkoutStatusAndStats()
@@ -250,6 +425,10 @@ class WorkoutDashboardActivity : AppCompatActivity() {
     }
     
     private fun loadAiRecommendation() {
+        // Show loading state
+        btnAiExerciseRecommendation.isEnabled = false
+        btnAiExerciseRecommendation.text = "Loading AI..."
+
         lifecycleScope.launch {
             try {
                 // Get mood from Repo
@@ -274,139 +453,39 @@ class WorkoutDashboardActivity : AppCompatActivity() {
                     if (recList.isNotEmpty()) {
                         runOnUiThread {
                            displayCurrentExercise()
-                           cardAiExercise.visibility = View.VISIBLE 
+                           cardAiExercise.visibility = View.VISIBLE
+                           btnAiExerciseRecommendation.isEnabled = true
+                           btnAiExerciseRecommendation.text = "Refresh AI 🔄"
+                           Toast.makeText(this@WorkoutDashboardActivity, "AI exercises loaded! ${recList.size} exercises ready", Toast.LENGTH_SHORT).show()
                         }
                     } else {
-                        runOnUiThread { cardAiExercise.visibility = View.GONE }
+                        runOnUiThread {
+                            cardAiExercise.visibility = View.GONE
+                            btnAiExerciseRecommendation.isEnabled = true
+                            btnAiExerciseRecommendation.text = "AI Exercise 🤖"
+                            Toast.makeText(this@WorkoutDashboardActivity, "No exercises available", Toast.LENGTH_SHORT).show()
+                        }
                     }
 
-                }.onFailure {
+                }.onFailure { error ->
                     runOnUiThread {
                         cardAiExercise.visibility = View.GONE
+                        btnAiExerciseRecommendation.isEnabled = true
+                        btnAiExerciseRecommendation.text = "AI Exercise 🤖"
+                        Toast.makeText(this@WorkoutDashboardActivity, "AI failed: ${error.message}", Toast.LENGTH_LONG).show()
                     }
                 }
             } catch (e: Exception) {
-               // Ignore
+               runOnUiThread {
+                   cardAiExercise.visibility = View.GONE
+                   btnAiExerciseRecommendation.isEnabled = true
+                   btnAiExerciseRecommendation.text = "AI Exercise 🤖"
+                   Toast.makeText(this@WorkoutDashboardActivity, "Error: ${e.message}", Toast.LENGTH_LONG).show()
+               }
             }
         }
     }
     
-    private fun displayCurrentExercise() {
-        if (currentExerciseIndex >= currentAiExerciseList.size) {
-            // End of list
-             cardAiExercise.visibility = View.GONE
-             Toast.makeText(this, "All recommended exercises completed! Great job!", Toast.LENGTH_LONG).show()
-             return
-        }
-        
-        val rec = currentAiExerciseList[currentExerciseIndex]
-        
-        tvAiExerciseName.text = rec.name
-        
-        // Combine Reason + Benefits for a richer description with proper HTML formatting
-        val richDescription = """
-            ${rec.reason}
-            <br/><br/>
-            💡 <b>Why this is important:</b><br/>
-            ${rec.benefits}
-        """.trimIndent()
-        
-        // Use Html.fromHtml to render bold text properly
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
-            tvAiExerciseReason.text = android.text.Html.fromHtml(richDescription, android.text.Html.FROM_HTML_MODE_COMPACT)
-        } else {
-            @Suppress("DEPRECATION")
-            tvAiExerciseReason.text = android.text.Html.fromHtml(richDescription)
-        }
-        
-        tvAiExerciseCalories.text = "🔥 ~${rec.estimatedCalories} kcal"
-        tvAiExerciseDuration.text = "⏱️ ${rec.recommendedDuration}"
-        tvExerciseCounter.text = "Exercise ${currentExerciseIndex + 1} of ${currentAiExerciseList.size}"
-        
-        // Reset Done button state
-        btnAiExerciseDone.isEnabled = true
-        btnAiExerciseDone.text = "Mark as Done ✅"
-        btnAiExerciseDone.alpha = 1.0f
-
-        // Load GIF/Image from assets - hide if no image available
-        if (rec.gifUrl.isNotEmpty()) {
-            ivAiExerciseGif.visibility = View.VISIBLE
-            
-            // URL-encode the path for spaces and special characters
-            val encodedPath = rec.gifUrl.replace(" ", "%20")
-            val fullPath = "file:///android_asset/$encodedPath"
-            
-            android.util.Log.d("WorkoutDashboard", "Loading image: $fullPath (original: ${rec.gifUrl})")
-            
-            try {
-                // Use different Glide request based on file type
-                if (rec.gifUrl.endsWith(".gif", ignoreCase = true)) {
-                    // Animated GIF
-                    com.bumptech.glide.Glide.with(this)
-                        .asGif()
-                        .load(fullPath)
-                        .listener(object : com.bumptech.glide.request.RequestListener<com.bumptech.glide.load.resource.gif.GifDrawable> {
-                            override fun onLoadFailed(
-                                e: com.bumptech.glide.load.engine.GlideException?,
-                                model: Any?,
-                                target: com.bumptech.glide.request.target.Target<com.bumptech.glide.load.resource.gif.GifDrawable>,
-                                isFirstResource: Boolean
-                            ): Boolean {
-                                android.util.Log.e("WorkoutDashboard", "GIF load failed: $fullPath", e)
-                                ivAiExerciseGif.visibility = View.GONE
-                                return true
-                            }
-                            override fun onResourceReady(
-                                resource: com.bumptech.glide.load.resource.gif.GifDrawable,
-                                model: Any,
-                                target: com.bumptech.glide.request.target.Target<com.bumptech.glide.load.resource.gif.GifDrawable>?,
-                                dataSource: com.bumptech.glide.load.DataSource,
-                                isFirstResource: Boolean
-                            ): Boolean {
-                                android.util.Log.d("WorkoutDashboard", "GIF loaded successfully: $fullPath")
-                                return false
-                            }
-                        })
-                        .into(ivAiExerciseGif)
-                } else {
-                    // Static image (PNG/JPG)
-                    com.bumptech.glide.Glide.with(this)
-                        .load(fullPath)
-                        .listener(object : com.bumptech.glide.request.RequestListener<android.graphics.drawable.Drawable> {
-                            override fun onLoadFailed(
-                                e: com.bumptech.glide.load.engine.GlideException?,
-                                model: Any?,
-                                target: com.bumptech.glide.request.target.Target<android.graphics.drawable.Drawable>,
-                                isFirstResource: Boolean
-                            ): Boolean {
-                                android.util.Log.e("WorkoutDashboard", "Image load failed: $fullPath", e)
-                                ivAiExerciseGif.visibility = View.GONE
-                                return true
-                            }
-                            override fun onResourceReady(
-                                resource: android.graphics.drawable.Drawable,
-                                model: Any,
-                                target: com.bumptech.glide.request.target.Target<android.graphics.drawable.Drawable>?,
-                                dataSource: com.bumptech.glide.load.DataSource,
-                                isFirstResource: Boolean
-                            ): Boolean {
-                                android.util.Log.d("WorkoutDashboard", "Image loaded successfully: $fullPath")
-                                return false
-                            }
-                        })
-                        .into(ivAiExerciseGif)
-                }
-            } catch (e: Exception) {
-                android.util.Log.e("WorkoutDashboard", "Exception loading image: ${e.message}", e)
-                ivAiExerciseGif.visibility = View.GONE
-            }
-        } else {
-            android.util.Log.d("WorkoutDashboard", "No gifUrl for exercise: ${rec.name}")
-            // No image available - hide the ImageView completely
-            ivAiExerciseGif.visibility = View.GONE
-        }
-    }
-
     private fun skipToNextExercise() {
         currentExerciseIndex++
         displayCurrentExercise()

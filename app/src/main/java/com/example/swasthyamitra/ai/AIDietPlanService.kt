@@ -18,7 +18,7 @@ import java.util.*
 class AIDietPlanService private constructor(private val context: Context) {
 
     private val authHelper = FirebaseAuthHelper(context)
-    private val firestore = com.google.firebase.firestore.FirebaseFirestore.getInstance("renu")
+    private val firestore = com.google.firebase.firestore.FirebaseFirestore.getInstance("renu") // Using RENU database instance
     private val TAG = "AIDietPlanService"
     
     // Memory Cache for Food Samples
@@ -113,21 +113,24 @@ class AIDietPlanService private constructor(private val context: Context) {
             // 3. Dynamic Context (Logs)
             val exerciseLogs = authHelper.getRecentExerciseLogs(userId, 3)
             val weightLogs = authHelper.getRecentWeightLogs(userId, 14)
-            val recentMeals = authHelper.getRecentFoodLogs(userId, 3)
+            val recentMeals = authHelper.getRecentFoodLogs(userId, 7) // Fetch 7 days
+            
+            Log.d(TAG, "📊 Fetched ${recentMeals.size} food logs from last 7 days")
 
             val intensityFlag = if (exerciseLogs.any { it["intensity"] == "High" || it["type"] == "HIIT" }) "INTENSITY_HIGH" else "INTENSITY_NORMAL"
             val plateauFlag = detectPlateau(weightLogs)
-            val pastMealsList = recentMeals.take(10).joinToString { it.foodName }
+            val distinctMeals = recentMeals.map { it.foodName }.distinct()
+            val pastMealsList = distinctMeals.joinToString(", ")
+            
+            Log.d(TAG, "🍽️ Distinct meals to avoid (${distinctMeals.size}): ${distinctMeals.take(10).joinToString(", ")}${if (distinctMeals.size > 10) "..." else ""}")
 
             // 4. Get user preferences (disliked foods)
             val dislikedFoods = getUserPreferences(userId)
 
-            // 5. Grounding Data (Vegan Dataset or CSV Sample)
-            val foodSample = if (dietaryPreference == "Vegan") {
-                loadVeganDataset(weight, height, allergies, 50)
-            } else {
-                loadFoodSampleFromCsv(dietaryPreference, 50)
-            }
+            // 5. Grounding Data - DISABLED for speed optimization
+            // The AI knows Indian foods well enough without explicit samples
+            // This was adding 1000+ tokens to each request, slowing generation significantly
+            val foodSample = "" // Disabled: loadFoodSampleFromCsv or loadVeganDataset
 
             // 6. Festival Check
             val festivalNote = getFestivalInstruction()
@@ -140,7 +143,11 @@ class AIDietPlanService private constructor(private val context: Context) {
             )
 
             // 8. Execute Vertex AI (Gemini 2.0 Flash)
+            Log.d(TAG, "⏱️ Starting AI generation...")
+            val startTime = System.currentTimeMillis()
             val plan = callGeminiAPI(promptText)
+            val duration = (System.currentTimeMillis() - startTime) / 1000.0
+            Log.d(TAG, "✅ AI generation completed in ${String.format("%.1f", duration)}s")
             
             // 8.5. Validate Dietary Compliance
             validateDietaryCompliance(plan, dietaryPreference).getOrElse {
@@ -170,6 +177,9 @@ class AIDietPlanService private constructor(private val context: Context) {
             val user = authHelper.getCurrentUser() ?: return@withContext Result.failure(Exception("User not logged in"))
             val userId = user.uid
 
+            Log.d(TAG, "🔄 Regenerating $mealType for user: $userId")
+            Log.d(TAG, "🚫 Excluded items from call: ${excludedItems.joinToString(", ")}")
+
             val profile = authHelper.getUserData(userId).getOrThrow()
             val goal = authHelper.getUserGoal(userId).getOrThrow()
 
@@ -188,12 +198,20 @@ class AIDietPlanService private constructor(private val context: Context) {
             val height = (profile["height"] as? Number)?.toDouble() ?: 170.0
             val allergies = (profile["allergies"] as? List<*>)?.joinToString(", ") ?: "None"
             
+            // Get user preferences (disliked foods from Firestore)
+            val userDislikedFoods = getUserPreferences(userId)
+            Log.d(TAG, "🚫 User's disliked foods: $userDislikedFoods")
+
+            // Combine excluded items with user's disliked foods
+            val allExclusions = (excludedItems + userDislikedFoods.split(", ").filter { it.isNotBlank() }).distinct()
+            Log.d(TAG, "🚫 Total exclusions (${allExclusions.size}): ${allExclusions.joinToString(", ")}")
+
             val foodSample = if (dietaryPreference == "Vegan") {
-                loadVeganDataset(weight, height, allergies, 30)
+                loadVeganDataset(weight, height, allergies, 15) // Reduced from 30 to 15
             } else {
-                loadFoodSampleFromCsv(dietaryPreference, 30)
+                loadFoodSampleFromCsv(dietaryPreference, 15) // Reduced from 30 to 15
             }
-            val exclusionList = excludedItems.joinToString(", ")
+            val exclusionList = allExclusions.joinToString(", ")
 
             val festivalNote = getFestivalInstruction()
             val season = getSeason()
@@ -218,13 +236,14 @@ class AIDietPlanService private constructor(private val context: Context) {
                 - Festival Context: $festivalNote
                 - Health Focus: Hydration (water intake) and $mealType timing.
                 
-                EXCLUDE these items: $exclusionList
+                ⚠️ CRITICAL - DO NOT suggest these items (NEVER): $exclusionList
+                Allergies to avoid: $allergies
                 
                 Available Foods:
                 $foodSample
                 
                 **TASK:**
-                Provide a healthy suggestion and a "Pro Tip" specifically for this $mealType.
+                Provide a DIFFERENT healthy suggestion (not in exclusion list) and a "Pro Tip" specifically for this $mealType.
                 ${if (isOnPeriod) "The suggestion must be supportive of menstrual comfort (e.g., warm dal, iron-rich greens, ginger tea)." else "The tip must be seasonal, festival-aware, or related to hydration and health."}
                 
                 Return ONLY JSON:
@@ -238,7 +257,7 @@ class AIDietPlanService private constructor(private val context: Context) {
             """.trimIndent()
 
             val config = generationConfig {
-                temperature = 0.5f
+                temperature = 0.7f // Increased from 0.5 for more variety
                 responseMimeType = "application/json"
             }
             val generativeModel = Firebase.ai(backend = GenerativeBackend.googleAI())
@@ -248,8 +267,8 @@ class AIDietPlanService private constructor(private val context: Context) {
             var lastException: Exception? = null
             for (attempt in 1..2) {
                 try {
-                    Log.d(TAG, "Regenerate meal attempt $attempt for $mealType")
-                    
+                    Log.d(TAG, "🎲 Regenerate meal attempt $attempt for $mealType")
+
                     val response = kotlinx.coroutines.withTimeout(30000) {
                         generativeModel.generateContent(promptText)
                     }
@@ -275,9 +294,11 @@ class AIDietPlanService private constructor(private val context: Context) {
                         parseMeal(JSONObject(cleanJson))
                     }
                     
+                    Log.d(TAG, "✅ Generated new meal: ${meal.item}")
+
                     // Track regeneration
-                    trackFeedback(userId, excludedItems.lastOrNull() ?: "", mealType, "Regenerated")
-                    
+                    trackFeedback(userId, meal.item, mealType, "New")
+
                     return@withContext Result.success(meal)
                     
                 } catch (e: kotlinx.coroutines.TimeoutCancellationException) {
@@ -339,7 +360,7 @@ class AIDietPlanService private constructor(private val context: Context) {
         }
     }
     /**
-     * Track user feedback (Ate/Skipped/Regenerated)
+     * Track user feedback (Ate/Skipped/New)
      */
     suspend fun trackFeedback(
         userId: String,
@@ -349,6 +370,8 @@ class AIDietPlanService private constructor(private val context: Context) {
         reason: String? = null
     ) = withContext(Dispatchers.IO) {
         try {
+            Log.d(TAG, "📝 Tracking feedback: userId=$userId, meal=$mealName, type=$mealType, action=$action")
+
             val dateFormat = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
             val feedback = hashMapOf(
                 "userId" to userId,
@@ -361,15 +384,21 @@ class AIDietPlanService private constructor(private val context: Context) {
             if (reason != null) feedback["reason"] = reason
 
             firestore.collection("meal_feedback").add(feedback).await()
-            
-            // Update user preferences if skipped
+            Log.d(TAG, "✅ Feedback tracked successfully in meal_feedback collection")
+
+            // Update user preferences if skipped or ate
             if (action == "Skipped") {
+                Log.d(TAG, "⏭️ Action is 'Skipped' - updating user preferences to add disliked food")
                 updateUserPreferences(userId, mealName, isDisliked = true)
             } else if (action == "Ate") {
+                Log.d(TAG, "🍽️ Action is 'Ate' - updating user preferences to add favorite food")
                 updateUserPreferences(userId, mealName, isDisliked = false)
+            } else if (action == "New") {
+                Log.d(TAG, "🆕 Action is 'New' - no preference update needed")
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Error tracking feedback: ${e.message}", e)
+            Log.e(TAG, "❌ Error tracking feedback: ${e.message}", e)
+            e.printStackTrace()
         }
     }
 
@@ -385,35 +414,57 @@ class AIDietPlanService private constructor(private val context: Context) {
 
     private suspend fun updateUserPreferences(userId: String, mealName: String, isDisliked: Boolean) {
         try {
+            Log.d(TAG, "🔄 Updating user preferences: userId=$userId, meal=$mealName, isDisliked=$isDisliked")
+
             val docRef = firestore.collection("user_preferences").document(userId)
             val doc = docRef.get().await()
             
             if (!doc.exists()) {
+                Log.d(TAG, "📝 Creating new user_preferences document")
                 docRef.set(hashMapOf(
                     "dislikedFoods" to if (isDisliked) listOf(mealName) else emptyList<String>(),
                     "favoriteFoods" to if (!isDisliked) listOf(mealName) else emptyList<String>(),
-                    "lastUpdated" to System.currentTimeMillis()
+                    "lastUpdated" to com.google.firebase.firestore.FieldValue.serverTimestamp()
                 )).await()
+                Log.d(TAG, "✅ New preferences document created")
             } else {
-                val disliked = (doc.get("dislikedFoods") as? List<*>)?.toMutableList() ?: mutableListOf()
-                val favorites = (doc.get("favoriteFoods") as? List<*>)?.toMutableList() ?: mutableListOf()
-                
-                if (isDisliked && !disliked.contains(mealName)) {
-                    disliked.add(mealName)
-                    favorites.remove(mealName)
-                } else if (!isDisliked && !favorites.contains(mealName)) {
-                    favorites.add(mealName)
-                    disliked.remove(mealName)
+                Log.d(TAG, "📋 Updating existing user_preferences document")
+                val disliked = (doc.get("dislikedFoods") as? List<*>)?.mapNotNull { it as? String }?.toMutableList() ?: mutableListOf()
+                val favorites = (doc.get("favoriteFoods") as? List<*>)?.mapNotNull { it as? String }?.toMutableList() ?: mutableListOf()
+
+                Log.d(TAG, "📊 Current - Disliked: ${disliked.size}, Favorites: ${favorites.size}")
+
+                if (isDisliked) {
+                    if (!disliked.contains(mealName)) {
+                        disliked.add(mealName)
+                        Log.d(TAG, "➕ Added '$mealName' to disliked foods")
+                    }
+                    if (favorites.contains(mealName)) {
+                        favorites.remove(mealName)
+                        Log.d(TAG, "➖ Removed '$mealName' from favorites")
+                    }
+                } else {
+                    if (!favorites.contains(mealName)) {
+                        favorites.add(mealName)
+                        Log.d(TAG, "➕ Added '$mealName' to favorites")
+                    }
+                    if (disliked.contains(mealName)) {
+                        disliked.remove(mealName)
+                        Log.d(TAG, "➖ Removed '$mealName' from disliked")
+                    }
                 }
                 
                 docRef.update(mapOf(
                     "dislikedFoods" to disliked,
                     "favoriteFoods" to favorites,
-                    "lastUpdated" to System.currentTimeMillis()
+                    "lastUpdated" to com.google.firebase.firestore.FieldValue.serverTimestamp()
                 )).await()
+
+                Log.d(TAG, "✅ Preferences updated - Disliked: ${disliked.size}, Favorites: ${favorites.size}")
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Error updating preferences: ${e.message}", e)
+            Log.e(TAG, "❌ Error updating preferences: ${e.message}", e)
+            e.printStackTrace()
         }
     }
 
@@ -452,44 +503,35 @@ class AIDietPlanService private constructor(private val context: Context) {
     ): String {
         val dietaryRules = getDietaryRules(dietaryPreference)
         
+        // Use all distinct meals from the past 7 days (already limited in caller)
+        val recentMealsText = pastMealsList
+        
+        // Only include food samples if available (non-empty)
+        val groundingSection = if (foodSample.isNotEmpty()) {
+            "\n\nAVAILABLE FOODS (use these or similar):\n$foodSample"
+        } else ""
+        
         return """
-            You are SwasthyaMitra, an expert Indian Nutritionist.
+            You are an Indian Nutritionist. Generate a DIVERSE daily meal plan in JSON.
             
-            **USER PROFILE:**
-            - Stats: $age years, $gender, $weight kg, $height cm.
-            - Target Daily Calories: $targetCalories kcal.
-            - Preference: $dietaryPreference.
-            - Allergies/Restrictions: $allergies.
+            USER: $age yrs, $gender, $weight kg, $height cm | Target: $targetCalories kcal/day
+            Diet: $dietaryPreference | Allergies: $allergies | Activity: $activityLevel${if (isOnPeriod) " | ON PERIOD" else ""}
             
             $dietaryRules
             
-            **DYNAMIC STATUS:**
-            - Activity Level: $activityLevel ($intensityFlag).
-            - Weight Trend: $plateauFlag.
-            - Anti-Repetition (Avoid these recently eaten foods): $pastMealsList.
-            - Disliked Foods (NEVER suggest these): $dislikedFoods.
+            ⚠️ CRITICAL - AVOID REPETITION:
+            Recently eaten (DO NOT suggest ANY of these): $recentMealsText
+            User dislikes (NEVER suggest): $dislikedFoods$groundingSection
             
-            **GROUNDING DATA (Use these items or similar Indian dishes):**
-            $foodSample
+            ${if (isOnPeriod) "PERIOD MODE: Iron-rich (spinach, beets, dal), warm meals, easy-to-digest." else ""}
+            ${if (intensityFlag == "INTENSITY_HIGH") "Include postWorkout meal (high protein)." else ""}
+            ${if (plateauFlag == "PLATEAU_DETECTED") "Boost metabolism: higher protein/fiber." else ""}
             
             $festivalNote
             
-            **TASK:**
-            Generate a personalized daily meal plan in STRICT JSON format.
-            Rules:
-            ${if (isOnPeriod) """
-            1. PERIOD MODE: Focus on iron-rich foods (Spinach, Beets, Dal, Pomegranate) and warm meals.
-            2. COMFORT: Suggest easy-to-digest items. Mention ginger tea or dark chocolate in the daily tip.
-            3. NO PRESSURE: Avoid suggesting heavy workouts; focus on recovery nutrition.
-            """ else """
-            1. If INTENSITY_HIGH, you MUST include a "postWorkout" meal rich in protein.
-            2. If PLATEAU_DETECTED, suggest a slightly higher protein and fiber mix to boost metabolism.
-            """}
-            3. Ensure total calories are within +/- 100 of $targetCalories.
-            4. Focus on authentic Indian dishes.
-            5. NEVER suggest items from the disliked foods list.
+            IMPORTANT: Suggest DIFFERENT foods for each meal. Variety is key!
             
-            **STRICT OUTPUT FORMAT (JSON ONLY):**
+            JSON FORMAT:
             {
               "breakfast": { "item": "...", "calories": 0, "protein": "...", "reason": "..." },
               "lunch": { "item": "...", "calories": 0, "protein": "...", "reason": "..." },
@@ -504,55 +546,40 @@ class AIDietPlanService private constructor(private val context: Context) {
     private fun getDietaryRules(dietaryPreference: String): String {
         return when (dietaryPreference) {
             "Vegan" -> """
-                **CRITICAL DIETARY RULES - STRICT VEGAN:**
-                - NEVER suggest ANY animal products whatsoever
-                - FORBIDDEN: All meat, fish, eggs, dairy (milk, paneer, ghee, butter, curd, cheese, yogurt, lassi, raita, kheer, kulfi, malai, cream), honey
-                - ALLOWED ONLY: 100% plant-based foods (vegetables, fruits, grains, legumes, nuts, seeds)
-                - PROTEIN SOURCES: Dal, chickpeas, tofu, soy chunks, quinoa, nuts, seeds, lentils
-                - DAIRY ALTERNATIVES: Almond milk, coconut milk, soy milk, cashew cream
-                - DOUBLE-CHECK: Every single suggested item must be completely plant-based
-                - VERIFY: No hidden dairy in curries, desserts, or snacks
+                VEGAN RULES: NO animal products (meat, fish, eggs, dairy, honey). Only plant-based.
+                Protein: Dal, tofu, soy, nuts, seeds. Dairy alt: Almond/coconut/soy milk.
             """.trimIndent()
             "Vegetarian" -> """
-                **CRITICAL DIETARY RULES - STRICT VEGETARIAN:**
-                - NEVER suggest meat, fish, or eggs
-                - FORBIDDEN: Chicken, mutton, fish, seafood, eggs, gelatin, meat broths, fish sauce
-                - ALLOWED: Dairy products (milk, paneer, ghee, curd, yogurt), vegetables, fruits, grains, legumes
-                - PROTEIN SOURCES: Dal, paneer, milk, curd, chickpeas, nuts, soy
-                - VERIFY: No hidden meat/fish ingredients (e.g., fish sauce in Indo-Chinese dishes)
-                - CHECK: No gelatin in desserts, no meat-based broths
+                VEGETARIAN RULES: NO meat, fish, eggs. Dairy OK.
+                Protein: Dal, paneer, milk, curd, chickpeas, nuts.
             """.trimIndent()
             "Eggetarian" -> """
-                **CRITICAL DIETARY RULES - EGGETARIAN:**
-                - NEVER suggest meat, fish, or seafood
-                - FORBIDDEN: Chicken, mutton, fish, seafood, meat broths
-                - ALLOWED: Eggs, dairy products, vegetables, fruits, grains, legumes
-                - PROTEIN SOURCES: Eggs, dal, paneer, milk, curd, chickpeas, nuts
+                EGGETARIAN RULES: NO meat, fish. Eggs & dairy OK.
+                Protein: Eggs, dal, paneer, milk, curd.
             """.trimIndent()
             else -> """
-                **DIETARY RULES - NON-VEGETARIAN:**
-                - All food types allowed
-                - BALANCE: Include both vegetarian and non-vegetarian options for variety
-                - PROTEIN SOURCES: Chicken, fish, eggs, dal, paneer, legumes
+                NON-VEG: All foods allowed. Balance veg & non-veg options.
             """.trimIndent()
         }
     }
 
     private suspend fun callGeminiAPI(promptText: String): MealPlan {
         val config = generationConfig {
-            temperature = 0.4f
+            temperature = 0.3f  // Lower temperature for faster, more deterministic responses
             responseMimeType = "application/json"
+            topK = 20  // Limit token sampling for faster generation
+            topP = 0.8f  // Reduce diversity for speed
         }
         val generativeModel = Firebase.ai(backend = GenerativeBackend.googleAI())
             .generativeModel("gemini-2.0-flash", generationConfig = config)
 
-        // Retry mechanism with backoff
+        // Retry mechanism with backoff (reduced retries for speed)
         var lastException: Exception? = null
-        for (attempt in 1..3) {
+        for (attempt in 1..2) {  // Reduced from 3 to 2 attempts
             try {
                 Log.d(TAG, "Gemini API attempt $attempt for diet plan")
                 
-                val response = kotlinx.coroutines.withTimeout(45000) { // 45s timeout
+                val response = kotlinx.coroutines.withTimeout(25000) { // Reduced to 25s timeout
                     generativeModel.generateContent(promptText)
                 }
                 
@@ -670,7 +697,7 @@ class AIDietPlanService private constructor(private val context: Context) {
         }
         
         val allSamples = mutableListOf<String>()
-        val files = listOf("food_data.csv", "foods (1).csv", "Indian_Food_DF (2).csv", "newfood.csv")
+        val files = listOf("food_data.csv", "Indian_Food_DF (2).csv") // Optimized: 2 files instead of 4
         
         files.forEach { fileName ->
             val cached = foodCache?.get(fileName) ?: emptyList()

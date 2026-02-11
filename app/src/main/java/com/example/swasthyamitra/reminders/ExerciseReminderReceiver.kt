@@ -16,15 +16,29 @@ import java.util.Locale
 
 class ExerciseReminderReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
-        Log.d("ExerciseReminder", "Alarm triggered for exercise notification")
-        
+        Log.d("ExerciseReminder", "Alarm triggered for exercise notification - DISABLED")
+        /*
         val auth = FirebaseAuth.getInstance()
         val userId = auth.currentUser?.uid ?: return
-        val firestore = FirebaseFirestore.getInstance("renu")
-        
+        val firestore = FirebaseFirestore.getInstance("renu") // Using RENU database instance
+
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 val today = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+
+                // 1. Check if user already exercised today (Smart Reminder)
+                val logs = firestore.collection("exercise_logs")
+                    .whereEqualTo("userId", userId)
+                    .whereEqualTo("date", today)
+                    .limit(1)
+                    .get()
+                    .await()
+
+                if (!logs.isEmpty) {
+                    Log.d("ExerciseReminder", "User already exercised today ($today). Skipping reminder.")
+                    return@launch
+                }
+
                 val document = firestore.collection("users").document(userId).get().await()
                 
                 val lastDate = document.getString("lastExerciseDate")
@@ -45,5 +59,6 @@ class ExerciseReminderReceiver : BroadcastReceiver() {
                 notificationHelper.showExerciseNotification()
             }
         }
+        */
     }
 }

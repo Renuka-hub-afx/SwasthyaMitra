@@ -15,6 +15,8 @@ import com.example.swasthyamitra.ai.AIDietPlanService
 import com.example.swasthyamitra.auth.FirebaseAuthHelper
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.Dispatchers
 
 class AISmartDietActivity : AppCompatActivity() {
 
@@ -83,23 +85,29 @@ class AISmartDietActivity : AppCompatActivity() {
     private fun setupMealActionButtons() {
         // Breakfast Actions
         findViewById<Button>(R.id.btnBreakfastAte).setOnClickListener {
+            Log.d(TAG, "🔘 Breakfast Ate button clicked")
             handleMealAction("Breakfast", currentPlan?.breakfast, "Ate")
         }
         findViewById<Button>(R.id.btnBreakfastSkipped).setOnClickListener {
+            Log.d(TAG, "🔘 Breakfast Skip button clicked")
             handleMealAction("Breakfast", currentPlan?.breakfast, "Skipped")
         }
         findViewById<Button>(R.id.btnBreakfastRegenerate).setOnClickListener {
+            Log.d(TAG, "🔘 Breakfast New button clicked")
             regenerateMeal("Breakfast", currentPlan?.breakfast?.item)
         }
 
         // Lunch Actions
         findViewById<Button>(R.id.btnLunchAte).setOnClickListener {
+            Log.d(TAG, "🔘 Lunch Ate button clicked")
             handleMealAction("Lunch", currentPlan?.lunch, "Ate")
         }
         findViewById<Button>(R.id.btnLunchSkipped).setOnClickListener {
+            Log.d(TAG, "🔘 Lunch Skip button clicked")
             handleMealAction("Lunch", currentPlan?.lunch, "Skipped")
         }
         findViewById<Button>(R.id.btnLunchRegenerate).setOnClickListener {
+            Log.d(TAG, "🔘 Lunch New button clicked")
             regenerateMeal("Lunch", currentPlan?.lunch?.item)
         }
 
@@ -127,59 +135,116 @@ class AISmartDietActivity : AppCompatActivity() {
     }
 
     private fun handleMealAction(mealType: String, meal: AIDietPlanService.MealRec?, action: String) {
+        Log.d(TAG, "🎯 handleMealAction called: mealType=$mealType, action=$action, meal=${meal?.item}")
+
         if (meal == null) {
-            Toast.makeText(this, "Please generate a plan first", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Please generate a meal first", Toast.LENGTH_SHORT).show()
+            Log.w(TAG, "⚠️ Meal is null, cannot perform action")
             return
         }
 
-        val userId = authHelper.getCurrentUser()?.uid ?: return
-        
+        val userId = authHelper.getCurrentUser()?.uid
+        if (userId == null) {
+            Toast.makeText(this, "User not logged in", Toast.LENGTH_SHORT).show()
+            Log.e(TAG, "❌ User ID is null")
+            return
+        }
+
+        Log.d(TAG, "✅ User ID: $userId, Processing action: $action for ${meal.item}")
+
         lifecycleScope.launch {
             try {
                 // Track feedback in meal_feedback collection
+                Log.d(TAG, "📝 Tracking feedback...")
                 aiService.trackFeedback(userId, meal.item, mealType, action)
-                
-                // If user ate the meal, also log it to foodLogs collection
-                if (action == "Ate") {
-                    logMealToFoodLog(meal, mealType)
+                Log.d(TAG, "✅ Feedback tracked successfully")
+
+                when (action) {
+                    "Ate" -> {
+                        Log.d(TAG, "🍽️ Processing 'Ate' action - logging meal to food diary")
+                        // Log meal to food diary
+                        logMealToFoodLog(meal, mealType)
+                        withContext(Dispatchers.Main) {
+                            Toast.makeText(this@AISmartDietActivity, "✅ Logged: ${meal.item}", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                    "Skipped" -> {
+                        Log.d(TAG, "⏭️ Processing 'Skipped' action - adding to disliked foods")
+                        // Add to disliked foods in user preferences
+                        addToDislikedFoods(userId, meal.item)
+                        withContext(Dispatchers.Main) {
+                            Toast.makeText(this@AISmartDietActivity, "⏭️ Skipped: ${meal.item}. Generating new...", Toast.LENGTH_SHORT).show()
+                        }
+
+                        Log.d(TAG, "🔄 Regenerating meal after skip...")
+                        // Automatically regenerate a new meal after skipping
+                        regenerateMeal(mealType, meal.item)
+                    }
                 }
-                
-                val emoji = if (action == "Ate") "✅" else "⏭️"
-                Toast.makeText(this@AISmartDietActivity, "$emoji $action: ${meal.item}", Toast.LENGTH_SHORT).show()
             } catch (e: Exception) {
-                Log.e(TAG, "Error tracking feedback: ${e.message}", e)
+                Log.e(TAG, "❌ Error in handleMealAction: ${e.message}", e)
+                e.printStackTrace()
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(this@AISmartDietActivity, "❌ Error: ${e.message}", Toast.LENGTH_LONG).show()
+                }
             }
         }
     }
 
     private suspend fun logMealToFoodLog(meal: AIDietPlanService.MealRec, mealType: String) {
         try {
-            val userId = authHelper.getCurrentUser()?.uid ?: return
-            val firestore = com.google.firebase.firestore.FirebaseFirestore.getInstance("renu")
-            
+            val userId = authHelper.getCurrentUser()?.uid
+            if (userId == null) {
+                Log.e(TAG, "❌ Cannot log meal: User ID is null")
+                return
+            }
+
+            Log.d(TAG, "📊 Logging meal to foodLogs: ${meal.item}")
+
             val dateFormat = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
             val currentDate = dateFormat.format(java.util.Date())
             
             // Parse protein value (remove 'g' suffix if present)
-            val proteinValue = meal.protein.replace("g", "").trim().toDoubleOrNull() ?: 0.0
+            val proteinValue = meal.protein.replace("g", "", ignoreCase = true).trim().toDoubleOrNull() ?: 0.0
             
-            val foodLogData = hashMapOf(
-                "userId" to userId,
-                "foodName" to meal.item,
-                "calories" to meal.calories,
-                "protein" to proteinValue,
-                "carbs" to 0.0,  // Not provided by AI, default to 0
-                "fat" to 0.0,     // Not provided by AI, default to 0
-                "mealType" to mealType,
-                "timestamp" to System.currentTimeMillis(),
-                "date" to currentDate,
-                "source" to "AI_Recommendation"  // Tag to identify AI-suggested meals
+            Log.d(TAG, "📝 Creating FoodLog: userId=$userId, foodName=${meal.item}, calories=${meal.calories}, protein=$proteinValue, mealType=$mealType, date=$currentDate")
+
+            val foodLog = com.example.swasthyamitra.models.FoodLog(
+                userId = userId,
+                foodName = meal.item,
+                calories = meal.calories,
+                protein = proteinValue,
+                carbs = 0.0, // AI doesn't provide carbs/fat reliably yet - defaulting to 0
+                fat = 0.0,   // AI doesn't provide carbs/fat reliably yet - defaulting to 0
+                mealType = mealType,
+                timestamp = System.currentTimeMillis(),
+                date = currentDate,
+                servingSize = "1 serving",
+                barcode = null,
+                photoUrl = null
             )
             
-            firestore.collection("foodLogs").add(foodLogData).await()
-            Log.d(TAG, "Meal logged to foodLogs: ${meal.item}")
+            Log.d(TAG, "🔄 Calling authHelper.logFood()...")
+            val result = authHelper.logFood(foodLog)
+            
+            result.onSuccess { docId ->
+                Log.d(TAG, "✅ SUCCESS: Meal logged to foodLogs with ID: $docId - ${meal.item}")
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(this@AISmartDietActivity, "✅ Saved to Food Log!", Toast.LENGTH_SHORT).show()
+                }
+            }.onFailure { e ->
+                Log.e(TAG, "❌ FAILED: Error logging meal to foodLogs: ${e.message}", e)
+                e.printStackTrace()
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(this@AISmartDietActivity, "❌ Failed to log: ${e.message}", Toast.LENGTH_LONG).show()
+                }
+            }
         } catch (e: Exception) {
-            Log.e(TAG, "Error logging meal to foodLogs: ${e.message}", e)
+            Log.e(TAG, "❌ Exception in logMealToFoodLog: ${e.message}", e)
+            e.printStackTrace()
+            withContext(Dispatchers.Main) {
+                Toast.makeText(this@AISmartDietActivity, "❌ Error: ${e.message}", Toast.LENGTH_LONG).show()
+            }
         }
     }
 
@@ -237,17 +302,24 @@ class AISmartDietActivity : AppCompatActivity() {
     }
 
     private fun regenerateMeal(mealType: String, currentItem: String?) {
+        Log.d(TAG, "🔄 regenerateMeal called: mealType=$mealType, currentItem=$currentItem")
+
         if (currentItem == null) {
-            Toast.makeText(this, "Please generate a plan first", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Please generate a meal first", Toast.LENGTH_SHORT).show()
+            Log.w(TAG, "⚠️ Current item is null")
             return
         }
 
         lifecycleScope.launch {
             try {
                 progressBar.visibility = View.VISIBLE
+                Log.d(TAG, "🎲 Generating new $mealType (excluding: $currentItem)")
+
                 val result = aiService.regenerateMeal(mealType, listOf(currentItem))
                 
                 result.onSuccess { newMeal ->
+                    Log.d(TAG, "✅ New meal generated: ${newMeal.item}")
+
                     when (mealType) {
                         "Breakfast" -> {
                             currentPlan = currentPlan?.copy(breakfast = newMeal)
@@ -267,12 +339,22 @@ class AISmartDietActivity : AppCompatActivity() {
                         }
                     }
                     tvDailyTip.text = "💡 Tip: ${newMeal.tip}"
-                    Toast.makeText(this@AISmartDietActivity, "🔁 New $mealType: ${newMeal.item}", Toast.LENGTH_SHORT).show()
+
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(this@AISmartDietActivity, "🔁 New $mealType: ${newMeal.item}", Toast.LENGTH_SHORT).show()
+                    }
                 }.onFailure { e ->
-                    Toast.makeText(this@AISmartDietActivity, "Failed to regenerate: ${e.message}", Toast.LENGTH_SHORT).show()
+                    Log.e(TAG, "❌ Failed to regenerate: ${e.message}", e)
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(this@AISmartDietActivity, "❌ Failed to regenerate: ${e.message}", Toast.LENGTH_LONG).show()
+                    }
                 }
             } catch (e: Exception) {
-                Log.e(TAG, "Error regenerating meal: ${e.message}", e)
+                Log.e(TAG, "❌ Error regenerating meal: ${e.message}", e)
+                e.printStackTrace()
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(this@AISmartDietActivity, "❌ Error: ${e.message}", Toast.LENGTH_LONG).show()
+                }
             } finally {
                 progressBar.visibility = View.GONE
             }
@@ -416,6 +498,45 @@ class AISmartDietActivity : AppCompatActivity() {
         } catch (e: Exception) {
             Toast.makeText(this, "WhatsApp not installed or error opening", Toast.LENGTH_SHORT).show()
             e.printStackTrace()
+        }
+    }
+    
+    /**
+     * Add skipped meal to user's disliked foods in Firestore user_preferences
+     */
+    private suspend fun addToDislikedFoods(userId: String, foodName: String) {
+        try {
+            Log.d(TAG, "📝 Adding '$foodName' to disliked foods for user: $userId")
+            val firestore = com.google.firebase.firestore.FirebaseFirestore.getInstance("renu") // Using RENU database instance
+            val prefsRef = firestore.collection("user_preferences").document(userId)
+            
+            // Get current preferences
+            val snapshot = prefsRef.get().await()
+            val currentDislikes = snapshot.get("dislikedFoods") as? List<String> ?: emptyList()
+            
+            Log.d(TAG, "📋 Current disliked foods count: ${currentDislikes.size}")
+            
+            // Add new food if not already in list
+            if (!currentDislikes.contains(foodName)) {
+                val updatedDislikes = currentDislikes + foodName
+                prefsRef.set(
+                    mapOf(
+                        "dislikedFoods" to updatedDislikes,
+                        "lastUpdated" to com.google.firebase.firestore.FieldValue.serverTimestamp()
+                    ),
+                    com.google.firebase.firestore.SetOptions.merge()
+                ).await()
+                
+                Log.d(TAG, "✅ SUCCESS: Added '$foodName' to disliked foods. Total: ${updatedDislikes.size}")
+            } else {
+                Log.d(TAG, "ℹ️ '$foodName' already in disliked foods")
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "❌ FAILED: Error adding to disliked foods: ${e.message}", e)
+            withContext(kotlinx.coroutines.Dispatchers.Main) {
+                Toast.makeText(this@AISmartDietActivity, "Failed to save preference: ${e.message}", Toast.LENGTH_LONG).show()
+            }
+            throw e
         }
     }
 }
