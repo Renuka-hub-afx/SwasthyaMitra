@@ -101,6 +101,10 @@ class StreakDetailsActivity : AppCompatActivity() {
         val shields = fitnessData?.shields ?: 0
         tvCurrentStreak.text = "$shields Shields"
         
+        // Hide arrows for Shield view
+        btnPrevMonth.visibility = android.view.View.GONE
+        btnNextMonth.visibility = android.view.View.GONE
+        
         // Show shield information instead of calendar
         generateShieldInfo()
     }
