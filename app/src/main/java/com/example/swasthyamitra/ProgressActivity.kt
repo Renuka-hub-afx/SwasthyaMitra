@@ -1,12 +1,20 @@
 package com.example.swasthyamitra
 
+import android.content.Intent
+import android.graphics.Color
 import android.os.Bundle
+import android.view.View
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.example.swasthyamitra.auth.FirebaseAuthHelper
-import kotlinx.coroutines.launch
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ValueEventListener
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -15,11 +23,14 @@ class ProgressActivity : AppCompatActivity() {
 
     private lateinit var authHelper: FirebaseAuthHelper
     private var userId: String = ""
-    
+
+    // UI Components
     private lateinit var weeklyCaloriesText: TextView
     private lateinit var weeklyWorkoutsText: TextView
     private lateinit var currentStreakText: TextView
     private lateinit var longestStreakText: TextView
+    private lateinit var rvHistory: RecyclerView
+    private lateinit var tvHistoryEmpty: TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -29,9 +40,8 @@ class ProgressActivity : AppCompatActivity() {
         userId = authHelper.getCurrentUser()?.uid ?: ""
 
         if (userId.isEmpty()) {
-            Toast.makeText(this, "User not logged in", Toast.LENGTH_SHORT).show()
-            finish()
-            return
+             finish()
+             return
         }
 
         initializeViews()
@@ -43,23 +53,24 @@ class ProgressActivity : AppCompatActivity() {
         weeklyWorkoutsText = findViewById(R.id.weeklyWorkoutsText)
         currentStreakText = findViewById(R.id.currentStreakText)
         longestStreakText = findViewById(R.id.longestStreakText)
-
-        findViewById<androidx.appcompat.widget.Toolbar>(R.id.toolbar).apply {
-            setNavigationOnClickListener { finish() }
-        }
         
-        // Setup click listeners
-        findViewById<android.view.View>(R.id.viewDetailedReportButton)?.setOnClickListener { showChartsView() }
+        rvHistory = findViewById(R.id.rv_history)
+        tvHistoryEmpty = findViewById(R.id.tv_history_empty)
+        rvHistory.layoutManager = LinearLayoutManager(this)
+
+        findViewById<View>(R.id.btnBack).setOnClickListener { finish() }
+        
+        findViewById<View>(R.id.viewDetailedReportButton)?.setOnClickListener { showChartsView() }
         
         // Progress Roadmap Click Listeners
-        findViewById<android.view.View>(R.id.roadmapItemWeight)?.setOnClickListener { 
-            startActivity(android.content.Intent(this, WeightProgressActivity::class.java))
+        findViewById<View>(R.id.roadmapItemWeight)?.setOnClickListener { 
+            startActivity(Intent(this, WeightProgressActivity::class.java))
         }
-        findViewById<android.view.View>(R.id.roadmapItemBadges)?.setOnClickListener { 
-            startActivity(android.content.Intent(this, BadgesActivity::class.java))
+        findViewById<View>(R.id.roadmapItemBadges)?.setOnClickListener { 
+            startActivity(Intent(this, BadgesActivity::class.java))
         }
-        findViewById<android.view.View>(R.id.roadmapItemHistory)?.setOnClickListener { 
-            startActivity(android.content.Intent(this, HistoryActivity::class.java))
+        findViewById<View>(R.id.roadmapItemHistory)?.setOnClickListener { 
+            startActivity(Intent(this, HistoryActivity::class.java))
         }
         
 
@@ -67,12 +78,12 @@ class ProgressActivity : AppCompatActivity() {
 
     private fun loadProgressData() {
         // 1. Load User Statistics (Streaks, Workouts, Calories) from Firebase Realtime Database
-        val db = com.google.firebase.database.FirebaseDatabase.getInstance("https://swasthyamitra-c0899-default-rtdb.asia-southeast1.firebasedatabase.app").reference
+        val db = FirebaseDatabase.getInstance("https://swasthyamitra-c0899-default-rtdb.asia-southeast1.firebasedatabase.app").reference
         val userRef = db.child("users").child(userId)
 
         // Use addValueEventListener for real-time updates
-        userRef.addValueEventListener(object : com.google.firebase.database.ValueEventListener {
-            override fun onDataChange(snapshot: com.google.firebase.database.DataSnapshot) {
+        userRef.addValueEventListener(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
                 val data = snapshot.getValue(FitnessData::class.java) ?: FitnessData()
                 
                 runOnUiThread {
@@ -83,12 +94,12 @@ class ProgressActivity : AppCompatActivity() {
                     // Calculate Weekly Stats (Workouts & Calories Burned)
                     val (workouts, calories) = calculateWeeklyStats(data.workoutHistory)
                     
-                    weeklyWorkoutsText.text = "$workouts workouts"
-                    weeklyCaloriesText.text = "$calories kcal"
+                    weeklyWorkoutsText.text = "$workouts"
+                    weeklyCaloriesText.text = "$calories"
                 }
             }
 
-            override fun onCancelled(error: com.google.firebase.database.DatabaseError) {
+            override fun onCancelled(error: DatabaseError) {
                 Toast.makeText(this@ProgressActivity, "Failed to load stats: ${error.message}", Toast.LENGTH_SHORT).show()
             }
         })
@@ -131,17 +142,12 @@ class ProgressActivity : AppCompatActivity() {
     }
 
     private fun showChartsView() {
-    startActivity(android.content.Intent(this, DetailedReportActivity::class.java))
-}
-
-
-
-    private fun showHistoryView() {
-        // Placeholder
-    }
-
-    private fun showAchievementsView() {
-        // Placeholder
+        // Check if DetailedReportActivity exists, else fix or use placeholder
+        try {
+            startActivity(Intent(this, DetailedReportActivity::class.java))
+        } catch (e: Exception) {
+            Toast.makeText(this, "Detailed Report coming soon!", Toast.LENGTH_SHORT).show()
+        }
     }
 }
     

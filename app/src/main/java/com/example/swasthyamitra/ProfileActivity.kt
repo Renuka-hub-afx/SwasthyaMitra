@@ -49,7 +49,6 @@ class ProfileActivity : AppCompatActivity() {
 
     // Edit Views
     private lateinit var userAgeEdit: EditText
-    private lateinit var userNameEdit: EditText
     private lateinit var userHeightEdit: EditText
     private lateinit var userWeightEdit: EditText
     private lateinit var userGenderSpinner: Spinner
@@ -103,7 +102,6 @@ class ProfileActivity : AppCompatActivity() {
         avatarContainer = findViewById(R.id.avatarContainer)
 
         userAgeEdit = findViewById(R.id.userAgeEdit)
-        userNameEdit = findViewById(R.id.userNameEdit)
         userHeightEdit = findViewById(R.id.userHeightEdit)
         userWeightEdit = findViewById(R.id.userWeightEdit)
         userGenderSpinner = findViewById(R.id.userGenderSpinner)
@@ -150,15 +148,10 @@ class ProfileActivity : AppCompatActivity() {
                     userEmailText.text = currentUser.email ?: "No email"
 
                     // Load user data from SharedPreferences first (offline/immediate)
-                    val localName = sharedPrefs.getString("name", null)
                     val localAge = sharedPrefs.getInt("age", -1)
                     val localGender = sharedPrefs.getString("gender", null)
                     val localHeight = sharedPrefs.getString("height", null)
                     val localWeight = sharedPrefs.getString("weight", null)
-
-                    if (localName != null) {
-                        userNameText.text = localName
-                    }
 
                     if (localAge != -1 && localGender != null && localHeight != null && localWeight != null) {
                         userAgeText.text = "$localAge years"
@@ -204,8 +197,7 @@ class ProfileActivity : AppCompatActivity() {
                             }
                         }
                         .addOnFailureListener { e ->
-                            // Toast.makeText(this@ProfileActivity, "Error loading profile: ${e.message}", Toast.LENGTH_SHORT).show()
-                            // Silently fail or log if needed, as we have local data as fallback
+                            Toast.makeText(this@ProfileActivity, "Error loading profile: ${e.message}", Toast.LENGTH_SHORT).show()
                         }
 
                     FirebaseFirestore.getInstance().collection("goals")
@@ -236,7 +228,7 @@ class ProfileActivity : AppCompatActivity() {
                         }
                 }
             } catch (e: Exception) {
-                // Toast.makeText(this@ProfileActivity, "Error loading profile: ${e.message}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this@ProfileActivity, "Error loading profile: ${e.message}", Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -308,11 +300,6 @@ class ProfileActivity : AppCompatActivity() {
 
         userAgeText.visibility = viewVisibility
         userAgeEdit.visibility = editVisibility
-        
-        // Name Field
-        userNameText.visibility = viewVisibility
-        userNameEdit.visibility = editVisibility
-
         userGenderText.visibility = viewVisibility
         userGenderSpinner.visibility = editVisibility
         userHeightText.visibility = viewVisibility
@@ -322,10 +309,8 @@ class ProfileActivity : AppCompatActivity() {
 
         editProfileButton.text = if (edit) "✅ Save Changes" else "✏️ Edit Profile"
 
-
         if (edit) {
             // Populate fields with current values
-            userNameEdit.setText(userNameText.text.toString())
             userAgeEdit.setText(userAgeText.text.toString().filter { it.isDigit() })
             userHeightEdit.setText(userHeightText.text.toString().filter { it.isDigit() || it == '.' })
             userWeightEdit.setText(userWeightText.text.toString().filter { it.isDigit() || it == '.' })
@@ -339,7 +324,6 @@ class ProfileActivity : AppCompatActivity() {
         val heightStr = userHeightEdit.text.toString()
         val weightStr = userWeightEdit.text.toString()
         val gender = userGenderSpinner.selectedItem.toString()
-        val newName = userNameEdit.text.toString()
 
         // Validation
         if (ageStr.isEmpty() || heightStr.isEmpty() || weightStr.isEmpty()) {
@@ -364,9 +348,8 @@ class ProfileActivity : AppCompatActivity() {
             return
         }
 
-        // Persistence: SharedPreferences (Immediate Local Save)
+        // Persistence: SharedPreferences
         sharedPrefs.edit().apply {
-            putString("name", newName)
             putInt("age", age)
             putString("gender", gender)
             putString("height", height.toString())
@@ -374,36 +357,24 @@ class ProfileActivity : AppCompatActivity() {
             apply()
         }
 
-        // --- UPDATE UI IMMEDIATELY ---
-        // Do not wait for Firestore. Trust local edits.
-        toggleEditMode(false)
-        
-        userNameText.text = newName
-        userAgeText.text = "$age years"
-        userGenderText.text = gender
-        userHeightText.text = "$height cm"
-        userWeightText.text = "$weight kg"
-        
-        if (height > 0) {
-            val bmi = weight / ((height / 100) * (height / 100))
-            userBmiText.text = String.format("%.1f", bmi)
-        }
-
-        // Show Success Message Immediately
-        Toast.makeText(this, "Profile Updated", Toast.LENGTH_SHORT).show()
-
-        // Sync with Firestore (Background / Fire-and-Forget)
+        // Sync with Firestore
         FirebaseFirestore.getInstance().collection("users")
             .document(userId)
             .update(mapOf(
-                "name" to newName,
                 "age" to age,
                 "gender" to gender,
                 "height" to height,
                 "weight" to weight
             ))
-            .addOnFailureListener {
-                // Optional: Log failure, but user is happy because UI is updated
+            .addOnSuccessListener {
+                Toast.makeText(this, "Profile updated successfully!", Toast.LENGTH_SHORT).show()
+                toggleEditMode(false)
+                loadUserProfile() // Refresh UI from data
+            }
+            .addOnFailureListener { e ->
+                Toast.makeText(this, "Sync failed: ${e.message}, saved locally", Toast.LENGTH_SHORT).show()
+                toggleEditMode(false)
+                loadUserProfile()
             }
     }
 

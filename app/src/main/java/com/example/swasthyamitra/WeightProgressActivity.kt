@@ -1,20 +1,26 @@
 package com.example.swasthyamitra
 
+import android.graphics.Color
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import android.widget.Toast
+import android.widget.ImageView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.swasthyamitra.auth.FirebaseAuthHelper
 import com.github.mikephil.charting.charts.LineChart
+import com.github.mikephil.charting.components.XAxis
 import com.github.mikephil.charting.data.Entry
 import com.github.mikephil.charting.data.LineData
 import com.github.mikephil.charting.data.LineDataSet
+import com.github.mikephil.charting.formatter.IndexAxisValueFormatter
+import com.google.android.material.button.MaterialButton
+import com.google.android.material.button.MaterialButtonToggleGroup
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
@@ -26,7 +32,9 @@ class WeightProgressActivity : AppCompatActivity() {
     private lateinit var chart: LineChart
     private lateinit var recyclerView: RecyclerView
     private lateinit var fab: FloatingActionButton
+    private lateinit var toggleGroup: MaterialButtonToggleGroup
     private var userId: String = ""
+    private var allLogs: List<Map<String, Any>> = emptyList()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -43,8 +51,9 @@ class WeightProgressActivity : AppCompatActivity() {
         chart = findViewById(R.id.weightChart)
         recyclerView = findViewById(R.id.weightHistoryRecyclerView)
         fab = findViewById(R.id.addWeightFab)
+        toggleGroup = findViewById(R.id.toggleGroup)
 
-        findViewById<androidx.appcompat.widget.Toolbar>(R.id.toolbar).setNavigationOnClickListener {
+        findViewById<ImageView>(R.id.btnBack).setOnClickListener {
             finish()
         }
 
@@ -55,27 +64,66 @@ class WeightProgressActivity : AppCompatActivity() {
         }
         
         setupChart()
+        
+        toggleGroup.addOnButtonCheckedListener { _, checkedId, isChecked ->
+            if (isChecked) {
+                updateChartMode(checkedId)
+            }
+        }
     }
     
     private fun setupChart() {
         chart.description.isEnabled = false
         chart.setTouchEnabled(true)
         chart.isDragEnabled = true
-        chart.setScaleEnabled(true)
-        chart.setPinchZoom(true)
+        chart.setScaleEnabled(false)
+        chart.setPinchZoom(false)
         chart.setDrawGridBackground(false)
+        
+        chart.xAxis.position = XAxis.XAxisPosition.BOTTOM
+        chart.xAxis.setDrawGridLines(false)
+        chart.xAxis.textColor = Color.parseColor("#757575")
+        
+        chart.axisLeft.textColor = Color.parseColor("#757575")
+        chart.axisRight.isEnabled = false
+        
+        chart.legend.isEnabled = false
     }
 
     private fun loadData() {
         lifecycleScope.launch {
-            // Fetch last 30 days
-            val logs = authHelper.getRecentWeightLogs(userId, 30)
+            // Fetch last 60 days to have enough data for month view
+            val logs = authHelper.getRecentWeightLogs(userId, 60)
             
-            // Sort by timestamp
-            val sortedLogs = logs.sortedBy { (it["timestamp"] as? Long) ?: 0L }
+            // Sort by timestamp for processing
+            allLogs = logs.onEach { 
+                // Ensure timestamp exists if missing (fallback to simple parsing if needed)
+                if (it["timestamp"] == null) {
+                    // Logic to parse date string if needed, or assume 0
+                }
+            }.sortedBy { (it["timestamp"] as? Long) ?: 0L }
             
-            updateChart(sortedLogs)
-            updateList(sortedLogs.sortedByDescending { (it["timestamp"] as? Long) ?: 0L })
+            // Default to Weekly view
+            updateChartMode(R.id.btnWeekly)
+            updateList(allLogs.sortedByDescending { (it["timestamp"] as? Long) ?: 0L })
+        }
+    }
+    
+    private fun updateChartMode(checkedId: Int) {
+        val days = if (checkedId == R.id.btnWeekly) 7 else 30
+        val filteredLogs = allLogs.takeLast(days) // Assuming allLogs is sorted ascending
+        updateChart(filteredLogs)
+        
+        // Update Button Styles
+        val btnWeekly = findViewById<MaterialButton>(R.id.btnWeekly)
+        val btnMonthly = findViewById<MaterialButton>(R.id.btnMonthly)
+        
+        if (checkedId == R.id.btnWeekly) {
+            btnWeekly.setTextColor(Color.parseColor("#7B2CBF"))
+            btnMonthly.setTextColor(Color.parseColor("#757575"))
+        } else {
+            btnWeekly.setTextColor(Color.parseColor("#757575"))
+            btnMonthly.setTextColor(Color.parseColor("#7B2CBF"))
         }
     }
 
@@ -88,30 +136,42 @@ class WeightProgressActivity : AppCompatActivity() {
             val weight = (log["weight"] as? Number)?.toFloat() ?: return@forEachIndexed
             entries.add(Entry(index.toFloat(), weight))
             
-            // Create label
             val timestamp = (log["timestamp"] as? Long) ?: 0L
             if (timestamp > 0) {
                 labels.add(dateFormat.format(Date(timestamp)))
             } else {
-                labels.add((log["date"] as? String)?.substring(5) ?: "") // try to show MM-DD
+                labels.add((log["date"] as? String)?.takeLast(5) ?: "")
             }
         }
 
-        if (entries.isEmpty()) return
+        if (entries.isEmpty()) {
+            chart.clear()
+            return 
+        }
 
-        val dataSet = LineDataSet(entries, "Weight (kg)")
-        dataSet.color = androidx.core.content.ContextCompat.getColor(this, android.R.color.holo_purple)
-        dataSet.valueTextColor = androidx.core.content.ContextCompat.getColor(this, android.R.color.black)
-        dataSet.lineWidth = 2f
-        dataSet.circleRadius = 4f
-        dataSet.setCircleColor(androidx.core.content.ContextCompat.getColor(this, android.R.color.holo_purple))
+        val dataSet = LineDataSet(entries, "Weight")
+        dataSet.color = Color.parseColor("#7B2CBF") // Purple Line
+        dataSet.lineWidth = 3f
+        dataSet.mode = LineDataSet.Mode.CUBIC_BEZIER // Smooth curves
         
-        // Fix X-Axis
-        chart.xAxis.valueFormatter = com.github.mikephil.charting.formatter.IndexAxisValueFormatter(labels)
-        chart.xAxis.granularity = 1f
-        chart.xAxis.position = com.github.mikephil.charting.components.XAxis.XAxisPosition.BOTTOM
+        dataSet.setDrawCircles(true)
+        dataSet.setCircleColor(Color.parseColor("#7B2CBF"))
+        dataSet.circleRadius = 5f
+        dataSet.setDrawCircleHole(true)
+        dataSet.circleHoleColor = Color.WHITE
+        
+        dataSet.setDrawValues(false)
+        dataSet.setDrawFilled(true)
+        // Ideally set a gradient drawable here, for now solid alpha
+        dataSet.fillColor = Color.parseColor("#7B2CBF")
+        dataSet.fillAlpha = 50
 
+        chart.xAxis.valueFormatter = IndexAxisValueFormatter(labels)
+        chart.xAxis.granularity = 1f
+        chart.xAxis.labelCount = if (logs.size > 7) 5 else logs.size 
+        
         chart.data = LineData(dataSet)
+        chart.animateY(1000)
         chart.invalidate()
     }
 
@@ -170,7 +230,9 @@ class WeightProgressActivity : AppCompatActivity() {
             val date = log["date"] as? String ?: ""
             
             holder.tvDate.text = date
+            holder.tvDate.setTextColor(Color.parseColor("#212121"))
             holder.tvWeight.text = "$weight kg"
+            holder.tvWeight.setTextColor(Color.parseColor("#757575"))
         }
 
         override fun getItemCount() = logs.size

@@ -47,6 +47,11 @@
             android:exported="false" />
 
         <activity
+            android:name=".MoodRecommendationActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+
+        <activity
             android:name=".AISmartDietActivity"
             android:exported="false"
             android:screenOrientation="portrait" />
@@ -55,6 +60,11 @@
             android:name=".WorkoutDashboardActivity"
             android:exported="false"
             android:hardwareAccelerated="true" />
+
+        <activity
+            android:name=".ManualExerciseActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
 
         <activity
             android:name=".GamificationActivity"
@@ -150,6 +160,11 @@
             android:screenOrientation="portrait" />
 
         <activity
+            android:name=".SmartPantryActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+
+        <activity
             android:name=".AvatarCustomizationActivity"
             android:exported="false"
             android:screenOrientation="portrait" />
@@ -161,7 +176,7 @@
 
         <activity
             android:name=".BadgesActivity"
-            android:exported="false"
+            android:exported="true"
             android:screenOrientation="portrait" />
 
         <activity
@@ -217,9 +232,6 @@
             android:name=".notifications.WaterReminderReceiver"
             android:exported="false" />
 
-        <receiver
-            android:name=".reminders.ExerciseReminderReceiver"
-            android:exported="false" />
         <activity
             android:name=".DetailedReportActivity"
             android:exported="false"

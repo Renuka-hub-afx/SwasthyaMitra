@@ -61,9 +61,6 @@
                     android:text="Track your fitness journey"
                     android:textSize="14sp"
                     android:textColor="#757575" />
-
-
-                    
             </LinearLayout>
         </androidx.cardview.widget.CardView>
 

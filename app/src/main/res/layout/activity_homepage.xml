@@ -274,8 +274,6 @@
                     android:textColor="#666666"
                     android:textSize="13sp" />
 
-
-
             </LinearLayout>
 
         </androidx.cardview.widget.CardView>

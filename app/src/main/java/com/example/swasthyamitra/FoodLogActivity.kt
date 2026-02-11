@@ -69,7 +69,7 @@ class FoodLogActivity : AppCompatActivity() {
         }
         
         setupUI()
-        loadTodayFoodLogs()
+        loadAllFoodLogs() // Load complete history instead of just today
     }
     
     private fun setupUI() {
@@ -98,7 +98,7 @@ class FoodLogActivity : AppCompatActivity() {
 
     }
     
-    private fun loadTodayFoodLogs() {
+    private fun loadAllFoodLogs() {
         binding.progressBar.visibility = View.VISIBLE
         binding.tvEmptyState.visibility = View.GONE
         
@@ -106,10 +106,11 @@ class FoodLogActivity : AppCompatActivity() {
         
         lifecycleScope.launch {
             try {
-                val result = authHelper.getTodayFoodLogs(userId)
+                // Load ALL food logs, not just today's
+                val result = authHelper.getAllFoodLogs(userId)
                 result.onSuccess { logs ->
                     foodLogs.clear()
-                    foodLogs.addAll(logs.sortedByDescending { it.timestamp })
+                    foodLogs.addAll(logs) // Already sorted by timestamp DESC in query
                 
                     runOnUiThread {
                         binding.progressBar.visibility = View.GONE
@@ -121,7 +122,7 @@ class FoodLogActivity : AppCompatActivity() {
                             binding.tvEmptyState.visibility = View.GONE
                             binding.rvFoodLogs.visibility = View.VISIBLE
                             foodAdapter.notifyDataSetChanged()
-                            updateSummary()
+                            updateSummary() // Summary will show today's totals
                         }
                     }
                 }
@@ -146,7 +147,9 @@ class FoodLogActivity : AppCompatActivity() {
         var totalCarbs = 0.0
         var totalFat = 0.0
         
-        foodLogs.forEach { log ->
+        // Only sum today's logs for the summary
+        val today = dateFormat.format(Date())
+        foodLogs.filter { it.date == today }.forEach { log ->
             totalCalories += log.calories
             totalProtein += log.protein
             totalCarbs += log.carbs
@@ -280,7 +283,7 @@ class FoodLogActivity : AppCompatActivity() {
                     binding.progressBar.visibility = View.GONE
                     result.onSuccess {
                         Toast.makeText(this@FoodLogActivity, "✅ Food logged successfully!", Toast.LENGTH_SHORT).show()
-                        loadTodayFoodLogs()
+                        loadAllFoodLogs()
                     }
                     result.onFailure { e ->
                         Toast.makeText(this@FoodLogActivity, "❌ Error: ${e.message}", Toast.LENGTH_SHORT).show()
@@ -593,22 +596,18 @@ class FoodLogActivity : AppCompatActivity() {
                 binding.progressBar.visibility = View.VISIBLE
                 lifecycleScope.launch {
                     try {
-                        com.google.firebase.firestore.FirebaseFirestore.getInstance("renu")
-                            .collection("foodLogs")
-                            .document(foodLog.logId)
-                            .delete()
-                            .addOnSuccessListener {
-                                runOnUiThread {
-                                    Toast.makeText(this@FoodLogActivity, "Deleted successfully", Toast.LENGTH_SHORT).show()
-                                    loadTodayFoodLogs()
-                                }
+                        val result = authHelper.deleteFoodLog(foodLog.userId, foodLog.logId)
+                        result.onSuccess {
+                            runOnUiThread {
+                                Toast.makeText(this@FoodLogActivity, "Deleted successfully", Toast.LENGTH_SHORT).show()
+                                loadAllFoodLogs()
                             }
-                            .addOnFailureListener { e ->
-                                runOnUiThread {
-                                    binding.progressBar.visibility = View.GONE
-                                    Toast.makeText(this@FoodLogActivity, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
-                                }
+                        }.onFailure { e ->
+                            runOnUiThread {
+                                binding.progressBar.visibility = View.GONE
+                                Toast.makeText(this@FoodLogActivity, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
                             }
+                        }
                     } catch (e: Exception) {
                         runOnUiThread {
                             binding.progressBar.visibility = View.GONE
@@ -623,7 +622,7 @@ class FoodLogActivity : AppCompatActivity() {
     
     override fun onResume() {
         super.onResume()
-        loadTodayFoodLogs()
+        loadAllFoodLogs()
     }
     
 
@@ -636,6 +635,8 @@ class FoodLogAdapter(
 ) : RecyclerView.Adapter<FoodLogAdapter.FoodLogViewHolder>() {
     
     private val timeFormat = SimpleDateFormat("hh:mm a", Locale.getDefault())
+    private val dateFormat = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault())
+    private val todayFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
     
     class FoodLogViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val tvFoodName: TextView = view.findViewById(R.id.tv_food_name)
@@ -656,7 +657,19 @@ class FoodLogAdapter(
         
         holder.tvFoodName.text = foodLog.foodName
         holder.tvMealType.text = getMealEmoji(foodLog.mealType) + " " + foodLog.mealType
-        holder.tvTime.text = timeFormat.format(Date(foodLog.timestamp))
+        
+        // Show date and time
+        val timestamp = Date(foodLog.timestamp)
+        val today = todayFormat.format(Date())
+        val logDate = todayFormat.format(timestamp)
+        
+        // If today, show only time. Otherwise show "MMM dd • hh:mm a"
+        holder.tvTime.text = if (logDate == today) {
+            timeFormat.format(timestamp)
+        } else {
+            "${dateFormat.format(timestamp)} • ${timeFormat.format(timestamp)}"
+        }
+        
         holder.tvCalories.text = "${foodLog.calories.toInt()} kcal"
         holder.tvMacros.text = "P: ${foodLog.protein.toInt()}g  C: ${foodLog.carbs.toInt()}g  F: ${foodLog.fat.toInt()}g"
         

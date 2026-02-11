@@ -12,7 +12,7 @@ import kotlin.math.min
 
 class InsightsRepository(private val authHelper: FirebaseAuthHelper, private val userId: String) {
 
-    private val firestore = FirebaseFirestore.getInstance("renu")
+    private val firestore = FirebaseFirestore.getInstance("renu") // Using RENU database instance
     private val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
     private val dayFormat = SimpleDateFormat("EEE", Locale.getDefault())
 
@@ -137,8 +137,9 @@ class InsightsRepository(private val authHelper: FirebaseAuthHelper, private val
     
     private suspend fun getCaloriesForDate(date: String): Int {
         return try {
-            val foodLogs = firestore.collection("foodLogs")
-                .whereEqualTo("userId", userId)
+            val foodLogs = firestore.collection("users")
+                .document(userId)
+                .collection("foodLogs")
                 .whereEqualTo("date", date)
                 .get()
                 .await()

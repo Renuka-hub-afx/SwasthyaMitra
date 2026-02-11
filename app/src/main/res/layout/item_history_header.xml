@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:paddingTop="16dp"
+    android:paddingBottom="8dp"
+    android:background="@android:color/white">
+
+    <TextView
+        android:id="@+id/tv_header_date"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Today, 12 Oct"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        android:textColor="#555555"
+        android:textAllCaps="true"
+        android:paddingStart="4dp"/>
+        
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#EEEEEE"
+        android:layout_marginTop="4dp"/>
+
+</LinearLayout>

@@ -23,7 +23,7 @@ class AICoachMessageService private constructor(private val context: Context) {
     private val authHelper = FirebaseAuthHelper(context)
     private val hydrationRepo = HydrationRepository()
     private val TAG = "AICoachService"
-    private val firestore = FirebaseFirestore.getInstance("renu")
+    private val firestore = FirebaseFirestore.getInstance()
     private val realtimeDb = FirebaseDatabase.getInstance("https://swasthyamitra-ded44-default-rtdb.asia-southeast1.firebasedatabase.app").reference
 
     companion object {

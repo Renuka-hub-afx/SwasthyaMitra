@@ -1,119 +1,185 @@
-﻿.\gradlew.bat : WARNING: A restricted method 
-in java.lang.System has been called
+﻿Starting a Gradle Daemon, 1 incompatible and 1 stopped Daemons could not be reused, use --status for details
+./gradlew : 
 At line:1 char:1
-+ .\gradlew.bat assembleDebug 2>&1 | Out-File 
--FilePath build_output.tx ...
-+ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    + CategoryInfo          : NotSpecified: (W 
-   ARNING: A rest...has been called:String) [  
-  ], RemoteException
-    + FullyQualifiedErrorId : NativeCommandErr 
-   or
++ ./gradlew 
+:app:assembleDebug 2>&1 | 
+Out-File -FilePath 
+"build_output. ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~
+    + CategoryInfo           
+   : NotSpecified: (:String  
+  ) [], RemoteException
+    + FullyQualifiedErrorId  
+   : NativeCommandError
  
-WARNING: java.lang.System::load has been 
-called by net.rubygrapefruit.platform.internal.
-NativeLibraryLoader in an unnamed module (file:
-/C:/Users/shrut/.gradle/wrapper/dists/gradle-9.
-1.0-bin/9agqghryom9wkf8r80qlhnts3/gradle-9.1.0/
-lib/native-platform-0.22-milestone-28.jar)
-WARNING: Use 
---enable-native-access=ALL-UNNAMED to avoid a 
-warning for callers in this module
-WARNING: Restricted methods will be blocked in 
-a future release unless native access is 
-enabled
+FAILURE: Build failed with 
+an exception.
+
+* What went wrong:
+Unable to start the daemon 
+process.
+This problem might be caused 
+by incorrect configuration 
+of the daemon.
+For example, an unrecognized 
+jvm option is used.For more 
+details on the daemon, 
+please refer to https://docs.
+gradle.org/9.1.0/userguide/gr
+adle_daemon.html in the 
+Gradle documentation.
+Process command line: 
+C:\Program 
+Files\Android\Android 
+Studio\jbr\bin\java.exe --add
+-opens=java.base/java.lang=AL
+L-UNNAMED --add-opens=java.ba
+se/java.lang.invoke=ALL-UNNAM
+ED --add-opens=java.base/java
+.util=ALL-UNNAMED --add-opens
+=java.prefs/java.util.prefs=A
+LL-UNNAMED --add-exports=jdk.
+compiler/com.sun.tools.javac.
+api=ALL-UNNAMED --add-exports
+=jdk.compiler/com.sun.tools.j
+avac.util=ALL-UNNAMED --add-o
+pens=java.base/java.util=ALL-
+UNNAMED --add-opens=java.pref
+s/java.util.prefs=ALL-UNNAMED
+ --add-opens=java.base/java.n
+io.charset=ALL-UNNAMED --add-
+opens=java.base/java.net=ALL-
+UNNAMED --add-opens=java.base
+/java.util.concurrent=ALL-UNN
+AMED --add-opens=java.base/ja
+va.util.concurrent.atomic=ALL
+-UNNAMED --add-opens=java.xml
+/javax.xml.namespace=ALL-UNNA
+MED --add-opens=java.base/jav
+a.time=ALL-UNNAMED -Xmx2048m 
+-Dfile.encoding=UTF-8 
+-Duser.country=IN 
+-Duser.language=en 
+-Duser.variant -cp C:\Users\r
+enuk\.gradle\wrapper\dists\gr
+adle-9.1.0-bin\9agqghryom9wkf
+8r80qlhnts3\gradle-9.1.0\lib\
+gradle-daemon-main-9.1.0.jar 
+-javaagent:C:\Users\renuk\.gr
+adle\wrapper\dists\gradle-9.1
+.0-bin\9agqghryom9wkf8r80qlhn
+ts3\gradle-9.1.0\lib\agents\g
+radle-instrumentation-agent-9
+.1.0.jar org.gradle.launcher.
+daemon.bootstrap.GradleDaemon
+ 9.1.0
+Please read the following 
+process output to find out 
+more:
+-----------------------
+java.lang.InternalError: 
+Error loading java.security 
+file
+	at java.base/java.security.S
+ecurity.initialize0(Unknown 
+Source)
+	at java.base/java.security.S
+ecurity.initialize(Unknown 
+Source)
+	at java.base/java.security.S
+ecurity.lambda$static$0(Unkno
+wn Source)
+	at java.base/java.security.A
+ccessController.doPrivileged(
+Unknown Source)
+	at java.base/java.security.S
+ecurity.<clinit>(Unknown 
+Source)
+	at java.base/sun.security.ut
+il.SecurityProperties.getOver
+ridableProperty(Unknown 
+Source)
+	at java.base/sun.security.ut
+il.SecurityProperties.privile
+gedGetOverridable(Unknown 
+Source)
+	at java.base/sun.security.ut
+il.SecurityProperties.include
+dInExceptions(Unknown Source)
+	at java.base/sun.security.ut
+il.SecurityProperties.<clinit
+>(Unknown Source)
+	at java.base/sun.security.ut
+il.FilePermCompat.<clinit>(Un
+known Source)
+	at java.base/java.io.FilePer
+mission.init(Unknown Source)
+	at java.base/java.io.FilePer
+mission.<init>(Unknown 
+Source)
+	at java.base/sun.net.www.pro
+tocol.file.FileURLConnection.
+getPermission(Unknown Source)
+	at java.base/java.net.URLCla
+ssLoader.getPermissions(Unkno
+wn Source)
+	at java.base/java.security.S
+ecureClassLoader$1.apply(Unkn
+own Source)
+	at java.base/java.security.S
+ecureClassLoader$1.apply(Unkn
+own Source)
+	at java.base/java.util.concu
+rrent.ConcurrentHashMap.compu
+teIfAbsent(Unknown Source)
+	at java.base/java.security.S
+ecureClassLoader.getProtectio
+nDomain(Unknown Source)
+	at java.base/java.security.S
+ecureClassLoader.defineClass(
+Unknown Source)
+	at java.base/java.net.URLCla
+ssLoader.defineClass(Unknown 
+Source)
+	at java.base/java.net.URLCla
+ssLoader$1.run(Unknown 
+Source)
+	at java.base/java.net.URLCla
+ssLoader$1.run(Unknown 
+Source)
+	at java.base/java.security.A
+ccessController.doPrivileged(
+Unknown Source)
+	at java.base/java.net.URLCla
+ssLoader.findClass(Unknown 
+Source)
+	at java.base/java.lang.Class
+Loader.loadClass(Unknown 
+Source)
+	at java.base/java.lang.Class
+Loader.loadClass(Unknown 
+Source)
+	at org.gradle.launcher.boots
+trap.ProcessBootstrap.runNoEx
+it(ProcessBootstrap.java:69)
+	at org.gradle.launcher.boots
+trap.ProcessBootstrap.run(Pro
+cessBootstrap.java:39)
+	at org.gradle.launcher.daemo
+n.bootstrap.GradleDaemon.main
+(GradleDaemon.java:22)
 
 
-> Configure project :app
-WARNING: The option setting 'android.usesSdkInManifest.disallowed=false' is deprecated.
-The current default is 'true'.
-It will be removed in version 10.0 of the Android Gradle plugin.
-WARNING: The option setting 'android.sdk.defaultTargetSdkToCompileSdkIfUnset=false' is deprecated.
-The current default is 'true'.
-It will be removed in version 10.0 of the Android Gradle plugin.
-WARNING: The option setting 'android.enableAppCompileTimeRClass=false' is deprecated.
-The current default is 'true'.
-It will be removed in version 10.0 of the Android Gradle plugin.
-WARNING: The option setting 'android.builtInKotlin=false' is deprecated.
-The current default is 'true'.
-It will be removed in version 10.0 of the Android Gradle plugin.
-WARNING: The option setting 'android.newDsl=false' is deprecated.
-The current default is 'true'.
-It will be removed in version 10.0 of the Android Gradle plugin.
-WARNING: The option setting 'android.r8.optimizedResourceShrinking=false' is deprecated.
-The current default is 'true'.
-It will be removed in version 10.0 of the Android Gradle plugin.
-WARNING: The option setting 'android.defaults.buildfeatures.resvalues=true' is deprecated.
-The current default is 'false'.
-It will be removed in version 10.0 of the Android Gradle plugin.
-WARNING: The property android.dependency.excludeLibraryComponentsFromConstraints improves project import performance for very large projects. It should be enabled to improve performance.
-To suppress this warning, add android.generateSyncIssueWhenLibraryConstraintsAreEnabled=false to gradle.properties
-WARNING: The property android.dependency.excludeLibraryComponentsFromConstraints improves project import performance for very large projects. It should be enabled to improve performance.
-To suppress this warning, add android.generateSyncIssueWhenLibraryConstraintsAreEnabled=false to gradle.properties
-WARNING: The property android.dependency.excludeLibraryComponentsFromConstraints improves project import performance for very large projects. It should be enabled to improve performance.
-To suppress this warning, add android.generateSyncIssueWhenLibraryConstraintsAreEnabled=false to gradle.properties
-WARNING: The property android.dependency.excludeLibraryComponentsFromConstraints improves project import performance for very large projects. It should be enabled to improve performance.
-To suppress this warning, add android.generateSyncIssueWhenLibraryConstraintsAreEnabled=false to gradle.properties
-WARNING: The specified Android SDK Build Tools version (35.0.0) is ignored, as it is below the minimum supported version (36.0.0) for Android Gradle Plugin 9.0.0.
-Android SDK Build Tools 36.0.0 will be used.
-To suppress this warning, remove "buildToolsVersion '35.0.0'" from your build.gradle file, as each version of the Android Gradle Plugin now has a default version of the build tools.
-
-> Task :app:preBuild UP-TO-DATE
-> Task :app:preDebugBuild UP-TO-DATE
-> Task :app:mergeDebugNativeDebugMetadata NO-SOURCE
-> Task :app:checkKotlinGradlePluginConfigurationErrors SKIPPED
-> Task :app:dataBindingMergeDependencyArtifactsDebug UP-TO-DATE
-> Task :app:generateDebugResValues UP-TO-DATE
-> Task :app:generateDebugResources UP-TO-DATE
-> Task :app:processDebugGoogleServices UP-TO-DATE
-> Task :app:mergeDebugResources UP-TO-DATE
-> Task :app:packageDebugResources UP-TO-DATE
-> Task :app:processDebugNavigationResources UP-TO-DATE
-> Task :app:parseDebugLocalResources UP-TO-DATE
-> Task :app:dataBindingGenBaseClassesDebug UP-TO-DATE
-> Task :app:generateDebugBuildConfig UP-TO-DATE
-> Task :app:checkDebugAarMetadata UP-TO-DATE
-> Task :app:compileDebugNavigationResources UP-TO-DATE
-> Task :app:mapDebugSourceSetPaths UP-TO-DATE
-> Task :app:createDebugCompatibleScreenManifests UP-TO-DATE
-> Task :app:extractDeepLinksDebug UP-TO-DATE
-> Task :app:processDebugMainManifest UP-TO-DATE
-> Task :app:processDebugManifest UP-TO-DATE
-> Task :app:processDebugManifestForPackage UP-TO-DATE
-> Task :app:processDebugResources UP-TO-DATE
-> Task :app:compileDebugKotlin UP-TO-DATE
-> Task :app:javaPreCompileDebug UP-TO-DATE
-> Task :app:compileDebugJavaWithJavac UP-TO-DATE
-> Task :app:generateDebugAssets UP-TO-DATE
-> Task :app:mergeDebugAssets UP-TO-DATE
-> Task :app:compressDebugAssets UP-TO-DATE
-> Task :app:desugarDebugFileDependencies UP-TO-DATE
-> Task :app:dexBuilderDebug UP-TO-DATE
-> Task :app:mergeDebugGlobalSynthetics UP-TO-DATE
-> Task :app:processDebugJavaRes UP-TO-DATE
-> Task :app:mergeDebugJavaResource UP-TO-DATE
-> Task :app:checkDebugDuplicateClasses UP-TO-DATE
-> Task :app:mergeExtDexDebug UP-TO-DATE
-> Task :app:mergeLibDexDebug UP-TO-DATE
-> Task :app:mergeProjectDexDebug UP-TO-DATE
-> Task :app:mergeDebugJniLibFolders UP-TO-DATE
-> Task :app:mergeDebugNativeLibs UP-TO-DATE
-> Task :app:stripDebugDebugSymbols UP-TO-DATE
-> Task :app:validateSigningDebug UP-TO-DATE
-> Task :app:writeDebugAppMetadata UP-TO-DATE
-> Task :app:writeDebugSigningConfigVersions UP-TO-DATE
-> Task :app:packageDebug UP-TO-DATE
-> Task :app:createDebugApkListingFileRedirect UP-TO-DATE
-> Task :app:assembleDebug UP-TO-DATE
-
-[Incubating] Problems report is available at: file:///C:/Users/shrut/AndroidStudioProjects/SwasthyaMitra/build/reports/problems/problems-report.html
-
-Deprecated Gradle features were used in this build, making it incompatible with Gradle 10.
-
-You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
-
-For more on this, please refer to https://docs.gradle.org/9.1.0/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
-
-BUILD SUCCESSFUL in 1s
-41 actionable tasks: 41 up-to-date
-Consider enabling configuration cache to speed up this build: https://docs.gradle.org/9.1.0/userguide/configuration_cache_enabling.html
+* Try:
+> Run with --stacktrace 
+option to get the stack 
+trace.
+> Run with --info or --debug 
+option to get more log 
+output.
+> Run with --scan to 
+generate a Build Scan 
+(Powered by Develocity).
+> Get more help at 
+https://help.gradle.org.
