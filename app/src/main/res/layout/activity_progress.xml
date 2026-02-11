@@ -62,17 +62,7 @@
                     android:textSize="14sp"
                     android:textColor="#757575" />
 
-                <!-- Send to Telegram Button -->
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btn_send_telegram_progress"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
-                    android:text="📤 Send Progress to Telegram"
-                    android:textColor="#FFFFFF"
-                    android:textSize="14sp"
-                    app:backgroundTint="#0088CC"
-                    app:cornerRadius="8dp" />
+
                     
             </LinearLayout>
         </androidx.cardview.widget.CardView>

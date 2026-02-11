@@ -17,8 +17,7 @@ import java.util.Calendar
 import androidx.cardview.widget.CardView
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
-import com.example.swasthyamitra.services.TelegramService
-import com.example.swasthyamitra.services.SmartTelegramBotService
+
 
 class homepage : AppCompatActivity() {
 
@@ -162,8 +161,7 @@ class homepage : AppCompatActivity() {
         }
         stepManager.start()
         
-        // Start Smart Telegram Bot Service (24/7 AI assistant)
-        SmartTelegramBotService.start(this)
+
 
         cardWorkout.setOnClickListener {
             val intent = Intent(this, WorkoutDashboardActivity::class.java)
@@ -243,10 +241,7 @@ class homepage : AppCompatActivity() {
             }
         }
         
-        // Telegram button handler
-        findViewById<MaterialButton>(R.id.btn_send_telegram_summary).setOnClickListener {
-            sendDailySummaryToTelegram()
-        }
+
     }
 
     private fun showCustomWaterAddDialog() {
@@ -956,47 +951,5 @@ class homepage : AppCompatActivity() {
         tvCalorieStatus.text = statusMessage
     }
     
-    private fun sendDailySummaryToTelegram() {
-        lifecycleScope.launch {
-            try {
-                // Show loading toast
-                runOnUiThread {
-                    Toast.makeText(this@homepage, "Sending to Telegram... 📤", Toast.LENGTH_SHORT).show()
-                }
-                
-                // Gather data
-                val caloriesIn = tvCaloriesIn.text.toString().replace(",", "").toIntOrNull() ?: 0
-                val caloriesOut = tvCaloriesOut.text.toString().replace(",", "").toIntOrNull() ?: 0
-                val calorieGoal = tvCalorieGoal.text.toString().replace(Regex("[^0-9]"), "").toIntOrNull() ?: 2000
-                val workouts = tvWorkouts.text.toString().toIntOrNull() ?: 0
-                
-                // Get meal count from Firebase
-                val today = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault()).format(java.util.Date())
-                val foodLogs = authHelper.getTodayFoodLogs(userId)
-                val mealsLogged = foodLogs.getOrNull()?.size ?: 0
-                
-                val result = TelegramService.sendDailySummaryToTelegram(
-                    userName = userName.ifEmpty { "User" },
-                    caloriesConsumed = caloriesIn,
-                    caloriesBurned = caloriesOut,
-                    calorieGoal = calorieGoal,
-                    mealsLogged = mealsLogged,
-                    workoutsCompleted = workouts
-                )
-                
-                runOnUiThread {
-                    if (result.isSuccess) {
-                        Toast.makeText(this@homepage, "✅ Sent to Telegram!", Toast.LENGTH_SHORT).show()
-                    } else {
-                        Toast.makeText(this@homepage, "❌ Failed to send", Toast.LENGTH_SHORT).show()
-                    }
-                }
-            } catch (e: Exception) {
-                Log.e("Homepage", "Error sending to Telegram", e)
-                runOnUiThread {
-                    Toast.makeText(this@homepage, "❌ Error: ${e.message}", Toast.LENGTH_SHORT).show()
-                }
-            }
-        }
-    }
+
 }

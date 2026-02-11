@@ -30,7 +30,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
-import com.example.swasthyamitra.services.TelegramService
+
 
 class FoodLogActivity : AppCompatActivity() {
     
@@ -95,10 +95,7 @@ class FoodLogActivity : AppCompatActivity() {
             showAddFoodOptionsDialog()
         }
         
-        // Telegram button
-        binding.btnSendTelegramMeals.setOnClickListener {
-            sendMealsToTelegram()
-        }
+
     }
     
     private fun loadTodayFoodLogs() {
@@ -629,60 +626,7 @@ class FoodLogActivity : AppCompatActivity() {
         loadTodayFoodLogs()
     }
     
-    private fun sendMealsToTelegram() {
-        if (foodLogs.isEmpty()) {
-            Toast.makeText(this, "No meals to send", Toast.LENGTH_SHORT).show()
-            return
-        }
-        
-        lifecycleScope.launch {
-            try {
-                runOnUiThread {
-                    Toast.makeText(this@FoodLogActivity, "Sending to Telegram... 📤", Toast.LENGTH_SHORT).show()
-                }
-                
-                val userName = authHelper.getCurrentUser()?.displayName ?: "User"
-                val today = SimpleDateFormat("dd MMM yyyy", Locale.getDefault()).format(Date())
-                
-                // Build meal list
-                val meals = foodLogs.map { log ->
-                    TelegramService.MealInfo(
-                        name = log.foodName,
-                        mealType = log.mealType,
-                        calories = log.calories.toInt()
-                    )
-                }
-                
-                // Calculate totals
-                val totalCalories = foodLogs.sumOf { it.calories.toInt() }
-                val totalProtein = foodLogs.sumOf { it.protein.toInt() }
-                val totalCarbs = foodLogs.sumOf { it.carbs.toInt() }
-                val totalFat = foodLogs.sumOf { it.fat.toInt() }
-                
-                val result = TelegramService.sendMealPlanToTelegram(
-                    userName = userName,
-                    date = today,
-                    meals = meals,
-                    totalCalories = totalCalories,
-                    protein = totalProtein,
-                    carbs = totalCarbs,
-                    fat = totalFat
-                )
-                
-                runOnUiThread {
-                    if (result.isSuccess) {
-                        Toast.makeText(this@FoodLogActivity, "✅ Sent to Telegram!", Toast.LENGTH_SHORT).show()
-                    } else {
-                        Toast.makeText(this@FoodLogActivity, "❌ Failed to send", Toast.LENGTH_SHORT).show()
-                    }
-                }
-            } catch (e: Exception) {
-                runOnUiThread {
-                    Toast.makeText(this@FoodLogActivity, "❌ Error: ${e.message}", Toast.LENGTH_SHORT).show()
-                }
-            }
-        }
-    }
+
 }
 
 // Adapter for RecyclerView
