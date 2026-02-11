@@ -150,10 +150,15 @@ class ProfileActivity : AppCompatActivity() {
                     userEmailText.text = currentUser.email ?: "No email"
 
                     // Load user data from SharedPreferences first (offline/immediate)
+                    val localName = sharedPrefs.getString("name", null)
                     val localAge = sharedPrefs.getInt("age", -1)
                     val localGender = sharedPrefs.getString("gender", null)
                     val localHeight = sharedPrefs.getString("height", null)
                     val localWeight = sharedPrefs.getString("weight", null)
+
+                    if (localName != null) {
+                        userNameText.text = localName
+                    }
 
                     if (localAge != -1 && localGender != null && localHeight != null && localWeight != null) {
                         userAgeText.text = "$localAge years"
