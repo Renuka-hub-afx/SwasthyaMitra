@@ -124,7 +124,7 @@ class ProfileActivity : AppCompatActivity() {
         }
 
         btnSettings.setOnClickListener {
-            Toast.makeText(this, "Settings clicked", Toast.LENGTH_SHORT).show()
+            startActivity(Intent(this, SettingsActivity::class.java))
         }
 
         editProfileButton.setOnClickListener {
@@ -206,8 +206,9 @@ class ProfileActivity : AppCompatActivity() {
                             Toast.makeText(this@ProfileActivity, "Error loading profile: ${e.message}", Toast.LENGTH_SHORT).show()
                         }
 
-                    FirebaseFirestore.getInstance("renu").collection("goals")
-                        .whereEqualTo("userId", userId)
+                    FirebaseFirestore.getInstance("renu").collection("users")
+                        .document(userId)
+                        .collection("goals")
                         .limit(1)
                         .get()
                         .addOnSuccessListener { querySnapshot ->
@@ -270,14 +271,17 @@ class ProfileActivity : AppCompatActivity() {
     }
 
     private fun updateGoalWeight(newGoalWeight: Double) {
-        FirebaseFirestore.getInstance("renu").collection("goals")
-            .whereEqualTo("userId", userId)
+        FirebaseFirestore.getInstance("renu").collection("users")
+            .document(userId)
+            .collection("goals")
             .limit(1)
             .get()
             .addOnSuccessListener { querySnapshot ->
                 if (!querySnapshot.isEmpty) {
                     val goalDocId = querySnapshot.documents[0].id
-                    FirebaseFirestore.getInstance("renu").collection("goals")
+                    FirebaseFirestore.getInstance("renu").collection("users")
+                        .document(userId)
+                        .collection("goals")
                         .document(goalDocId)
                         .update("targetWeight", newGoalWeight)
                         .addOnSuccessListener {
@@ -388,14 +392,17 @@ class ProfileActivity : AppCompatActivity() {
             .update(userUpdate)
             .addOnSuccessListener {
                 // Now update goals collection
-                firestore.collection("goals")
-                    .whereEqualTo("userId", userId)
+                firestore.collection("users")
+                    .document(userId)
+                    .collection("goals")
                     .limit(1)
                     .get()
                     .addOnSuccessListener { querySnapshot ->
                         if (!querySnapshot.isEmpty) {
                             val goalDocId = querySnapshot.documents[0].id
-                            firestore.collection("goals")
+                            firestore.collection("users")
+                                .document(userId)
+                                .collection("goals")
                                 .document(goalDocId)
                                 .update(mapOf(
                                     "targetWeight" to goalWeight,

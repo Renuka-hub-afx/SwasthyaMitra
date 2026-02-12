@@ -186,7 +186,7 @@ class HydrationActivity : AppCompatActivity() {
 
     private fun deleteWaterLog(log: com.example.swasthyamitra.data.model.WaterLog) {
         lifecycleScope.launch {
-            hydrationRepo.deleteWaterLog(log.logId).onSuccess {
+            hydrationRepo.deleteWaterLog(userId, log.logId).onSuccess {
                 currentIntake -= log.amountML
                 updateProgressUI()
                 loadHistory()

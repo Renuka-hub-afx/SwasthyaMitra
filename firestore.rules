@@ -2,81 +2,56 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    
-    // ==================== HELPER FUNCTIONS ====================
 
+    // ==================== HELPER FUNCTIONS ====================
+    
     function isAuthenticated() {
       return request.auth != null;
     }
-    
+
     function isOwner(userId) {
       return isAuthenticated() && request.auth.uid == userId;
     }
     
     function ownsResource() {
-      return isAuthenticated() && resource.data.userId == request.auth.uid;
+      return isAuthenticated() && (resource.data.userId == request.auth.uid);
     }
-    
+
     function willOwnResource() {
-      return isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      return isAuthenticated() && (request.resource.data.userId == request.auth.uid);
     }
-    
-    // ==================== USERS COLLECTION ====================
-    // Main user profile - only owner can access
+
+    // ==================== MAIN USER COLLECTION ====================
+    // This is the core of the "User-Centric" architecture.
+    // All user data (goals, logs, profile) MUST be nested under /users/{userId}
     match /users/{userId} {
       allow read, write: if isOwner(userId);
-      
-      // Subcollections (mood_logs, foodLogs, weightLogs, etc. stored under user)
-      match /{allSubcollections=**} {
+
+      // RECURSIVE WILDCARD: Allows access to ALL subcollections
+      // e.g. /users/{userId}/goals, /users/{userId}/foodLogs, etc.
+      match /{document=**} {
         allow read, write: if isOwner(userId);
       }
     }
+
+    // ==================== EXCEPTIONS (Valid Root Collections) ====================
     
-    // ==================== TOP-LEVEL COLLECTIONS ====================
-    
-    // Goals - Updated to allow ProfileActivity to find and update user goals
-    match /goals/{goalId} {
-      allow read: if isAuthenticated();
+    // Recommendations (AI Plans)
+    // Kept at root to allow easy writing by AI services/Cloud Functions
+    match /recommendations/{recommendationId} {
       allow create: if willOwnResource();
-      allow update: if ownsResource() && willOwnResource();
-      allow delete: if ownsResource();
-    }
-    
-    // Water Logs
-    match /waterLogs/{logId} {
-      allow read: if isAuthenticated() && (resource.data.userId == request.auth.uid || request.query.limit <= 100);
-      allow create: if willOwnResource();
-      allow update, delete: if ownsResource() && willOwnResource();
+      allow read, update, delete: if ownsResource();
     }
 
-    // Weight Logs
-    match /weightLogs/{logId} {
+    // Festival Calendar (Global Read-Only)
+    match /festivalCalendar/{eventId} {
       allow read: if isAuthenticated();
-      allow create: if willOwnResource();
-      allow update, delete: if ownsResource() && willOwnResource();
+      allow write: if false;
     }
-    
-    // Exercise Logs
-    match /exerciseLogs/{logId} {
-      allow read: if isAuthenticated();
-      allow create: if willOwnResource();
-      allow update, delete: if ownsResource() && willOwnResource();
-    }
-    
-    match /exercise_logs/{logId} {
-      allow read: if isAuthenticated();
-      allow create: if willOwnResource();
-      allow update, delete: if ownsResource() && willOwnResource();
-    }
-    
-    // AI Generated Plans
-    match /ai_generated_plans/{planId} {
-      allow read: if ownsResource();
-      allow create: if willOwnResource();
-      allow update, delete: if ownsResource() && willOwnResource();
-    }
-    
-    // Default Deny
+
+    // ==================== DENY ALL ELSE ====================
+    // This strictly blocks any writes to root collections like /goals, /weightLogs, etc.
+    // preventing the "messy" broken structure.
     match /{document=**} {
       allow read, write: if false;
     }

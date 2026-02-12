@@ -171,6 +171,8 @@ class ManualExerciseActivity : AppCompatActivity() {
         )
 
         FirebaseFirestore.getInstance("renu")
+            .collection("users")
+            .document(userId)
             .collection("exercise_logs")
             .add(logData)
             .addOnSuccessListener {

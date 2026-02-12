@@ -158,16 +158,17 @@ class InsightsRepository(private val authHelper: FirebaseAuthHelper, private val
     
     private suspend fun getWorkoutMinutesForDate(date: String): Int {
         return try {
-            val workouts = firestore.collection("workouts")
-                .whereEqualTo("userId", userId)
+            val workouts = firestore.collection("users")
+                .document(userId)
+                .collection("exercise_logs")
                 .whereEqualTo("date", date)
-                .whereEqualTo("completed", true)
+                //.whereEqualTo("completed", true) // ExerciseLog entries are implicitly completed
                 .get()
                 .await()
             
             var totalMinutes = 0
             for (doc in workouts.documents) {
-                totalMinutes += doc.getLong("durationMinutes")?.toInt() ?: 30 // Default 30 min if not specified
+                totalMinutes += doc.getLong("duration")?.toInt() ?: 30 // Default 30 min if not specified
             }
             totalMinutes
         } catch (e: Exception) {

@@ -370,7 +370,7 @@ class AIDietPlanService private constructor(private val context: Context) {
             )
             if (reason != null) feedback["reason"] = reason
 
-            firestore.collection("meal_feedback").add(feedback).await()
+            firestore.collection("users").document(userId).collection("meal_feedback").add(feedback).await()
             Log.d(TAG, "âœ… Feedback tracked successfully in meal_feedback collection")
 
             // Update user preferences if skipped or ate
@@ -391,7 +391,7 @@ class AIDietPlanService private constructor(private val context: Context) {
 
     private suspend fun getUserPreferences(userId: String): String {
         return try {
-            val doc = firestore.collection("user_preferences").document(userId).get().await()
+            val doc = firestore.collection("users").document(userId).collection("user_preferences").document("general").get().await()
             val disliked = doc.get("dislikedFoods") as? List<*> ?: emptyList<String>()
             disliked.joinToString(", ")
         } catch (e: Exception) {
@@ -403,7 +403,7 @@ class AIDietPlanService private constructor(private val context: Context) {
         try {
             Log.d(TAG, "ðŸ”„ Updating user preferences: userId=$userId, meal=$mealName, isDisliked=$isDisliked")
 
-            val docRef = firestore.collection("user_preferences").document(userId)
+            val docRef = firestore.collection("users").document(userId).collection("user_preferences").document("general")
             val doc = docRef.get().await()
             
             if (!doc.exists()) {
@@ -475,7 +475,7 @@ class AIDietPlanService private constructor(private val context: Context) {
                 planData["postWorkout"] = mapOf("item" to plan.postWorkout.item, "calories" to plan.postWorkout.calories, "protein" to plan.postWorkout.protein, "reason" to plan.postWorkout.reason)
             }
 
-            firestore.collection("ai_generated_plans").add(planData).await()
+            firestore.collection("users").document(userId).collection("ai_generated_plans").add(planData).await()
         } catch (e: Exception) {
             Log.e(TAG, "Error saving plan: ${e.message}", e)
         }

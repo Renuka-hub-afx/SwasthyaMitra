@@ -49,18 +49,23 @@ SwasthyaMitra (SWASTHYA: Health | MITRA: Friend) is a comprehensive healthcare a
 
 ## 📖 Documentation
 
-The project features a modular documentation system located in the `DOCS` directory:
+Comprehensive documentation is available in the `docs` directory:
 
-- **[Master Guide](DOCS/Project_Master_Guide.md)**: Overview of implementation phases and project structure.
-- **[Firebase Schema](DOCS/Firebase_Schema.md)**: Complete database collection and attribute reference.
-- **Feature Deep Dives**:
-    - [Architecture & AI Logic](DOCS/Features/AI_Diet_System.md)
-    - [Metabolic Calculations](DOCS/Features/Onboarding_and_Goals.md)
-    - [Nutrition Engine](DOCS/Features/Nutrition_Tracking.md)
-    - [Hydration System](DOCS/Features/Water_Tracker.md)
-    - [Utility Tools](DOCS/Features/Utility_Tools.md)
-    - [Workout & Fitness](DOCS/Features/Workout_and_Fitness.md)
-    - [WhatsApp Integration Plan](DOCS/Features/WhatsApp_Integration_Plan.md)
+### Core
+- **[Onboarding & Metabolic Engine](docs/ONBOARDING.md)**: Logic for BMR/TDEE and goal setting.
+- **[Authentication](docs/AUTH.md)**: Login flows and user management.
+- **[Database Schema](docs/DATABASE_SCHEMA.md)**: Full Firestore structure.
+- **[Dashboard](docs/DASHBOARD.md)**: Central navigation hub.
+
+### Features
+- **[Food Logging](docs/FOOD_LOGGING.md)**: Macros, Barcode, and Indian Food DB.
+- **[Workouts](docs/WORKOUTS.md)**: Exercise tracking and recommendations.
+- **[Hydration](docs/HYDRATION.md)**: Water intake tracking.
+- **[AI Features](docs/AI_FEATURES.md)**: Smart Diet, Pantry, and Visual Analysis.
+- **[Wellness](docs/WELLNESS.md)**: Mood, Safety, and Posture Coach.
+- **[Analytics](docs/INSIGHTS.md)**: Insights and weight progress.
+- **[Gamification](docs/GAMIFICATION.md)**: XP, Streaks, Shields, and Levels.
+- **[Social](docs/SOCIAL.md)**: Challenges and sharing.
 
 ---
 

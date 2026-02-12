@@ -61,6 +61,7 @@ class homepage : AppCompatActivity() {
 
     private lateinit var cardFood: MaterialButton
     private lateinit var cardWorkout: MaterialButton
+    private lateinit var cardExerciseLog: MaterialButton
     private lateinit var cardWater: MaterialButton
 
     private lateinit var tvWaterTotal: TextView
@@ -118,6 +119,7 @@ class homepage : AppCompatActivity() {
 
         cardFood = findViewById(R.id.card_food)
         cardWorkout = findViewById(R.id.card_workout)
+        cardExerciseLog = findViewById(R.id.card_exercise_log)
         cardWater = findViewById(R.id.card_water)
         cardWaterSummary = findViewById(R.id.card_water_summary)
         tvWaterTotal = findViewById(R.id.tv_water_total)
@@ -180,6 +182,11 @@ class homepage : AppCompatActivity() {
         cardWater.setOnClickListener {
             val intent = Intent(this, com.example.swasthyamitra.ui.hydration.HydrationActivity::class.java)
             intent.putExtra("USER_ID", userId)
+            startActivity(intent)
+        }
+
+        cardExerciseLog.setOnClickListener {
+            val intent = Intent(this, ExerciseLogActivity::class.java)
             startActivity(intent)
         }
 
@@ -558,9 +565,10 @@ class homepage : AppCompatActivity() {
             try {
                 val today = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault()).format(java.util.Date())
                 
-                // Count all exercises logged today from exercise_logs collection
-                val exerciseLogs = firestore.collection("exercise_logs")
-                    .whereEqualTo("userId", userId)
+                // Count all exercises logged today from exerciseLogs subcollection
+                val exerciseLogs = firestore.collection("users")
+                    .document(userId)
+                    .collection("exercise_logs")
                     .whereEqualTo("date", today)
                     .get()
                     .await()
@@ -841,7 +849,7 @@ class homepage : AppCompatActivity() {
                     "date" to today,
                     "source" to "AI_Recommendation"
                 )
-                firestore.collection("exerciseLogs").add(logData)
+                firestore.collection("users").document(userId).collection("exercise_logs").add(logData)
                 
                 runOnUiThread {
                     Toast.makeText(this@homepage, "Great job! Exercise logged successfully ✅", Toast.LENGTH_SHORT).show()
@@ -978,8 +986,7 @@ class homepage : AppCompatActivity() {
             totalCalories += stepCalories
             
             // 2. Calories from logged workouts
-            val workoutLogs = firestore.collection("exercise_logs")
-                .whereEqualTo("userId", userId)
+            val workoutLogs = firestore.collection("users").document(userId).collection("exercise_logs")
                 .whereEqualTo("date", date)
                 .get()
                 .await()

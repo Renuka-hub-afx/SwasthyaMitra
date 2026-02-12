@@ -27,7 +27,7 @@ class ExerciseReminderReceiver : BroadcastReceiver() {
                 val today = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
 
                 // 1. Check if user already exercised today (Smart Reminder)
-                val logs = firestore.collection("exercise_logs")
+                val logs = firestore.collection("users").document(userId).collection("exercise_logs")
                     .whereEqualTo("userId", userId)
                     .whereEqualTo("date", today)
                     .limit(1)
