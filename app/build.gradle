@@ -1,6 +1,6 @@
 plugins {
-    id 'com.android.application'
-    id 'org.jetbrains.kotlin.android'
+    alias(libs.plugins.android.application)
+
     alias(libs.plugins.google.gms.google.services)
 }
 
@@ -68,9 +68,7 @@ android {
         targetCompatibility JavaVersion.VERSION_17
     }
 
-    kotlinOptions {
-        jvmTarget = '17'
-    }
+
     
 }
 
@@ -96,8 +94,6 @@ dependencies {
 
     // Play Services
     implementation libs.play.services.location
-    // Temporarily commented out due to resolution issues
-    // implementation libs.play.services.activity.recognition
 
     // ML Kit & CameraX (Stable versions)
     implementation 'com.google.mlkit:barcode-scanning:17.3.0'

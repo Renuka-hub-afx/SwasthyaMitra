@@ -381,7 +381,7 @@ class FirebaseAuthHelper(private val context: Context) {
     // Get today's food logs
     suspend fun getTodayFoodLogs(userId: String): Result<List<FoodLog>> {
         return try {
-            val dateFormat = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
+            val dateFormat = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.US)
             val today = dateFormat.format(java.util.Date())
             
             val querySnapshot = firestore.collection("users")
@@ -537,7 +537,7 @@ class FirebaseAuthHelper(private val context: Context) {
     suspend fun logWeight(userId: String, weight: Double): Result<Unit> {
         return try {
             val timestamp = System.currentTimeMillis()
-            val date = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault()).format(java.util.Date())
+            val date = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.US).format(java.util.Date())
             
             val weightData = hashMapOf(
                 "userId" to userId,

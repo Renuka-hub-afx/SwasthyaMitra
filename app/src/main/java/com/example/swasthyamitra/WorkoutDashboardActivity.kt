@@ -362,7 +362,7 @@ class WorkoutDashboardActivity : AppCompatActivity() {
 
         val db = FirebaseDatabase.getInstance("https://swasthyamitra-ded44-default-rtdb.asia-southeast1.firebasedatabase.app").reference
         val userRef = db.child("users").child(userId)
-        val today = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault()).format(java.util.Date())
+        val today = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.US).format(java.util.Date())
 
         // 1. Log to Firestore (for Homepage stats)
         val logData = hashMapOf(
@@ -533,7 +533,7 @@ class WorkoutDashboardActivity : AppCompatActivity() {
     private fun checkWorkoutStatusAndStats() {
         val db = FirebaseDatabase.getInstance("https://swasthyamitra-ded44-default-rtdb.asia-southeast1.firebasedatabase.app").reference
         val userRef = db.child("users").child(userId)
-        val today = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault()).format(java.util.Date())
+        val today = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.US).format(java.util.Date())
 
         userRef.get().addOnSuccessListener { snapshot ->
             val data = snapshot.getValue(FitnessData::class.java) ?: FitnessData()
@@ -562,7 +562,7 @@ class WorkoutDashboardActivity : AppCompatActivity() {
         val dbUrl = "https://swasthyamitra-ded44-default-rtdb.asia-southeast1.firebasedatabase.app"
         val db = FirebaseDatabase.getInstance(dbUrl).reference
         val userRef = db.child("users").child(userId)
-        val today = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault()).format(java.util.Date())
+        val today = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.US).format(java.util.Date())
         
         userRef.get().addOnSuccessListener { snapshot ->
             val data = snapshot.getValue(FitnessData::class.java) ?: FitnessData()
@@ -694,7 +694,7 @@ class WorkoutDashboardActivity : AppCompatActivity() {
         currentRecommendations = WorkoutVideoRepository.getSmartRecommendation(goalType, calorieStatus, intensity)
         val videos = currentRecommendations
         
-        val today = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault()).format(java.util.Date())
+        val today = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.US).format(java.util.Date())
         
         runOnUiThread {
             llVideoListContainer.removeAllViews()

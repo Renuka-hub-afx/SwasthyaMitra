@@ -141,7 +141,7 @@ class LifestyleActivity : AppCompatActivity() {
         val minute = calendar.get(Calendar.MINUTE)
 
         TimePickerDialog(this, { _, selectedHour, selectedMinute ->
-            val timeStr = String.format(Locale.getDefault(), "%02d:%02d", selectedHour, selectedMinute)
+            val timeStr = String.format(Locale.US, "%02d:%02d", selectedHour, selectedMinute)
             if (isWakeTime) {
                 binding.etWakeTime.setText(timeStr)
             } else {

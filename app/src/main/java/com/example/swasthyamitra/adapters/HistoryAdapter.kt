@@ -113,7 +113,7 @@ class HistoryAdapter(
                 tvCalories.setTextColor(android.graphics.Color.parseColor("#388E3C")) 
             } catch (e: Exception) {}
             
-            val timeFormat = SimpleDateFormat("h:mm a", Locale.getDefault())
+            val timeFormat = SimpleDateFormat("h:mm a", Locale.US)
             tvTime.text = timeFormat.format(Date(item.timestamp))
         }
     }
@@ -141,7 +141,7 @@ class HistoryAdapter(
                 } catch (e: Exception) {}
             }
             
-            val timeFormat = SimpleDateFormat("h:mm a", Locale.getDefault())
+            val timeFormat = SimpleDateFormat("h:mm a", Locale.US)
             tvTime.text = timeFormat.format(Date(item.timestamp))
         }
     }

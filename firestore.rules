@@ -13,70 +13,97 @@ service cloud.firestore {
       return isAuthenticated() && request.auth.uid == userId;
     }
     
+    // Checks if the user owns the existing resource
     function ownsResource() {
-      return isAuthenticated() && resource.data.userId == request.auth.uid;
+      return isAuthenticated() && (resource == null || resource.data.userId == request.auth.uid);
     }
     
+    // Checks if the user will own the incoming resource
     function willOwnResource() {
       return isAuthenticated() && request.resource.data.userId == request.auth.uid;
     }
-    
+
     // ==================== USERS COLLECTION ====================
     // Main user profile - only owner can access
     match /users/{userId} {
       allow read, write: if isOwner(userId);
       
-      // Subcollections (mood_logs, foodLogs, weightLogs, etc. stored under user)
+      // Nested subcollections (mood_logs, foodLogs, weightLogs, recipes, etc.)
       match /{allSubcollections=**} {
         allow read, write: if isOwner(userId);
       }
     }
     
     // ==================== TOP-LEVEL COLLECTIONS ====================
+    // These collections use a userId field for ownership
     
-    // Goals - Updated to allow ProfileActivity to find and update user goals
+    // Goals
     match /goals/{goalId} {
-      allow read: if isAuthenticated();
+      allow read: if ownsResource();
       allow create: if willOwnResource();
       allow update: if ownsResource() && willOwnResource();
       allow delete: if ownsResource();
     }
     
-    // Water Logs
+    // Logs (Water, Weight, Exercise)
     match /waterLogs/{logId} {
-      allow read: if isAuthenticated() && (resource.data.userId == request.auth.uid || request.query.limit <= 100);
-      allow create: if willOwnResource();
-      allow update, delete: if ownsResource() && willOwnResource();
+      allow read, create, update, delete: if ownsResource() || willOwnResource();
     }
 
-    // Weight Logs
     match /weightLogs/{logId} {
-      allow read: if isAuthenticated();
-      allow create: if willOwnResource();
-      allow update, delete: if ownsResource() && willOwnResource();
-    }
-    
-    // Exercise Logs
-    match /exerciseLogs/{logId} {
-      allow read: if isAuthenticated();
-      allow create: if willOwnResource();
-      allow update, delete: if ownsResource() && willOwnResource();
+      allow read, create, update, delete: if ownsResource() || willOwnResource();
     }
     
     match /exercise_logs/{logId} {
-      allow read: if isAuthenticated();
-      allow create: if willOwnResource();
-      allow update, delete: if ownsResource() && willOwnResource();
+      allow read, create, update, delete: if ownsResource() || willOwnResource();
     }
     
-    // AI Generated Plans
+    match /exerciseLogs/{logId} {
+      allow read, create, update, delete: if ownsResource() || willOwnResource();
+    }
+    
+    // AI Related Data
     match /ai_generated_plans/{planId} {
-      allow read: if ownsResource();
-      allow create: if willOwnResource();
-      allow update, delete: if ownsResource() && willOwnResource();
+      allow read, create, update, delete: if ownsResource() || willOwnResource();
     }
     
-    // Default Deny
+    match /meal_feedback/{feedbackId} {
+      allow read, create, update, delete: if ownsResource() || willOwnResource();
+    }
+    
+    match /user_preferences/{userId} {
+      allow read, write: if isOwner(userId);
+    }
+    
+    // Social & Gamification
+    match /notifications/{notifId} {
+      allow read, create, update, delete: if ownsResource() || willOwnResource();
+    }
+    
+    match /challenges/{challengeId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated() && (
+        resource == null ||
+        resource.data.creatorId == request.auth.uid ||
+        resource.data.opponentId == request.auth.uid ||
+        resource.data.opponentId == ""
+      );
+      allow delete: if isAuthenticated() && resource.data.creatorId == request.auth.uid;
+    }
+
+    // Global Data (Read-only for users)
+    match /workouts/{workoutId} {
+      allow read: if isAuthenticated();
+      allow write: if false;
+    }
+    
+    match /festivalCalendar/{eventId} {
+      allow read: if isAuthenticated();
+      allow write: if false;
+    }
+
+    // ==================== DEFAULT DENY ====================
     match /{document=**} {
       allow read, write: if false;
     }

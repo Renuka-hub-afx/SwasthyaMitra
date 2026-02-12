@@ -105,7 +105,7 @@ class DetailedReportActivity : AppCompatActivity() {
         if (userId.isEmpty()) return
 
         // 1. Load Fitness Data (Realtime DB)
-        val db = FirebaseDatabase.getInstance("https://swasthyamitra-c0899-default-rtdb.asia-southeast1.firebasedatabase.app").reference
+        val db = FirebaseDatabase.getInstance("https://swasthyamitra-ded44-default-rtdb.asia-southeast1.firebasedatabase.app").reference
         db.child("users").child(userId).addListenerForSingleValueEvent(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 fitnessData = snapshot.getValue(FitnessData::class.java)
@@ -231,7 +231,7 @@ class DetailedReportActivity : AppCompatActivity() {
     private fun countActiveDays(history: Map<String, WorkoutSession>, days: Int): Int {
         val cutoff = System.currentTimeMillis() - (days * 24 * 60 * 60 * 1000L)
         val uniqueDays = mutableSetOf<String>()
-        val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+        val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.US)
         
         history.values.forEach { session ->
              val time = if (session.timestamp > 0) session.timestamp 
@@ -313,7 +313,7 @@ class DetailedReportActivity : AppCompatActivity() {
 
         override fun onBindViewHolder(holder: ViewHolder, position: Int) {
             val item = items[position]
-            val dateStr = SimpleDateFormat("MMM dd", Locale.getDefault()).format(Date(item.date))
+            val dateStr = SimpleDateFormat("MMM dd", Locale.US).format(Date(item.date))
             holder.title.text = "$dateStr - ${item.title}"
             holder.subtitle.text = item.details
         }

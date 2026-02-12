@@ -23,7 +23,6 @@ import androidx.core.app.NotificationCompat
 import com.example.swasthyamitra.MainActivity
 import com.example.swasthyamitra.R
 import com.example.swasthyamitra.features.steps.StepVerifier
-// Temporarily commented out due to dependency issues
 // import com.google.android.gms.location.ActivityRecognition
 // import com.google.android.gms.location.ActivityRecognitionResult
 // import com.google.android.gms.location.DetectedActivity
@@ -39,7 +38,6 @@ class StepCounterService : Service(), SensorEventListener {
         const val NOTIFICATION_ID = 888
         const val CHANNEL_ID = "StepCounterChannel"
         const val ACTION_UPDATE_STEPS = "com.example.swasthyamitra.UPDATE_STEPS"
-        const val ACTION_ACTIVITY_UPDATE = "com.example.swasthyamitra.ACTIVITY_UPDATE"
     }
 
     private lateinit var sensorManager: SensorManager
@@ -55,9 +53,6 @@ class StepCounterService : Service(), SensorEventListener {
     private var lastDate = ""
     private var lastSensorValue: Float? = null
     private var lastUpdateTime: Long = 0L
-    
-    // Activity Recognition
-    private var activityPendingIntent: PendingIntent? = null
 
     inner class LocalBinder : Binder() {
         fun getService(): StepCounterService = this@StepCounterService
@@ -79,8 +74,6 @@ class StepCounterService : Service(), SensorEventListener {
         
         startForegroundService()
         registerSensors()
-        // Temporarily disabled Activity Recognition
-        // requestActivityUpdates()
     }
     
     private fun startForegroundService() {
@@ -106,8 +99,6 @@ class StepCounterService : Service(), SensorEventListener {
                 notification,
                 ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC
             )
-        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            startForeground(NOTIFICATION_ID, notification)
         } else {
             startForeground(NOTIFICATION_ID, notification)
         }
@@ -115,68 +106,13 @@ class StepCounterService : Service(), SensorEventListener {
 
     private fun registerSensors() {
         stepSensor?.let {
-            // Using FASTEST to minimize hardware batching latency
             sensorManager.registerListener(this, it, SensorManager.SENSOR_DELAY_FASTEST)
         }
     }
-    
-    /*
-    // Temporarily disabled due to dependency issues
-    private fun requestActivityUpdates() {
-        val intent = Intent(this, StepCounterService::class.java)
-        intent.action = ACTION_ACTIVITY_UPDATE
-        
-        activityPendingIntent = PendingIntent.getService(
-            this,
-            1,
-            intent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE
-        )
-
-        val client = ActivityRecognition.getClient(this)
-        client.requestActivityUpdates(3000, activityPendingIntent!!) // 3 seconds detection
-            .addOnSuccessListener { Log.d("StepCounterService", "Activity Recognition Registered") }
-            .addOnFailureListener { e -> Log.e("StepCounterService", "Activity Recognition Failed", e) }
-    }
-    */
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        // Temporarily disabled Activity Recognition
-        // if (intent?.action == ACTION_ACTIVITY_UPDATE) {
-        //     handleActivityUpdate(intent)
-        // }
         return START_STICKY
     }
-    
-    /*
-    // Temporarily disabled due to dependency issues
-    private fun handleActivityUpdate(intent: Intent) {
-        if (ActivityRecognitionResult.hasResult(intent)) {
-            val result = ActivityRecognitionResult.extractResult(intent)
-            result?.mostProbableActivity?.let { activity ->
-                Log.d("StepCounterService", "Activity: ${activity.type} Conf: ${activity.confidence}")
-                
-                val isMoving = when (activity.type) {
-                    DetectedActivity.WALKING, DetectedActivity.RUNNING, DetectedActivity.ON_FOOT -> true
-                    DetectedActivity.STILL, DetectedActivity.IN_VEHICLE, DetectedActivity.TILTING -> false
-                    else -> true // Unknown usually means movement or transition, be permissive unless confident STILL
-                }
-                
-                // If high confidence STILL, gate the steps
-                if (activity.type == DetectedActivity.STILL && activity.confidence > 70) {
-                    stepVerifier.isWalkingOrRunning = false
-                } else if (activity.type == DetectedActivity.IN_VEHICLE && activity.confidence > 80) {
-                    stepVerifier.isWalkingOrRunning = false // Reduce false positives in car
-                } else if ((activity.type == DetectedActivity.WALKING || activity.type == DetectedActivity.RUNNING) && activity.confidence > 50) {
-                    stepVerifier.isWalkingOrRunning = true
-                } else {
-                     // Default permsissive if unknown or low confidence
-                     stepVerifier.isWalkingOrRunning = true
-                }
-            }
-        }
-    }
-    */
 
     override fun onSensorChanged(event: SensorEvent?) {
         event ?: return
@@ -189,7 +125,6 @@ class StepCounterService : Service(), SensorEventListener {
         val today = getTodayDate()
         
         if (today != lastDate) {
-            // New Day: Reset
             dailySteps = 0
             lastDate = today
             lastSensorValue = rawSteps
@@ -200,15 +135,10 @@ class StepCounterService : Service(), SensorEventListener {
         }
 
         if (lastSensorValue == null) {
-            // Initial read (service start)
             lastSensorValue = rawSteps
-            // We just set the baseline, we don't add to dailySteps yet 
-            // because rawSteps is total-since-boot, not daily. 
-            // dailySteps comes from Prefs.
             return
         }
         
-        // Handle Reboot (Sensor reset to 0)
         if (rawSteps < lastSensorValue!!) {
             lastSensorValue = rawSteps
             return
@@ -220,24 +150,8 @@ class StepCounterService : Service(), SensorEventListener {
             val currentTime = System.currentTimeMillis()
             val timeDelta = if (lastUpdateTime > 0) currentTime - lastUpdateTime else 1000L
             
-            // Anti-Cheat: 1. Rate Limiting (Reject shaking)
-            // If the rate is impossibly high (e.g. > 6 steps/sec), reject it.
-            if (!stepVerifier.validateBatch(diff, timeDelta)) {
-                // Reject update, but DO update timestamp to prevent "catching up" next time with a huge delta
-                lastUpdateTime = currentTime
-                // Do NOT update lastSensorValue yet, so next valid update will incldue these steps? 
-                // NO. If we reject "shaking", we must consume the raw value so we don't count them later.
-                lastSensorValue = rawSteps
-                Log.d("StepCounterService", "Ignored $diff steps due to high rate (shaking)")
-                return
-            }
-            
-            // Anti-Cheat: 2. Activity Gating
-            // If Activity Recognition says "STILL" for a long time, we might ignore this.
-            // But sometimes AR is laggy. 
-            // We trust AR if it's confident we are NOT walking.
-            
-            if (stepVerifier.isWalkingOrRunning) {
+            // Hybrid Validation (Activity + Cadence)
+            if (stepVerifier.validateBatch(diff, timeDelta)) {
                  dailySteps += diff
                  lastUpdateTime = currentTime
                  lastSensorValue = rawSteps
@@ -245,9 +159,9 @@ class StepCounterService : Service(), SensorEventListener {
                  updateNotification()
                  broadcastUpdate()
             } else {
-                Log.d("StepCounterService", "Ignored $diff steps (Activity: STILL/Driving)")
-                // We update lastSensorValue anyway so we don't process these steps later
-                lastSensorValue = rawSteps 
+                Log.d("StepCounterService", "Steps rejected: diff=$diff, Activity=${stepVerifier.currentActivityType}, Conf=${stepVerifier.currentConfidence}")
+                lastSensorValue = rawSteps
+                lastUpdateTime = currentTime
             }
         }
     }
@@ -262,7 +176,6 @@ class StepCounterService : Service(), SensorEventListener {
             apply()
         }
         
-        // Firebase Sync
         val userId = FirebaseAuth.getInstance().currentUser?.uid
         if (userId != null) {
             try {
@@ -307,7 +220,7 @@ class StepCounterService : Service(), SensorEventListener {
         intent.putExtra("steps", dailySteps)
         val calories = dailySteps * 0.04
         intent.putExtra("calories", calories)
-        intent.setPackage(packageName) // Security
+        intent.setPackage(packageName)
         sendBroadcast(intent)
     }
 
@@ -324,15 +237,11 @@ class StepCounterService : Service(), SensorEventListener {
     }
 
     private fun getTodayDate(): String {
-        return SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+        return SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date())
     }
 
     override fun onDestroy() {
         super.onDestroy()
         sensorManager.unregisterListener(this)
-        // Temporarily disabled Activity Recognition
-        // activityPendingIntent?.let {
-        //      ActivityRecognition.getClient(this).removeActivityUpdates(it)
-        // }
     }
 }

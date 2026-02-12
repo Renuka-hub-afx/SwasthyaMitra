@@ -231,9 +231,9 @@ class GamificationActivity : AppCompatActivity() {
         val calendar = Calendar.getInstance()
         calendar.add(Calendar.DAY_OF_YEAR, -3)
         
-        val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-        val dayFormat = SimpleDateFormat("EEE", Locale.getDefault())
-        val todayStr = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+        val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.US)
+        val dayFormat = SimpleDateFormat("EEE", Locale.US)
+        val todayStr = SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date())
         
         for (i in 0 until 7) {
              val dateStr = sdf.format(calendar.time)

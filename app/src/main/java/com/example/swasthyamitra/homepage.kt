@@ -17,6 +17,13 @@ import java.util.Calendar
 import androidx.cardview.widget.CardView
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
+import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.ValueEventListener
+import com.google.firebase.database.DatabaseReference
+import java.util.Date
+import java.util.Locale
 
 
 class homepage : AppCompatActivity() {
@@ -25,7 +32,9 @@ class homepage : AppCompatActivity() {
     private lateinit var stepManager: StepManager
     private var userId: String = ""
     private lateinit var firestore: FirebaseFirestore
-    private var currentSteps: Int = 0 // Store current step count
+    private var currentSteps: Int = 0 
+    private lateinit var gamificationRepository: GamificationRepository
+    private var fitnessData: FitnessData = FitnessData()
 
     // UI Elements
     private lateinit var tvUserName: TextView
@@ -98,6 +107,11 @@ class homepage : AppCompatActivity() {
         firestore = FirebaseFirestore.getInstance("renu")
 
         userId = intent.getStringExtra("USER_ID") ?: ""
+        
+        // Initialize Gamification Repo
+        val rdb = FirebaseDatabase.getInstance("https://swasthyamitra-ded44-default-rtdb.asia-southeast1.firebasedatabase.app").reference
+        gamificationRepository = GamificationRepository(rdb, userId)
+        syncStreak()
 
         // Initialize UI Elements
         tvDate = findViewById(R.id.tv_date)
@@ -160,6 +174,8 @@ class homepage : AppCompatActivity() {
         loadUserData()
 
         // Initialize Step Tracking
+        checkActivityRecognitionPermission()
+        
         stepManager = StepManager(this) { steps, _ ->
             currentSteps = steps // Store the step count
             runOnUiThread {
@@ -167,8 +183,6 @@ class homepage : AppCompatActivity() {
             }
         }
         stepManager.start()
-        
-
 
         cardWorkout.setOnClickListener {
             val intent = Intent(this, WorkoutDashboardActivity::class.java)
@@ -263,6 +277,39 @@ class homepage : AppCompatActivity() {
         setupMoodTracking()
     }
 
+    private fun checkActivityRecognitionPermission() {
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+            if (androidx.core.content.ContextCompat.checkSelfPermission(
+                    this,
+                    android.Manifest.permission.ACTIVITY_RECOGNITION
+                ) != android.content.pm.PackageManager.PERMISSION_GRANTED
+            ) {
+                androidx.core.app.ActivityCompat.requestPermissions(
+                    this,
+                    arrayOf(android.Manifest.permission.ACTIVITY_RECOGNITION),
+                    101
+                )
+            }
+        }
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == 101) {
+            if (grantResults.isNotEmpty() && grantResults[0] == android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                stepManager.start() // Restart to pick up changes
+            }
+        }
+    }
+        
+
+
+
+
     private fun setupMoodTracking() {
         val moods: Map<Int, String> = mapOf(
             R.id.btn_mood_happy to "Happy",
@@ -294,7 +341,7 @@ class homepage : AppCompatActivity() {
             energy = analysis.energy,
             suggestion = analysis.suggestion,
             timestamp = System.currentTimeMillis(),
-            date = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault()).format(java.util.Date())
+            date = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.US).format(java.util.Date())
         )
 
         // 3. Save to Repository (Background)
@@ -342,7 +389,7 @@ class homepage : AppCompatActivity() {
 
     private fun updateDateDisplay() {
         val calendar = Calendar.getInstance()
-        val dateFormat = java.text.SimpleDateFormat("EEEE, MMM dd", java.util.Locale.getDefault())
+        val dateFormat = java.text.SimpleDateFormat("EEEE, MMM dd", java.util.Locale.US)
         val currentDate = dateFormat.format(calendar.time)
         tvDate.text = currentDate
     }
@@ -554,11 +601,34 @@ class homepage : AppCompatActivity() {
         }
     }
 
+    private fun syncStreak() {
+        if (userId.isEmpty()) return
+        
+        val rdb = FirebaseDatabase.getInstance("https://swasthyamitra-ded44-default-rtdb.asia-southeast1.firebasedatabase.app").reference
+        rdb.child("users").child(userId).addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                val data = snapshot.getValue(FitnessData::class.java) ?: FitnessData(userId = userId)
+                
+                // 1. Validate streak (break if missed days)
+                val checkedData = gamificationRepository.validateAndFixStreak(data)
+                
+                // 2. Perform daily check-in (increment if new day)
+                gamificationRepository.checkIn(checkedData) { updated ->
+                    fitnessData = updated
+                    Log.d("Homepage", "Streak synced: ${updated.streak} days")
+                }
+            }
+            override fun onCancelled(error: DatabaseError) {
+                Log.e("Homepage", "Failed to sync streak: ${error.message}")
+            }
+        })
+    }
+
 
     private fun displayWorkoutStatus() {
         lifecycleScope.launch {
             try {
-                val today = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault()).format(java.util.Date())
+                val today = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.US).format(java.util.Date())
                 
                 // Count all exercises logged today from exercise_logs collection
                 val exerciseLogs = firestore.collection("exercise_logs")
@@ -672,7 +742,7 @@ class homepage : AppCompatActivity() {
 
                 // 0.1 Check if already completed today
                 val db = com.google.firebase.database.FirebaseDatabase.getInstance("https://swasthyamitra-ded44-default-rtdb.asia-southeast1.firebasedatabase.app").reference
-                val today = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault()).format(java.util.Date())
+                val today = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.US).format(java.util.Date())
                 val completedToday = db.child("users").child(userId).child("completionHistory").child(today).get().await().getValue(Boolean::class.java) ?: false
                 
                 if (completedToday) {
@@ -824,7 +894,7 @@ class homepage : AppCompatActivity() {
         lifecycleScope.launch {
             try {
                 val db = com.google.firebase.database.FirebaseDatabase.getInstance("https://swasthyamitra-ded44-default-rtdb.asia-southeast1.firebasedatabase.app").reference
-                val today = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault()).format(java.util.Date())
+                val today = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.US).format(java.util.Date())
                 
                 // 1. Mark as completed in Realtime DB (for homepage counter)
                 db.child("users").child(userId).child("completionHistory").child(today).setValue(true)
@@ -919,7 +989,7 @@ class homepage : AppCompatActivity() {
     private fun updateCalorieBalance() {
         lifecycleScope.launch {
             try {
-                val dateFormat = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
+                val dateFormat = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.US)
                 val today = dateFormat.format(java.util.Date())
                 
                 // 1. Get target calories from goals

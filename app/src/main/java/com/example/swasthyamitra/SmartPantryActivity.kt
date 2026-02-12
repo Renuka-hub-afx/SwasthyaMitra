@@ -158,7 +158,7 @@ class SmartPantryActivity : AppCompatActivity() {
                     fat = recipe.fat.toDouble(),
                     mealType = "Snack", // Defaulting to Snack for pantry recipes
                     timestamp = System.currentTimeMillis(),
-                    date = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault()).format(java.util.Date()),
+                    date = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.US).format(java.util.Date()),
                     servingSize = "1 serving",
                     barcode = null,
                     photoUrl = null
@@ -186,7 +186,7 @@ class SmartPantryActivity : AppCompatActivity() {
     }
 
     private fun updateCompletionHistory(userId: String) {
-        val today = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault()).format(java.util.Date())
+        val today = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.US).format(java.util.Date())
         // Just a simple touch to realtime DB to signify activity if needed, 
         // or we rely on the foodLog existence for other stats.
     }

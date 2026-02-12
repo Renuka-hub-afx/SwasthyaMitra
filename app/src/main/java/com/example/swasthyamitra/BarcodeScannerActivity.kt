@@ -200,7 +200,7 @@ class BarcodeScannerActivity : AppCompatActivity() {
             return
         }
         
-        val dateFormat = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
+        val dateFormat = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.US)
         val today = dateFormat.format(java.util.Date())
         
         val foodLog = FoodLog(

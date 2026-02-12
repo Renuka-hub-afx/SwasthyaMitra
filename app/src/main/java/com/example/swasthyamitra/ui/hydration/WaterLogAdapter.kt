@@ -24,7 +24,7 @@ class WaterLogAdapter(
         val log = logs[position]
         holder.binding.tvLogAmount.text = "${log.amountML} ml"
         
-        val sdf = SimpleDateFormat("hh:mm a", Locale.getDefault())
+        val sdf = SimpleDateFormat("hh:mm a", Locale.US)
         holder.binding.tvLogTime.text = sdf.format(Date(log.timestamp))
 
         holder.binding.btnDeleteLog.setOnClickListener {

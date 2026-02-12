@@ -78,7 +78,7 @@ class ProgressActivity : AppCompatActivity() {
 
     private fun loadProgressData() {
         // 1. Load User Statistics (Streaks, Workouts, Calories) from Firebase Realtime Database
-        val db = FirebaseDatabase.getInstance("https://swasthyamitra-c0899-default-rtdb.asia-southeast1.firebasedatabase.app").reference
+        val db = FirebaseDatabase.getInstance("https://swasthyamitra-ded44-default-rtdb.asia-southeast1.firebasedatabase.app").reference
         val userRef = db.child("users").child(userId)
 
         // Use addValueEventListener for real-time updates
@@ -113,7 +113,7 @@ class ProgressActivity : AppCompatActivity() {
         
         var workoutCount = 0
         var caloriesBurned = 0
-        val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+        val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.US)
 
         for (session in history.values) {
              try {

@@ -176,7 +176,7 @@ class StreakDetailsActivity : AppCompatActivity() {
         btnNextMonth.isEnabled = !isCurrentMonth
         
         // Update Title
-        val monthFormat = SimpleDateFormat("MMMM yyyy", Locale.getDefault())
+        val monthFormat = SimpleDateFormat("MMMM yyyy", Locale.US)
         tvMonthYear.text = monthFormat.format(displayCalendar.time)
 
         // Get day of week for the 1st
@@ -200,13 +200,13 @@ class StreakDetailsActivity : AppCompatActivity() {
             calendarGrid.addView(emptyView)
         }
 
-        val todayDateStr = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+        val todayDateStr = SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date())
         val history = fitnessData?.completionHistory ?: emptyMap()
 
         // Generate Day Views
         for (day in 1..daysInMonth) {
             tempCal.set(Calendar.DAY_OF_MONTH, day)
-            val dateStr = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(tempCal.time)
+            val dateStr = SimpleDateFormat("yyyy-MM-dd", Locale.US).format(tempCal.time)
             
             val isCompleted = history[dateStr] == true
             val isToday = dateStr == todayDateStr

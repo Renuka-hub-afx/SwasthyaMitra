@@ -53,7 +53,7 @@ class ChallengeSetupActivity : AppCompatActivity() {
 
         // Generate 6-char alphanumeric code
         val challengeCode = java.util.UUID.randomUUID().toString().substring(0, 6).uppercase()
-        val database = FirebaseDatabase.getInstance("https://swasthyamitra-c0899-default-rtdb.asia-southeast1.firebasedatabase.app").reference
+        val database = FirebaseDatabase.getInstance("https://swasthyamitra-ded44-default-rtdb.asia-southeast1.firebasedatabase.app").reference
 
         val challengeData = hashMapOf(
             "id" to challengeCode,

@@ -24,7 +24,7 @@ class ExerciseReminderReceiver : BroadcastReceiver() {
 
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                val today = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+                val today = SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date())
 
                 // 1. Check if user already exercised today (Smart Reminder)
                 val logs = firestore.collection("exercise_logs")

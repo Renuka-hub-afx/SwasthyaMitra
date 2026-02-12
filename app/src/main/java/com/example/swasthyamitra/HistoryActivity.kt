@@ -48,7 +48,7 @@ class HistoryActivity : AppCompatActivity() {
     private fun loadData() {
         if (userId.isEmpty()) return
 
-        val db = FirebaseDatabase.getInstance("https://swasthyamitra-c0899-default-rtdb.asia-southeast1.firebasedatabase.app").reference
+        val db = FirebaseDatabase.getInstance("https://swasthyamitra-ded44-default-rtdb.asia-southeast1.firebasedatabase.app").reference
         val userRef = db.child("users").child(userId)
 
         userRef.addValueEventListener(object : ValueEventListener {
@@ -67,7 +67,7 @@ class HistoryActivity : AppCompatActivity() {
         // Sort by timestamp descending
         val sortedHistory = history.values.sortedByDescending { session ->
             if (session.timestamp > 0) session.timestamp 
-            else SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).parse(session.date)?.time ?: 0L
+            else SimpleDateFormat("yyyy-MM-dd", Locale.US).parse(session.date)?.time ?: 0L
         }
 
         recyclerView.adapter = HistoryAdapter(sortedHistory)
@@ -91,10 +91,10 @@ class HistoryActivity : AppCompatActivity() {
             
             // Format Date
             val dateObj = if (session.timestamp > 0) java.util.Date(session.timestamp) 
-                          else SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).parse(session.date)
+                          else SimpleDateFormat("yyyy-MM-dd", Locale.US).parse(session.date)
             
             val dateStr = if (dateObj != null) {
-                SimpleDateFormat("EEEE, MMM dd", Locale.getDefault()).format(dateObj)
+                SimpleDateFormat("EEEE, MMM dd", Locale.US).format(dateObj)
             } else {
                 session.date
             }

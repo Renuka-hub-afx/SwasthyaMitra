@@ -23,8 +23,8 @@ class HydrationActivity : AppCompatActivity() {
     private var dailyGoal: Int = 2500
     private var currentIntake: Int = 0
     private var selectedDate: Calendar = Calendar.getInstance()
-    private val dateFormat = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
-    private val displayFormat = java.text.SimpleDateFormat("MMMM dd, yyyy", java.util.Locale.getDefault())
+    private val dateFormat = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.US)
+    private val displayFormat = java.text.SimpleDateFormat("MMMM dd, yyyy", java.util.Locale.US)
     private lateinit var reminderManager: WaterReminderManager
     private var userWeight: Double = 70.0
     private var userWakeTime: String = "07:00"

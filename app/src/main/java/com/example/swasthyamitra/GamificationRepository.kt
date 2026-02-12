@@ -5,7 +5,7 @@ import com.example.swasthyamitra.models.DailyActivity
 
 class GamificationRepository(private val database: DatabaseReference, private val userId: String) {
 
-    private val dateFormat = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
+    private val dateFormat = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.US)
 
     fun validateAndFixStreak(data: FitnessData): FitnessData {
         if (data.lastActiveDate.isEmpty()) return data
@@ -62,10 +62,17 @@ class GamificationRepository(private val database: DatabaseReference, private va
         }
 
         val newStreak = data.streak + 1
+        var newShields = data.shields
+        
+        // 7-day Bonus Shield!
+        if (newStreak % 7 == 0 && newStreak > 0) {
+            newShields += 1
+        }
         
         val updatedData = data.copy(
             lastActiveDate = today,
             streak = newStreak,
+            shields = newShields,
             steps = 0 // Reset steps for new day logic if needed, but here we just init
         )
         

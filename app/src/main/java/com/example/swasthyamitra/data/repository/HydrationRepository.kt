@@ -12,7 +12,7 @@ class HydrationRepository {
 
     suspend fun addWaterLog(userId: String, amountML: Int, targetDate: String? = null): Result<Unit> {
         return try {
-            val dateStr = targetDate ?: SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+            val dateStr = targetDate ?: SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date())
             
             val log = WaterLog(
                 userId = userId,
@@ -44,7 +44,7 @@ class HydrationRepository {
     }
 
     suspend fun getTodayWaterTotal(userId: String): Result<Int> {
-        val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+        val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.US)
         return getWaterTotalForDate(userId, dateFormat.format(Date()))
     }
 

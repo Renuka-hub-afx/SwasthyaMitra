@@ -94,7 +94,7 @@ _Keep pushing! 💪 - SwasthyaMitra_
     ): Result<Boolean> {
         val netCalories = caloriesConsumed - caloriesBurned
         val progress = if (calorieGoal > 0) ((caloriesConsumed.toFloat() / calorieGoal) * 100).toInt() else 0
-        val dateFormat = SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
+        val dateFormat = SimpleDateFormat("dd MMM yyyy", Locale.US)
         val today = dateFormat.format(Date())
         
         val statusEmoji = when {
@@ -136,7 +136,7 @@ _Stay consistent! 🎯 - SwasthyaMitra_
         exerciseType: String,
         notes: String = ""
     ): Result<Boolean> {
-        val dateFormat = SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
+        val dateFormat = SimpleDateFormat("dd MMM yyyy", Locale.US)
         val today = dateFormat.format(Date())
         
         val notesSection = if (notes.isNotEmpty()) "\n📝 $notes" else ""
