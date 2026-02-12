@@ -2,27 +2,34 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    
-    // ==================== HELPER FUNCTIONS ====================
 
+    // ==================== HELPER FUNCTIONS ====================
+    
     function isAuthenticated() {
       return request.auth != null;
     }
-    
+
     function isOwner(userId) {
       return isAuthenticated() && request.auth.uid == userId;
     }
     
     // Checks if the user owns the existing resource
     function ownsResource() {
+<<<<<<< HEAD
       return isAuthenticated() && (resource == null || resource.data.userId == request.auth.uid);
     }
     
     // Checks if the user will own the incoming resource
-    function willOwnResource() {
-      return isAuthenticated() && request.resource.data.userId == request.auth.uid;
+=======
+      return isAuthenticated() && (resource.data.userId == request.auth.uid);
     }
 
+>>>>>>> 3bb4e4351d544b8c52b68d318c28a38650e99e3c
+    function willOwnResource() {
+      return isAuthenticated() && (request.resource.data.userId == request.auth.uid);
+    }
+
+<<<<<<< HEAD
     // ==================== USERS COLLECTION ====================
     // Main user profile - only owner can access
     match /users/{userId} {
@@ -30,10 +37,24 @@ service cloud.firestore {
       
       // Nested subcollections (mood_logs, foodLogs, weightLogs, recipes, etc.)
       match /{allSubcollections=**} {
+=======
+    // ==================== MAIN USER COLLECTION ====================
+    // This is the core of the "User-Centric" architecture.
+    // All user data (goals, logs, profile) MUST be nested under /users/{userId}
+    match /users/{userId} {
+      allow read, write: if isOwner(userId);
+
+      // RECURSIVE WILDCARD: Allows access to ALL subcollections
+      // e.g. /users/{userId}/goals, /users/{userId}/foodLogs, etc.
+      match /{document=**} {
+>>>>>>> 3bb4e4351d544b8c52b68d318c28a38650e99e3c
         allow read, write: if isOwner(userId);
       }
     }
+
+    // ==================== EXCEPTIONS (Valid Root Collections) ====================
     
+<<<<<<< HEAD
     // ==================== TOP-LEVEL COLLECTIONS ====================
     // These collections use a userId field for ownership
     
@@ -98,12 +119,28 @@ service cloud.firestore {
       allow write: if false;
     }
     
+=======
+    // Recommendations (AI Plans)
+    // Kept at root to allow easy writing by AI services/Cloud Functions
+    match /recommendations/{recommendationId} {
+      allow create: if willOwnResource();
+      allow read, update, delete: if ownsResource();
+    }
+
+    // Festival Calendar (Global Read-Only)
+>>>>>>> 3bb4e4351d544b8c52b68d318c28a38650e99e3c
     match /festivalCalendar/{eventId} {
       allow read: if isAuthenticated();
       allow write: if false;
     }
 
+<<<<<<< HEAD
     // ==================== DEFAULT DENY ====================
+=======
+    // ==================== DENY ALL ELSE ====================
+    // This strictly blocks any writes to root collections like /goals, /weightLogs, etc.
+    // preventing the "messy" broken structure.
+>>>>>>> 3bb4e4351d544b8c52b68d318c28a38650e99e3c
     match /{document=**} {
       allow read, write: if false;
     }

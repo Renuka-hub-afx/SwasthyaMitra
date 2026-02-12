@@ -3,7 +3,9 @@ package com.example.swasthyamitra
 import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
+import android.view.LayoutInflater
 import android.view.View
+import android.view.ViewGroup
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -58,7 +60,7 @@ class ProgressActivity : AppCompatActivity() {
         tvHistoryEmpty = findViewById(R.id.tv_history_empty)
         rvHistory.layoutManager = LinearLayoutManager(this)
 
-        findViewById<View>(R.id.btnBack).setOnClickListener { finish() }
+        findViewById<androidx.appcompat.widget.Toolbar>(R.id.toolbar).setNavigationOnClickListener { finish() }
         
         findViewById<View>(R.id.viewDetailedReportButton)?.setOnClickListener { showChartsView() }
         
@@ -72,8 +74,9 @@ class ProgressActivity : AppCompatActivity() {
         findViewById<View>(R.id.roadmapItemHistory)?.setOnClickListener { 
             startActivity(Intent(this, HistoryActivity::class.java))
         }
-        
-
+        findViewById<View>(R.id.historyCard)?.setOnClickListener { 
+            startActivity(Intent(this, HistoryActivity::class.java))
+        }
     }
 
     private fun loadProgressData() {
@@ -96,6 +99,9 @@ class ProgressActivity : AppCompatActivity() {
                     
                     weeklyWorkoutsText.text = "$workouts"
                     weeklyCaloriesText.text = "$calories"
+
+                    // Update History List
+                    updateHistoryUI(data.workoutHistory)
                 }
             }
 
@@ -141,6 +147,62 @@ class ProgressActivity : AppCompatActivity() {
         return Pair(workoutCount, caloriesBurned)
     }
 
+    private fun updateHistoryUI(history: Map<String, WorkoutSession>) {
+        if (history.isEmpty()) {
+            rvHistory.visibility = View.GONE
+            tvHistoryEmpty.visibility = View.VISIBLE
+            return
+        }
+
+        // Sort by timestamp descending (last 30 days logic is implicit if data is recent)
+        val sortedHistory = history.values.sortedByDescending { session ->
+            if (session.timestamp > 0) session.timestamp 
+            else SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).parse(session.date)?.time ?: 0L
+        }
+
+        rvHistory.visibility = View.VISIBLE
+        tvHistoryEmpty.visibility = View.GONE
+        rvHistory.adapter = HistoryItemAdapter(sortedHistory)
+    }
+
+    private inner class HistoryItemAdapter(private val sessions: List<WorkoutSession>) : RecyclerView.Adapter<HistoryItemAdapter.ViewHolder>() {
+
+        inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+            val date: TextView = view.findViewById(R.id.tvHistoryDate)
+            val title: TextView = view.findViewById(R.id.tvHistoryTitle)
+            val details: TextView = view.findViewById(R.id.tvHistoryDetails)
+        }
+
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+            val view = LayoutInflater.from(parent.context).inflate(R.layout.item_history, parent, false)
+            return ViewHolder(view)
+        }
+
+        override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+            val session = sessions[position]
+            
+            // Format Date
+            val dateObj = if (session.timestamp > 0) java.util.Date(session.timestamp) 
+                          else SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).parse(session.date)
+            
+            val dateStr = if (dateObj != null) {
+                SimpleDateFormat("EEEE, MMM dd", Locale.getDefault()).format(dateObj)
+            } else {
+                session.date
+            }
+            
+            holder.date.text = dateStr
+            holder.title.text = session.category.replaceFirstChar { it.uppercase() } + " Workout"
+            
+            // Calculate calories if missing
+            val calories = if (session.caloriesBurned > 0) session.caloriesBurned else session.duration * 6
+            
+            holder.details.text = "${session.duration} min • $calories kcal"
+        }
+
+        override fun getItemCount() = sessions.size
+    }
+
     private fun showChartsView() {
         // Check if DetailedReportActivity exists, else fix or use placeholder
         try {
@@ -150,5 +212,3 @@ class ProgressActivity : AppCompatActivity() {
         }
     }
 }
-    
-

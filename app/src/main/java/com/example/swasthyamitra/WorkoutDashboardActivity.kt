@@ -375,6 +375,8 @@ class WorkoutDashboardActivity : AppCompatActivity() {
         )
         
         com.google.firebase.firestore.FirebaseFirestore.getInstance("renu") // Using RENU database instance
+            .collection("users")
+            .document(userId)
             .collection("exercise_logs")
             .add(logData)
             .addOnSuccessListener {

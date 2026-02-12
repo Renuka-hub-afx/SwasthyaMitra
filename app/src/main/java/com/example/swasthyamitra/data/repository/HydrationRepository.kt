@@ -8,7 +8,8 @@ import java.util.*
 
 class HydrationRepository {
     private val firestore = FirebaseFirestore.getInstance("renu") // Using RENU database instance
-    private val waterLogsCollection = firestore.collection("waterLogs")
+
+    private fun getWaterLogsCollection(userId: String) = firestore.collection("users").document(userId).collection("waterLogs")
 
     suspend fun addWaterLog(userId: String, amountML: Int, targetDate: String? = null): Result<Unit> {
         return try {
@@ -21,7 +22,7 @@ class HydrationRepository {
                 date = dateStr
             )
             
-            waterLogsCollection.add(log).await()
+            getWaterLogsCollection(userId).add(log).await()
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
@@ -30,7 +31,7 @@ class HydrationRepository {
 
     suspend fun getWaterTotalForDate(userId: String, date: String): Result<Int> {
         return try {
-            val snapshot = waterLogsCollection
+            val snapshot = getWaterLogsCollection(userId)
                 .whereEqualTo("userId", userId)
                 .whereEqualTo("date", date)
                 .get()
@@ -51,7 +52,7 @@ class HydrationRepository {
     suspend fun getWaterLogs(userId: String, date: String? = null, limit: Int = 20): Result<List<WaterLog>> {
         return try {
             android.util.Log.d("HydrationRepo", "Fetching logs for userId: $userId, date: $date")
-            var query = waterLogsCollection
+            var query = getWaterLogsCollection(userId)
                 .whereEqualTo("userId", userId)
             
             if (date != null) {
@@ -93,9 +94,9 @@ class HydrationRepository {
         }
     }
 
-    suspend fun deleteWaterLog(logId: String): Result<Unit> {
+    suspend fun deleteWaterLog(userId: String, logId: String): Result<Unit> {
         return try {
-            waterLogsCollection.document(logId).delete().await()
+            getWaterLogsCollection(userId).document(logId).delete().await()
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)

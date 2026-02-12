@@ -3,6 +3,7 @@ package com.example.swasthyamitra.auth
 import android.content.Context
 import android.util.Log
 import com.example.swasthyamitra.models.FoodLog
+import com.example.swasthyamitra.models.ExerciseLog
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.FirebaseFirestore
@@ -162,7 +163,9 @@ class FirebaseAuthHelper(private val context: Context) {
                 "createdAt" to System.currentTimeMillis()
             )
             
-            val docRef = firestore.collection("goals")
+            val docRef = firestore.collection("users")
+                .document(userId)
+                .collection("goals")
                 .add(goalData)
                 .await()
             
@@ -193,8 +196,9 @@ class FirebaseAuthHelper(private val context: Context) {
     // Check if user has a goal
     suspend fun hasUserGoal(userId: String): Result<Boolean> {
         return try {
-            val querySnapshot = firestore.collection("goals")
-                .whereEqualTo("userId", userId)
+            val querySnapshot = firestore.collection("users")
+                .document(userId)
+                .collection("goals")
                 .limit(1)
                 .get()
                 .await()
@@ -208,8 +212,9 @@ class FirebaseAuthHelper(private val context: Context) {
     // Get user goal data
     suspend fun getUserGoal(userId: String): Result<Map<String, Any>> {
         return try {
-            val querySnapshot = firestore.collection("goals")
-                .whereEqualTo("userId", userId)
+            val querySnapshot = firestore.collection("users")
+                .document(userId)
+                .collection("goals")
                 .limit(1)
                 .get()
                 .await()
@@ -233,8 +238,9 @@ class FirebaseAuthHelper(private val context: Context) {
     ): Result<Unit> {
         return try {
             // First, find the user's goal document
-            val querySnapshot = firestore.collection("goals")
-                .whereEqualTo("userId", userId)
+            val querySnapshot = firestore.collection("users")
+                .document(userId)
+                .collection("goals")
                 .limit(1)
                 .get()
                 .await()
@@ -249,7 +255,9 @@ class FirebaseAuthHelper(private val context: Context) {
                     "updatedAt" to System.currentTimeMillis()
                 )
                 
-                firestore.collection("goals")
+                firestore.collection("users")
+                    .document(userId)
+                    .collection("goals")
                     .document(goalDocId)
                     .update(updates)
                     .await()
@@ -269,8 +277,9 @@ class FirebaseAuthHelper(private val context: Context) {
     // Check if user has completed lifestyle data in goal document
     suspend fun hasLifestyleData(userId: String): Result<Boolean> {
         return try {
-            val querySnapshot = firestore.collection("goals")
-                .whereEqualTo("userId", userId)
+            val querySnapshot = firestore.collection("users")
+                .document(userId)
+                .collection("goals")
                 .limit(1)
                 .get()
                 .await()
@@ -521,8 +530,9 @@ class FirebaseAuthHelper(private val context: Context) {
     suspend fun getRecentExerciseLogs(userId: String, days: Int = 3): List<Map<String, Any>> {
         return try {
             val cutoff = System.currentTimeMillis() - (days * 24 * 60 * 60 * 1000L)
-            val querySnapshot = firestore.collection("exerciseLogs")
-                .whereEqualTo("userId", userId)
+            val querySnapshot = firestore.collection("users")
+                .document(userId)
+                .collection("exercise_logs")
                 .whereGreaterThanOrEqualTo("timestamp", cutoff)
                 .get()
                 .await()
@@ -546,7 +556,11 @@ class FirebaseAuthHelper(private val context: Context) {
                 "date" to date
             )
             
-            firestore.collection("weightLogs").add(weightData).await()
+            firestore.collection("users")
+                .document(userId)
+                .collection("weightLogs")
+                .add(weightData)
+                .await()
             
             // Also update current weight in user profile
             updateUserPhysicalStats(userId, 0.0, weight, "", 0) // Validating parameters might be needed, ignoring for now as update helper might overwrite
@@ -563,8 +577,9 @@ class FirebaseAuthHelper(private val context: Context) {
     suspend fun getRecentWeightLogs(userId: String, days: Int = 14): List<Map<String, Any>> {
         return try {
             val cutoff = System.currentTimeMillis() - (days * 24 * 60 * 60 * 1000L)
-            val querySnapshot = firestore.collection("weightLogs")
-                .whereEqualTo("userId", userId)
+            val querySnapshot = firestore.collection("users")
+                .document(userId)
+                .collection("weightLogs")
                 .whereGreaterThanOrEqualTo("timestamp", cutoff)
                 .get()
                 .await()
@@ -611,6 +626,106 @@ class FirebaseAuthHelper(private val context: Context) {
         }
     }
 
+    // ==================== EXERCISE LOGGING METHODS ====================
+
+    // Log exercise entry
+    suspend fun logExercise(exerciseLog: ExerciseLog): Result<String> {
+        return try {
+            val userExerciseLogsRef = firestore.collection("users")
+                .document(exerciseLog.userId)
+                .collection("exercise_logs") // Matched to Firestore new structure
+
+            val exerciseData = hashMapOf(
+                "userId" to exerciseLog.userId,
+                "exerciseName" to exerciseLog.exerciseName,
+                "caloriesBurned" to exerciseLog.caloriesBurned,
+                "duration" to exerciseLog.duration,
+                "timestamp" to exerciseLog.timestamp,
+                "date" to exerciseLog.date
+            )
+            
+            val docRef = userExerciseLogsRef.add(exerciseData).await()
+            Result.success(docRef.id)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    // Delete an exercise log entry
+    suspend fun deleteExerciseLog(userId: String, logId: String): Result<Boolean> {
+        return try {
+            firestore.collection("users")
+                .document(userId)
+                .collection("exercise_logs")
+                .document(logId)
+                .delete()
+                .await()
+            Result.success(true)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    // Get ALL exercise logs
+    suspend fun getAllExerciseLogs(userId: String): Result<List<ExerciseLog>> {
+        return try {
+            val querySnapshot = firestore.collection("users")
+                .document(userId)
+                .collection("exercise_logs")
+                .orderBy("timestamp", com.google.firebase.firestore.Query.Direction.DESCENDING)
+                .get()
+                .await()
+            
+            val logs = querySnapshot.documents.mapNotNull { doc ->
+                ExerciseLog(
+                    logId = doc.id,
+                    userId = doc.getString("userId") ?: "",
+                    exerciseName = doc.getString("exerciseName") ?: "",
+                    caloriesBurned = (doc.getLong("caloriesBurned") ?: 0).toInt(),
+                    duration = (doc.getLong("duration") ?: 0).toInt(),
+                    timestamp = doc.getLong("timestamp") ?: 0L,
+                    date = doc.getString("date") ?: ""
+                )
+            }
+            
+            Result.success(logs)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    // Get today's exercise logs
+    suspend fun getTodayExerciseLogs(userId: String): Result<List<ExerciseLog>> {
+        return try {
+            val dateFormat = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
+            val today = dateFormat.format(java.util.Date())
+            
+            val querySnapshot = firestore.collection("users")
+                .document(userId)
+                .collection("exercise_logs")
+                .whereEqualTo("date", today)
+                .get()
+                .await()
+            
+            val logs = querySnapshot.documents.mapNotNull { doc ->
+                ExerciseLog(
+                    logId = doc.id,
+                    userId = doc.getString("userId") ?: "",
+                    exerciseName = doc.getString("exerciseName") ?: "",
+                    caloriesBurned = (doc.getLong("caloriesBurned") ?: 0).toInt(),
+                    duration = (doc.getLong("duration") ?: 0).toInt(),
+                    timestamp = doc.getLong("timestamp") ?: 0L,
+                    date = doc.getString("date") ?: ""
+                )
+            }
+            
+            Result.success(logs)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+
     /**
      * Update goal with calculated calories and lifestyle data
      */
@@ -656,15 +771,16 @@ class FirebaseAuthHelper(private val context: Context) {
             firestore.collection("users").document(userId).update(userUpdates).await()
             
             // Find goal doc to update
-             val querySnapshot = firestore.collection("goals")
-                .whereEqualTo("userId", userId)
+             val querySnapshot = firestore.collection("users")
+                .document(userId)
+                .collection("goals")
                 .limit(1)
                 .get()
                 .await()
             
             if (!querySnapshot.isEmpty) {
                 val goalDocId = querySnapshot.documents[0].id
-                firestore.collection("goals").document(goalDocId).update(updates).await()
+                firestore.collection("users").document(userId).collection("goals").document(goalDocId).update(updates).await()
             } else {
                 // If no goal exists, create one? For now just return success as user update worked
             }

@@ -108,12 +108,21 @@
             android:screenOrientation="portrait" />
 
         <activity
+            android:name=".SettingsActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+        <activity
             android:name=".ProfileActivity"
             android:exported="false"
             android:screenOrientation="portrait" />
 
         <activity
             android:name=".FoodLogActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name=".ExerciseLogActivity"
             android:exported="false"
             android:screenOrientation="portrait" />
 

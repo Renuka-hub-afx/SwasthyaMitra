@@ -1114,11 +1114,22 @@
                 app:backgroundTint="@null"
                 app:cornerRadius="8dp" />
 
-            <View
+            <!-- Exercise Log Button -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/card_exercise_log"
+                style="@style/Widget.MaterialComponents.Button.UnelevatedButton"
                 android:layout_width="0dp"
-                android:layout_height="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="4dp"
                 android:layout_weight="1"
-                android:layout_marginStart="4dp"/>
+                android:background="@drawable/button_background"
+                android:text="📝\nLOGS"
+                android:textColor="#FFFFFF"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                app:backgroundTint="@null"
+                app:cornerRadius="8dp" />
+
 
         </LinearLayout>
 

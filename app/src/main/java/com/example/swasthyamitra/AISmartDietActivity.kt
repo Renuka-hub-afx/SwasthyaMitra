@@ -176,7 +176,7 @@ class AISmartDietActivity : AppCompatActivity() {
                 "source" to "AI_Recommendation"  // Tag to identify AI-suggested meals
             )
             
-            firestore.collection("foodLogs").add(foodLogData).await()
+            firestore.collection("users").document(userId).collection("foodLogs").add(foodLogData).await()
             Log.d(TAG, "Meal logged to foodLogs: ${meal.item}")
         } catch (e: Exception) {
             Log.e(TAG, "Error logging meal to foodLogs: ${e.message}", e)

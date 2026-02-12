@@ -39,21 +39,9 @@ class SmartPantryActivity : AppCompatActivity() {
     }
 
     private fun setupUI() {
-        // Navigation Logic
-        binding.menuHome.setOnClickListener {
-            // Return to Homepage
+        // Back Button Logic
+        binding.btnBack.setOnClickListener {
             finish()
-        }
-        
-        binding.menuDashboard.setOnClickListener {
-            // Already on a feature, maybe go to logs? For now, just finish to home
-            finish()
-        }
-        
-        binding.menuProfile.setOnClickListener {
-            // Navigate to Profile
-             val intent = Intent(this, UserInfoActivity::class.java)
-             startActivity(intent)
         }
 
         binding.btnTakePhoto.setOnClickListener {
