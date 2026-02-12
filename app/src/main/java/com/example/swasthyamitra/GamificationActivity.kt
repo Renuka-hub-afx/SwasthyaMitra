@@ -27,6 +27,7 @@ import android.view.Gravity
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import android.widget.LinearLayout
+import com.google.firebase.firestore.FirebaseFirestore
 import com.example.swasthyamitra.auth.FirebaseAuthHelper
 import java.util.Calendar
 import java.util.Locale
@@ -84,7 +85,12 @@ class GamificationActivity : AppCompatActivity() {
         
         try {
             if (FirebaseApp.getApps(this).isNotEmpty()) {
-                database = FirebaseDatabase.getInstance("https://swasthyamitra-ded44-default-rtdb.asia-southeast1.firebasedatabase.app").reference
+                // Original line: database = FirebaseDatabase.getInstance("https://swasthyamitra-ded44-default-rtdb.asia-southeast1.firebasedatabase.app").reference
+                // The instruction was syntactically incorrect, assuming the intent was to initialize FirebaseFirestore.
+                // If the intent was to replace FirebaseDatabase with FirebaseFirestore, further changes would be needed for 'database' variable type and usage.
+                // For now, initializing firestore as a separate instance as per the instruction's text.
+                val firestore = FirebaseFirestore.getInstance("renu") // Initializing FirebaseFirestore with the specified name
+                database = FirebaseDatabase.getInstance("https://swasthyamitra-ded44-default-rtdb.asia-southeast1.firebasedatabase.app").reference // Keeping original FirebaseDatabase initialization
                 repository = GamificationRepository(database!!, userId)
                 syncWithFirebase()
             } else {

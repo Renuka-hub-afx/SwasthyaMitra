@@ -44,12 +44,19 @@ class MainActivity : AppCompatActivity() {
     private fun checkAutoLogin() {
         try {
             if (::authHelper.isInitialized && authHelper.isUserLoggedIn()) {
-                // User is logged in, check profile completion status
                 val userId = authHelper.getCurrentUser()?.uid
                 if (userId != null) {
-                    Log.d("MainActivity", "User already logged in with ID: $userId, checking profile completion")
-                    // Use the existing validation logic to determine navigation
-                    checkProfileAndNavigate(userId)
+                    // FAST PATH: Check local preferences first
+                    val sharedPreferences = getSharedPreferences("UserPreferences", MODE_PRIVATE)
+                    val isProfileCompleted = sharedPreferences.getBoolean("PROFILE_COMPLETED", false)
+                    
+                    if (isProfileCompleted) {
+                         Log.d("MainActivity", "Local flag PROFILE_COMPLETED is true. Going to Homepage.")
+                         navigateToHomePage(userId)
+                    } else {
+                        Log.d("MainActivity", "User logged in, checking profile completion on server...")
+                        checkProfileAndNavigate(userId)
+                    }
                 } else {
                     Log.d("MainActivity", "User logged in but no UID found")
                     showWelcomeScreen()
@@ -83,7 +90,12 @@ class MainActivity : AppCompatActivity() {
                             when {
                                 // Profile complete: has height, weight, gender, goal, and lifestyle
                                 height > 0 && weight > 0 && gender.isNotEmpty() && hasGoal && hasLifestyle -> {
-                                    Log.d("MainActivity", "Profile complete, going to homepage")
+                                    Log.d("MainActivity", "Server Profile complete. Setting local flag and going to homepage")
+                                    
+                                    // HEALING: Set the flag so next time we don't need to check server
+                                    val sharedPreferences = getSharedPreferences("UserPreferences", MODE_PRIVATE)
+                                    sharedPreferences.edit().putBoolean("PROFILE_COMPLETED", true).apply()
+                                    
                                     navigateToHomePage(userId)
                                 }
                                 // Has profile and goal but no lifestyle

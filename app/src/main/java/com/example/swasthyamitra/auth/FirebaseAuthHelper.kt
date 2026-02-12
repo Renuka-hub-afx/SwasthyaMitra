@@ -12,7 +12,14 @@ import kotlinx.coroutines.tasks.await
 class FirebaseAuthHelper(private val context: Context) {
 
     private val auth: FirebaseAuth = FirebaseAuth.getInstance()
-    private val firestore: FirebaseFirestore = FirebaseFirestore.getInstance("renu") // Using RENU database instance
+    private val firestore: FirebaseFirestore by lazy {
+        try {
+            FirebaseFirestore.getInstance("renu") // Using RENU database instance
+        } catch (e: Exception) {
+            Log.e("FirebaseAuthHelper", "Failed to initialize 'renu' database, using default: ${e.message}")
+            FirebaseFirestore.getInstance() // Fallback to default
+        }
+    }
 
     // Get current user
     fun getCurrentUser(): FirebaseUser? = auth.currentUser

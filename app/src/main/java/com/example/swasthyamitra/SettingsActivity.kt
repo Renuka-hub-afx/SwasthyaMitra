@@ -18,7 +18,12 @@ import java.util.concurrent.TimeUnit
 
 class SettingsActivity : AppCompatActivity() {
 
-    private lateinit var switchSmartNotifications: SwitchMaterial
+    private lateinit var switchWater: SwitchMaterial
+    private lateinit var switchBreakfast: SwitchMaterial
+    private lateinit var switchLunch: SwitchMaterial
+    private lateinit var switchDinner: SwitchMaterial
+    private lateinit var switchEvents: SwitchMaterial
+    
     private lateinit var sharedPrefs: SharedPreferences
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -27,89 +32,72 @@ class SettingsActivity : AppCompatActivity() {
 
         sharedPrefs = getSharedPreferences("app_settings", Context.MODE_PRIVATE)
 
-        switchSmartNotifications = findViewById(R.id.switchSmartNotifications)
-        val btnBack = findViewById<ImageView>(R.id.btnBack)
+        switchWater = findViewById(R.id.switchWater)
+        switchBreakfast = findViewById(R.id.switchBreakfast)
+        switchLunch = findViewById(R.id.switchLunch)
+        switchDinner = findViewById(R.id.switchDinner)
+        switchEvents = findViewById(R.id.switchEvents)
 
-        // Load saved state
-        val isEnabled = sharedPrefs.getBoolean("smart_notifications_enabled", false)
-        switchSmartNotifications.isChecked = isEnabled
+        setupSwitch(switchWater, "pref_water", "WaterReminderWork")
+        setupSwitch(switchBreakfast, "pref_breakfast", "MealEventWork")
+        setupSwitch(switchLunch, "pref_lunch", "MealEventWork")
+        setupSwitch(switchDinner, "pref_dinner", "MealEventWork")
+        setupSwitch(switchEvents, "pref_events", "MealEventWork")
 
-        switchSmartNotifications.setOnCheckedChangeListener { _, isChecked ->
+        findViewById<ImageView>(R.id.btnBack).setOnClickListener { finish() }
+    }
+
+    private fun setupSwitch(switch: SwitchMaterial, key: String, workerTag: String) {
+        // Load State
+        switch.isChecked = sharedPrefs.getBoolean(key, true) // Default true for now
+
+        switch.setOnCheckedChangeListener { _, isChecked ->
+            // Save State
+            sharedPrefs.edit().putBoolean(key, isChecked).apply()
+            
             if (isChecked) {
-                enableNotifications()
+                checkPermission()
+            }
+            
+            // Re-evaluate Workers
+            updateWorkers(workerTag)
+        }
+    }
+
+    private fun updateWorkers(tag: String) {
+        val workManager = WorkManager.getInstance(this)
+        
+        if (tag == "WaterReminderWork") {
+            if (sharedPrefs.getBoolean("pref_water", true)) {
+                val waterRequest = PeriodicWorkRequestBuilder<WaterNotificationWorker>(1, TimeUnit.HOURS).build()
+                workManager.enqueueUniquePeriodicWork("WaterReminderWork", ExistingPeriodicWorkPolicy.UPDATE, waterRequest)
             } else {
-                disableNotifications()
+                workManager.cancelUniqueWork("WaterReminderWork")
+            }
+        } else if (tag == "MealEventWork") {
+            // Only cancel if ALL meal/event prefs are false
+            val b = sharedPrefs.getBoolean("pref_breakfast", true)
+            val l = sharedPrefs.getBoolean("pref_lunch", true)
+            val d = sharedPrefs.getBoolean("pref_dinner", true)
+            val e = sharedPrefs.getBoolean("pref_events", true)
+            
+            if (b || l || d || e) {
+                val mealRequest = PeriodicWorkRequestBuilder<MealEventWorker>(1, TimeUnit.HOURS).build()
+                workManager.enqueueUniquePeriodicWork("MealEventWork", ExistingPeriodicWorkPolicy.UPDATE, mealRequest)
+            } else {
+                workManager.cancelUniqueWork("MealEventWork")
             }
         }
-
-        btnBack.setOnClickListener { finish() }
     }
-
-    private fun enableNotifications() {
-        // Request Permission for Android 13+
+    
+    private fun checkPermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            ActivityCompat.requestPermissions(
-                this,
-                arrayOf(android.Manifest.permission.POST_NOTIFICATIONS),
-                101
-            )
+            ActivityCompat.requestPermissions(this, arrayOf(android.Manifest.permission.POST_NOTIFICATIONS), 101)
         }
-
-        // Save State
-        sharedPrefs.edit().putBoolean("smart_notifications_enabled", true).apply()
-
-        // Schedule Workers
-        scheduleWorkers()
-        
-        Toast.makeText(this, "Smart Notifications Enabled! \uD83D\uDCA7", Toast.LENGTH_SHORT).show()
     }
-
-    private fun disableNotifications() {
-        // Save State
-        sharedPrefs.edit().putBoolean("smart_notifications_enabled", false).apply()
-
-        // Cancel Workers
-        WorkManager.getInstance(this).cancelUniqueWork("WaterReminderWork")
-        WorkManager.getInstance(this).cancelUniqueWork("MealEventWork")
-
-        Toast.makeText(this, "Notifications Disabled", Toast.LENGTH_SHORT).show()
-    }
-
-    private fun scheduleWorkers() {
-        val workManager = WorkManager.getInstance(this)
-
-        // Water: Every 1 hour
-        val waterRequest = PeriodicWorkRequestBuilder<WaterNotificationWorker>(1, TimeUnit.HOURS)
-            .build()
-
-        workManager.enqueueUniquePeriodicWork(
-            "WaterReminderWork",
-            ExistingPeriodicWorkPolicy.UPDATE, // Update existing (reschedule) or KEEP
-            waterRequest
-        )
-
-        // Meal/Events: Checks every 1 hour (to be safe and catch meal windows)
-        // If we want 15 mins for precision we can, but 1 hour is battery friendly and "roughly" ok for meal windows (7-9, 12-14, 19-21)
-        val mealRequest = PeriodicWorkRequestBuilder<MealEventWorker>(1, TimeUnit.HOURS)
-            .build()
-            
-        workManager.enqueueUniquePeriodicWork(
-            "MealEventWork",
-            ExistingPeriodicWorkPolicy.UPDATE,
-            mealRequest
-        )
-    }
-
+    
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (requestCode == 101) {
-            if (grantResults.isNotEmpty() && grantResults[0] == android.content.pm.PackageManager.PERMISSION_GRANTED) {
-                // Permission granted
-            } else {
-                Toast.makeText(this, "Permission denied. Notifications won't show.", Toast.LENGTH_LONG).show()
-                // Optionally toggle switch back off
-                // switchSmartNotifications.isChecked = false
-            }
-        }
+        // Handle result if needed
     }
 }

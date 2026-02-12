@@ -252,27 +252,51 @@
                         android:clickable="false"
                         android:focusable="false">
 
+                        <FrameLayout
+                            android:layout_width="50dp"
+                            android:layout_height="50dp">
+
+                            <ProgressBar
+                                android:id="@+id/waterProgressBar"
+                                style="?android:attr/progressBarStyleHorizontal"
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:indeterminate="false"
+                                android:max="100"
+                                android:progress="0"
+                                android:progressDrawable="@drawable/circular_progress_bar"
+                                android:rotation="-90"/>
+
+                            <ImageView
+                                android:layout_width="20dp"
+                                android:layout_height="20dp"
+                                android:layout_gravity="center"
+                                android:src="@drawable/ic_water_drop"
+                                app:tint="#2196F3"/>
+                        </FrameLayout>
+
                         <TextView
                             android:id="@+id/tv_water_total"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="0"
-                            android:textSize="18sp"
+                            android:text="0 ml"
+                            android:textSize="12sp"
                             android:textStyle="bold"
                             android:maxLines="1"
-                            android:textColor="#2196F3"/>
+                            android:textColor="#2196F3"
+                            android:layout_marginTop="2dp"/>
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Water"
+                            android:textSize="13sp"
+                            android:textColor="#666666"
+                            android:layout_marginTop="2dp"/>
 
                     </LinearLayout>
 
                 </LinearLayout>
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
-                    android:text="Water"
-                    android:textColor="#666666"
-                    android:textSize="13sp" />
 
             </LinearLayout>
 
@@ -1098,6 +1122,48 @@
                 app:backgroundTint="@null"
                 app:cornerRadius="8dp" />
 
+
+        </LinearLayout>
+
+        <!-- Progress Dashboard & Analytics Row -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:weightSum="2"
+            android:layout_marginBottom="20dp">
+
+            <!-- Progress Dashboard Button -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/card_progress_dashboard"
+                style="@style/Widget.MaterialComponents.Button.UnelevatedButton"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="4dp"
+                android:layout_weight="1"
+                android:background="@drawable/button_background"
+                android:text="📊\nPROGRESS"
+                android:textColor="#FFFFFF"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                app:backgroundTint="@null"
+                app:cornerRadius="8dp" />
+
+            <!-- Insights Button (Placeholder for future) -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/card_insights"
+                style="@style/Widget.MaterialComponents.Button.UnelevatedButton"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="4dp"
+                android:layout_weight="1"
+                android:background="@drawable/button_background"
+                android:text="💡\nINSIGHTS"
+                android:textColor="#FFFFFF"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                app:backgroundTint="@null"
+                app:cornerRadius="8dp" />
 
         </LinearLayout>
 

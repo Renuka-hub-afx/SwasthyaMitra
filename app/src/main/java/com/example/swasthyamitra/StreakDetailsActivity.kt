@@ -12,6 +12,7 @@ import androidx.appcompat.app.AppCompatActivity
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
+import com.google.firebase.firestore.FirebaseFirestore
 import java.util.Locale
 
 class StreakDetailsActivity : AppCompatActivity() {
@@ -84,7 +85,7 @@ class StreakDetailsActivity : AppCompatActivity() {
         }
         
         // Reset to current month initially
-        displayCalendar = Calendar.getInstance()
+        val firestore = FirebaseFirestore.getInstance("renu")
         displayCalendar.set(Calendar.DAY_OF_MONTH, 1)
         
         generateCalendar()
