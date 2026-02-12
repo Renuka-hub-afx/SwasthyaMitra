@@ -248,6 +248,11 @@
             android:name=".reminders.ExerciseReminderReceiver"
             android:exported="false" />
 
+        <receiver
+            android:name=".receivers.ActivityUpdateReceiver"
+            android:exported="false" />
+
+
         <service
             android:name=".services.StepCounterService"
             android:enabled="true"

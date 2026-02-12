@@ -38,15 +38,34 @@ class StepCounterService : Service(), SensorEventListener {
         const val NOTIFICATION_ID = 888
         const val CHANNEL_ID = "StepCounterChannel"
         const val ACTION_UPDATE_STEPS = "com.example.swasthyamitra.UPDATE_STEPS"
+        const val ACTION_ACTIVITY_UPDATE = "com.example.swasthyamitra.ACTIVITY_UPDATE"
     }
 
     private lateinit var sensorManager: SensorManager
     private var stepSensor: Sensor? = null
+    private var accelSensor: Sensor? = null
     
     // Core Logic
     private val stepVerifier = StepVerifier()
     private val binder = LocalBinder()
-    
+    private lateinit var activityRecognitionClient: com.google.android.gms.location.ActivityRecognitionClient
+    private lateinit var activityUpdatePendingIntent: PendingIntent
+
+    // Internal Receiver for activity updates forwarded by the global receiver
+    private val activityUpdateReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            if (intent?.action == ACTION_ACTIVITY_UPDATE) {
+                val type = intent.getIntExtra("activity_type", -1)
+                val confidence = intent.getIntExtra("confidence", 0)
+                
+                if (type != -1) {
+                    stepVerifier.currentActivityType = type
+                    stepVerifier.currentConfidence = confidence
+                    Log.d("StepCounterService", "Updated verifier activity: $type ($confidence%)")
+                }
+            }
+        }
+    }
     // Persistence
     private lateinit var prefs: SharedPreferences
     private var dailySteps = 0
@@ -71,9 +90,48 @@ class StepCounterService : Service(), SensorEventListener {
         
         sensorManager = getSystemService(Context.SENSOR_SERVICE) as SensorManager
         stepSensor = sensorManager.getDefaultSensor(Sensor.TYPE_STEP_COUNTER)
+        accelSensor = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
         
         startForegroundService()
         registerSensors()
+        
+        // Initialize Activity Recognition
+        activityRecognitionClient = com.google.android.gms.location.ActivityRecognition.getClient(this)
+        val intent = Intent(this, com.example.swasthyamitra.receivers.ActivityUpdateReceiver::class.java)
+        activityUpdatePendingIntent = PendingIntent.getBroadcast(
+            this,
+            0,
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+        
+        // Register local receiver for updates
+        val filter = IntentFilter(ACTION_ACTIVITY_UPDATE)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            registerReceiver(activityUpdateReceiver, filter, Context.RECEIVER_NOT_EXPORTED)
+        } else {
+            registerReceiver(activityUpdateReceiver, filter)
+        }
+        
+        requestActivityUpdates()
+    }
+    
+    private fun requestActivityUpdates() {
+        if (androidx.core.app.ActivityCompat.checkSelfPermission(
+                this,
+                android.Manifest.permission.ACTIVITY_RECOGNITION
+            ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+        ) {
+            activityRecognitionClient.requestActivityUpdates(3000L, activityUpdatePendingIntent)
+                .addOnSuccessListener {
+                    Log.d("StepCounterService", "Activity Recognition updates requested successfully")
+                }
+                .addOnFailureListener { e ->
+                    Log.e("StepCounterService", "Failed to request activity updates", e)
+                }
+        } else {
+            Log.w("StepCounterService", "Activity Recognition permission not granted")
+        }
     }
     
     private fun startForegroundService() {
@@ -108,6 +166,9 @@ class StepCounterService : Service(), SensorEventListener {
         stepSensor?.let {
             sensorManager.registerListener(this, it, SensorManager.SENSOR_DELAY_FASTEST)
         }
+        accelSensor?.let {
+            sensorManager.registerListener(this, it, SensorManager.SENSOR_DELAY_GAME)
+        }
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -116,8 +177,15 @@ class StepCounterService : Service(), SensorEventListener {
 
     override fun onSensorChanged(event: SensorEvent?) {
         event ?: return
-        if (event.sensor.type == Sensor.TYPE_STEP_COUNTER) {
-            processStepUpdate(event.values[0])
+        when (event.sensor.type) {
+            Sensor.TYPE_STEP_COUNTER -> processStepUpdate(event.values[0])
+            Sensor.TYPE_ACCELEROMETER -> {
+                val x = event.values[0]
+                val y = event.values[1]
+                val z = event.values[2]
+                val magnitude = Math.sqrt((x * x + y * y + z * z).toDouble())
+                stepVerifier.currentMagnitude = magnitude
+            }
         }
     }
 
@@ -147,21 +215,21 @@ class StepCounterService : Service(), SensorEventListener {
         val diff = (rawSteps - lastSensorValue!!).toInt()
         
         if (diff > 0) {
-            val currentTime = System.currentTimeMillis()
-            val timeDelta = if (lastUpdateTime > 0) currentTime - lastUpdateTime else 1000L
-            
-            // Hybrid Validation (Activity + Cadence)
-            if (stepVerifier.validateBatch(diff, timeDelta)) {
-                 dailySteps += diff
-                 lastUpdateTime = currentTime
+            var validatedSteps = 0
+            // Process each step individually to satisfy interval/consistency checks
+            for (i in 1..diff) {
+                validatedSteps += stepVerifier.verifyStep()
+            }
+
+            if (validatedSteps > 0) {
+                 dailySteps += validatedSteps
                  lastSensorValue = rawSteps
                  saveData()
                  updateNotification()
                  broadcastUpdate()
             } else {
-                Log.d("StepCounterService", "Steps rejected: diff=$diff, Activity=${stepVerifier.currentActivityType}, Conf=${stepVerifier.currentConfidence}")
+                Log.d("StepCounterService", "Steps rejected by verifier")
                 lastSensorValue = rawSteps
-                lastUpdateTime = currentTime
             }
         }
     }
@@ -243,5 +311,11 @@ class StepCounterService : Service(), SensorEventListener {
     override fun onDestroy() {
         super.onDestroy()
         sensorManager.unregisterListener(this)
+        try {
+            unregisterReceiver(activityUpdateReceiver)
+            activityRecognitionClient.removeActivityUpdates(activityUpdatePendingIntent)
+        } catch (e: Exception) {
+            Log.e("StepCounterService", "Error cleaning up", e)
+        }
     }
 }
