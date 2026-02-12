@@ -250,12 +250,6 @@
             android:exported="false"
             android:screenOrientation="portrait" />
 
-        <!-- Smart Telegram Bot Service -->
-        <service
-            android:name=".services.SmartTelegramBotService"
-            android:enabled="true"
-            android:exported="false"
-            android:foregroundServiceType="dataSync" />
 
         <receiver
             android:name=".receivers.BootReceiver"
