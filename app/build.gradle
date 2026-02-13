@@ -94,6 +94,7 @@ dependencies {
 
     // Play Services
     implementation libs.play.services.location
+    implementation libs.play.services.maps
 
     // ML Kit & CameraX (Stable versions)
     implementation 'com.google.mlkit:barcode-scanning:17.3.0'

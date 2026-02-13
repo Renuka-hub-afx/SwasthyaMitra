@@ -117,7 +117,7 @@ class SignupActivity : AppCompatActivity() {
     private fun calculateAge(dob: String): Int {
         return try {
             val sdf = SimpleDateFormat("dd MMM yyyy", Locale.US)
-            val birthDate = sdf.parse(dob)
+            val birthDate = sdf.parse(dob) ?: return 0
             val today = Calendar.getInstance()
             val birth = Calendar.getInstance()
             birth.time = birthDate

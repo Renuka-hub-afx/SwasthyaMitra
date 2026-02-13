@@ -5,6 +5,7 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-feature android:name="android.hardware.camera" android:required="false" />
+    <uses-feature android:name="android.hardware.telephony" android:required="false" />
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
@@ -23,6 +24,7 @@
     <uses-permission android:name="android.permission.BODY_SENSORS" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_HEALTH" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.READ_CONTACTS" />
     
     <queries>
         <package android:name="com.google.android.youtube" />
@@ -157,10 +159,6 @@
             android:exported="false"
             android:screenOrientation="portrait" />
 
-        <activity
-            android:name=".ActiveDuelActivity"
-            android:exported="false"
-            android:screenOrientation="portrait" />
 
         <activity
             android:name=".MealPlanActivity"
@@ -201,35 +199,12 @@
             </intent-filter>
         </activity>
 
-        <activity
-            android:name=".ChallengeAcceptActivity"
-            android:exported="true"
-            android:screenOrientation="portrait">
-            <intent-filter>
-                <action android:name="android.intent.action.VIEW" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
-                <data
-                    android:host="challenge"
-                    android:pathPrefix="/join"
-                    android:scheme="swasthyamitra" />
-            </intent-filter>
-            <intent-filter android:autoVerify="true">
-                <action android:name="android.intent.action.VIEW" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
-                <data
-                    android:host="swasthyamitra.app"
-                    android:pathPrefix="/challenge/join"
-                    android:scheme="https" />
-            </intent-filter>
-        </activity>
 
-        <service
-            android:name=".services.SafetyMonitorService"
-            android:enabled="true"
+        <activity
+            android:name=".SafetyCoreActivity"
             android:exported="false"
-            android:foregroundServiceType="location" />
+            android:screenOrientation="portrait" />
+
 
         <activity
             android:name=".ui.hydration.HydrationActivity"
@@ -254,6 +229,16 @@
             android:enabled="true"
             android:exported="false"
             android:foregroundServiceType="dataSync" />
+
+        <service
+            android:name=".services.TrackingService"
+            android:enabled="true"
+            android:exported="false"
+            android:foregroundServiceType="location" />
+
+        <receiver
+            android:name=".services.ActivityTransitionReceiver"
+            android:exported="false" />
 
         <activity
             android:name=".DetailedReportActivity"
@@ -299,6 +284,10 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/provider_paths" />
         </provider>
+
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="AIzaSyCbQS3zxm_B3ndUYkPz2S1Sn2bbf_fDa-w" />
     </application>
 
 </manifest>

@@ -167,7 +167,7 @@ class WorkoutDashboardActivity : AppCompatActivity() {
         tvAiExerciseDuration = findViewById(R.id.tvAiExerciseDuration)
         
         // Buttons
-        btnAiExerciseDone = findViewById<View>(R.id.btnAiExerciseDone) as com.google.android.material.button.MaterialButton // Safe cast if XML is Button but we treat as View or correct type
+        btnAiExerciseDone = findViewById(R.id.btnAiExerciseDone)
         // Actually in XML it is <Button> which is AppCompatButton, but commonly castable. 
         // Let's fix the type in member variable if needed, or just finding by ID is enough.
         // In XML: btnAiExerciseDone is <Button>, btnAiExerciseSkip is <MaterialButton>
@@ -202,8 +202,9 @@ class WorkoutDashboardActivity : AppCompatActivity() {
             startActivity(Intent(this, InsightsActivity::class.java))
         }
 
-        findViewById<View>(R.id.cvSafety).setOnClickListener {
-            startActivity(Intent(this, SafetyActivity::class.java))
+
+        findViewById<View>(R.id.cvMapTracking).setOnClickListener {
+            startActivity(Intent(this, SafetyCoreActivity::class.java))
         }
 
         btnBackWorkout.setOnClickListener {
@@ -374,7 +375,7 @@ class WorkoutDashboardActivity : AppCompatActivity() {
             "timestamp" to System.currentTimeMillis()
         )
         
-        com.google.firebase.firestore.FirebaseFirestore.getInstance("renu") // Using RENU database instance
+        com.google.firebase.firestore.FirebaseFirestore.getInstance()
             .collection("users")
             .document(userId)
             .collection("exercise_logs")
@@ -682,8 +683,8 @@ class WorkoutDashboardActivity : AppCompatActivity() {
             }
 
             runOnUiThread {
-                tvCalorieStatus.text = statusText
-                tvRecommendationText.text = recommendation
+                // tvCalorieStatus.text = statusText // Old UI
+                // tvRecommendationText.text = recommendation // Old UI
                 updateVideoList(calorieStatus, intensity)
             }
         }

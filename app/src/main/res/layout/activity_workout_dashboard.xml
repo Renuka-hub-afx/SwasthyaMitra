@@ -6,51 +6,59 @@
     android:orientation="vertical"
     android:background="@drawable/background_main">
 
-    <!-- Header with Gradient -->
-    <RelativeLayout
+    <!-- Header (Matches Food Log) -->
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@drawable/button_background"
         android:elevation="4dp"
-        android:padding="20dp">
-
-        <ImageButton
-            android:id="@+id/btnBackWorkout"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:layout_alignParentStart="true"
-            android:layout_centerVertical="true"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:contentDescription="Back"
-            android:src="@drawable/ic_back"
-            app:tint="#FFFFFF"/>
+        android:orientation="vertical"
+        android:padding="16dp">
 
         <LinearLayout
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_centerInParent="true"
-            android:orientation="vertical"
-            android:gravity="center">
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <ImageButton
+                android:id="@+id/btnBackWorkout"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:src="@drawable/ic_back_arrow"
+                app:tint="#FFFFFF"
+                android:scaleType="centerInside"
+                android:padding="8dp"/>
 
             <TextView
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="center"
                 android:text="Workout &amp; Activity"
                 android:textColor="#FFFFFF"
-                android:textSize="20sp"
+                android:textSize="22sp"
                 android:textStyle="bold" />
 
-            <TextView
-                android:id="@+id/tv_date"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:text="Today"
-                android:textColor="#E3F2FD"
-                android:textSize="13sp" />
+            <!-- Spacer to balance title -->
+            <View
+                android:layout_width="40dp"
+                android:layout_height="40dp" />
+
         </LinearLayout>
 
-    </RelativeLayout>
+        <TextView
+            android:id="@+id/tv_date"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginTop="8dp"
+            android:text="Today"
+            android:textColor="#FFFFFF"
+            android:textSize="14sp" />
+
+    </LinearLayout>
 
     <ScrollView
         android:layout_width="match_parent"
@@ -63,101 +71,49 @@
             android:orientation="vertical"
             android:padding="16dp">
 
-            <!-- Live Steps Card -->
+            <!-- Live Steps Card (White Style) -->
             <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                app:cardCornerRadius="20dp"
-                app:cardElevation="4dp"
-                android:layout_marginBottom="20dp">
+                app:cardCornerRadius="16dp"
+                app:cardElevation="2dp"
+                android:layout_marginBottom="24dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:background="#FFFFFF"
-                    android:padding="24dp">
+                    android:background="@android:color/white"
+                    android:padding="24dp"
+                    android:gravity="center">
 
-                    <!-- Steps Icon and Title -->
-                    <LinearLayout
-                        android:layout_width="match_parent"
+                    <TextView
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:gravity="center_vertical"
-                        android:layout_marginBottom="16dp">
+                        android:text="LIVE STEPS"
+                        android:textColor="#999999"
+                        android:textSize="12sp"
+                        android:letterSpacing="0.1"
+                        android:textStyle="bold"/>
 
-                        <ImageView
-                            android:layout_width="40dp"
-                            android:layout_height="40dp"
-                            android:src="@drawable/ic_person"
-                            android:background="@drawable/circular_background"
-                            android:backgroundTint="#E8F5E9"
-                            android:padding="8dp"
-                            app:tint="#4CAF50"
-                            android:contentDescription="Steps"/>
-
-                        <LinearLayout
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:orientation="vertical"
-                            android:layout_marginStart="12dp">
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="LIVE STEPS TODAY"
-                                android:textColor="#999999"
-                                android:textSize="11sp"
-                                android:letterSpacing="0.1"
-                                android:textStyle="bold"/>
-
-                            <TextView
-                                android:id="@+id/tvStepsWorkout"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="0"
-                                android:textColor="#4CAF50"
-                                android:textSize="36sp"
-                                android:textStyle="bold"
-                                android:layout_marginTop="4dp"/>
-                        </LinearLayout>
-                    </LinearLayout>
-
-                    <!-- Progress Bar -->
-                    <ProgressBar
-                        android:id="@+id/progressSteps"
-                        style="?android:attr/progressBarStyleHorizontal"
-                        android:layout_width="match_parent"
-                        android:layout_height="8dp"
-                        android:max="10000"
-                        android:progress="0"
-                        android:progressDrawable="@drawable/circular_progress_bar"
-                        android:layout_marginBottom="8dp"/>
-
-                    <!-- Goal and Calories -->
-                    <LinearLayout
-                        android:layout_width="match_parent"
+                    <TextView
+                        android:id="@+id/tvStepsWorkout"
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:orientation="horizontal">
+                        android:text="0"
+                        android:textColor="#4CAF50"
+                        android:textSize="48sp"
+                        android:textStyle="bold"
+                        android:layout_marginTop="4dp"/>
 
-                        <TextView
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="Goal: 10,000 steps"
-                            android:textColor="#666666"
-                            android:textSize="12sp"/>
-
-                        <TextView
-                            android:id="@+id/tvCaloriesBurned"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="🔥 0.0 kcal"
-                            android:textColor="#E64A19"
-                            android:textSize="13sp"
-                            android:textStyle="bold"/>
-                    </LinearLayout>
+                    <TextView
+                        android:id="@+id/tvCaloriesBurned"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="0.0 kcal burned"
+                        android:textColor="#666666"
+                        android:textSize="14sp"
+                        android:layout_marginTop="8dp"/>
 
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
@@ -167,42 +123,42 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
-                android:layout_marginBottom="20dp"
-                android:weightSum="2">
+                android:layout_marginBottom="16dp"
+                android:gravity="center">
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnAiExerciseRecommendation"
-                    style="@style/Widget.MaterialComponents.Button.UnelevatedButton"
                     android:layout_width="0dp"
-                    android:layout_height="60dp"
+                    android:layout_height="56dp"
                     android:layout_weight="1"
-                    android:layout_marginEnd="8dp"
-                    android:text="🤖 AI Exercise"
+                    android:text="AI Exercise 🤖"
                     android:textSize="14sp"
-                    android:textColor="#FFFFFF"
                     android:textStyle="bold"
-                    android:background="@drawable/button_background"
-                    app:backgroundTint="@null"
-                    app:cornerRadius="16dp"/>
+                    app:backgroundTint="@color/colorPrimary"
+                    app:cornerRadius="12dp"
+                    app:icon="@drawable/ic_ai"
+                    app:iconGravity="textStart"
+                    app:iconPadding="8dp"
+                    android:layout_marginEnd="8dp"/>
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnManualExercise"
-                    style="@style/Widget.MaterialComponents.Button.UnelevatedButton"
                     android:layout_width="0dp"
-                    android:layout_height="60dp"
+                    android:layout_height="56dp"
                     android:layout_weight="1"
-                    android:layout_marginStart="8dp"
-                    android:text="✍️ Manual Log"
+                    android:text="Manual Log ✍️"
                     android:textSize="14sp"
-                    android:textColor="#FFFFFF"
                     android:textStyle="bold"
-                    android:background="@drawable/button_background"
-                    app:backgroundTint="@null"
-                    app:cornerRadius="16dp"/>
+                    app:backgroundTint="@color/colorAccent"
+                    app:cornerRadius="12dp"
+                    app:icon="@drawable/ic_edit"
+                    app:iconGravity="textStart"
+                    app:iconPadding="8dp"
+                    android:layout_marginStart="8dp"/>
 
             </LinearLayout>
 
-            <!-- AI Exercise Recommendation Card -->
+            <!-- AI Exercise Recommendation Card - ENHANCED DESIGN -->
             <androidx.cardview.widget.CardView
                 android:id="@+id/cardAiExercise"
                 android:layout_width="match_parent"
@@ -212,336 +168,329 @@
                 android:layout_marginBottom="24dp"
                 android:visibility="gone">
 
-                <LinearLayout
+                <ScrollView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:background="@android:color/white">
+                    android:scrollbars="none">
 
-                    <!-- Header with Gradient -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:background="@drawable/button_background"
-                        android:padding="16dp"
-                        android:orientation="horizontal"
-                        android:gravity="center_vertical">
+                        android:orientation="vertical"
+                        android:background="@android:color/white">
 
-                        <TextView
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="Your Personalized Exercise 💪"
-                            android:textStyle="bold"
-                            android:textColor="#FFFFFF"
-                            android:textSize="16sp"/>
-                    </LinearLayout>
-
-                    <!-- Scrollable Content -->
-                    <ScrollView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:scrollbars="none"
-                        android:maxHeight="600dp">
-
+                        <!-- Header with Gradient -->
                         <LinearLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:orientation="vertical">
+                            android:background="@drawable/button_background"
+                            android:padding="16dp"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical">
+                            
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="Your Personalized Exercise Today 💪"
+                                android:textStyle="bold"
+                                android:textColor="#FFFFFF"
+                                android:textSize="16sp"/>
+                        </LinearLayout>
 
-                            <!-- Exercise GIF / Image -->
-                            <androidx.cardview.widget.CardView
+                        <!-- Large GIF / Image -->
+                        <androidx.cardview.widget.CardView
+                            android:layout_width="match_parent"
+                            android:layout_height="300dp"
+                            app:cardCornerRadius="0dp"
+                            app:cardElevation="0dp">
+                            <ImageView
+                                android:id="@+id/ivAiExerciseGif"
                                 android:layout_width="match_parent"
-                                android:layout_height="250dp"
-                                app:cardCornerRadius="0dp"
-                                app:cardElevation="0dp">
-                                <ImageView
-                                    android:id="@+id/ivAiExerciseGif"
-                                    android:layout_width="match_parent"
-                                    android:layout_height="match_parent"
-                                    android:scaleType="centerCrop"
-                                    android:src="@drawable/ic_workout_placeholder"
-                                    android:background="#F5F5F5"
-                                    android:contentDescription="Exercise demonstration"/>
-                            </androidx.cardview.widget.CardView>
+                                android:layout_height="match_parent"
+                                android:scaleType="centerCrop"
+                                android:src="@drawable/ic_workout_placeholder"
+                                android:background="#F5F5F5"/>
+                        </androidx.cardview.widget.CardView>
 
-                            <!-- Content Container -->
+                        <!-- Content Container -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical"
+                            android:padding="20dp">
+
+                            <!-- Exercise Name -->
+                            <TextView
+                                android:id="@+id/tvAiExerciseName"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="CAT-COW STRETCH 💪"
+                                android:textSize="22sp"
+                                android:textStyle="bold"
+                                android:textColor="#333333"
+                                android:layout_marginBottom="12dp"/>
+
+                            <!-- Target & Equipment Row -->
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="horizontal"
+                                android:layout_marginBottom="12dp">
+
+                                <TextView
+                                    android:id="@+id/tvAiExerciseTarget"
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_weight="1"
+                                    android:text="🎯 Target: spine"
+                                    android:textSize="14sp"
+                                    android:textColor="#666666"/>
+
+                                <TextView
+                                    android:id="@+id/tvAiExerciseEquipment"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="🏋️ Equipment: body weight"
+                                    android:textSize="14sp"
+                                    android:textColor="#666666"/>
+                            </LinearLayout>
+
+                            <!-- Stats Row -->
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="horizontal"
+                                android:layout_marginBottom="16dp">
+
+                                <TextView
+                                    android:id="@+id/tvAiExerciseCalories"
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_weight="1"
+                                    android:text="🔥 ~150 kcal"
+                                    android:textStyle="bold"
+                                    android:textSize="15sp"
+                                    android:textColor="#E64A19"/>
+
+                                <TextView
+                                    android:id="@+id/tvAiExerciseDuration"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="⏱️ 15m"
+                                    android:textStyle="bold"
+                                    android:textSize="15sp"
+                                    android:textColor="@color/purple_500"/>
+                            </LinearLayout>
+
+                            <!-- Reason / Description -->
+                            <TextView
+                                android:id="@+id/tvAiExerciseReason"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="The Cat-Cow Stretch is perfect for easing menstrual cramps and improving circulation with gentle spinal movement."
+                                android:textSize="14sp"
+                                android:textColor="#555555"
+                                android:lineSpacingMultiplier="1.3"
+                                android:layout_marginBottom="16dp"/>
+
+                            <!-- Age Explanation Section -->
                             <LinearLayout
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:orientation="vertical"
-                                android:padding="20dp">
-
-                                <!-- Exercise Name -->
+                                android:background="#FFF3E0"
+                                android:padding="12dp"
+                                android:layout_marginBottom="12dp">
+                                
                                 <TextView
-                                    android:id="@+id/tvAiExerciseName"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:text="Exercise Name"
-                                    android:textSize="22sp"
-                                    android:textStyle="bold"
-                                    android:textColor="#333333"
-                                    android:layout_marginBottom="12dp"/>
-
-                                <!-- Target & Equipment Row -->
-                                <LinearLayout
+                                    android:id="@+id/tvAiExerciseAgeExplanation"
                                     android:layout_width="match_parent"
                                     android:layout_height="wrap_content"
-                                    android:orientation="horizontal"
-                                    android:layout_marginBottom="12dp">
-
-                                    <TextView
-                                        android:id="@+id/tvAiExerciseTarget"
-                                        android:layout_width="0dp"
-                                        android:layout_height="wrap_content"
-                                        android:layout_weight="1"
-                                        android:text="🎯 Target: Full body"
-                                        android:textSize="14sp"
-                                        android:textColor="#666666"/>
-
-                                    <TextView
-                                        android:id="@+id/tvAiExerciseEquipment"
-                                        android:layout_width="wrap_content"
-                                        android:layout_height="wrap_content"
-                                        android:text="🏋️ Body weight"
-                                        android:textSize="14sp"
-                                        android:textColor="#666666"/>
-                                </LinearLayout>
-
-                                <!-- Stats Row -->
-                                <LinearLayout
-                                    android:layout_width="match_parent"
-                                    android:layout_height="wrap_content"
-                                    android:orientation="horizontal"
-                                    android:layout_marginBottom="16dp">
-
-                                    <TextView
-                                        android:id="@+id/tvAiExerciseCalories"
-                                        android:layout_width="0dp"
-                                        android:layout_height="wrap_content"
-                                        android:layout_weight="1"
-                                        android:text="🔥 ~150 kcal"
-                                        android:textStyle="bold"
-                                        android:textSize="15sp"
-                                        android:textColor="#E64A19"/>
-
-                                    <TextView
-                                        android:id="@+id/tvAiExerciseDuration"
-                                        android:layout_width="wrap_content"
-                                        android:layout_height="wrap_content"
-                                        android:text="⏱️ 15m"
-                                        android:textStyle="bold"
-                                        android:textSize="15sp"
-                                        android:textColor="#7B2CBF"/>
-                                </LinearLayout>
-
-                                <!-- Reason / Description -->
-                                <TextView
-                                    android:id="@+id/tvAiExerciseReason"
-                                    android:layout_width="match_parent"
-                                    android:layout_height="wrap_content"
-                                    android:text="This exercise is perfect for you based on your goals and current fitness level."
-                                    android:textSize="14sp"
-                                    android:textColor="#555555"
-                                    android:lineSpacingMultiplier="1.3"
-                                    android:layout_marginBottom="16dp"/>
-
-                                <!-- ...existing code for other sections... -->
-
-                                <!-- Age Explanation Section -->
-                                <LinearLayout
-                                    android:layout_width="match_parent"
-                                    android:layout_height="wrap_content"
-                                    android:orientation="vertical"
-                                    android:background="#FFF3E0"
-                                    android:padding="12dp"
-                                    android:layout_marginBottom="12dp">
-
-                                    <TextView
-                                        android:id="@+id/tvAiExerciseAgeExplanation"
-                                        android:layout_width="match_parent"
-                                        android:layout_height="wrap_content"
-                                        android:text="💡 Perfect for your age group"
-                                        android:textSize="13sp"
-                                        android:textColor="#E65100"
-                                        android:lineSpacingMultiplier="1.3"/>
-                                </LinearLayout>
-
-                                <!-- Gender Note Section -->
-                                <LinearLayout
-                                    android:layout_width="match_parent"
-                                    android:layout_height="wrap_content"
-                                    android:orientation="vertical"
-                                    android:background="#FCE4EC"
-                                    android:padding="12dp"
-                                    android:layout_marginBottom="12dp">
-
-                                    <TextView
-                                        android:id="@+id/tvAiExerciseGenderNote"
-                                        android:layout_width="match_parent"
-                                        android:layout_height="wrap_content"
-                                        android:text="🌸 Beneficial for overall wellness"
-                                        android:textSize="13sp"
-                                        android:textColor="#C2185B"
-                                        android:lineSpacingMultiplier="1.3"/>
-                                </LinearLayout>
-
-                                <!-- Motivational Message Section -->
-                                <LinearLayout
-                                    android:layout_width="match_parent"
-                                    android:layout_height="wrap_content"
-                                    android:orientation="vertical"
-                                    android:background="#F3E5F5"
-                                    android:padding="12dp"
-                                    android:layout_marginBottom="16dp">
-
-                                    <TextView
-                                        android:id="@+id/tvAiExerciseMotivation"
-                                        android:layout_width="match_parent"
-                                        android:layout_height="wrap_content"
-                                        android:text="💕 You've got this!"
-                                        android:textSize="14sp"
-                                        android:textStyle="italic"
-                                        android:textColor="#7B1FA2"
-                                        android:lineSpacingMultiplier="1.3"/>
-                                </LinearLayout>
-
-                                <!-- Goal Alignment Section -->
-                                <LinearLayout
-                                    android:layout_width="match_parent"
-                                    android:layout_height="wrap_content"
-                                    android:orientation="vertical"
-                                    android:background="#E3F2FD"
-                                    android:padding="12dp"
-                                    android:layout_marginBottom="16dp">
-
-                                    <TextView
-                                        android:layout_width="match_parent"
-                                        android:layout_height="wrap_content"
-                                        android:text="🎯 GOAL ALIGNMENT:"
-                                        android:textSize="12sp"
-                                        android:textStyle="bold"
-                                        android:textColor="#1565C0"
-                                        android:layout_marginBottom="4dp"/>
-
-                                    <TextView
-                                        android:id="@+id/tvAiExerciseGoalAlignment"
-                                        android:layout_width="match_parent"
-                                        android:layout_height="wrap_content"
-                                        android:text="Aligned with your fitness goals"
-                                        android:textSize="13sp"
-                                        android:textColor="#0D47A1"
-                                        android:lineSpacingMultiplier="1.3"/>
-                                </LinearLayout>
-
-                                <!-- Instructions Section -->
-                                <TextView
-                                    android:layout_width="match_parent"
-                                    android:layout_height="wrap_content"
-                                    android:text="📝 HOW TO DO IT:"
-                                    android:textSize="14sp"
-                                    android:textStyle="bold"
-                                    android:textColor="#333333"
-                                    android:layout_marginBottom="8dp"/>
-
-                                <LinearLayout
-                                    android:id="@+id/llInstructions"
-                                    android:layout_width="match_parent"
-                                    android:layout_height="wrap_content"
-                                    android:orientation="vertical"
-                                    android:layout_marginBottom="16dp"/>
-
-                                <!-- Pro Tips Section -->
-                                <TextView
-                                    android:layout_width="match_parent"
-                                    android:layout_height="wrap_content"
-                                    android:text="✨ PRO TIPS:"
-                                    android:textSize="14sp"
-                                    android:textStyle="bold"
-                                    android:textColor="#4CAF50"
-                                    android:layout_marginBottom="8dp"/>
-
-                                <LinearLayout
-                                    android:id="@+id/llTips"
-                                    android:layout_width="match_parent"
-                                    android:layout_height="wrap_content"
-                                    android:orientation="vertical"
-                                    android:background="#E8F5E9"
-                                    android:padding="12dp"
-                                    android:layout_marginBottom="16dp"/>
-
-                                <!-- Common Mistakes Section -->
-                                <TextView
-                                    android:layout_width="match_parent"
-                                    android:layout_height="wrap_content"
-                                    android:text="⚠️ AVOID THESE MISTAKES:"
-                                    android:textSize="14sp"
-                                    android:textStyle="bold"
-                                    android:textColor="#F44336"
-                                    android:layout_marginBottom="8dp"/>
-
-                                <LinearLayout
-                                    android:id="@+id/llCommonMistakes"
-                                    android:layout_width="match_parent"
-                                    android:layout_height="wrap_content"
-                                    android:orientation="vertical"
-                                    android:background="#FFEBEE"
-                                    android:padding="12dp"
-                                    android:layout_marginBottom="20dp"/>
-
-                                <!-- Counter Text -->
-                                <TextView
-                                    android:id="@+id/tvExerciseCounter"
-                                    android:layout_width="match_parent"
-                                    android:layout_height="wrap_content"
-                                    android:text="Exercise 1 of 3"
-                                    android:gravity="center"
-                                    android:textColor="#888888"
+                                    android:text="💡 Age 23: At 23, this exercise helps maintain spine mobility and relieve stress, which is beneficial for overall well-being."
                                     android:textSize="13sp"
-                                    android:layout_marginBottom="16dp"/>
+                                    android:textColor="#E65100"
+                                    android:lineSpacingMultiplier="1.3"/>
+                            </LinearLayout>
 
-                                <!-- Actions Row -->
-                                <LinearLayout
+                            <!-- Gender Note Section -->
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="vertical"
+                                android:background="#FCE4EC"
+                                android:padding="12dp"
+                                android:layout_marginBottom="12dp">
+                                
+                                <TextView
+                                    android:id="@+id/tvAiExerciseGenderNote"
                                     android:layout_width="match_parent"
                                     android:layout_height="wrap_content"
-                                    android:orientation="horizontal"
-                                    android:weightSum="2">
-
-                                    <!-- Maybe Later Button -->
-                                    <com.google.android.material.button.MaterialButton
-                                        android:id="@+id/btnAiExerciseSkip"
-                                        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                                        android:layout_width="0dp"
-                                        android:layout_height="56dp"
-                                        android:layout_weight="1"
-                                        android:text="MAYBE LATER"
-                                        android:textColor="#666666"
-                                        android:textSize="13sp"
-                                        app:strokeColor="#7B2CBF"
-                                        app:strokeWidth="2dp"
-                                        app:cornerRadius="12dp"
-                                        android:layout_marginEnd="8dp"/>
-
-                                    <!-- I DID IT Button -->
-                                    <com.google.android.material.button.MaterialButton
-                                        android:id="@+id/btnAiExerciseDone"
-                                        style="@style/Widget.MaterialComponents.Button.UnelevatedButton"
-                                        android:layout_width="0dp"
-                                        android:layout_height="56dp"
-                                        android:layout_weight="1"
-                                        android:text="I DID IT! 💪"
-                                        android:background="@drawable/button_background"
-                                        app:backgroundTint="@null"
-                                        android:textColor="#FFFFFF"
-                                        android:textStyle="bold"
-                                        android:textSize="15sp"
-                                        android:layout_marginStart="8dp"/>
-                                </LinearLayout>
-
+                                    android:text="🌸 Excellent for pelvic circulation and relieving menstrual discomfort."
+                                    android:textSize="13sp"
+                                    android:textColor="#C2185B"
+                                    android:lineSpacingMultiplier="1.3"/>
                             </LinearLayout>
+
+                            <!-- Motivational Message Section -->
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="vertical"
+                                android:background="#F3E5F5"
+                                android:padding="12dp"
+                                android:layout_marginBottom="16dp">
+                                
+                                <TextView
+                                    android:id="@+id/tvAiExerciseMotivation"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:text="💕 This flowing movement is like a gentle massage for your spine. Perfect for today!"
+                                    android:textSize="14sp"
+                                    android:textStyle="italic"
+                                    android:textColor="#7B1FA2"
+                                    android:lineSpacingMultiplier="1.3"/>
+                            </LinearLayout>
+
+                            <!-- Goal Alignment Section -->
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="vertical"
+                                android:background="#E3F2FD"
+                                android:padding="12dp"
+                                android:layout_marginBottom="16dp">
+                                
+                                <TextView
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:text="🎯 GOAL ALIGNMENT:"
+                                    android:textSize="12sp"
+                                    android:textStyle="bold"
+                                    android:textColor="#1565C0"
+                                    android:layout_marginBottom="4dp"/>
+                                
+                                <TextView
+                                    android:id="@+id/tvAiExerciseGoalAlignment"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:text="For weight loss: This gentle movement increases blood flow and metabolism, preparing your body for more intense activity. Burns ~150 calories through sustained movement."
+                                    android:textSize="13sp"
+                                    android:textColor="#0D47A1"
+                                    android:lineSpacingMultiplier="1.3"/>
+                            </LinearLayout>
+
+                            <!-- Instructions Section -->
+                            <TextView
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="📝 HOW TO DO IT:"
+                                android:textSize="14sp"
+                                android:textStyle="bold"
+                                android:textColor="#333333"
+                                android:layout_marginBottom="8dp"/>
+
+                            <LinearLayout
+                                android:id="@+id/llInstructions"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="vertical"
+                                android:layout_marginBottom="16dp">
+                                <!-- Instructions will be added dynamically -->
+                            </LinearLayout>
+
+                            <!-- Pro Tips Section -->
+                            <TextView
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="✨ PRO TIPS:"
+                                android:textSize="14sp"
+                                android:textStyle="bold"
+                                android:textColor="#4CAF50"
+                                android:layout_marginBottom="8dp"/>
+
+                            <LinearLayout
+                                android:id="@+id/llTips"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="vertical"
+                                android:background="#E8F5E9"
+                                android:padding="12dp"
+                                android:layout_marginBottom="16dp">
+                                <!-- Tips will be added dynamically -->
+                            </LinearLayout>
+
+                            <!-- Common Mistakes Section -->
+                            <TextView
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="⚠️ AVOID THESE MISTAKES:"
+                                android:textSize="14sp"
+                                android:textStyle="bold"
+                                android:textColor="#F44336"
+                                android:layout_marginBottom="8dp"/>
+
+                            <LinearLayout
+                                android:id="@+id/llCommonMistakes"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="vertical"
+                                android:background="#FFEBEE"
+                                android:padding="12dp"
+                                android:layout_marginBottom="20dp">
+                                <!-- Mistakes will be added dynamically -->
+                            </LinearLayout>
+
+                            <!-- Counter Text -->
+                            <TextView
+                                android:id="@+id/tvExerciseCounter"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="Exercise 1 of 3"
+                                android:gravity="center"
+                                android:textColor="#888888"
+                                android:textSize="13sp"
+                                android:layout_marginBottom="16dp"/>
+                            
+                            <!-- Actions Row -->
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="horizontal"
+                                android:weightSum="2">
+
+                                <!-- Maybe Later Button -->
+                                <com.google.android.material.button.MaterialButton
+                                    android:id="@+id/btnAiExerciseSkip"
+                                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                                    android:layout_width="0dp"
+                                    android:layout_height="56dp"
+                                    android:layout_weight="0.9"
+                                    android:text="MAYBE LATER"
+                                    android:textColor="@color/gray_600"
+                                    android:textSize="13sp"
+                                    app:strokeColor="@color/purple_500"
+                                    app:strokeWidth="2dp"
+                                    app:cornerRadius="12dp"
+                                    android:layout_marginEnd="8dp"/>
+
+                                <!-- I DID IT Button with Gradient -->
+                                <Button
+                                    android:id="@+id/btnAiExerciseDone"
+                                    android:layout_width="0dp"
+                                    android:layout_height="56dp"
+                                    android:layout_weight="1.1"
+                                    android:text="I DID IT! 💪"
+                                    android:background="@drawable/button_background"
+                                    app:backgroundTint="@null"
+                                    android:textColor="#FFFFFF"
+                                    android:textStyle="bold"
+                                    android:textSize="15sp"/>
+                            </LinearLayout>
+
                         </LinearLayout>
-                    </ScrollView>
-                </LinearLayout>
+                    </LinearLayout>
+                </ScrollView>
             </androidx.cardview.widget.CardView>
 
             <!-- Video Recommendations List -->
@@ -666,15 +615,14 @@
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
 
-            <!-- Modules (Tools & Features) -->
+            <!-- Modules (Buttons) -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="TOOLS &amp; FEATURES"
-                android:textSize="12sp"
+                android:text="Tools &amp; Modules"
+                android:textSize="18sp"
                 android:textStyle="bold"
-                android:textColor="#999999"
-                android:letterSpacing="0.1"
+                android:textColor="#333333"
                 android:layout_marginBottom="12dp"/>
 
             <LinearLayout
@@ -684,53 +632,58 @@
                 android:weightSum="2"
                 android:layout_marginBottom="12dp">
 
-                <!-- Gamification / Leaderboard -->
+                <!-- Gamification -->
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/cvGamification"
                     style="@style/Widget.MaterialComponents.Button.UnelevatedButton"
                     android:layout_width="0dp"
-                    android:layout_height="80dp"
+                    android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:layout_marginEnd="8dp"
-                    android:text="🏆\nLEADERBOARD"
+                    android:text="🏆\n\nLEADER\nBOARD"
                     android:textColor="#FFFFFF"
                     android:textStyle="bold"
-                    android:textSize="14sp"
+                    android:paddingVertical="16dp"
                     android:background="@drawable/button_background"
                     app:backgroundTint="@null"
-                    app:cornerRadius="16dp"/>
+                    app:cornerRadius="12dp"/>
 
                 <!-- Insights -->
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/cvInsights"
                     style="@style/Widget.MaterialComponents.Button.UnelevatedButton"
                     android:layout_width="0dp"
-                    android:layout_height="80dp"
+                    android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:layout_marginStart="8dp"
-                    android:text="📊\nINSIGHTS"
+                    android:text="📊\n\nWORKOUT\nINSIGHTS"
                     android:textColor="#FFFFFF"
                     android:textStyle="bold"
-                    android:textSize="14sp"
+                    android:paddingVertical="16dp"
                     android:background="@drawable/button_background"
                     app:backgroundTint="@null"
-                    app:cornerRadius="16dp"/>
+                    app:cornerRadius="12dp"/>
             </LinearLayout>
 
-            <!-- Safety / Ghost Mode -->
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/cvSafety"
-                style="@style/Widget.MaterialComponents.Button.UnelevatedButton"
+            <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="70dp"
-                android:text="👻 GHOST MODE"
-                android:textColor="#FFFFFF"
-                android:textStyle="bold"
-                android:textSize="15sp"
-                android:background="@drawable/button_background"
-                app:backgroundTint="@null"
-                app:cornerRadius="16dp"
-                android:layout_marginBottom="24dp"/>
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <!-- Safety -->
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/cvSafety"
+                    style="@style/Widget.MaterialComponents.Button.UnelevatedButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="👻 GHOST MODE"
+                    android:textColor="#FFFFFF"
+                    android:textStyle="bold"
+                    android:paddingVertical="16dp"
+                    android:background="@drawable/button_background"
+                    app:backgroundTint="@null"
+                    app:cornerRadius="12dp"/>
+            </LinearLayout>
 
         </LinearLayout>
     </ScrollView>

@@ -130,6 +130,10 @@ class InsertGoalActivity : AppCompatActivity() {
     override fun onBackPressed() {
         // Prevent going back to login without completing profile
         android.widget.Toast.makeText(this, "Please complete your goal selection first", android.widget.Toast.LENGTH_SHORT).show()
-        // Don't call super - prevents back navigation
+        // Call super to satisfy lint, but we are effectively blocking it by not allowing finish() if we want.
+        // Actually super.onBackPressed() will call finish(). 
+        // If we want to block it, we must NOT call super, but lint will complain.
+        // Use @SuppressLint("MissingSuperCall") if we really want to block it.
+        // super.onBackPressed() 
     }
 }
