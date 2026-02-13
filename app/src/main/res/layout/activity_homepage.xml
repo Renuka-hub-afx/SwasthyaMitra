@@ -302,7 +302,7 @@
 
         </androidx.cardview.widget.CardView>
 
-        <!-- Sleep Tracking Card -->
+        <!-- Sleep Tracker Button Card -->
         <androidx.cardview.widget.CardView
             android:id="@+id/card_sleep_tracking"
             android:layout_width="match_parent"
@@ -318,178 +318,15 @@
                 android:padding="20dp"
                 android:background="@android:color/white">
 
-                <!-- Header -->
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical">
-
-                    <TextView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="Sleep Tracking 😴"
-                        android:textSize="18sp"
-                        android:textStyle="bold"
-                        android:textColor="#333333"/>
-
-                    <ImageView
-                        android:id="@+id/iv_sleep_info"
-                        android:layout_width="24dp"
-                        android:layout_height="24dp"
-                        android:src="@android:drawable/ic_dialog_info"
-                        android:tint="#9C27B0"
-                        android:contentDescription="Sleep info"/>
-
-                </LinearLayout>
-
-                <!-- Sleep Stats -->
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:layout_marginTop="16dp"
-                    android:weightSum="3">
-
-                    <!-- Last Night -->
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:orientation="vertical"
-                        android:gravity="center">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Last Night"
-                            android:textSize="11sp"
-                            android:textColor="#999999"/>
-
-                        <TextView
-                            android:id="@+id/tv_last_sleep_duration"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="7h 30m"
-                            android:textSize="20sp"
-                            android:textStyle="bold"
-                            android:textColor="#9C27B0"
-                            android:layout_marginTop="4dp"/>
-
-                    </LinearLayout>
-
-                    <!-- Avg This Week -->
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:orientation="vertical"
-                        android:gravity="center">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="7-Day Avg"
-                            android:textSize="11sp"
-                            android:textColor="#999999"/>
-
-                        <TextView
-                            android:id="@+id/tv_avg_sleep_duration"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="7h 15m"
-                            android:textSize="20sp"
-                            android:textStyle="bold"
-                            android:textColor="#673AB7"
-                            android:layout_marginTop="4dp"/>
-
-                    </LinearLayout>
-
-                    <!-- Sleep Quality -->
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:orientation="vertical"
-                        android:gravity="center">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Quality"
-                            android:textSize="11sp"
-                            android:textColor="#999999"/>
-
-                        <TextView
-                            android:id="@+id/tv_sleep_quality"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Good"
-                            android:textSize="16sp"
-                            android:textStyle="bold"
-                            android:textColor="#4CAF50"
-                            android:layout_marginTop="4dp"/>
-
-                    </LinearLayout>
-
-                </LinearLayout>
-
-                <!-- Sleep Goal Progress -->
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:layout_marginTop="16dp"
-                    android:background="#F5F5F5"
-                    android:padding="12dp">
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:gravity="center_vertical">
-
-                        <TextView
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="Sleep Goal: 8 hours"
-                            android:textSize="12sp"
-                            android:textColor="#666666"/>
-
-                        <TextView
-                            android:id="@+id/tv_sleep_goal_percentage"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="94%"
-                            android:textSize="14sp"
-                            android:textStyle="bold"
-                            android:textColor="#9C27B0"/>
-
-                    </LinearLayout>
-
-                    <ProgressBar
-                        android:id="@+id/pb_sleep_goal"
-                        style="?android:attr/progressBarStyleHorizontal"
-                        android:layout_width="match_parent"
-                        android:layout_height="8dp"
-                        android:layout_marginTop="8dp"
-                        android:progressTint="#9C27B0"
-                        android:max="100"
-                        android:progress="94"/>
-
-                </LinearLayout>
-
-                <!-- Track Sleep Button -->
+                <!-- Sleep Tracker Button -->
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btn_track_sleep"
                     style="@style/Widget.MaterialComponents.Button"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
-                    android:text="Track Sleep"
+                    android:layout_height="60dp"
+                    android:text="Sleep Tracker 😴"
                     android:textColor="#FFFFFF"
+                    android:textSize="18sp"
                     android:textStyle="bold"
                     app:backgroundTint="#9C27B0"
                     app:cornerRadius="12dp"
@@ -497,17 +334,6 @@
                     app:iconGravity="textStart"
                     app:iconTint="#FFFFFF"/>
 
-                <!-- Sleep Streak -->
-                <TextView
-                    android:id="@+id/tv_sleep_streak"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:text="🔥 3 days of good sleep!"
-                    android:textSize="13sp"
-                    android:textColor="#FF6F00"
-                    android:textStyle="bold"
-                    android:layout_gravity="center"/>
 
             </LinearLayout>
 
