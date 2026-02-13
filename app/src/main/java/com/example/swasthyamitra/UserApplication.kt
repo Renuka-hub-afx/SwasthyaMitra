@@ -14,6 +14,10 @@ class UserApplication : Application() {
         FirebaseAuthHelper(this)
     }
 
+    val stepManager: StepManager by lazy {
+        StepManager(this) { _, _ -> }
+    }
+
     override fun onCreate() {
         super.onCreate()
 

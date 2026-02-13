@@ -43,11 +43,12 @@ class StepManager(private val context: Context, private val onStepUpdate: (Int, 
         // but Service and Activity are same process here. Service used sendBroadcast().
         if (!isRegistered) {
             val filter = IntentFilter(StepCounterService.ACTION_UPDATE_STEPS)
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                context.registerReceiver(stepReceiver, filter, Context.RECEIVER_NOT_EXPORTED)
-            } else {
-                context.registerReceiver(stepReceiver, filter)
-            }
+            androidx.core.content.ContextCompat.registerReceiver(
+                context,
+                stepReceiver,
+                filter,
+                androidx.core.content.ContextCompat.RECEIVER_NOT_EXPORTED
+            )
             isRegistered = true
         }
         

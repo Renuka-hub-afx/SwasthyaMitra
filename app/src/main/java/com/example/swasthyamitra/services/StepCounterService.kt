@@ -107,11 +107,12 @@ class StepCounterService : Service(), SensorEventListener {
         
         // Register local receiver for updates
         val filter = IntentFilter(ACTION_ACTIVITY_UPDATE)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            registerReceiver(activityUpdateReceiver, filter, Context.RECEIVER_NOT_EXPORTED)
-        } else {
-            registerReceiver(activityUpdateReceiver, filter)
-        }
+        androidx.core.content.ContextCompat.registerReceiver(
+            this,
+            activityUpdateReceiver,
+            filter,
+            androidx.core.content.ContextCompat.RECEIVER_NOT_EXPORTED
+        )
         
         requestActivityUpdates()
     }

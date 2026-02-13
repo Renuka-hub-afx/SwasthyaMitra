@@ -32,7 +32,7 @@
                     android:background="?attr/selectableItemBackgroundBorderless"
                     android:contentDescription="Back"
                     android:src="@android:drawable/ic_menu_close_clear_cancel"
-                    android:tint="#FFFFFF" />
+                    app:tint="#FFFFFF" />
 
                 <TextView
                     android:layout_width="0dp"
