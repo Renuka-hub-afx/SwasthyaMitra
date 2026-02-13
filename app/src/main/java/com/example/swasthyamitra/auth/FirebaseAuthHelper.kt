@@ -790,4 +790,21 @@ class FirebaseAuthHelper(private val context: Context) {
             Result.failure(e)
         }
     }
+    // Get recent walking sessions
+    suspend fun getRecentWalkingSessions(userId: String, days: Int = 14): List<Map<String, Any>> {
+        return try {
+            val cutoff = System.currentTimeMillis() - (days * 24 * 60 * 60 * 1000L)
+            val querySnapshot = firestore.collection("users")
+                .document(userId)
+                .collection("walking_sessions")
+                .whereGreaterThanOrEqualTo("startTime", cutoff)
+                .get()
+                .await()
+            
+            querySnapshot.documents.map { it.data ?: emptyMap() }
+        } catch (e: Exception) {
+            Log.e("FirebaseAuthHelper", "Error fetching walking sessions", e)
+            emptyList()
+        }
+    }
 }

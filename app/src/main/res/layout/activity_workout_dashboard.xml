@@ -665,25 +665,20 @@
                     app:cornerRadius="12dp"/>
             </LinearLayout>
 
-            <LinearLayout
+            <!-- Live Tracking & Safety Combined -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/cvMapTracking"
+                style="@style/Widget.MaterialComponents.Button.UnelevatedButton"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal">
-
-                <!-- Safety -->
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/cvSafety"
-                    style="@style/Widget.MaterialComponents.Button.UnelevatedButton"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="👻 GHOST MODE"
-                    android:textColor="#FFFFFF"
-                    android:textStyle="bold"
-                    android:paddingVertical="16dp"
-                    android:background="@drawable/button_background"
-                    app:backgroundTint="@null"
-                    app:cornerRadius="12dp"/>
-            </LinearLayout>
+                android:text="📍 LIVE ROUTE &amp; GHOST MODE 👻"
+                android:textColor="#FFFFFF"
+                android:textStyle="bold"
+                android:paddingVertical="20dp"
+                android:background="@drawable/button_background"
+                app:backgroundTint="@null"
+                app:cornerRadius="16dp"
+                android:layout_marginTop="8dp"/>
 
         </LinearLayout>
     </ScrollView>

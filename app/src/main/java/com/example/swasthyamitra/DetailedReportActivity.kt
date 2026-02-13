@@ -51,6 +51,7 @@ class DetailedReportActivity : AppCompatActivity() {
     private var daysToLoad = 7
     private var fitnessData: FitnessData? = null
     private var weightLogs: List<Map<String, Any>> = emptyList()
+    private var walkingSessions: List<Map<String, Any>> = emptyList()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -114,10 +115,13 @@ class DetailedReportActivity : AppCompatActivity() {
             override fun onCancelled(error: DatabaseError) {}
         })
 
-        // 2. Load Weight Logs (Firestore)
+        // 2. Load Weight Logs & Walking Sessions (Firestore)
         lifecycleScope.launch {
             weightLogs = authHelper.getRecentWeightLogs(userId, daysToLoad)
+            walkingSessions = authHelper.getRecentWalkingSessions(userId, daysToLoad)
+            
             updateWeightUI()
+            refreshCombinedHistory()
         }
     }
 
@@ -133,24 +137,7 @@ class DetailedReportActivity : AppCompatActivity() {
         val consistency = (activeDays.toFloat() / daysToLoad.toFloat()) * 100
         tvConsistencyScore.text = "${consistency.toInt()}%"
         
-        // Populate History List (Combined)
-        val historyItems = mutableListOf<HistoryItem>()
-        
-        // Add workouts
-        data.workoutHistory.values.forEach { session ->
-            if (isWithinRange(session.timestamp, daysToLoad)) {
-                historyItems.add(HistoryItem(
-                    date = session.timestamp,
-                    title = "${session.category.replaceFirstChar { it.uppercase() }} Workout",
-                    details = "${session.duration} min • ${if(session.caloriesBurned>0) session.caloriesBurned else session.duration*6} kcal",
-                    type = "WORKOUT"
-                ))
-            }
-        }
-        
-        // Add Weight Logs (we verify against already loaded list or wait? Just wait for updateWeightUI to combine?)
-        // Let's combine in updateList
-        updateList(historyItems)
+        refreshCombinedHistory()
     }
 
     private fun updateWeightUI() {
@@ -203,24 +190,56 @@ class DetailedReportActivity : AppCompatActivity() {
             )
         }
         
-        // Need to merge with existing workout items - simpler to reload recyclerview
-        // For MVP, if calculateStats ran first, we might overwrite. Better to have a shared list.
-        // I will trigger a refresh of the list here merging known workout data.
+        // Refresh list
+        refreshCombinedHistory()
+    }
+
+    private fun refreshCombinedHistory() {
+        val historyItems = mutableListOf<HistoryItem>()
         
-        if (fitnessData != null) {
-            val workoutItems = mutableListOf<HistoryItem>()
-            fitnessData!!.workoutHistory.values.forEach { session ->
-                 if (isWithinRange(session.timestamp, daysToLoad)) {
-                    workoutItems.add(HistoryItem(
-                        date = session.timestamp,
-                        title = "${session.category.replaceFirstChar { it.uppercase() }} Workout",
-                        details = "${session.duration} min",
-                        type = "WORKOUT"
-                    ))
-                }
+        // 1. Add workouts
+        fitnessData?.workoutHistory?.values?.forEach { session ->
+            if (isWithinRange(session.timestamp, daysToLoad)) {
+                historyItems.add(HistoryItem(
+                    date = session.timestamp,
+                    title = "${session.category.replaceFirstChar { it.uppercase() }} Workout",
+                    details = "${session.duration} min • ${if(session.caloriesBurned>0) session.caloriesBurned else session.duration*6} kcal",
+                    type = "WORKOUT"
+                ))
             }
-            updateList(workoutItems + weightItems)
         }
+
+        // 2. Add Weight Logs
+        weightLogs.forEach { log ->
+            val ts = (log["timestamp"] as? Long) ?: 0L
+            if (isWithinRange(ts, daysToLoad)) {
+                historyItems.add(HistoryItem(
+                    date = ts,
+                    title = "Weight Log",
+                    details = "${log["weight"]} kg",
+                    type = "WEIGHT"
+                ) )
+            }
+        }
+
+        // 3. Add Walking Sessions
+        walkingSessions.forEach { session ->
+            val ts = (session["startTime"] as? Long) ?: 0L
+            if (isWithinRange(ts, daysToLoad)) {
+                val distanceM = (session["totalDistanceMeters"] as? Number)?.toDouble() ?: 0.0
+                val steps = (session["totalSteps"] as? Number)?.toInt() ?: 0
+                val km = String.format("%.2f", distanceM / 1000.0)
+                
+                historyItems.add(HistoryItem(
+                    date = ts,
+                    title = "GPS Walk \uD83D\uDCCD",
+                    details = "$km km • $steps steps",
+                    type = "WALK"
+                ))
+            }
+        }
+
+        updateList(historyItems)
     }
     
     private fun updateList(items: List<HistoryItem>) {

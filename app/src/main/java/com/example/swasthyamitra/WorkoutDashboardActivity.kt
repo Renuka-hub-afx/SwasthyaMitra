@@ -202,8 +202,9 @@ class WorkoutDashboardActivity : AppCompatActivity() {
             startActivity(Intent(this, InsightsActivity::class.java))
         }
 
-        findViewById<View>(R.id.cvSafety).setOnClickListener {
-            startActivity(Intent(this, SafetyActivity::class.java))
+
+        findViewById<View>(R.id.cvMapTracking).setOnClickListener {
+            startActivity(Intent(this, SafetyCoreActivity::class.java))
         }
 
         btnBackWorkout.setOnClickListener {

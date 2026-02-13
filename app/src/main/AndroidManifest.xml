@@ -22,6 +22,8 @@
     <uses-permission android:name="android.permission.BODY_SENSORS" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_HEALTH" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.READ_CONTACTS" />
+    <uses-permission android:name="android.permission.SEND_SMS" />
     
     <queries>
         <package android:name="com.google.android.youtube" />
@@ -229,11 +231,11 @@
             </intent-filter>
         </activity>
 
-        <service
-            android:name=".services.SafetyMonitorService"
-            android:enabled="true"
+        <activity
+            android:name=".SafetyCoreActivity"
             android:exported="false"
-            android:foregroundServiceType="location" />
+            android:screenOrientation="portrait" />
+
 
         <activity
             android:name=".ui.hydration.HydrationActivity"
@@ -258,6 +260,16 @@
             android:enabled="true"
             android:exported="false"
             android:foregroundServiceType="dataSync" />
+
+        <service
+            android:name=".services.TrackingService"
+            android:enabled="true"
+            android:exported="false"
+            android:foregroundServiceType="location" />
+
+        <receiver
+            android:name=".services.ActivityTransitionReceiver"
+            android:exported="false" />
 
         <activity
             android:name=".DetailedReportActivity"
@@ -284,6 +296,10 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/provider_paths" />
         </provider>
+
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="AIzaSyCbQS3zxm_B3ndUYkPz2S1Sn2bbf_fDa-w" />
     </application>
 
 </manifest>
