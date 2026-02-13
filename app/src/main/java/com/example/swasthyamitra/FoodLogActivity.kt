@@ -39,8 +39,8 @@ class FoodLogActivity : AppCompatActivity() {
     private lateinit var foodAdapter: FoodLogAdapter
     private lateinit var foodRepository: IndianFoodRepository
     private val foodLogs = mutableListOf<FoodLog>()
-    private val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-    private val timeFormat = SimpleDateFormat("hh:mm a", Locale.getDefault())
+    private val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.US)
+    private val timeFormat = SimpleDateFormat("hh:mm a", Locale.US)
     private var selectedDate = Date()
     
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -79,7 +79,7 @@ class FoodLogActivity : AppCompatActivity() {
         }
         
         // Date display
-        binding.tvDate.text = SimpleDateFormat("EEEE, MMMM dd, yyyy", Locale.getDefault()).format(selectedDate)
+        binding.tvDate.text = SimpleDateFormat("EEEE, MMMM dd, yyyy", Locale.US).format(selectedDate)
         
         // RecyclerView setup
         foodAdapter = FoodLogAdapter(foodLogs) { foodLog ->
@@ -634,9 +634,9 @@ class FoodLogAdapter(
     private val onItemClick: (FoodLog) -> Unit
 ) : RecyclerView.Adapter<FoodLogAdapter.FoodLogViewHolder>() {
     
-    private val timeFormat = SimpleDateFormat("hh:mm a", Locale.getDefault())
-    private val dateFormat = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault())
-    private val todayFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+    private val timeFormat = SimpleDateFormat("hh:mm a", Locale.US)
+    private val dateFormat = SimpleDateFormat("MMM dd, yyyy", Locale.US)
+    private val todayFormat = SimpleDateFormat("yyyy-MM-dd", Locale.US)
     
     class FoodLogViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val tvFoodName: TextView = view.findViewById(R.id.tv_food_name)

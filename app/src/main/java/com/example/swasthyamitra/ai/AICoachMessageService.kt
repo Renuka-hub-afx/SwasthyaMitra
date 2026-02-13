@@ -24,7 +24,7 @@ class AICoachMessageService private constructor(private val context: Context) {
     private val hydrationRepo = HydrationRepository()
     private val TAG = "AICoachService"
     private val firestore = FirebaseFirestore.getInstance("renu")
-    private val realtimeDb = FirebaseDatabase.getInstance("https://swasthyamitra-c0899-default-rtdb.asia-southeast1.firebasedatabase.app").reference
+    private val realtimeDb = FirebaseDatabase.getInstance("https://swasthyamitra-ded44-default-rtdb.asia-southeast1.firebasedatabase.app").reference
 
     companion object {
         @Volatile
@@ -39,7 +39,7 @@ class AICoachMessageService private constructor(private val context: Context) {
 
     suspend fun getCoachMessage(userId: String, steps: Int = 0): Result<String> = withContext(Dispatchers.IO) {
         try {
-            val today = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+            val today = SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date())
             
             // 1. Fetch User Context
             val profile = authHelper.getUserData(userId).getOrThrow()

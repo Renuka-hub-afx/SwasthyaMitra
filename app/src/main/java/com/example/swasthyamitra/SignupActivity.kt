@@ -46,7 +46,7 @@ class SignupActivity : AppCompatActivity() {
             { _, year, month, day ->
                 val selected = Calendar.getInstance()
                 selected.set(year, month, day)
-                val dob = SimpleDateFormat("dd MMM yyyy", Locale.getDefault()).format(selected.time)
+                val dob = SimpleDateFormat("dd MMM yyyy", Locale.US).format(selected.time)
                 binding.textView8.text = "BirthDate: $dob"
                 binding.textView8.tag = dob
             },
@@ -116,7 +116,7 @@ class SignupActivity : AppCompatActivity() {
 
     private fun calculateAge(dob: String): Int {
         return try {
-            val sdf = SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
+            val sdf = SimpleDateFormat("dd MMM yyyy", Locale.US)
             val birthDate = sdf.parse(dob)
             val today = Calendar.getInstance()
             val birth = Calendar.getInstance()

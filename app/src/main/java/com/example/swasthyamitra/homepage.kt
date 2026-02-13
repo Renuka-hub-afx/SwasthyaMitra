@@ -17,6 +17,13 @@ import java.util.Calendar
 import androidx.cardview.widget.CardView
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
+import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.ValueEventListener
+import com.google.firebase.database.DatabaseReference
+import java.util.Date
+import java.util.Locale
 
 
 class homepage : AppCompatActivity() {
@@ -25,6 +32,9 @@ class homepage : AppCompatActivity() {
     private lateinit var stepManager: StepManager
     private var userId: String = ""
     private lateinit var firestore: FirebaseFirestore
+    private var currentSteps: Int = 0 
+    private lateinit var gamificationRepository: GamificationRepository
+    private var fitnessData: FitnessData = FitnessData()
 
     // UI Elements
     private lateinit var tvUserName: TextView
@@ -39,21 +49,21 @@ class homepage : AppCompatActivity() {
     private lateinit var pbCarbs: ProgressBar
     private lateinit var pbFats: ProgressBar
 
-    // AI Recommendation UI
-    private lateinit var cardAiExercise: androidx.cardview.widget.CardView
-    private lateinit var tvRecExerciseName: TextView
-    private lateinit var tvRecTargetMuscle: TextView
-    private lateinit var tvRecReason: TextView
-    private lateinit var btnViewExerciseDetails: MaterialButton
-    private lateinit var btnLogRecExercise: MaterialButton
-    private lateinit var btnRegenerateExercise: MaterialButton
-    private lateinit var ivExerciseGif: android.widget.ImageView
-    private lateinit var tvAgeExplanation: TextView
-    private lateinit var tvGenderNote: TextView
-    private lateinit var tvMotivationalMessage: TextView
-    private lateinit var tvExerciseCalories: TextView
-    private lateinit var tvExerciseDuration: TextView
-    private var currentRecommendedExercise: com.example.swasthyamitra.ai.AIExerciseRecommendationService.ExerciseRec? = null
+    // AI Recommendation UI - MOVED TO WORKOUT DASHBOARD
+    // private lateinit var cardAiExercise: androidx.cardview.widget.CardView
+    // private lateinit var tvRecExerciseName: TextView
+    // private lateinit var tvRecTargetMuscle: TextView
+    // private lateinit var tvRecReason: TextView
+    // private lateinit var btnViewExerciseDetails: MaterialButton
+    // private lateinit var btnLogRecExercise: MaterialButton
+    // private lateinit var btnRegenerateExercise: MaterialButton
+    // private lateinit var ivExerciseGif: android.widget.ImageView
+    // private lateinit var tvAgeExplanation: TextView
+    // private lateinit var tvGenderNote: TextView
+    // private lateinit var tvMotivationalMessage: TextView
+    // private lateinit var tvExerciseCalories: TextView
+    // private lateinit var tvExerciseDuration: TextView
+    // private var currentRecommendedExercise: com.example.swasthyamitra.ai.AIExerciseRecommendationService.ExerciseRec? = null
 
     private lateinit var menuHome: LinearLayout
     private lateinit var menuProgress: LinearLayout
@@ -65,7 +75,6 @@ class homepage : AppCompatActivity() {
     private lateinit var cardWater: MaterialButton
 
     private lateinit var tvWaterTotal: TextView
-    private lateinit var waterProgressBar: ProgressBar
     private lateinit var cardWaterSummary: View
     private lateinit var tvDate: TextView
     private lateinit var chipPeriodMode: com.google.android.material.chip.Chip
@@ -88,283 +97,225 @@ class homepage : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_homepage)
 
-        try {
-            setContentView(R.layout.activity_homepage)
-            Log.d("Homepage", "Layout inflated successfully")
+        val application = application as? UserApplication
+        if (application == null) {
+            navigateToLogin()
+            return
+        }
+        authHelper = application.authHelper
+        firestore = FirebaseFirestore.getInstance("renu")
 
-            val application = application as? UserApplication
-            if (application == null) {
-                Log.e("Homepage", "UserApplication is null")
-                Toast.makeText(this, "Application initialization error", Toast.LENGTH_SHORT).show()
-                navigateToLogin()
-                return
+        userId = intent.getStringExtra("USER_ID") ?: ""
+        
+        // Initialize Gamification Repo
+        val rdb = FirebaseDatabase.getInstance("https://swasthyamitra-ded44-default-rtdb.asia-southeast1.firebasedatabase.app").reference
+        gamificationRepository = GamificationRepository(rdb, userId)
+        syncStreak()
+
+        // Initialize UI Elements
+        tvDate = findViewById(R.id.tv_date)
+        tvUserName = findViewById(R.id.tv_user_name)
+        tvGoalType = findViewById(R.id.tv_goal_type)
+        tvSteps = findViewById(R.id.tv_steps)
+        tvWorkouts = findViewById(R.id.tv_workouts)
+        tvCoachMessage = findViewById(R.id.tv_coach_message)
+        tvProteinValue = findViewById(R.id.tv_protein_value)
+        tvCarbsValue = findViewById(R.id.tv_carbs_value)
+        tvFatsValue = findViewById(R.id.tv_fats_value)
+        pbProtein = findViewById(R.id.pb_protein)
+        pbCarbs = findViewById(R.id.pb_carbs)
+        pbFats = findViewById(R.id.pb_fats)
+
+        menuHome = findViewById(R.id.menu_home)
+        menuProgress = findViewById(R.id.menu_progress)
+        menuProfile = findViewById(R.id.menu_profile)
+
+        cardFood = findViewById(R.id.card_food)
+        cardWorkout = findViewById(R.id.card_workout)
+        cardExerciseLog = findViewById(R.id.card_exercise_log)
+        cardWater = findViewById(R.id.card_water)
+        cardWaterSummary = findViewById(R.id.card_water_summary)
+        tvWaterTotal = findViewById(R.id.tv_water_total)
+
+        // cardAiExercise = findViewById(R.id.card_ai_exercise)
+        // tvRecExerciseName = findViewById(R.id.tv_rec_exercise_name)
+        // tvRecTargetMuscle = findViewById(R.id.tv_rec_target_muscle)
+        // tvRecReason = findViewById(R.id.tv_rec_reason)
+        // btnViewExerciseDetails = findViewById(R.id.btn_view_exercise_details)
+        // btnLogRecExercise = findViewById(R.id.btn_log_rec_exercise)
+        // btnRegenerateExercise = findViewById(R.id.btn_regenerate_exercise)
+        
+        val tvViewDetails: TextView = findViewById(R.id.tv_view_details)
+        tvViewDetails.setOnClickListener {
+            startActivity(Intent(this, FoodLogActivity::class.java))
+        }
+
+        chipPeriodMode = findViewById(R.id.chip_period_mode)
+        // ivExerciseGif = findViewById(R.id.iv_exercise_gif)
+        // tvAgeExplanation = findViewById(R.id.tv_age_explanation)
+        // tvGenderNote = findViewById(R.id.tv_gender_note)
+        // tvMotivationalMessage = findViewById(R.id.tv_motivational_message)
+        // tvExerciseCalories = findViewById(R.id.tv_exercise_calories)
+        // tvExerciseDuration = findViewById(R.id.tv_exercise_duration)
+        
+        // Initialize calorie balance UI
+        tvCaloriesIn = findViewById(R.id.tv_calories_in)
+        tvCaloriesOut = findViewById(R.id.tv_calories_out)
+        pbCaloriesIn = findViewById(R.id.pb_calories_in)
+        pbCaloriesOut = findViewById(R.id.pb_calories_out)
+        tvNetBalance = findViewById(R.id.tv_net_balance)
+        tvCalorieGoal = findViewById(R.id.tv_calorie_goal)
+        tvCalorieStatus = findViewById(R.id.tv_calorie_status)
+        
+        // Initialize History UI
+
+
+        updateDateDisplay()
+        loadUserData()
+
+        // Initialize Step Tracking
+        checkActivityRecognitionPermission()
+        
+        stepManager = StepManager(this) { steps, _ ->
+            currentSteps = steps // Store the step count
+            runOnUiThread {
+                tvSteps.text = steps.toString()
             }
+        }
+        stepManager.start()
 
-            authHelper = application.authHelper
-            Log.d("Homepage", "AuthHelper initialized successfully")
+        cardWorkout.setOnClickListener {
+            val intent = Intent(this, WorkoutDashboardActivity::class.java)
+            startActivity(intent)
+        }
 
-            // Initialize Firestore with error handling
-            try {
-                firestore = FirebaseFirestore.getInstance("renu")
-                Log.d("Homepage", "Firestore 'renu' database initialized successfully")
-            } catch (e: Exception) {
-                Log.e("Homepage", "Error initializing named Firestore database: ${e.message}", e)
-                // Fallback to default instance
-                firestore = FirebaseFirestore.getInstance()
-                Log.d("Homepage", "Using default Firestore instance as fallback")
-            }
+        cardFood.setOnClickListener {
+            startActivity(Intent(this, FoodLogActivity::class.java))
+        }
 
-            // Get userId from intent or from current Firebase user
-            userId = intent.getStringExtra("USER_ID") ?: authHelper.getCurrentUser()?.uid ?: ""
+        cardWater.setOnClickListener {
+            val intent = Intent(this, com.example.swasthyamitra.ui.hydration.HydrationActivity::class.java)
+            intent.putExtra("USER_ID", userId)
+            startActivity(intent)
+        }
 
-            if (userId.isEmpty()) {
-                Log.e("Homepage", "No user ID found, redirecting to login")
-                Toast.makeText(this, "Please login first", Toast.LENGTH_SHORT).show()
-                navigateToLogin()
-                return
-            }
+        cardExerciseLog.setOnClickListener {
+            val intent = Intent(this, ExerciseLogActivity::class.java)
+            startActivity(intent)
+        }
 
-            Log.d("Homepage", "Homepage initialized for user: $userId")
-
-            // DISABLED: Auto-tracking service (requires health permissions)
-            // Start auto-tracking service for this user
-            // try {
-            //     (application as? UserApplication)?.startAutoTrackingService()
-            //     Log.d("Homepage", "Auto-tracking service started")
-            // } catch (e: Exception) {
-            //     Log.e("Homepage", "Error starting auto-tracking service: ${e.message}")
-            // }
-
-            // Initialize UI Elements
-            tvDate = findViewById(R.id.tv_date)
-            tvUserName = findViewById(R.id.tv_user_name)
-            tvGoalType = findViewById(R.id.tv_goal_type)
-            tvSteps = findViewById(R.id.tv_steps)
-            tvWorkouts = findViewById(R.id.tv_workouts)
-            tvCoachMessage = findViewById(R.id.tv_coach_message)
-            tvProteinValue = findViewById(R.id.tv_protein_value)
-            tvCarbsValue = findViewById(R.id.tv_carbs_value)
-            tvFatsValue = findViewById(R.id.tv_fats_value)
-            pbProtein = findViewById(R.id.pb_protein)
-            pbCarbs = findViewById(R.id.pb_carbs)
-            pbFats = findViewById(R.id.pb_fats)
-
-            menuHome = findViewById(R.id.menu_home)
-            menuProgress = findViewById(R.id.menu_progress)
-            menuProfile = findViewById(R.id.menu_profile)
-
-            cardFood = findViewById(R.id.card_food)
-            cardWorkout = findViewById(R.id.card_workout)
-            cardExerciseLog = findViewById(R.id.card_exercise_log)
-            cardWater = findViewById(R.id.card_water)
-            cardWaterSummary = findViewById(R.id.card_water_summary)
-            tvWaterTotal = findViewById(R.id.tv_water_total)
-            waterProgressBar = findViewById(R.id.waterProgressBar)
-
-            // Initialize AI Exercise views (optional - may not exist in all layouts)
-            try {
-                cardAiExercise = findViewById(R.id.card_ai_exercise)
-                tvRecExerciseName = findViewById(R.id.tv_rec_exercise_name)
-                tvRecTargetMuscle = findViewById(R.id.tv_rec_target_muscle)
-                tvRecReason = findViewById(R.id.tv_rec_reason)
-                btnViewExerciseDetails = findViewById(R.id.btn_view_exercise_details)
-                btnLogRecExercise = findViewById(R.id.btn_log_rec_exercise)
-                btnRegenerateExercise = findViewById(R.id.btn_regenerate_exercise)
-                ivExerciseGif = findViewById(R.id.iv_exercise_gif)
-                tvAgeExplanation = findViewById(R.id.tv_age_explanation)
-                tvGenderNote = findViewById(R.id.tv_gender_note)
-                tvMotivationalMessage = findViewById(R.id.tv_motivational_message)
-                tvExerciseCalories = findViewById(R.id.tv_exercise_calories)
-                tvExerciseDuration = findViewById(R.id.tv_exercise_duration)
-                Log.d("Homepage", "AI Exercise views initialized")
-            } catch (e: Exception) {
-                Log.w("Homepage", "AI Exercise views not found in layout (optional): ${e.message}")
-            }
-
-            // Food details view (optional)
-            try {
-                val tvViewDetails: TextView? = findViewById(R.id.tv_view_details)
-                tvViewDetails?.setOnClickListener {
-                    startActivity(Intent(this, FoodLogActivity::class.java))
-                }
-            } catch (e: Exception) {
-                Log.w("Homepage", "tv_view_details not found (optional): ${e.message}")
-            }
-
-            // Period mode chip (optional)
-            try {
-                chipPeriodMode = findViewById(R.id.chip_period_mode)
-                Log.d("Homepage", "Period mode chip initialized")
-            } catch (e: Exception) {
-                Log.w("Homepage", "chip_period_mode not found (optional): ${e.message}")
-            }
-
-            // Initialize calorie balance UI
-            tvCaloriesIn = findViewById(R.id.tv_calories_in)
-            tvCaloriesOut = findViewById(R.id.tv_calories_out)
-            pbCaloriesIn = findViewById(R.id.pb_calories_in)
-            pbCaloriesOut = findViewById(R.id.pb_calories_out)
-            tvNetBalance = findViewById(R.id.tv_net_balance)
-            tvCalorieGoal = findViewById(R.id.tv_calorie_goal)
-            tvCalorieStatus = findViewById(R.id.tv_calorie_status)
-
-            Log.d("Homepage", "All views initialized successfully")
-
-            // Initialize History UI
-
-            updateDateDisplay()
-            loadUserData()
-
-            // Initialize Step Tracking
-            try {
-                stepManager = StepManager(this) { steps, _ ->
-                    runOnUiThread {
-                        tvSteps.text = steps.toString()
-                    }
-                }
-                stepManager.start()
-                Log.d("Homepage", "Step manager started successfully")
-            } catch (e: Exception) {
-                Log.e("Homepage", "Error starting step manager: ${e.message}", e)
-                // Set default value if step manager fails
-                tvSteps.text = "0"
-            }
-
-            cardWorkout.setOnClickListener {
-                val intent = Intent(this, WorkoutDashboardActivity::class.java)
-                startActivity(intent)
-            }
-
-            cardFood.setOnClickListener {
-                startActivity(Intent(this, FoodLogActivity::class.java))
-            }
-
-            cardWater.setOnClickListener {
-                val intent = Intent(this, com.example.swasthyamitra.ui.hydration.HydrationActivity::class.java)
-                intent.putExtra("USER_ID", userId)
-                startActivity(intent)
-            }
-
-            cardExerciseLog.setOnClickListener {
-                val intent = Intent(this, ExerciseLogActivity::class.java)
-                startActivity(intent)
-            }
-
-            // Period mode listener (only if chip exists)
-            if (::chipPeriodMode.isInitialized) {
-                chipPeriodMode.setOnCheckedChangeListener { _, isChecked ->
-                    isOnPeriod = isChecked
-                    lifecycleScope.launch {
-                        try {
-                            firestore.collection("users").document(userId)
-                                .update("isOnPeriod", isChecked)
-                                .await()
-
-                            // Trigger AI refreshes for specialized mode
-                            updateAICoachMessage()
-                            updateAIExerciseRecommendation()
-
-                            val status = if (isChecked) "activated 🌸" else "deactivated"
-                            Toast.makeText(this@homepage, "Period Mode $status", Toast.LENGTH_SHORT).show()
-                        } catch (e: Exception) {
-                            Log.e("Homepage", "Error updating period mode", e)
-                        }
-                    }
+        chipPeriodMode.setOnCheckedChangeListener { _, isChecked ->
+            isOnPeriod = isChecked
+            lifecycleScope.launch {
+                try {
+                    firestore.collection("users").document(userId)
+                        .update("isOnPeriod", isChecked)
+                        .await()
+                    
+                    // Trigger AI refreshes for specialized mode
+                    updateAICoachMessage()
+                    // updateAIExerciseRecommendation()
+                    
+                    val status = if (isChecked) "activated 🌸" else "deactivated"
+                    Toast.makeText(this@homepage, "Period Mode $status", Toast.LENGTH_SHORT).show()
+                } catch (e: Exception) {
+                    Log.e("Homepage", "Error updating period mode", e)
                 }
             }
+        }
 
-            menuHome.setOnClickListener {
-                Toast.makeText(this, "You are on Home", Toast.LENGTH_SHORT).show()
-            }
 
-            menuProgress.setOnClickListener {
-                // Open Enhanced Progress Dashboard with Graphs
-                startActivity(Intent(this, com.example.swasthyamitra.ui.EnhancedProgressDashboardActivity::class.java))
-            }
+        
+        menuHome.setOnClickListener {
+            Toast.makeText(this, "You are on Home", Toast.LENGTH_SHORT).show()
+        }
 
-            menuProfile.setOnClickListener {
-                startActivity(Intent(this, ProfileActivity::class.java))
-            }
+        menuProgress.setOnClickListener {
+            startActivity(Intent(this, ProgressActivity::class.java))
+        }
 
-            // Setup AI Diet Button (optional)
-            try {
-                val cardAiDiet: MaterialButton? = findViewById(R.id.card_ai_diet)
-                cardAiDiet?.setOnClickListener {
-                    val intent = Intent(this, AISmartDietActivity::class.java)
-                    startActivity(intent)
-                }
-            } catch (e: Exception) {
-                Log.w("Homepage", "card_ai_diet not found (optional): ${e.message}")
-            }
+        menuProfile.setOnClickListener {
+            startActivity(Intent(this, ProfileActivity::class.java))
+        }
 
-            // Setup AI Rasoi (Smart Pantry)
-            val cardAiRasoi: MaterialButton? = findViewById(R.id.card_ai_pantry)
-            cardAiRasoi?.setOnClickListener {
-                val intent = Intent(this, SmartPantryActivity::class.java)
-                startActivity(intent)
-            }
+        // Setup AI Diet Button
+        val cardAiDiet: MaterialButton = findViewById(R.id.card_ai_diet)
+        cardAiDiet.setOnClickListener {
+            val intent = Intent(this, AISmartDietActivity::class.java)
+            startActivity(intent)
+        }
 
-            // REMOVED: Progress Dashboard and Insights buttons
-            // These are now only accessible from the dashboard (bottom navigation "Progress" menu)
-            // Users should click the "Progress" icon in bottom navigation to access:
-            // - Enhanced Progress Dashboard with graphs (7/15/30 days)
-            // - Insights and analytics
+        // Setup AI Rasoi (Smart Pantry)
+        val cardAiRasoi: MaterialButton? = findViewById(R.id.card_ai_pantry)
+        cardAiRasoi?.setOnClickListener {
+            val intent = Intent(this, SmartPantryActivity::class.java)
+            startActivity(intent)
+        }
 
-            // AI Exercise button listeners (only if views exist)
-            if (::btnViewExerciseDetails.isInitialized) {
-                btnViewExerciseDetails.setOnClickListener {
-                    showExerciseGuideDialog()
-                }
-            }
+        // btnViewExerciseDetails.setOnClickListener {
+        //     showExerciseGuideDialog()
+        // }
 
-            if (::btnLogRecExercise.isInitialized) {
-                btnLogRecExercise.setOnClickListener {
-                    logRecommendedExercise()
-                }
-            }
+        // btnLogRecExercise.setOnClickListener {
+        //     logRecommendedExercise()
+        // }
 
-            if (::btnRegenerateExercise.isInitialized) {
-                btnRegenerateExercise.setOnClickListener {
-                    lifecycleScope.launch {
-                        try {
-                            // Clear existing recommendation to force new generation
-                            firestore.collection("users").document(userId)
-                                .update("currentDailyExercise", null, "lastExerciseDate", null)
-                                .await()
-                            updateAIExerciseRecommendation()
-                        } catch (e: Exception) {
-                            Log.e("Homepage", "Error skipping exercise", e)
-                        }
-                    }
-                }
-            }
+        // btnRegenerateExercise.setOnClickListener {
+        //     lifecycleScope.launch {
+        //         try {
+        //             // Clear existing recommendation to force new generation
+        //             firestore.collection("users").document(userId)
+        //                 .update("currentDailyExercise", null, "lastExerciseDate", null)
+        //                 .await()
+        //             updateAIExerciseRecommendation()
+        //         } catch (e: Exception) {
+        //             Log.e("Homepage", "Error skipping exercise", e)
+        //         }
+        //     }
+        // }
 
-            // Mood details link (optional)
-            try {
-                findViewById<TextView>(R.id.tv_view_mood_details)?.setOnClickListener {
-                    val intent = Intent(this, MoodRecommendationActivity::class.java)
-                    startActivity(intent)
-                }
-            } catch (e: Exception) {
-                Log.w("Homepage", "tv_view_mood_details not found (optional): ${e.message}")
-            }
+        findViewById<TextView>(R.id.tv_view_mood_details).setOnClickListener {
+            val intent = Intent(this, MoodRecommendationActivity::class.java)
+            startActivity(intent)
+        }
 
-            setupMoodTracking()
+        setupMoodTracking()
+    }
 
-        } catch (e: Exception) {
-            Log.e("Homepage", "FATAL ERROR in onCreate: ${e.message}", e)
-            e.printStackTrace()
-            Toast.makeText(this, "Failed to load homepage: ${e.message}", Toast.LENGTH_LONG).show()
-            // Don't crash - navigate back to login
-            try {
-                navigateToLogin()
-            } catch (ex: Exception) {
-                Log.e("Homepage", "Even navigation failed: ${ex.message}")
-                finish()
+    private fun checkActivityRecognitionPermission() {
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+            if (androidx.core.content.ContextCompat.checkSelfPermission(
+                    this,
+                    android.Manifest.permission.ACTIVITY_RECOGNITION
+                ) != android.content.pm.PackageManager.PERMISSION_GRANTED
+            ) {
+                androidx.core.app.ActivityCompat.requestPermissions(
+                    this,
+                    arrayOf(android.Manifest.permission.ACTIVITY_RECOGNITION),
+                    101
+                )
             }
         }
     }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == 101) {
+            if (grantResults.isNotEmpty() && grantResults[0] == android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                stepManager.start() // Restart to pick up changes
+            }
+        }
+    }
+        
+
+
+
 
     private fun setupMoodTracking() {
         val moods: Map<Int, String> = mapOf(
@@ -397,7 +348,7 @@ class homepage : AppCompatActivity() {
             energy = analysis.energy,
             suggestion = analysis.suggestion,
             timestamp = System.currentTimeMillis(),
-            date = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault()).format(java.util.Date())
+            date = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.US).format(java.util.Date())
         )
 
         // 3. Save to Repository (Background)
@@ -445,7 +396,7 @@ class homepage : AppCompatActivity() {
 
     private fun updateDateDisplay() {
         val calendar = Calendar.getInstance()
-        val dateFormat = java.text.SimpleDateFormat("EEEE, MMM dd", java.util.Locale.getDefault())
+        val dateFormat = java.text.SimpleDateFormat("EEEE, MMM dd", java.util.Locale.US)
         val currentDate = dateFormat.format(calendar.time)
         tvDate.text = currentDate
     }
@@ -458,7 +409,7 @@ class homepage : AppCompatActivity() {
             displayWorkoutStatus()
             displayWaterStatus()
             updateAICoachMessage()
-            updateAIExerciseRecommendation()
+            // updateAIExerciseRecommendation()
             updateCalorieBalance()
             updateCalorieBalance()
         }
@@ -467,8 +418,6 @@ class homepage : AppCompatActivity() {
     private fun loadUserData() {
         lifecycleScope.launch {
             try {
-                var userProfileWeight = 0.0
-
                 val userDataResult = authHelper.getUserData(userId)
                 userDataResult.onSuccess { userData ->
                     userName = userData["name"] as? String ?: "User"
@@ -493,13 +442,6 @@ class homepage : AppCompatActivity() {
                     } else {
                         chipPeriodMode.visibility = android.view.View.GONE
                     }
-                    
-                    // Capture dynamic weight from profile
-                    userProfileWeight = when (val w = userData["weight"]) {
-                        is Number -> w.toDouble()
-                        is String -> w.toDoubleOrNull() ?: 0.0
-                        else -> 0.0
-                    }
                 }
 
                 val goalsResult = authHelper.getUserGoal(userId)
@@ -522,34 +464,46 @@ class homepage : AppCompatActivity() {
                         else -> 0.0
                     }
                     
-                    // Get current weight - PRIORITIZE USER PROFILE WEIGHT (DYNAMIC)
-                    var currentWeight = userProfileWeight
-                    
-                    // Fallback to goal's initial weight if profile weight is missing/zero
-                    if (currentWeight <= 0.0) {
-                        currentWeight = when {
-                            goal["currentWeight"] != null -> when (val cw = goal["currentWeight"]) {
-                                is Number -> cw.toDouble()
-                                is String -> cw.toDoubleOrNull() ?: 0.0
-                                else -> 0.0
-                            }
-                            goal["currentValue"] != null -> when (val cv = goal["currentValue"]) {
-                                is Number -> cv.toDouble()
-                                is String -> cv.toDoubleOrNull() ?: 0.0
-                                else -> 0.0
-                            }
+                    // Get current weight - first try from goal, then from user profile
+                    var currentWeight = when {
+                        goal["currentWeight"] != null -> when (val cw = goal["currentWeight"]) {
+                            is Number -> cw.toDouble()
+                            is String -> cw.toDoubleOrNull() ?: 0.0
                             else -> 0.0
                         }
+                        goal["currentValue"] != null -> when (val cv = goal["currentValue"]) {
+                            is Number -> cv.toDouble()
+                            is String -> cv.toDoubleOrNull() ?: 0.0
+                            else -> 0.0
+                        }
+                        else -> 0.0
                     }
                     
                     // Debug logging
                     android.util.Log.d("Homepage", "===== WEIGHT CALCULATION DEBUG =====")
                     android.util.Log.d("Homepage", "Goal Type: $goalType")
-                    android.util.Log.d("Homepage", "User Profile Weight (Dynamic): $userProfileWeight kg")
+                    android.util.Log.d("Homepage", "Current Weight (from goal): $currentWeight kg")
                     android.util.Log.d("Homepage", "Target Weight: $targetWeight kg")
-                    android.util.Log.d("Homepage", "Used Current Weight: $currentWeight kg")
                     
-                    updateWeightRemainingDisplay(goalType, currentWeight, targetWeight)
+                    // If current weight is 0, try to get it from user profile
+                    if (currentWeight == 0.0) {
+                        lifecycleScope.launch {
+                            authHelper.getUserData(userId).onSuccess { userData ->
+                                val userWeight = when (val w = userData["weight"]) {
+                                    is Number -> w.toDouble()
+                                    is String -> w.toDoubleOrNull() ?: 0.0
+                                    else -> 0.0
+                                }
+                                if (userWeight > 0) {
+                                    currentWeight = userWeight
+                                    android.util.Log.d("Homepage", "Current Weight (from user profile): $currentWeight kg")
+                                    updateWeightRemainingDisplay(goalType, currentWeight, targetWeight)
+                                }
+                            }
+                        }
+                    } else {
+                        updateWeightRemainingDisplay(goalType, currentWeight, targetWeight)
+                    }
                     
                     val greeting = getGreeting()
                     val emoji = when(greeting) {
@@ -585,7 +539,7 @@ class homepage : AppCompatActivity() {
                     tvCoachMessage.text = "Coach is analyzing your progress... 🔍"
                 }
 
-                val steps = if (::stepManager.isInitialized) stepManager.dailySteps else 0
+                val steps = currentSteps
                 val service = com.example.swasthyamitra.ai.AICoachMessageService.getInstance(this@homepage)
                 val result = service.getCoachMessage(userId, steps)
                 
@@ -654,11 +608,34 @@ class homepage : AppCompatActivity() {
         }
     }
 
+    private fun syncStreak() {
+        if (userId.isEmpty()) return
+        
+        val rdb = FirebaseDatabase.getInstance("https://swasthyamitra-ded44-default-rtdb.asia-southeast1.firebasedatabase.app").reference
+        rdb.child("users").child(userId).addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                val data = snapshot.getValue(FitnessData::class.java) ?: FitnessData(userId = userId)
+                
+                // 1. Validate streak (break if missed days)
+                val checkedData = gamificationRepository.validateAndFixStreak(data)
+                
+                // 2. Perform daily check-in (increment if new day)
+                gamificationRepository.checkIn(checkedData) { updated ->
+                    fitnessData = updated
+                    Log.d("Homepage", "Streak synced: ${updated.streak} days")
+                }
+            }
+            override fun onCancelled(error: DatabaseError) {
+                Log.e("Homepage", "Failed to sync streak: ${error.message}")
+            }
+        })
+    }
+
 
     private fun displayWorkoutStatus() {
         lifecycleScope.launch {
             try {
-                val today = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault()).format(java.util.Date())
+                val today = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.US).format(java.util.Date())
                 
                 // Count all exercises logged today from exerciseLogs subcollection
                 val exerciseLogs = firestore.collection("users")
@@ -692,19 +669,10 @@ class homepage : AppCompatActivity() {
                 val total = totalResult.getOrDefault(0)
                 val goal = goalResult.getOrDefault(2500)
                 
-                runOnUiThread {
-                    // Update Progress Bar
-                    val progress = if (goal > 0) ((total.toFloat() / goal.toFloat()) * 100).toInt() else 0
-                    waterProgressBar.progress = progress.coerceIn(0, 100)
-                    
-                    // Update Text
-                    tvWaterTotal.text = "$total / $goal ml"
-                }
+                // Format: Just show total to match "Big Value" design of Steps/Workouts
+                 tvWaterTotal.text = "$total ml"
             } else {
-                runOnUiThread {
-                    waterProgressBar.progress = 0
-                    tvWaterTotal.text = "0 ml"
-                }
+                 tvWaterTotal.text = "0 ml"
             }
         }
     }
@@ -754,7 +722,7 @@ class homepage : AppCompatActivity() {
         }
     }
 
-    private fun updateAIExerciseRecommendation() {
+/*    private fun updateAIExerciseRecommendation() {
         lifecycleScope.launch {
             try {
                 // 0. Check if it's time to show the recommendation
@@ -782,7 +750,7 @@ class homepage : AppCompatActivity() {
 
                 // 0.1 Check if already completed today
                 val db = com.google.firebase.database.FirebaseDatabase.getInstance("https://swasthyamitra-ded44-default-rtdb.asia-southeast1.firebasedatabase.app").reference
-                val today = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault()).format(java.util.Date())
+                val today = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.US).format(java.util.Date())
                 val completedToday = db.child("users").child(userId).child("completionHistory").child(today).get().await().getValue(Boolean::class.java) ?: false
                 
                 if (completedToday) {
@@ -822,7 +790,7 @@ class homepage : AppCompatActivity() {
                 }
 
                 // 1. Calculate burned calories from steps
-                val steps = if (::stepManager.isInitialized) stepManager.dailySteps else 0
+                val steps = currentSteps
                 val burnedFromSteps = (steps * 0.04).toInt()
 
                 // 2. Refresh UI to show loading state
@@ -934,7 +902,7 @@ class homepage : AppCompatActivity() {
         lifecycleScope.launch {
             try {
                 val db = com.google.firebase.database.FirebaseDatabase.getInstance("https://swasthyamitra-ded44-default-rtdb.asia-southeast1.firebasedatabase.app").reference
-                val today = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault()).format(java.util.Date())
+                val today = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.US).format(java.util.Date())
                 
                 // 1. Mark as completed in Realtime DB (for homepage counter)
                 db.child("users").child(userId).child("completionHistory").child(today).setValue(true)
@@ -1005,7 +973,7 @@ class homepage : AppCompatActivity() {
         builder.show()
     }
 
-
+*/
     private fun getAvatarDrawable(avatarId: String): Int {
         val resName = avatarId.replace("_", "")
         return try {
@@ -1029,7 +997,7 @@ class homepage : AppCompatActivity() {
     private fun updateCalorieBalance() {
         lifecycleScope.launch {
             try {
-                val dateFormat = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
+                val dateFormat = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.US)
                 val today = dateFormat.format(java.util.Date())
                 
                 // 1. Get target calories from goals
@@ -1085,7 +1053,7 @@ class homepage : AppCompatActivity() {
             var totalCalories = 0
             
             // 1. Calories from steps
-            val steps = if (::stepManager.isInitialized) stepManager.dailySteps else 0
+            val steps = currentSteps
             val stepCalories = (steps * 0.04).toInt() // ~0.04 kcal per step
             totalCalories += stepCalories
             

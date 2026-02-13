@@ -13,209 +13,134 @@ service cloud.firestore {
       return isAuthenticated() && request.auth.uid == userId;
     }
     
+    // Checks if the user owns the existing resource
     function ownsResource() {
-      return isAuthenticated() && resource != null && resource.data.userId == request.auth.uid;
+<<<<<<< HEAD
+      return isAuthenticated() && (resource == null || resource.data.userId == request.auth.uid);
+    }
+    
+    // Checks if the user will own the incoming resource
+=======
+      return isAuthenticated() && (resource.data.userId == request.auth.uid);
     }
 
+>>>>>>> 3bb4e4351d544b8c52b68d318c28a38650e99e3c
     function willOwnResource() {
-      return isAuthenticated() && request.resource != null && request.resource.data.userId == request.auth.uid;
+      return isAuthenticated() && (request.resource.data.userId == request.auth.uid);
     }
 
-    // ==================== MAIN USER COLLECTION ====================
-    // All user data MUST be nested under /users/{userId}
+<<<<<<< HEAD
+    // ==================== USERS COLLECTION ====================
+    // Main user profile - only owner can access
     match /users/{userId} {
-      // User can read and write their own profile
+      allow read, write: if isOwner(userId);
+      
+      // Nested subcollections (mood_logs, foodLogs, weightLogs, recipes, etc.)
+      match /{allSubcollections=**} {
+=======
+    // ==================== MAIN USER COLLECTION ====================
+    // This is the core of the "User-Centric" architecture.
+    // All user data (goals, logs, profile) MUST be nested under /users/{userId}
+    match /users/{userId} {
       allow read, write: if isOwner(userId);
 
-      // User goals subcollection
-      match /goals/{goalId} {
-        allow read, write: if isOwner(userId);
-      }
-
-      // Food intake logs (7+ days history)
-      match /foodLogs/{logId} {
-        allow read: if isOwner(userId);
-        allow create: if isOwner(userId);
-        allow update, delete: if isOwner(userId);
-      }
-
-      // Water/hydration logs
-      match /waterLogs/{logId} {
-        allow read: if isOwner(userId);
-        allow create: if isOwner(userId);
-        allow update, delete: if isOwner(userId);
-      }
-
-      // Hydration logs (alternative naming)
-      match /hydration_logs/{logId} {
-        allow read: if isOwner(userId);
-        allow create: if isOwner(userId);
-        allow update, delete: if isOwner(userId);
-      }
-
-      // Exercise logs (AI + Manual)
-      match /exercise_logs/{logId} {
-        allow read: if isOwner(userId);
-        allow create: if isOwner(userId);
-        allow update, delete: if isOwner(userId);
-      }
-
-      // Weight tracking logs
-      match /weightLogs/{logId} {
-        allow read: if isOwner(userId);
-        allow create: if isOwner(userId);
-        allow update, delete: if isOwner(userId);
-      }
-
-      // Sleep logs
-      match /sleep_logs/{logId} {
-        allow read: if isOwner(userId);
-        allow create: if isOwner(userId);
-        allow update, delete: if isOwner(userId);
-      }
-
-      // Meal feedback for AI learning
-      match /meal_feedback/{feedbackId} {
-        allow read: if isOwner(userId);
-        allow create: if isOwner(userId);
-        allow update, delete: if isOwner(userId);
-      }
-
-      // User dietary preferences
-      match /user_preferences/{preferenceId} {
-        allow read, write: if isOwner(userId);
-      }
-
-      // Health metrics (BP, heart rate, glucose, etc.)
-      match /health_metrics/{metricId} {
-        allow read: if isOwner(userId);
-        allow create: if isOwner(userId);
-        allow update, delete: if isOwner(userId);
-      }
-
-      // Workout plans
-      match /workouts/{workoutId} {
-        allow read: if isOwner(userId);
-        allow create: if isOwner(userId);
-        allow update, delete: if isOwner(userId);
-      }
-
-      // Lifestyle data
-      match /lifestyle/{lifestyleId} {
-        allow read, write: if isOwner(userId);
-      }
-
-      // Mood tracking
-      match /mood_logs/{moodId} {
-        allow read: if isOwner(userId);
-        allow create: if isOwner(userId);
-        allow update, delete: if isOwner(userId);
-      }
-
-      // Progress tracking
-      match /progress/{progressId} {
-        allow read: if isOwner(userId);
-        allow create: if isOwner(userId);
-        allow update, delete: if isOwner(userId);
-      }
-
-      // Streaks and gamification
-      match /streaks/{streakId} {
-        allow read, write: if isOwner(userId);
-      }
-
-      // Challenges
-      match /challenges/{challengeId} {
-        allow read, write: if isOwner(userId);
-      }
-
-      // Safety contacts
-      match /safety_contacts/{contactId} {
-        allow read, write: if isOwner(userId);
-      }
-
-      // Menstrual cycle tracking
-      match /period_logs/{logId} {
-        allow read: if isOwner(userId);
-        allow create: if isOwner(userId);
-        allow update, delete: if isOwner(userId);
-      }
-
-      // AI Recommendations (user-specific)
-      match /recommendations/{recommendationId} {
-        allow read: if isOwner(userId);
-        allow create: if isOwner(userId);
-        allow update, delete: if isOwner(userId);
-      }
-
-      // Activity logs from auto-tracking
-      match /activity_logs/{logId} {
-        allow read: if isOwner(userId);
-        allow create: if isOwner(userId);
-        allow update, delete: if isOwner(userId);
-      }
-
-      // Calorie balance tracking
-      match /calorie_logs/{logId} {
-        allow read: if isOwner(userId);
-        allow create: if isOwner(userId);
-        allow update, delete: if isOwner(userId);
-      }
-
-      // RECURSIVE WILDCARD: Allows access to ANY future subcollections
-      // This ensures new features work without rule updates
+      // RECURSIVE WILDCARD: Allows access to ALL subcollections
+      // e.g. /users/{userId}/goals, /users/{userId}/foodLogs, etc.
       match /{document=**} {
+>>>>>>> 3bb4e4351d544b8c52b68d318c28a38650e99e3c
         allow read, write: if isOwner(userId);
       }
     }
 
-    // ==================== ROOT LEVEL COLLECTIONS ====================
+    // ==================== EXCEPTIONS (Valid Root Collections) ====================
+    
+<<<<<<< HEAD
+    // ==================== TOP-LEVEL COLLECTIONS ====================
+    // These collections use a userId field for ownership
+    
+    // Goals
+    match /goals/{goalId} {
+      allow read: if ownsResource();
+      allow create: if willOwnResource();
+      allow update: if ownsResource() && willOwnResource();
+      allow delete: if ownsResource();
+    }
+    
+    // Logs (Water, Weight, Exercise)
+    match /waterLogs/{logId} {
+      allow read, create, update, delete: if ownsResource() || willOwnResource();
+    }
 
-    // Global AI Recommendations (shared templates)
-    match /global_recommendations/{recommendationId} {
+    match /weightLogs/{logId} {
+      allow read, create, update, delete: if ownsResource() || willOwnResource();
+    }
+    
+    match /exercise_logs/{logId} {
+      allow read, create, update, delete: if ownsResource() || willOwnResource();
+    }
+    
+    match /exerciseLogs/{logId} {
+      allow read, create, update, delete: if ownsResource() || willOwnResource();
+    }
+    
+    // AI Related Data
+    match /ai_generated_plans/{planId} {
+      allow read, create, update, delete: if ownsResource() || willOwnResource();
+    }
+    
+    match /meal_feedback/{feedbackId} {
+      allow read, create, update, delete: if ownsResource() || willOwnResource();
+    }
+    
+    match /user_preferences/{userId} {
+      allow read, write: if isOwner(userId);
+    }
+    
+    // Social & Gamification
+    match /notifications/{notifId} {
+      allow read, create, update, delete: if ownsResource() || willOwnResource();
+    }
+    
+    match /challenges/{challengeId} {
       allow read: if isAuthenticated();
-      allow write: if false; // Only admin/cloud functions
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated() && (
+        resource == null ||
+        resource.data.creatorId == request.auth.uid ||
+        resource.data.opponentId == request.auth.uid ||
+        resource.data.opponentId == ""
+      );
+      allow delete: if isAuthenticated() && resource.data.creatorId == request.auth.uid;
+    }
+
+    // Global Data (Read-only for users)
+    match /workouts/{workoutId} {
+      allow read: if isAuthenticated();
+      allow write: if false;
+    }
+    
+=======
+    // Recommendations (AI Plans)
+    // Kept at root to allow easy writing by AI services/Cloud Functions
+    match /recommendations/{recommendationId} {
+      allow create: if willOwnResource();
+      allow read, update, delete: if ownsResource();
     }
 
     // Festival Calendar (Global Read-Only)
+>>>>>>> 3bb4e4351d544b8c52b68d318c28a38650e99e3c
     match /festivalCalendar/{eventId} {
       allow read: if isAuthenticated();
-      allow write: if false; // Only admins via Firebase Console/Cloud Functions
-    }
-
-    // Food database (for barcode scanning and search)
-    match /foodDatabase/{foodId} {
-      allow read: if isAuthenticated();
-      allow write: if false; // Populated by admin/Cloud Functions
-    }
-
-    // Exercise database (for AI recommendations)
-    match /exerciseDatabase/{exerciseId} {
-      allow read: if isAuthenticated();
-      allow write: if false; // Populated by admin/Cloud Functions
-    }
-
-    // Recipe database (for AI meal planning)
-    match /recipeDatabase/{recipeId} {
-      allow read: if isAuthenticated();
-      allow write: if false; // Populated by admin/Cloud Functions
-    }
-
-    // Supplement database
-    match /supplementDatabase/{supplementId} {
-      allow read: if isAuthenticated();
       allow write: if false;
     }
 
-    // Health tips and insights
-    match /healthTips/{tipId} {
-      allow read: if isAuthenticated();
-      allow write: if false;
-    }
-
-    // ==================== DENY ALL OTHER PATHS ====================
-    // Explicitly deny access to any other collections not listed above
-    // This prevents accidental writes to root-level collections
+<<<<<<< HEAD
+    // ==================== DEFAULT DENY ====================
+=======
+    // ==================== DENY ALL ELSE ====================
+    // This strictly blocks any writes to root collections like /goals, /weightLogs, etc.
+    // preventing the "messy" broken structure.
+>>>>>>> 3bb4e4351d544b8c52b68d318c28a38650e99e3c
     match /{document=**} {
       allow read, write: if false;
     }

@@ -92,137 +92,87 @@ class WeightProgressActivity : AppCompatActivity() {
 
     private fun loadData() {
         lifecycleScope.launch {
-            // Use the Helper to get the Full Trend (Actual + Projected)
-            val helper = com.example.swasthyamitra.utils.WeightProjectionHelper(authHelper)
+            // Fetch last 60 days to have enough data for month view
+            val logs = authHelper.getRecentWeightLogs(userId, 60)
             
-            // Determine days based on toggle (or just fetch max)
-            // Ideally we fetch based on current view, but let's fetch enough for Monthly
-            val trendPoints = helper.getProjectedWeightTrend(userId, 60)
+            // Sort by timestamp for processing
+            allLogs = logs.onEach { 
+                // Ensure timestamp exists if missing (fallback to simple parsing if needed)
+                if (it["timestamp"] == null) {
+                    // Logic to parse date string if needed, or assume 0
+                }
+            }.sortedBy { (it["timestamp"] as? Long) ?: 0L }
             
-            // For list view, we still want the raw logs or maybe the trend points?
-            // User request: "right and actual progress". List usually shows logs.
-            // Let's keep list as "Actual Logs" for clarity.
-            val rawLogs = authHelper.getRecentWeightLogs(userId, 60)
-            allLogs = rawLogs.sortedBy { (it["timestamp"] as? Long) ?: 0L }
-            
-            // Store trend points for chart
-            currentTrendData = trendPoints
-            
-            // Default to current view
-            updateChartMode(toggleGroup.checkedButtonId)
-            
-            // Update List with actual logs only
+            // Default to Weekly view
+            updateChartMode(R.id.btnWeekly)
             updateList(allLogs.sortedByDescending { (it["timestamp"] as? Long) ?: 0L })
         }
     }
     
-    // Store trend data at class level
-    private var currentTrendData: List<com.example.swasthyamitra.utils.WeightPoint> = emptyList()
-
     private fun updateChartMode(checkedId: Int) {
-        val days = when (checkedId) {
-            R.id.btnWeekly -> 7
-            R.id.btnBiWeekly -> 15
-            else -> 30
-        }
-        
-        val cutoff = System.currentTimeMillis() - (days * 24 * 60 * 60 * 1000L)
-        
-        // Filter the TREND data
-        val filteredTrend = currentTrendData.filter { it.timestamp >= cutoff }
-        
-        // Set Custom Marker
-        val markerView = com.example.swasthyamitra.utils.CustomMarkerView(this, R.layout.custom_marker_view, filteredTrend)
-        chart.marker = markerView
-
-        updateChart(filteredTrend)
+        val days = if (checkedId == R.id.btnWeekly) 7 else 30
+        val filteredLogs = allLogs.takeLast(days) // Assuming allLogs is sorted ascending
+        updateChart(filteredLogs)
         
         // Update Button Styles
         val btnWeekly = findViewById<MaterialButton>(R.id.btnWeekly)
-        val btnBiWeekly = findViewById<MaterialButton>(R.id.btnBiWeekly)
         val btnMonthly = findViewById<MaterialButton>(R.id.btnMonthly)
         
-        val activeColor = Color.parseColor("#7B2CBF")
-        val inactiveColor = Color.parseColor("#757575")
-
-        btnWeekly.setTextColor(if (checkedId == R.id.btnWeekly) activeColor else inactiveColor)
-        btnBiWeekly.setTextColor(if (checkedId == R.id.btnBiWeekly) activeColor else inactiveColor)
-        btnMonthly.setTextColor(if (checkedId == R.id.btnMonthly) activeColor else inactiveColor)
+        if (checkedId == R.id.btnWeekly) {
+            btnWeekly.setTextColor(Color.parseColor("#7B2CBF"))
+            btnMonthly.setTextColor(Color.parseColor("#757575"))
+        } else {
+            btnWeekly.setTextColor(Color.parseColor("#757575"))
+            btnMonthly.setTextColor(Color.parseColor("#7B2CBF"))
+        }
     }
 
-    private fun updateChart(points: List<com.example.swasthyamitra.utils.WeightPoint>) {
-        if (points.isEmpty()) {
+    private fun updateChart(logs: List<Map<String, Any>>) {
+        val entries = ArrayList<Entry>()
+        val labels = ArrayList<String>()
+        val dateFormat = SimpleDateFormat("MM/dd", Locale.US)
+
+        logs.forEachIndexed { index, log ->
+            val weight = (log["weight"] as? Number)?.toFloat() ?: return@forEachIndexed
+            entries.add(Entry(index.toFloat(), weight))
+            
+            val timestamp = (log["timestamp"] as? Long) ?: 0L
+            if (timestamp > 0) {
+                labels.add(dateFormat.format(Date(timestamp)))
+            } else {
+                labels.add((log["date"] as? String)?.takeLast(5) ?: "")
+            }
+        }
+
+        if (entries.isEmpty()) {
             chart.clear()
-            chart.setNoDataText("No data available.")
-            chart.invalidate()
             return 
         }
 
-        val entriesTrend = ArrayList<Entry>()
-        val entriesActual = ArrayList<Entry>()
-        val actualColors = ArrayList<Int>() // Colors for actual points
+        val dataSet = LineDataSet(entries, "Weight")
+        dataSet.color = Color.parseColor("#7B2CBF") // Purple Line
+        dataSet.lineWidth = 3f
+        dataSet.mode = LineDataSet.Mode.CUBIC_BEZIER // Smooth curves
         
-        val labels = ArrayList<String>()
-        val dateFormat = SimpleDateFormat("MM/dd", Locale.getDefault())
+        dataSet.setDrawCircles(true)
+        dataSet.setCircleColor(Color.parseColor("#7B2CBF"))
+        dataSet.circleRadius = 5f
+        dataSet.setDrawCircleHole(true)
+        dataSet.circleHoleColor = Color.WHITE
+        
+        dataSet.setDrawValues(false)
+        dataSet.setDrawFilled(true)
+        // Ideally set a gradient drawable here, for now solid alpha
+        dataSet.fillColor = Color.parseColor("#7B2CBF")
+        dataSet.fillAlpha = 50
 
-        // Create entries
-        points.forEachIndexed { index, point ->
-            // Add to Continuous Trend Line
-            entriesTrend.add(Entry(index.toFloat(), point.weight))
-            
-            // Add to Actual Points (Scatter) if not projected
-            if (!point.isProjected) {
-                entriesActual.add(Entry(index.toFloat(), point.weight))
-                actualColors.add(getMoodColor(point.mood))
-            }
-            
-            labels.add(dateFormat.format(Date(point.timestamp)))
-        }
-
-        // DataSet 1: The Continuous Trend Line (Projected + Actual)
-        val setTrend = LineDataSet(entriesTrend, "Projected Trend")
-        setTrend.color = Color.parseColor("#E1BEE7") // Lighter Purple
-        setTrend.lineWidth = 2f
-        setTrend.setDrawCircles(false) // No circles on the trend line (cleaner)
-        setTrend.setDrawValues(false)
-        setTrend.mode = LineDataSet.Mode.CUBIC_BEZIER
-        setTrend.enableDashedLine(10f, 5f, 0f) // Optional: Dash it? Or solid? User said "Direct progress". Let's stick to solid light line.
-        setTrend.disableDashedLine() 
-        
-        // DataSet 2: Actual Measured Points
-        val setActual = LineDataSet(entriesActual, "Actual Weight")
-        setActual.color = Color.TRANSPARENT // Invisible line
-        setActual.setDrawCircles(true)
-        setActual.circleRadius = 6f
-        
-        // Use individual colors for circles
-        setActual.circleColors = actualColors
-        
-        setActual.setDrawCircleHole(true)
-        setActual.circleHoleColor = Color.WHITE
-        setActual.setDrawValues(false) // Hide values on chart to reduce clutter, rely on marker
-        setActual.mode = LineDataSet.Mode.LINEAR // Doesn't matter as line is invisible
-
-        val data = LineData(setTrend, setActual)
-        
         chart.xAxis.valueFormatter = IndexAxisValueFormatter(labels)
         chart.xAxis.granularity = 1f
-        chart.xAxis.labelCount = if (labels.size > 7) 5 else labels.size
+        chart.xAxis.labelCount = if (logs.size > 7) 5 else logs.size 
         
-        chart.data = data
+        chart.data = LineData(dataSet)
         chart.animateY(1000)
         chart.invalidate()
-    }
-    
-    private fun getMoodColor(mood: String): Int {
-        return when (mood.lowercase(Locale.getDefault())) {
-            // Positive - Green
-            "happy", "energetic", "calm", "focused", "grateful", "loved", "confident", "proud", "excited" -> Color.parseColor("#4CAF50")
-            // Negative - Red
-            "sad", "anxious", "tired", "stressed", "angry", "lonely", "bored", "depressed", "overwhelmed" -> Color.parseColor("#F44336")
-            // Neutral/Data Missing - Default Purple
-            else -> Color.parseColor("#7B2CBF")
-        }
     }
 
     private fun updateList(logs: List<Map<String, Any>>) {

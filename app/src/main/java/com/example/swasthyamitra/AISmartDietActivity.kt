@@ -157,7 +157,7 @@ class AISmartDietActivity : AppCompatActivity() {
             val userId = authHelper.getCurrentUser()?.uid ?: return
             val firestore = com.google.firebase.firestore.FirebaseFirestore.getInstance("renu")
             
-            val dateFormat = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
+            val dateFormat = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.US)
             val currentDate = dateFormat.format(java.util.Date())
             
             // Parse protein value (remove 'g' suffix if present)

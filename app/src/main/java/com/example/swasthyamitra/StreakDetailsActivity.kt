@@ -25,7 +25,6 @@ class StreakDetailsActivity : AppCompatActivity() {
     
     private var fitnessData: FitnessData? = null
     private var viewMode: String = "STREAK" // Default to streak view
-    
     private var displayCalendar: Calendar = Calendar.getInstance()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -80,8 +79,18 @@ class StreakDetailsActivity : AppCompatActivity() {
         }
         
         btnNextMonth.setOnClickListener {
-            displayCalendar.add(Calendar.MONTH, 1)
-            generateCalendar()
+            val today = Calendar.getInstance()
+            // Check if adding a month would exceed current month
+            val nextMonthCheck = displayCalendar.clone() as Calendar
+            nextMonthCheck.add(Calendar.MONTH, 1)
+            
+            if (nextMonthCheck.get(Calendar.YEAR) < today.get(Calendar.YEAR) ||
+                (nextMonthCheck.get(Calendar.YEAR) == today.get(Calendar.YEAR) && 
+                 nextMonthCheck.get(Calendar.MONTH) <= today.get(Calendar.MONTH))) {
+                 
+                displayCalendar.add(Calendar.MONTH, 1)
+                generateCalendar()
+            }
         }
         
         // Reset to current month initially
@@ -90,6 +99,8 @@ class StreakDetailsActivity : AppCompatActivity() {
         
         generateCalendar()
     }
+    
+
 
     private fun setupShieldUI() {
         // Update header to show "Shield Details"
@@ -159,8 +170,14 @@ class StreakDetailsActivity : AppCompatActivity() {
         val currentMonth = displayCalendar.get(Calendar.MONTH)
         val currentYear = displayCalendar.get(Calendar.YEAR)
         
+        // Disable next button if future
+        val today = Calendar.getInstance()
+        val isCurrentMonth = (currentYear == today.get(Calendar.YEAR) && currentMonth == today.get(Calendar.MONTH))
+        btnNextMonth.alpha = if (isCurrentMonth) 0.3f else 1.0f
+        btnNextMonth.isEnabled = !isCurrentMonth
+        
         // Update Title
-        val monthFormat = SimpleDateFormat("MMMM yyyy", Locale.getDefault())
+        val monthFormat = SimpleDateFormat("MMMM yyyy", Locale.US)
         tvMonthYear.text = monthFormat.format(displayCalendar.time)
 
         // Get day of week for the 1st
@@ -184,13 +201,13 @@ class StreakDetailsActivity : AppCompatActivity() {
             calendarGrid.addView(emptyView)
         }
 
-        val todayDateStr = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+        val todayDateStr = SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date())
         val history = fitnessData?.completionHistory ?: emptyMap()
 
         // Generate Day Views
         for (day in 1..daysInMonth) {
             tempCal.set(Calendar.DAY_OF_MONTH, day)
-            val dateStr = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(tempCal.time)
+            val dateStr = SimpleDateFormat("yyyy-MM-dd", Locale.US).format(tempCal.time)
             
             val isCompleted = history[dateStr] == true
             val isToday = dateStr == todayDateStr

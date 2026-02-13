@@ -84,8 +84,8 @@ class MealPlanActivity : AppCompatActivity() {
     private fun setupDates() {
         try {
             val calendar = java.util.Calendar.getInstance()
-            val dateFormat = java.text.SimpleDateFormat("EEE", java.util.Locale.getDefault())
-            val dayFormat = java.text.SimpleDateFormat("d", java.util.Locale.getDefault())
+            val dateFormat = java.text.SimpleDateFormat("EEE", java.util.Locale.US)
+            val dayFormat = java.text.SimpleDateFormat("d", java.util.Locale.US)
             
             // We want to show 5 days: Today-2, Today-1, Today, Today+1, Today+2
             // Start from 2 days ago
@@ -494,7 +494,7 @@ class MealPlanActivity : AppCompatActivity() {
         
         lifecycleScope.launch {
             try {
-                val dateFormat = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
+                val dateFormat = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.US)
                 val foodLog = com.example.swasthyamitra.models.FoodLog(
                     logId = "",
                     userId = userId,

@@ -13,8 +13,8 @@ import kotlin.math.min
 class InsightsRepository(private val authHelper: FirebaseAuthHelper, private val userId: String) {
 
     private val firestore = FirebaseFirestore.getInstance("renu") // Using RENU database instance
-    private val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-    private val dayFormat = SimpleDateFormat("EEE", Locale.getDefault())
+    private val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.US)
+    private val dayFormat = SimpleDateFormat("EEE", Locale.US)
 
     suspend fun getWeeklyMetrics(): WeeklyMetrics {
         try {

@@ -152,7 +152,7 @@ class ManualExerciseActivity : AppCompatActivity() {
         btnSaveExercise.isEnabled = false
         btnSaveExercise.text = "Saving..."
 
-        val today = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+        val today = SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date())
         val timeStr = String.format("%02d:%02d", selectedHour, selectedMinute)
         val timestamp = System.currentTimeMillis()
 

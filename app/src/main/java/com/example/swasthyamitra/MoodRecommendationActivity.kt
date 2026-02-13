@@ -100,7 +100,7 @@ class MoodRecommendationActivity : AppCompatActivity() {
         findViewById<TextView>(R.id.tv_current_mood_text).text = "Feeling ${moodData.mood}"
         findViewById<TextView>(R.id.tv_mood_suggestion).text = moodData.suggestion
         
-        val dateFormat = SimpleDateFormat("EEEE, MMM dd, HH:mm", Locale.getDefault())
+        val dateFormat = SimpleDateFormat("EEEE, MMM dd, HH:mm", Locale.US)
         findViewById<TextView>(R.id.tv_mood_date).text = dateFormat.format(java.util.Date(moodData.timestamp))
     }
 
@@ -197,7 +197,7 @@ class MoodRecommendationActivity : AppCompatActivity() {
             // Calculate distribution
             val distribution = moods.groupingBy { 
                  // Capitalize for consistency
-                 it.mood.replaceFirstChar { char -> if (char.isLowerCase()) char.titlecase(Locale.getDefault()) else char.toString() } 
+                 it.mood.replaceFirstChar { char -> if (char.isLowerCase()) char.titlecase(Locale.US) else char.toString() } 
             }.eachCount()
             
             distribution.forEach { (mood, count) ->
@@ -246,12 +246,12 @@ class MoodRecommendationActivity : AppCompatActivity() {
             holder.emoji.text = emojiMap[mood.mood.lowercase()] ?: "😐"
             holder.moodName.text = keyToLabel(mood.mood)
             
-            val sdf = SimpleDateFormat("MMM dd, HH:mm", Locale.getDefault())
+            val sdf = SimpleDateFormat("MMM dd, HH:mm", Locale.US)
             holder.date.text = sdf.format(java.util.Date(mood.timestamp))
         }
 
         private fun keyToLabel(key: String): String {
-             return key.replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() }
+             return key.replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.US) else it.toString() }
         }
 
         override fun getItemCount() = moods.size
