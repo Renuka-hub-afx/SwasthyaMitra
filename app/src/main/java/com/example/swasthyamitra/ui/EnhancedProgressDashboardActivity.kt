@@ -1,6 +1,7 @@
 package com.example.swasthyamitra.ui
 
 import android.graphics.Color
+import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import android.widget.Toast
@@ -16,6 +17,8 @@ import com.github.mikephil.charting.data.LineDataSet
 import com.github.mikephil.charting.components.XAxis
 import com.github.mikephil.charting.formatter.ValueFormatter
 import kotlinx.coroutines.tasks.await
+import java.util.Calendar
+
 
 /**
  * Enhanced Progress Dashboard with Multi-Period Support and Smart Graphs
@@ -74,7 +77,10 @@ class EnhancedProgressDashboardActivity : AppCompatActivity() {
         // Stage card click listeners
         binding.cardStage1.setOnClickListener { showStageDetails(1, "Hydration Hero", "Track 7 days of water intake") }
         binding.cardStage2.setOnClickListener { showStageDetails(2, "Step Master", "Reach 10k steps for 7 days") }
-        binding.cardStage3.setOnClickListener { showStageDetails(3, "Sleep Saint", "Track 7 nights of good sleep") }
+        binding.cardStage3.setOnClickListener {
+            // Show details instead of opening Sleep Tracker (moved to Homepage)
+            showStageDetails(3, "Sleep Saint", "Track 7 nights of good sleep")
+        }
         binding.cardStage4.setOnClickListener { showStageDetails(4, "Zen Master", "Log 7 days of mood tracking") }
         binding.cardStage5.setOnClickListener { showStageDetails(5, "Nutrition Ninja", "Log 21 meals (7 days × 3)") }
         binding.cardStage6.setOnClickListener { showStageDetails(6, "Iron Legend", "Complete 7 workouts") }
@@ -395,11 +401,30 @@ class EnhancedProgressDashboardActivity : AppCompatActivity() {
                     currentStage = 3
                 }
 
-                // Stage 3: Sleep Saint (unlock after stage 2)
-                if (unlockedStages >= 2) {
+                // Stage 3: Sleep Saint (7 nights of good sleep)
+                val sevenDaysAgo = Calendar.getInstance().apply {
+                    add(Calendar.DAY_OF_YEAR, -7)
+                }.timeInMillis
+
+                val sleepLogs = firestore.collection("users")
+                    .document(userId)
+                    .collection("sleep_logs")
+                    .whereGreaterThan("timestamp", sevenDaysAgo)
+                    .get()
+                    .await()
+
+                val goodSleepNights = sleepLogs.documents.count { doc ->
+                    val quality = doc.getString("quality")
+                    quality == "good" || quality == "excellent"
+                }
+
+                if (goodSleepNights >= 7 && unlockedStages >= 2) {
                     unlockStage(3, "😴", "#FFFFFF")
                     unlockedStages++
                     currentStage = 4
+                } else if (unlockedStages >= 2) {
+                    // Show progress
+                    binding.tvCurrentActivity.text = "$goodSleepNights / 7 nights"
                 }
 
                 // Stage 4: Zen Master (7 days of mood tracking)

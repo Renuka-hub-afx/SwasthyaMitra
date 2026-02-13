@@ -24,6 +24,9 @@ import com.google.firebase.database.ValueEventListener
 import com.google.firebase.database.DatabaseReference
 import java.util.Date
 import java.util.Locale
+import com.example.swasthyamitra.models.FitnessData
+import com.example.swasthyamitra.repository.GamificationRepository
+
 
 
 class homepage : AppCompatActivity() {
@@ -233,7 +236,7 @@ class homepage : AppCompatActivity() {
         }
 
         menuProgress.setOnClickListener {
-            startActivity(Intent(this, ProgressActivity::class.java))
+            startActivity(Intent(this, com.example.swasthyamitra.ui.EnhancedProgressDashboardActivity::class.java))
         }
 
         menuProfile.setOnClickListener {

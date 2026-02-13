@@ -20,7 +20,7 @@
             android:layout_height="40dp"
             android:padding="8dp"
             android:background="@drawable/circular_background"
-            android:src="@drawable/ic_back_arrow"
+            android:src="@drawable/ic_back"
             app:tint="#424242"/>
 
         <TextView

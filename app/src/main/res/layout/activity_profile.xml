@@ -21,7 +21,7 @@
             android:background="@drawable/circular_background"
             android:backgroundTint="#80FFFFFF"
             android:padding="8dp"
-            android:src="@drawable/ic_back_arrow"
+            android:src="@drawable/ic_back"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             app:tint="#4A4A4A" />

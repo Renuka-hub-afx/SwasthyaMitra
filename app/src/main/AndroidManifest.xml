@@ -101,12 +101,11 @@
             android:name=".CoachActivity"
             android:exported="false" />
 
-
-
         <activity
-            android:name=".ProgressActivity"
+            android:name=".SleepTrackerActivity"
             android:exported="false"
             android:screenOrientation="portrait" />
+
 
         <activity
             android:name=".SettingsActivity"
@@ -132,10 +131,6 @@
             android:exported="false"
             android:screenOrientation="portrait" />
 
-        <activity
-            android:name=".FoodPhotoCaptureActivity"
-            android:exported="false"
-            android:screenOrientation="fullSensor" />
 
         <activity
             android:name=".LifestyleActivity"
