@@ -70,6 +70,15 @@ class homepage : AppCompatActivity() {
     private lateinit var tvDate: TextView
     private lateinit var chipPeriodMode: com.google.android.material.chip.Chip
     
+    // Sleep Tracking UI
+    private lateinit var tvLastSleepDuration: TextView
+    private lateinit var tvAvgSleepDuration: TextView
+    private lateinit var tvSleepQuality: TextView
+    private lateinit var tvSleepGoalPercentage: TextView
+    private lateinit var pbSleepGoal: ProgressBar
+    private lateinit var btnTrackSleep: MaterialButton
+    private lateinit var tvSleepStreak: TextView
+
     // Calorie Balance UI
     private lateinit var tvCaloriesIn: TextView
     private lateinit var tvCaloriesOut: TextView
@@ -305,6 +314,14 @@ class homepage : AppCompatActivity() {
                 startActivity(intent)
             }
 
+            // Setup Sleep Tracking Button (optional)
+            if (::btnTrackSleep.isInitialized) {
+                btnTrackSleep.setOnClickListener {
+                    val intent = Intent(this, SleepTrackerActivity::class.java)
+                    startActivity(intent)
+                }
+            }
+
             // REMOVED: Progress Dashboard and Insights buttons
             // These are now only accessible from the dashboard (bottom navigation "Progress" menu)
             // Users should click the "Progress" icon in bottom navigation to access:
@@ -457,6 +474,7 @@ class homepage : AppCompatActivity() {
             displayNutritionBreakdown()
             displayWorkoutStatus()
             displayWaterStatus()
+            loadSleepData()
             updateAICoachMessage()
             updateAIExerciseRecommendation()
             updateCalorieBalance()
@@ -1148,6 +1166,116 @@ class homepage : AppCompatActivity() {
         }
         tvCalorieStatus.text = statusMessage
     }
-    
+
+    private fun loadSleepData() {
+        if (!::tvLastSleepDuration.isInitialized) {
+            Log.w("Homepage", "Sleep tracking views not initialized")
+            return
+        }
+
+        lifecycleScope.launch {
+            try {
+                val calendar = Calendar.getInstance()
+                val sevenDaysAgo = calendar.clone() as Calendar
+                sevenDaysAgo.add(Calendar.DAY_OF_YEAR, -7)
+
+                // Get last 7 days of sleep data
+                val sleepLogs = firestore.collection("users")
+                    .document(userId)
+                    .collection("sleep_logs")
+                    .whereGreaterThanOrEqualTo("timestamp", com.google.firebase.Timestamp(sevenDaysAgo.time))
+                    .orderBy("timestamp", com.google.firebase.firestore.Query.Direction.DESCENDING)
+                    .limit(7)
+                    .get()
+                    .await()
+
+                if (sleepLogs.isEmpty) {
+                    // No sleep data yet
+                    tvLastSleepDuration.text = "--"
+                    tvAvgSleepDuration.text = "--"
+                    tvSleepQuality.text = "No data"
+                    tvSleepGoalPercentage.text = "0%"
+                    pbSleepGoal.progress = 0
+                    tvSleepStreak.text = "Start tracking your sleep! 😴"
+                    tvSleepStreak.setTextColor(android.graphics.Color.parseColor("#999999"))
+                    return@launch
+                }
+
+                // Calculate sleep statistics
+                var totalMinutes = 0.0
+                var lastSleepMinutes = 0.0
+                var goodSleepDays = 0
+
+                sleepLogs.documents.forEachIndexed { index, doc ->
+                    val sleepTime = doc.getString("sleepTime") ?: ""
+                    val wakeTime = doc.getString("wakeTime") ?: ""
+                    val durationMinutes = doc.getDouble("durationMinutes") ?: 0.0
+
+                    if (index == 0) {
+                        lastSleepMinutes = durationMinutes
+                    }
+
+                    totalMinutes += durationMinutes
+
+                    // Consider sleep "good" if >= 7 hours (420 minutes)
+                    if (durationMinutes >= 420) {
+                        goodSleepDays++
+                    }
+                }
+
+                val avgMinutes = if (sleepLogs.size() > 0) totalMinutes / sleepLogs.size() else 0.0
+
+                // Format durations
+                val lastHours = (lastSleepMinutes / 60).toInt()
+                val lastMins = (lastSleepMinutes % 60).toInt()
+                tvLastSleepDuration.text = "${lastHours}h ${lastMins}m"
+
+                val avgHours = (avgMinutes / 60).toInt()
+                val avgMins = (avgMinutes % 60).toInt()
+                tvAvgSleepDuration.text = "${avgHours}h ${avgMins}m"
+
+                // Determine sleep quality based on average
+                val quality = when {
+                    avgMinutes >= 420 -> "Good" // 7+ hours
+                    avgMinutes >= 360 -> "Fair" // 6-7 hours
+                    else -> "Poor" // < 6 hours
+                }
+                tvSleepQuality.text = quality
+
+                val qualityColor = when (quality) {
+                    "Good" -> android.graphics.Color.parseColor("#4CAF50")
+                    "Fair" -> android.graphics.Color.parseColor("#FF9800")
+                    else -> android.graphics.Color.parseColor("#F44336")
+                }
+                tvSleepQuality.setTextColor(qualityColor)
+
+                // Calculate sleep goal progress (goal: 8 hours = 480 minutes)
+                val goalMinutes = 480.0
+                val goalPercentage = ((lastSleepMinutes / goalMinutes) * 100).toInt().coerceIn(0, 150)
+                tvSleepGoalPercentage.text = "$goalPercentage%"
+                pbSleepGoal.progress = goalPercentage.coerceIn(0, 100)
+
+                // Display sleep streak
+                if (goodSleepDays > 0) {
+                    tvSleepStreak.text = "🔥 $goodSleepDays ${if (goodSleepDays == 1) "day" else "days"} of good sleep!"
+                    tvSleepStreak.setTextColor(android.graphics.Color.parseColor("#FF6F00"))
+                } else {
+                    tvSleepStreak.text = "Try to get 7+ hours tonight! 💤"
+                    tvSleepStreak.setTextColor(android.graphics.Color.parseColor("#9C27B0"))
+                }
+
+                Log.d("Homepage", "Sleep data loaded: last=${lastHours}h${lastMins}m, avg=${avgHours}h${avgMins}m, quality=$quality")
+
+            } catch (e: Exception) {
+                Log.e("Homepage", "Error loading sleep data: ${e.message}", e)
+                tvLastSleepDuration.text = "--"
+                tvAvgSleepDuration.text = "--"
+                tvSleepQuality.text = "Error"
+                tvSleepStreak.text = "Unable to load sleep data"
+            }
+        }
+    }
+
 
 }
+

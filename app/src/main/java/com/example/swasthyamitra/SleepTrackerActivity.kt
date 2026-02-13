@@ -162,12 +162,15 @@ private fun setupUI() {
 
                 val sleepLog = hashMapOf(
                     "userId" to userId,
-                    "sleepTime" to sleepTime,
-                    "wakeTime" to currentTime,
+                    "sleepTime" to SimpleDateFormat("hh:mm a", Locale.getDefault()).format(Date(sleepTime)),
+                    "wakeTime" to SimpleDateFormat("hh:mm a", Locale.getDefault()).format(Date(currentTime)),
+                    "sleepTimeMillis" to sleepTime,
+                    "wakeTimeMillis" to currentTime,
                     "durationHours" to hours,
+                    "durationMinutes" to (hours * 60),
                     "quality" to quality,
                     "date" to getCurrentDate(),
-                    "timestamp" to currentTime,
+                    "timestamp" to com.google.firebase.Timestamp.now(),
                     "source" to "manual_quick"
                 )
 
@@ -231,12 +234,15 @@ private fun setupUI() {
 
                 val sleepLog = hashMapOf(
                     "userId" to userId,
-                    "sleepTime" to selectedSleepTime!!.timeInMillis,
-                    "wakeTime" to selectedWakeTime!!.timeInMillis,
+                    "sleepTime" to formatTime(selectedSleepTime!!),
+                    "wakeTime" to formatTime(selectedWakeTime!!),
+                    "sleepTimeMillis" to selectedSleepTime!!.timeInMillis,
+                    "wakeTimeMillis" to selectedWakeTime!!.timeInMillis,
                     "durationHours" to durationHours,
+                    "durationMinutes" to (durationHours * 60),
                     "quality" to quality,
                     "date" to SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(selectedSleepTime!!.time), // Use sleep start date
-                    "timestamp" to System.currentTimeMillis(),
+                    "timestamp" to com.google.firebase.Timestamp.now(),
                     "source" to "manual"
                 )
 
