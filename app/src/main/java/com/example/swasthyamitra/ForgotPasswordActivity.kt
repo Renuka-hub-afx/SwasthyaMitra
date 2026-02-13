@@ -3,51 +3,48 @@ package com.example.swasthyamitra
 import android.os.Bundle
 import android.util.Log
 import android.util.Patterns
+import android.widget.Button
+import android.widget.EditText
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import com.example.swasthyamitra.databinding.ActivityForgotPasswordBinding
 import com.google.firebase.auth.FirebaseAuth
+import com.example.swasthyamitra.databinding.ActivityForgotPasswordBinding
+import com.google.firebase.firestore.FirebaseFirestore
 
 class ForgotPasswordActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityForgotPasswordBinding
+    private lateinit var auth: FirebaseAuth
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityForgotPasswordBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        binding.sendLinkButton.setOnClickListener {
-            handleResetPassword()
-        }
+        auth = FirebaseAuth.getInstance()
 
+        binding.sendLinkButton.setOnClickListener {
+            val email = binding.emailInput.text.toString().trim()
+            if (isValidEmail(email)) {
+                sendPasswordResetEmail(email)
+            } else {
+                binding.emailInput.error = "Enter a valid email"
+            }
+        }
+        
         binding.backToSignIn.setOnClickListener {
             finish()
         }
     }
 
-    private fun handleResetPassword() {
-        val email = binding.emailInput.text.toString().trim()
-
-        if (email.isEmpty()) {
-            binding.emailInput.error = "Enter your email address"
-            binding.emailInput.requestFocus()
-            return
-        }
-
-        if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-            binding.emailInput.error = "Enter a valid email address"
-            binding.emailInput.requestFocus()
-            return
-        }
-
-        sendPasswordResetEmail(email)
+    private fun isValidEmail(email: String): Boolean {
+        return email.isNotEmpty() && Patterns.EMAIL_ADDRESS.matcher(email).matches()
     }
 
     private fun sendPasswordResetEmail(email: String) {
+        // specific generic message to avoid user enumeration
+        // but for now, let's keep it helpful for the user as per original code context
         Toast.makeText(this, "Sending reset link...", Toast.LENGTH_SHORT).show()
-        
-        val auth = FirebaseAuth.getInstance()
         
         auth.sendPasswordResetEmail(email)
             .addOnCompleteListener { task ->
@@ -58,8 +55,7 @@ class ForgotPasswordActivity : AppCompatActivity() {
                         "✅ Password reset link sent to $email. Check your inbox!",
                         Toast.LENGTH_LONG
                     ).show()
-                    // Optionally finish and go back after success
-                    // finish() 
+                    finish() // Close activity on success
                 } else {
                     val exception = task.exception
                     Log.e("ForgotPassword", "Reset failed: ${exception?.message}")

@@ -20,6 +20,7 @@ class StepManager(private val context: Context, private val onStepUpdate: (Int, 
             if (intent?.action == StepCounterService.ACTION_UPDATE_STEPS) {
                 val steps = intent.getIntExtra("steps", 0)
                 val calories = intent.getDoubleExtra("calories", 0.0)
+                dailySteps = steps
                 Log.d("StepManager", "Received update: $steps steps")
                 onStepUpdate(steps, calories)
             }
@@ -27,6 +28,8 @@ class StepManager(private val context: Context, private val onStepUpdate: (Int, 
     }
 
     private var isRegistered = false
+    var dailySteps: Int = 0
+        private set
 
     fun start() {
         // 1. Start the Foreground Service (if not running)
@@ -56,6 +59,7 @@ class StepManager(private val context: Context, private val onStepUpdate: (Int, 
         val prefs = context.getSharedPreferences("StepCounterPrefs", Context.MODE_PRIVATE)
         val savedSteps = prefs.getInt("daily_steps", 0)
         val calories = savedSteps * 0.04
+        dailySteps = savedSteps
         onStepUpdate(savedSteps, calories)
     }
 

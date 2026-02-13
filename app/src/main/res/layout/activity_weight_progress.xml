@@ -18,7 +18,7 @@
             android:id="@+id/btnBack"
             android:layout_width="40dp"
             android:layout_height="40dp"
-            android:src="@drawable/ic_arrow_back"
+            android:src="@drawable/ic_back"
             android:background="@drawable/circular_background"
             android:padding="8dp"
             app:tint="#212121"
@@ -64,6 +64,14 @@
             android:layout_height="wrap_content"
             android:text="Weekly"
             android:textColor="#7B2CBF"/>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnBiWeekly"
+            style="@style/Widget.Material3.Button.OutlinedButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="15 Days"
+            android:textColor="#757575"/>
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnMonthly"

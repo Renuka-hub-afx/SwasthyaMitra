@@ -32,16 +32,21 @@ class MealEventWorker(
         // Meal Times: Breakfast (8 AM), Lunch (1 PM = 13), Dinner (8 PM = 20)
         // We check a window (e.g., 7-9 for breakfast) to ensure we catch it even if worker runs slightly off
         
-        if (hour in 7..9 && !isTriggeredDetails("breakfast", todayStr)) {
+        val appPrefs = applicationContext.getSharedPreferences("app_settings", Context.MODE_PRIVATE)
+
+        if (hour in 7..9 && appPrefs.getBoolean("pref_breakfast", true) && !isTriggeredDetails("breakfast", todayStr)) {
             sendMealNotification("Breakfast", NotificationConstants.BREAKFAST_MESSAGES)
-            checkEvents(todayStr) // Check events in the morning
+            // Events are usually morning checks too
+            if (appPrefs.getBoolean("pref_events", true)) {
+                checkEvents(todayStr) 
+            }
             markTriggered("breakfast", todayStr)
         } 
-        else if (hour in 12..14 && !isTriggeredDetails("lunch", todayStr)) {
+        else if (hour in 12..14 && appPrefs.getBoolean("pref_lunch", true) && !isTriggeredDetails("lunch", todayStr)) {
             sendMealNotification("Lunch", NotificationConstants.LUNCH_MESSAGES)
             markTriggered("lunch", todayStr)
         }
-        else if (hour in 19..21 && !isTriggeredDetails("dinner", todayStr)) {
+        else if (hour in 19..21 && appPrefs.getBoolean("pref_dinner", true) && !isTriggeredDetails("dinner", todayStr)) {
             sendMealNotification("Dinner", NotificationConstants.DINNER_MESSAGES)
             markTriggered("dinner", todayStr)
         }
@@ -62,7 +67,8 @@ class MealEventWorker(
         val user = authHelper.getCurrentUser() ?: return
         
         try {
-            val doc = FirebaseFirestore.getInstance("renu").collection("users").document(user.uid).get().await()
+            val firestore = FirebaseFirestore.getInstance("renu")
+            val doc = firestore.collection("users").document(user.uid).get().await()
             val name = doc.getString("name") ?: "Friend"
             
             // Birthday Check

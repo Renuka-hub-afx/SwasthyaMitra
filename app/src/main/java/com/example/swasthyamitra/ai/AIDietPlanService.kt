@@ -3,6 +3,7 @@ package com.example.swasthyamitra.ai
 import android.content.Context
 import android.util.Log
 import com.example.swasthyamitra.auth.FirebaseAuthHelper
+import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.Firebase
 import com.google.firebase.ai.ai
 import com.google.firebase.ai.type.GenerativeBackend
@@ -18,7 +19,7 @@ import java.util.*
 class AIDietPlanService private constructor(private val context: Context) {
 
     private val authHelper = FirebaseAuthHelper(context)
-    private val firestore = com.google.firebase.firestore.FirebaseFirestore.getInstance("renu")
+    private val firestore = FirebaseFirestore.getInstance("renu")
     private val TAG = "AIDietPlanService"
     
     // Memory Cache for Food Samples
@@ -859,7 +860,7 @@ class AIDietPlanService private constructor(private val context: Context) {
 
     private fun preloadFoodCache() {
         val cache = mutableMapOf<String, List<String>>()
-        val files = listOf("food_data.csv", "foods (1).csv", "Indian_Food_DF (2).csv", "newfood.csv")
+        val files = listOf("food_data.csv", "newfood.csv", "indian_food_recipes.csv")
         
         files.forEach { fileName ->
             try {

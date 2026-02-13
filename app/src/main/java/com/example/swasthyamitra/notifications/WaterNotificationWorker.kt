@@ -20,6 +20,7 @@ class WaterNotificationWorker(
 
     private val notificationHelper = NotificationHelper(appContext)
     private val authHelper = FirebaseAuthHelper(appContext)
+    private val firestore = FirebaseFirestore.getInstance("renu")
 
     override suspend fun doWork(): Result {
         Log.d("WaterWorker", "Checking hydration schedule...")
@@ -32,8 +33,7 @@ class WaterNotificationWorker(
 
         try {
             // Fetch User Profile for Wake/Sleep times
-            val db = FirebaseFirestore.getInstance("renu")
-            val doc = db.collection("users").document(user.uid).get().await()
+            val doc = firestore.collection("users").document(user.uid).get().await()
             
             val wakeTimeStr = doc.getString("wakeTime") ?: "07:00 AM"
             val sleepTimeStr = doc.getString("sleepTime") ?: "10:00 PM"

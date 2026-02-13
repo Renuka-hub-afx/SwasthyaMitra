@@ -307,6 +307,10 @@ class LifestyleActivity : AppCompatActivity() {
                         )
 
                         result.onSuccess {
+                            // Save local flag that profile is complete
+                            val sharedPreferences = getSharedPreferences("UserPreferences", MODE_PRIVATE)
+                            sharedPreferences.edit().putBoolean("PROFILE_COMPLETED", true).apply()
+
                             // Schedule exercise reminder - DISABLED
                             // scheduleExerciseReminder(selectedPreferredTime)
 

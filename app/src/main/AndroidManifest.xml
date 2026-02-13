@@ -15,6 +15,7 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_HEALTH" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.SEND_SMS" />
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
@@ -259,6 +260,25 @@
                 <action android:name="android.intent.action.QUICKBOOT_POWERON" />
             </intent-filter>
         </receiver>
+
+        <!-- Auto Behavior Tracking Service -->
+        <service
+            android:name=".services.UserBehaviorTracker"
+            android:enabled="true"
+            android:exported="false"
+            android:foregroundServiceType="health" />
+
+        <!-- Progress Dashboard Activity -->
+        <activity
+            android:name=".ui.ProgressDashboardActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+
+        <!-- Enhanced Progress Dashboard with Graphs -->
+        <activity
+            android:name=".ui.EnhancedProgressDashboardActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
 
         <provider
             android:name="androidx.core.content.FileProvider"

@@ -130,7 +130,7 @@ class WeightProgressActivity : AppCompatActivity() {
     private fun updateChart(logs: List<Map<String, Any>>) {
         val entries = ArrayList<Entry>()
         val labels = ArrayList<String>()
-        val dateFormat = SimpleDateFormat("MM/dd", Locale.US)
+        val dateFormat = SimpleDateFormat("MM/dd", Locale.getDefault())
 
         logs.forEachIndexed { index, log ->
             val weight = (log["weight"] as? Number)?.toFloat() ?: return@forEachIndexed

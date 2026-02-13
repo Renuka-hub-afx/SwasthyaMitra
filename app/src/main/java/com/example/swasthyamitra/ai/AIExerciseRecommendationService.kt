@@ -3,6 +3,7 @@ package com.example.swasthyamitra.ai
 import android.content.Context
 import android.util.Log
 import com.example.swasthyamitra.auth.FirebaseAuthHelper
+import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.Firebase
 import com.google.firebase.ai.ai
 import com.google.firebase.ai.type.GenerativeBackend
@@ -17,6 +18,7 @@ import java.io.InputStreamReader
 class AIExerciseRecommendationService private constructor(private val context: Context) {
 
     private val authHelper = FirebaseAuthHelper(context)
+    private val firestore = FirebaseFirestore.getInstance("renu") // Added this line as per instruction
     private val TAG = "AIExerciseService"
 
     companion object {
@@ -58,25 +60,22 @@ class AIExerciseRecommendationService private constructor(private val context: C
 
     private data class ExerciseData(
         val name: String,
-        val type: String, // "json" or "folder"
-        val path: String, // json gif path or folder path
-        val details: String // instructions or "Yoga Pose"
+        val type: String, // "json", "folder", or "csv"
+        val path: String, // json gif path, folder path, or empty
+        val details: String, // instructions or metadata
+        val isPeriodSafe: Boolean = false // Strict filtering flag
     )
 
     /**
-     * Load exercises based on user gender:
-     * - Male: Gym exercises from exercisedb_v1_sample
-     * - Female: Yoga poses from exercise 2
-     * - Other/Unknown: Mix of both
+     * Load ALL exercises from all available datasets.
+     * Tags them with properties like isPeriodSafe for downstream filtering.
      */
-    private suspend fun loadCombinedExercises(gender: String): List<ExerciseData> = withContext(Dispatchers.IO) {
+    private suspend fun loadAllExercises(): List<ExerciseData> = withContext(Dispatchers.IO) {
         val exercises = mutableListOf<ExerciseData>()
         val gifMap = mutableMapOf<String, String>()
-        val isMale = gender.equals("Male", ignoreCase = true)
-        val isFemale = gender.equals("Female", ignoreCase = true)
         
         try {
-            // 1. Load GYM exercises (exercisedb_v1_sample) - Available to ALL users
+            // 1. Load GYM exercises (exercisedb_v1_sample) - Machines/Heavy Weights
             try {
                 val jsonString = context.assets.open("exercisedb_v1_sample/exercises.json").bufferedReader().use { it.readText() }
                 val jsonArray = org.json.JSONArray(jsonString)
@@ -85,11 +84,14 @@ class AIExerciseRecommendationService private constructor(private val context: C
                     val obj = jsonArray.getJSONObject(i)
                     val name = obj.optString("name")
                     val gifPath = "exercisedb_v1_sample/gifs_360x360/" + obj.optString("gifUrl")
+                    
+                    // Gym exercises are generally NOT period-friendly (heavy lifting, machines)
                     exercises.add(ExerciseData(
                         name = name,
                         type = "json",
                         path = gifPath,
-                        details = "Target: ${obj.optString("target")}, BodyPart: ${obj.optString("bodyPart")}"
+                        details = "Target: ${obj.optString("target")}, BodyPart: ${obj.optString("bodyPart")}",
+                        isPeriodSafe = false
                     ))
                     gifMap[name.lowercase()] = gifPath
                 }
@@ -97,7 +99,7 @@ class AIExerciseRecommendationService private constructor(private val context: C
                 Log.e(TAG, "Error loading gym exercises", e)
             }
 
-            // 2. Load YOGA poses (exercise 2) - Available to ALL users
+            // 2. Load YOGA poses (exercise 2) - Yoga/Stretching
             try {
                 val yogaPoses = context.assets.list("exercise 2") ?: emptyArray()
                 for (pose in yogaPoses) {
@@ -105,11 +107,14 @@ class AIExerciseRecommendationService private constructor(private val context: C
                     val imageFile = files.firstOrNull { it.endsWith(".png") || it.endsWith(".jpg") || it.endsWith(".gif") }
                     if (imageFile != null) {
                         val imagePath = "exercise 2/$pose/$imageFile"
+                        
+                        // Yoga is generally Period Safe
                         exercises.add(ExerciseData(
                             name = pose,
                             type = "folder",
                             path = imagePath,
-                            details = "Yoga Pose / Stretching"
+                            details = "Yoga Pose / Stretching",
+                            isPeriodSafe = true
                         ))
                         gifMap[pose.lowercase()] = imagePath
                     }
@@ -118,7 +123,7 @@ class AIExerciseRecommendationService private constructor(private val context: C
                 Log.e(TAG, "Error loading yoga exercises", e)
             }
             
-            // 3. Load exercise types from exercise3.csv (for ALL users)
+            // 3. Load exercise types from exercise3.csv (Cardio/Sports/General)
             try {
                 val csvStream = context.assets.open("exercise3.csv")
                 val csvReader = java.io.BufferedReader(java.io.InputStreamReader(csvStream))
@@ -148,19 +153,27 @@ class AIExerciseRecommendationService private constructor(private val context: C
                 }
                 csvReader.close()
                 
-                // Add unique exercise types from CSV (no images for these)
+                // Add unique exercise types from CSV
                 for ((exerciseName, stats) in uniqueExercises) {
                     // Skip if already exists from JSON or folder sources
                     if (!gifMap.containsKey(exerciseName.lowercase())) {
+                        val lowerName = exerciseName.lowercase()
+                        // Determine safety based on keywords
+                        val isSafe = lowerName.contains("yoga") || 
+                                     lowerName.contains("pilates") || 
+                                     lowerName.contains("walking") || 
+                                     lowerName.contains("stretching") ||
+                                     lowerName.contains("meditation")
+                        
                         exercises.add(ExerciseData(
                             name = exerciseName,
                             type = "csv",
                             path = "", // No image available
-                            details = "General Exercise (~${stats.first} mins, ~${stats.second} kcal)"
+                            details = "General Exercise (~${stats.first} mins, ~${stats.second} kcal)",
+                            isPeriodSafe = isSafe
                         ))
                     }
                 }
-                Log.d(TAG, "Loaded ${uniqueExercises.size} unique exercises from CSV")
             } catch (e: Exception) {
                 Log.e(TAG, "Error loading exercise3.csv: ${e.message}")
             }
@@ -189,13 +202,29 @@ class AIExerciseRecommendationService private constructor(private val context: C
             val age = (userData["age"] as? String)?.toIntOrNull() ?: (userData["age"] as? Long)?.toInt() ?: 25
             val weight = (userData["weight"] as? String)?.toDoubleOrNull() ?: (userData["weight"] as? Double) ?: 70.0
             
-            // Load exercises filtered by gender
-            val allExercises = loadCombinedExercises(gender)
-            // ONLY include exercises that HAVE IMAGES (non-empty path)
-            val availableExercises = allExercises.filter { it.path.isNotEmpty() }
-            val simplifiedList = availableExercises.joinToString("\n") { "- ${it.name} (${it.details})" }
-            val goalType = userGoal["goalType"] as? String ?: "General Fitness"
+            // Load ALL exercises
+            val allExercises = loadAllExercises()
+            
             val isOnPeriod = userData["isOnPeriod"] as? Boolean ?: false
+
+            // Filter exercises based on context
+            val filteredExercises = if (isOnPeriod) {
+                // strict mode: only period-safe
+                allExercises.filter { it.isPeriodSafe && it.path.isNotEmpty() }
+            } else {
+                // normal mode: only those with images (for quality)
+                allExercises.filter { it.path.isNotEmpty() }
+            }
+
+            // Fallback: If strict filtering leaves nothing (unlikely), relax it slightly
+            val usableExercises = if (filteredExercises.isEmpty()) {
+                 allExercises.filter { it.path.isNotEmpty() } 
+            } else {
+                 filteredExercises
+            }
+
+            val simplifiedList = usableExercises.joinToString("\n") { "- ${it.name} (${it.details})" }
+            val goalType = userGoal["goalType"] as? String ?: "General Fitness"
             
             // Get current time
             val calendar = java.util.Calendar.getInstance()
@@ -321,21 +350,28 @@ class AIExerciseRecommendationService private constructor(private val context: C
                 val jsonArray = JSONArray(cleanJson)
                 for (i in 0 until jsonArray.length()) {
                     val json = jsonArray.getJSONObject(i)
-                    results.add(parseExerciseJson(json))
+                    val rec = parseExerciseJson(json)
+                    // STRICT CHECK: Only accept if we successfully resolved an image
+                    if (rec.gifUrl.isNotEmpty()) {
+                        results.add(rec)
+                    }
                 }
             } catch (e: Exception) {
-                // Fallback: Try parsing single object if AI messed up and make it a list of 1
+                // Fallback: Try parsing single object if AI messed up
                 try {
                     val json = JSONObject(cleanJson)
-                    results.add(parseExerciseJson(json))
+                    val rec = parseExerciseJson(json)
+                    if (rec.gifUrl.isNotEmpty()) {
+                        results.add(rec)
+                    }
                 } catch (e2: Exception) {
-                    throw e // Re-throw original array error or a new one
+                    // ignore
                 }
             }
             
             // ENSURE AT LEAST 3 EXERCISES - fill with fallback if needed
-            if (results.size < 3 && availableExercises.isNotEmpty()) {
-                val fallbackExercises = availableExercises.shuffled()
+            if (results.size < 3 && usableExercises.isNotEmpty()) {
+                val fallbackExercises = usableExercises.shuffled()
                 var index = 0
                 while (results.size < 3 && index < fallbackExercises.size) {
                     val fallback = fallbackExercises[index]

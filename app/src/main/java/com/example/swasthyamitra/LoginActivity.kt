@@ -13,6 +13,9 @@ import com.example.swasthyamitra.auth.FirebaseAuthHelper
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.textfield.TextInputEditText
 import kotlinx.coroutines.launch
+import com.google.firebase.FirebaseNetworkException
+import com.google.firebase.auth.FirebaseAuthInvalidUserException
+import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
 
 class LoginActivity : AppCompatActivity() {
 
@@ -21,6 +24,7 @@ class LoginActivity : AppCompatActivity() {
     private lateinit var loginButton: MaterialButton
     private lateinit var signupLink: TextView
     private lateinit var forgotPasswordLink: TextView
+    private lateinit var loginProgressBar: android.widget.ProgressBar
     private lateinit var authHelper: FirebaseAuthHelper
 
     @SuppressLint("MissingInflatedId")
@@ -64,6 +68,7 @@ class LoginActivity : AppCompatActivity() {
             loginButton = findViewById(R.id.login_button)
             signupLink = findViewById(R.id.signup_link)
             forgotPasswordLink = findViewById(R.id.forgot_password_link)
+            loginProgressBar = findViewById(R.id.loginProgressBar)
             Log.d("LoginActivity", "All views found successfully")
         } catch (e: Exception) {
             Log.e("LoginActivity", "Error finding views: ${e.message}", e)
@@ -97,6 +102,7 @@ class LoginActivity : AppCompatActivity() {
         val password = passwordInput.text.toString()
 
         if (validateInputs(email, password)) {
+            showLoading(true)
             lifecycleScope.launch {
                 val result = authHelper.signInWithEmail(email, password)
                 result.onSuccess { user ->
@@ -106,19 +112,32 @@ class LoginActivity : AppCompatActivity() {
                     // Check user onboarding status before navigation
                     checkUserProfileAndNavigate(user.uid)
                 }.onFailure { e ->
+                    showLoading(false)
                     Log.e("LoginActivity", "Login failed: ${e.message}", e)
                     val errorMessage = when (e) {
                         is com.google.firebase.FirebaseNetworkException -> 
-                            "Network Error: Please check your internet connection or try a different network (hotspot)."
+                            "Network Error. Check internet connection."
                         is com.google.firebase.auth.FirebaseAuthInvalidUserException ->
-                            "Account not found. Please sign up or check the email."
+                            "Account not found. Please sign up."
                         is com.google.firebase.auth.FirebaseAuthInvalidCredentialsException ->
-                            "Invalid password or email format."
+                            "Incorrect email or password."
                         else -> "Login failed: ${e.localizedMessage ?: "Unknown error"}"
                     }
                     Toast.makeText(this@LoginActivity, errorMessage, Toast.LENGTH_LONG).show()
                 }
             }
+        }
+    }
+    
+    private fun showLoading(isLoading: Boolean) {
+        if (isLoading) {
+            loginProgressBar.visibility = android.view.View.VISIBLE
+            loginButton.isEnabled = false
+            loginButton.text = "Signing In..."
+        } else {
+            loginProgressBar.visibility = android.view.View.GONE
+            loginButton.isEnabled = true
+            loginButton.text = "Sign In"
         }
     }
 
@@ -142,6 +161,11 @@ class LoginActivity : AppCompatActivity() {
                                 // Profile complete: has height, weight, gender, goal, and lifestyle
                                 height > 0 && weight > 0 && gender.isNotEmpty() && hasGoal && hasLifestyle -> {
                                     Log.d("LoginActivity", "Profile complete, going to homepage")
+                                    
+                                    // Save local flag
+                                    val sharedPreferences = getSharedPreferences("UserPreferences", MODE_PRIVATE)
+                                    sharedPreferences.edit().putBoolean("PROFILE_COMPLETED", true).apply()
+                                    
                                     navigateToHomePage(userId)
                                 }
                                 // Has profile and goal but no lifestyle
@@ -185,6 +209,11 @@ class LoginActivity : AppCompatActivity() {
     }
 
     private fun navigateToHomePage(userId: String) {
+        // Save PROFILE_COMPLETED flag for auto-login
+        val sharedPreferences = getSharedPreferences("UserPreferences", MODE_PRIVATE)
+        sharedPreferences.edit().putBoolean("PROFILE_COMPLETED", true).apply()
+        Log.d("LoginActivity", "PROFILE_COMPLETED flag set to true")
+
         val intent = Intent(this, homepage::class.java)
         intent.putExtra("USER_ID", userId)
         startActivity(intent)
@@ -216,7 +245,7 @@ class LoginActivity : AppCompatActivity() {
         if (email.isEmpty()) { emailInput.error = "Required"; return false }
         if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) { emailInput.error = "Invalid Email"; return false }
         if (password.isEmpty()) { passwordInput.error = "Required"; return false }
-        if (password.length < 8) { passwordInput.error = "Min 8 chars"; return false }
+        if (password.length < 6) { passwordInput.error = "Min 6 chars"; return false } // Relaxed to 6
         return true
     }
 }
