@@ -203,7 +203,7 @@ class WorkoutDashboardActivity : AppCompatActivity() {
         }
 
 
-        findViewById<View>(R.id.cvMapTracking).setOnClickListener {
+        findViewById<View>(R.id.cvSafety).setOnClickListener {
             startActivity(Intent(this, SafetyCoreActivity::class.java))
         }
 
