@@ -1,453 +1,556 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/background_main"
-    android:fillViewport="true">
+    android:background="#F8F9FA">
 
-    <LinearLayout
+    <!-- Header Section with Gradient -->
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/header_container"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="16dp">
+        android:background="@drawable/bg_header_gradient_rounded"
+        android:paddingBottom="24dp"
+        app:layout_constraintTop_toTopOf="parent">
 
-        <!-- Header -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:gravity="center_vertical"
-            android:paddingBottom="16dp">
+            android:paddingHorizontal="16dp"
+            android:paddingTop="16dp"
+            app:layout_constraintTop_toTopOf="parent">
 
+            <!-- Back Button (Oval/Circle) -->
             <ImageView
                 android:id="@+id/btnBack"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
                 android:src="@drawable/ic_back"
-                android:background="@drawable/button_background"
-                android:padding="8dp"
-                app:tint="@color/white"
-                android:contentDescription="Back"/>
+                android:background="@drawable/bg_white_rounded_card"
+                android:padding="12dp"
+                app:tint="#D500F9"
+                android:elevation="4dp"
+                android:clickable="true"
+                android:focusable="true"/>
 
             <TextView
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="Your Progress"
-                android:textSize="24sp"
+                android:textSize="22sp"
                 android:textStyle="bold"
                 android:textColor="#FFFFFF"
-                android:layout_marginStart="16dp"/>
+                android:gravity="center"/>
 
+            <!-- Refresh Button (Oval/Circle) -->
             <ImageView
                 android:id="@+id/btnRefresh"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
                 android:src="@drawable/ic_refresh"
-                android:background="@drawable/button_background"
-                android:padding="8dp"
-                app:tint="@color/white"
-                android:contentDescription="Refresh"/>
+                android:background="@drawable/bg_white_rounded_card"
+                android:padding="12dp"
+                app:tint="#D500F9"
+                android:elevation="4dp"
+                android:clickable="true"
+                android:focusable="true"/>
+
         </LinearLayout>
 
-        <ProgressBar
-            android:id="@+id/progressBar"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:visibility="gone"/>
+        <!-- Optional: Add a subtle summary text in header if desired, or keep it clean -->
 
-        <!-- Weight Progress Card -->
-        <androidx.cardview.widget.CardView
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <ProgressBar
+        android:id="@+id/progressBar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:visibility="gone"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:elevation="10dp"/>
+
+    <!-- Main Content Scroll -->
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        app:layout_constraintTop_toBottomOf="@id/header_container"
+        app:layout_constraintBottom_toBottomOf="parent"
+        android:fillViewport="true"
+        android:clipToPadding="false"
+        android:paddingTop="16dp"
+        android:paddingHorizontal="16dp"
+        android:paddingBottom="24dp">
+
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
-            app:cardCornerRadius="16dp"
-            app:cardElevation="4dp"
-            app:cardBackgroundColor="#FFFFFF">
+            android:orientation="vertical">
 
-            <LinearLayout
+            <!-- Weight Progress Card -->
+            <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="16dp">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="⚖️ Weight Progress"
-                    android:textSize="18sp"
-                    android:textStyle="bold"
-                    android:textColor="#212121"/>
+                android:layout_marginBottom="20dp"
+                app:cardCornerRadius="24dp"
+                app:cardElevation="2dp"
+                android:outlineAmbientShadowColor="#D1C4E9"
+                android:outlineSpotShadowColor="#D1C4E9">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:layout_marginTop="12dp">
+                    android:orientation="vertical"
+                    android:padding="24dp"
+                    android:background="@drawable/bg_white_rounded_card">
 
                     <LinearLayout
-                        android:layout_width="0dp"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:orientation="vertical">
-
-                        <TextView
-                            android:id="@+id/tvCurrentWeight"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="0.0 kg"
-                            android:textSize="24sp"
-                            android:textStyle="bold"
-                            android:textColor="#7B2CBF"/>
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Current Weight"
-                            android:textSize="12sp"
-                            android:textColor="#757575"/>
-                    </LinearLayout>
-
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:orientation="vertical">
-
-                        <TextView
-                            android:id="@+id/tvWeightTrend"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Stable"
-                            android:textSize="16sp"
-                            android:textStyle="bold"
-                            android:textColor="#4CAF50"/>
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="16dp">
+                        
+                         <ImageView
+                            android:layout_width="32dp"
+                            android:layout_height="32dp"
+                            android:src="@drawable/ic_fire"
+                            app:tint="#D81B60"
+                            android:background="@drawable/bg_circle_soft_pink"
+                            android:padding="6dp"/>
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Trend"
-                            android:textSize="12sp"
-                            android:textColor="#757575"/>
-                    </LinearLayout>
-                </LinearLayout>
-
-                <TextView
-                    android:id="@+id/tvPredictedWeight"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Predicted: 0.0 kg"
-                    android:textSize="14sp"
-                    android:textColor="#424242"
-                    android:layout_marginTop="8dp"/>
-
-                <ProgressBar
-                    android:id="@+id/progressWeight"
-                    style="@android:style/Widget.ProgressBar.Horizontal"
-                    android:layout_width="match_parent"
-                    android:layout_height="8dp"
-                    android:layout_marginTop="8dp"
-                    android:progress="0"
-                    android:max="100"
-                    android:progressTint="#7B2CBF"/>
-            </LinearLayout>
-        </androidx.cardview.widget.CardView>
-
-        <!-- Nutrition Progress Card -->
-        <androidx.cardview.widget.CardView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
-            app:cardCornerRadius="16dp"
-            app:cardElevation="4dp"
-            app:cardBackgroundColor="#FFFFFF">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="16dp">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="🍽️ Nutrition Progress"
-                    android:textSize="18sp"
-                    android:textStyle="bold"
-                    android:textColor="#212121"/>
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:layout_marginTop="12dp">
-
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:orientation="vertical">
-
-                        <TextView
-                            android:id="@+id/tvAvgCalories"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="0 kcal/day"
-                            android:textSize="20sp"
-                            android:textStyle="bold"
-                            android:textColor="#FF6D00"/>
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Average Calories"
-                            android:textSize="12sp"
-                            android:textColor="#757575"/>
-                    </LinearLayout>
-
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:orientation="vertical">
-
-                        <TextView
-                            android:id="@+id/tvNutritionTrend"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Balanced"
-                            android:textSize="16sp"
-                            android:textStyle="bold"
-                            android:textColor="#4CAF50"/>
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Status"
-                            android:textSize="12sp"
-                            android:textColor="#757575"/>
-                    </LinearLayout>
-                </LinearLayout>
-
-                <ProgressBar
-                    android:id="@+id/progressNutrition"
-                    style="@android:style/Widget.ProgressBar.Horizontal"
-                    android:layout_width="match_parent"
-                    android:layout_height="8dp"
-                    android:layout_marginTop="12dp"
-                    android:progress="0"
-                    android:max="100"
-                    android:progressTint="#FF6D00"/>
-
-                <TextView
-                    android:id="@+id/tvNutritionRecommendations"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Recommendations"
-                    android:textSize="12sp"
-                    android:textColor="#424242"
-                    android:layout_marginTop="8dp"/>
-            </LinearLayout>
-        </androidx.cardview.widget.CardView>
-
-        <!-- Hydration Progress Card -->
-        <androidx.cardview.widget.CardView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
-            app:cardCornerRadius="16dp"
-            app:cardElevation="4dp"
-            app:cardBackgroundColor="#FFFFFF">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="16dp">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="💧 Hydration Progress"
-                    android:textSize="18sp"
-                    android:textStyle="bold"
-                    android:textColor="#212121"/>
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:layout_marginTop="12dp">
-
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:orientation="vertical">
-
-                        <TextView
-                            android:id="@+id/tvAvgHydration"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="0 ml/day"
-                            android:textSize="20sp"
-                            android:textStyle="bold"
-                            android:textColor="#2196F3"/>
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Daily Average"
-                            android:textSize="12sp"
-                            android:textColor="#757575"/>
-                    </LinearLayout>
-
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:orientation="vertical">
-
-                        <TextView
-                            android:id="@+id/tvHydrationTrend"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Good"
-                            android:textSize="16sp"
-                            android:textStyle="bold"
-                            android:textColor="#4CAF50"/>
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Status"
-                            android:textSize="12sp"
-                            android:textColor="#757575"/>
-                    </LinearLayout>
-                </LinearLayout>
-
-                <ProgressBar
-                    android:id="@+id/progressHydration"
-                    style="@android:style/Widget.ProgressBar.Horizontal"
-                    android:layout_width="match_parent"
-                    android:layout_height="8dp"
-                    android:layout_marginTop="12dp"
-                    android:progress="0"
-                    android:max="100"
-                    android:progressTint="#2196F3"/>
-
-                <TextView
-                    android:id="@+id/tvHydrationRecommendations"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Recommendations"
-                    android:textSize="12sp"
-                    android:textColor="#424242"
-                    android:layout_marginTop="8dp"/>
-            </LinearLayout>
-        </androidx.cardview.widget.CardView>
-
-        <!-- Exercise Progress Card -->
-        <androidx.cardview.widget.CardView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
-            app:cardCornerRadius="16dp"
-            app:cardElevation="4dp"
-            app:cardBackgroundColor="#FFFFFF">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="16dp">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="💪 Exercise Progress"
-                    android:textSize="18sp"
-                    android:textStyle="bold"
-                    android:textColor="#212121"/>
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:layout_marginTop="12dp">
-
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:orientation="vertical">
-
-                        <TextView
-                            android:id="@+id/tvTotalExercise"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="0 min this week"
+                            android:text="Weight Progress"
                             android:textSize="18sp"
                             android:textStyle="bold"
-                            android:textColor="#FF5722"/>
-
-                        <TextView
-                            android:id="@+id/tvAvgExercise"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="0 min/day"
-                            android:textSize="14sp"
-                            android:textColor="#757575"
-                            android:layout_marginTop="4dp"/>
+                            android:textColor="#212121"
+                            android:layout_marginStart="12dp"/>
                     </LinearLayout>
 
                     <LinearLayout
-                        android:layout_width="0dp"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:orientation="vertical">
+                        android:orientation="horizontal"
+                        android:layout_marginBottom="16dp">
 
-                        <TextView
-                            android:id="@+id/tvExerciseTrend"
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:id="@+id/tvCurrentWeight"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="0.0 kg"
+                                android:textSize="28sp"
+                                android:textStyle="bold"
+                                android:textColor="#880E4F"/>
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Current Weight"
+                                android:textSize="12sp"
+                                android:textColor="#757575"/>
+                        </LinearLayout>
+
+                        <!-- Trend Pill -->
+                        <LinearLayout
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Good"
-                            android:textSize="16sp"
-                            android:textStyle="bold"
-                            android:textColor="#4CAF50"/>
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Status"
-                            android:textSize="12sp"
-                            android:textColor="#757575"/>
+                            android:background="@drawable/bg_status_pill"
+                            android:gravity="center"
+                            android:paddingHorizontal="12dp"
+                            android:paddingVertical="6dp">
+                            <TextView
+                                android:id="@+id/tvWeightTrend"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Stable"
+                                android:textSize="12sp"
+                                android:textStyle="bold"
+                                android:textColor="#D81B60"/>
+                        </LinearLayout>
                     </LinearLayout>
+
+                    <TextView
+                        android:id="@+id/tvPredictedWeight"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Predicted: 0.0 kg"
+                        android:textSize="13sp"
+                        android:textColor="#9E9E9E"
+                        android:layout_marginBottom="8dp"/>
+
+                    <ProgressBar
+                        android:id="@+id/progressWeight"
+                        style="@android:style/Widget.ProgressBar.Horizontal"
+                        android:layout_width="match_parent"
+                        android:layout_height="8dp"
+                        android:progressDrawable="@drawable/custom_progress_drawable_pink" 
+                        android:progress="0"
+                        android:max="100"/>
+                        <!-- Note: Using default drawable or creating a custom one? Let's use standard tint for now -->
                 </LinearLayout>
+            </androidx.cardview.widget.CardView>
 
-                <ProgressBar
-                    android:id="@+id/progressExercise"
-                    style="@android:style/Widget.ProgressBar.Horizontal"
+            <!-- Nutrition Progress Card -->
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="20dp"
+                app:cardCornerRadius="24dp"
+                app:cardElevation="2dp">
+
+                <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="8dp"
-                    android:layout_marginTop="12dp"
-                    android:progress="0"
-                    android:max="100"
-                    android:progressTint="#FF5722"/>
-
-                <TextView
-                    android:id="@+id/tvExerciseRecommendations"
-                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Recommendations"
-                    android:textSize="12sp"
-                    android:textColor="#424242"
-                    android:layout_marginTop="8dp"/>
-            </LinearLayout>
-        </androidx.cardview.widget.CardView>
+                    android:orientation="vertical"
+                    android:padding="24dp"
+                    android:background="@drawable/bg_white_rounded_card">
 
-    </LinearLayout>
-</ScrollView>
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="16dp">
+                        
+                         <ImageView
+                            android:layout_width="32dp"
+                            android:layout_height="32dp"
+                            android:src="@drawable/ic_analytics_white" 
+                            app:tint="#FB8C00"
+                            android:background="@drawable/bg_circle_soft_pink"
+                            android:backgroundTint="#FFF3E0"
+                            android:padding="6dp"/>
+                            <!-- Assuming generic icon if specific one not found, layout uses emoji in text originally -->
 
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Nutrition"
+                            android:textSize="18sp"
+                            android:textStyle="bold"
+                            android:textColor="#212121"
+                            android:layout_marginStart="12dp"/>
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginBottom="16dp">
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:id="@+id/tvAvgCalories"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="0 kcal"
+                                android:textSize="24sp"
+                                android:textStyle="bold"
+                                android:textColor="#FB8C00"/>
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Daily Average"
+                                android:textSize="12sp"
+                                android:textColor="#757575"/>
+                        </LinearLayout>
+
+                         <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:background="@drawable/bg_status_pill"
+                            android:backgroundTint="#FFF3E0"
+                            android:gravity="center"
+                            android:paddingHorizontal="12dp"
+                            android:paddingVertical="6dp">
+                            <TextView
+                                android:id="@+id/tvNutritionTrend"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Balanced"
+                                android:textSize="12sp"
+                                android:textStyle="bold"
+                                android:textColor="#FB8C00"/>
+                        </LinearLayout>
+                    </LinearLayout>
+
+                    <ProgressBar
+                        android:id="@+id/progressNutrition"
+                        style="@android:style/Widget.ProgressBar.Horizontal"
+                        android:layout_width="match_parent"
+                        android:layout_height="8dp"
+                        android:progressTint="#FB8C00"
+                        android:progressBackgroundTint="#F5F5F5"
+                        android:progress="0"
+                        android:max="100"/>
+
+                    <TextView
+                        android:id="@+id/tvNutritionRecommendations"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Loading insights..."
+                        android:textSize="13sp"
+                        android:textColor="#FB8C00"
+                        android:background="@drawable/bg_light_purple_card"
+                        android:backgroundTint="#FFF3E0"
+                        android:padding="12dp"
+                        android:layout_marginTop="16dp"/>
+
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <!-- Hydration Progress Card -->
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="20dp"
+                app:cardCornerRadius="24dp"
+                app:cardElevation="2dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="24dp"
+                    android:background="@drawable/bg_white_rounded_card">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="16dp">
+
+                         <ImageView
+                            android:layout_width="32dp"
+                            android:layout_height="32dp"
+                            android:src="@drawable/ic_water_drop"
+                            app:tint="#2196F3"
+                            android:background="@drawable/bg_circle_soft_pink"
+                            android:backgroundTint="#E3F2FD"
+                            android:padding="6dp"/>
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Hydration"
+                            android:textSize="18sp"
+                            android:textStyle="bold"
+                            android:textColor="#212121"
+                            android:layout_marginStart="12dp"/>
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginBottom="16dp">
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:id="@+id/tvAvgHydration"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="0 ml"
+                                android:textSize="24sp"
+                                android:textStyle="bold"
+                                android:textColor="#2196F3"/>
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Daily Average"
+                                android:textSize="12sp"
+                                android:textColor="#757575"/>
+                        </LinearLayout>
+
+                         <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:background="@drawable/bg_status_pill"
+                            android:backgroundTint="#E3F2FD"
+                            android:gravity="center"
+                            android:paddingHorizontal="12dp"
+                            android:paddingVertical="6dp">
+                            <TextView
+                                android:id="@+id/tvHydrationTrend"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Good"
+                                android:textSize="12sp"
+                                android:textStyle="bold"
+                                android:textColor="#1976D2"/>
+                        </LinearLayout>
+                    </LinearLayout>
+
+                    <ProgressBar
+                        android:id="@+id/progressHydration"
+                        style="@android:style/Widget.ProgressBar.Horizontal"
+                        android:layout_width="match_parent"
+                        android:layout_height="8dp"
+                        android:progressTint="#2196F3"
+                        android:progressBackgroundTint="#F5F5F5"
+                        android:progress="0"
+                        android:max="100"/>
+
+                    <TextView
+                        android:id="@+id/tvHydrationRecommendations"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Loading insights..."
+                        android:textSize="13sp"
+                        android:textColor="#1565C0"
+                        android:background="@drawable/bg_light_purple_card"
+                        android:backgroundTint="#E3F2FD"
+                        android:padding="12dp"
+                        android:layout_marginTop="16dp"/>
+
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <!-- Exercise Progress Card -->
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="40dp"
+                app:cardCornerRadius="24dp"
+                app:cardElevation="2dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="24dp"
+                    android:background="@drawable/bg_white_rounded_card">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="16dp">
+
+                         <ImageView
+                            android:layout_width="32dp"
+                            android:layout_height="32dp"
+                            android:src="@drawable/ic_analytics_white"
+                            app:tint="#7B1FA2"
+                            android:background="@drawable/bg_circle_soft_pink"
+                            android:padding="6dp"/>
+                            <!-- Reusing analytic icon if dumbbell not available or specific exercise icon not known -->
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Exercise"
+                            android:textSize="18sp"
+                            android:textStyle="bold"
+                            android:textColor="#212121"
+                            android:layout_marginStart="12dp"/>
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginBottom="16dp">
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:id="@+id/tvTotalExercise"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="0 min"
+                                android:textSize="24sp"
+                                android:textStyle="bold"
+                                android:textColor="#7B1FA2"/>
+
+                            <TextView
+                                android:id="@+id/tvAvgExercise"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="0 min/day"
+                                android:textSize="12sp"
+                                android:textColor="#757575"/>
+                        </LinearLayout>
+
+                         <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:background="@drawable/bg_status_pill"
+                            android:backgroundTint="#F3E5F5"
+                            android:gravity="center"
+                            android:paddingHorizontal="12dp"
+                            android:paddingVertical="6dp">
+                            <TextView
+                                android:id="@+id/tvExerciseTrend"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Consistent"
+                                android:textSize="12sp"
+                                android:textStyle="bold"
+                                android:textColor="#7B1FA2"/>
+                        </LinearLayout>
+                    </LinearLayout>
+
+                    <ProgressBar
+                        android:id="@+id/progressExercise"
+                        style="@android:style/Widget.ProgressBar.Horizontal"
+                        android:layout_width="match_parent"
+                        android:layout_height="8dp"
+                        android:progressTint="#7B1FA2"
+                        android:progressBackgroundTint="#F5F5F5"
+                        android:progress="0"
+                        android:max="100"/>
+
+                    <TextView
+                        android:id="@+id/tvExerciseRecommendations"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Loading insights..."
+                        android:textSize="13sp"
+                        android:textColor="#4A148C"
+                        android:background="@drawable/bg_light_purple_card"
+                        android:padding="12dp"
+                        android:layout_marginTop="16dp"/>
+
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

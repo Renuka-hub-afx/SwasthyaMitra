@@ -197,7 +197,8 @@ class GamificationActivity : AppCompatActivity() {
                  runOnUiThread { updateUI(steps) }
             }
         }
-        stepManager.start()
+        // Enable hybrid validation for accurate step counting
+        stepManager.start(enableHybridValidation = true)
     }
 
     private fun updateUI(steps: Int) {

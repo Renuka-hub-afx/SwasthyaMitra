@@ -5,7 +5,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#B3ABC3">
+    android:background="@drawable/background_main">
 
     <!-- Header -->
     <LinearLayout
@@ -21,9 +21,11 @@
             android:id="@+id/btnBack"
             android:layout_width="40dp"
             android:layout_height="40dp"
-            android:background="?attr/selectableItemBackgroundBorderless"
+            android:background="@drawable/circular_background"
             android:src="@android:drawable/ic_menu_close_clear_cancel"
-            android:tint="#121212"
+            app:tint="#121212"
+            android:padding="8dp"
+            android:scaleType="centerInside"
             android:contentDescription="Back" />
 
         <TextView
@@ -33,7 +35,7 @@
             android:gravity="center"
             android:text="AI Smart Diet Plan"
             android:textColor="#121212"
-            android:textSize="22sp"
+            android:textSize="20sp"
             android:fontFamily="sans-serif-medium"
             android:textStyle="bold" />
 
@@ -56,57 +58,55 @@
             android:padding="16dp"
             android:clipToPadding="false">
 
-            <TextView
-                android:id="@+id/tvDailyTip"
+            <!-- Tip Card -->
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="@drawable/tip_light_bg"
+                android:background="@drawable/bg_card_tip"
+                android:orientation="horizontal"
                 android:padding="16dp"
-                android:lineSpacingExtra="4dp"
-                android:text="💡 Tip: Get your personalized Indian diet plan based on nutrition science."
-                android:textColor="#333333"
-                android:textSize="14sp" />
+                android:gravity="center_vertical">
 
-            <!-- Metabolic Status Card -->
-            <androidx.cardview.widget.CardView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                app:cardCornerRadius="16dp"
-                app:cardElevation="2dp"
-                app:cardBackgroundColor="#F3E5F5">
+                <ImageView
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:src="@drawable/ic_bulb_yellow"
+                    android:layout_marginEnd="16dp"/>
+
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="16dp">
+                    android:orientation="vertical">
+
                     <TextView
-                        android:id="@+id/tvMetabolicStatus"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Metabolic Status: Normal"
-                        android:textColor="#7B1FA2"
+                        android:text="AI Smart Tip"
                         android:textStyle="bold"
-                        android:textSize="15sp"/>
+                        android:textColor="#333333"
+                        android:textSize="14sp"
+                        android:layout_marginBottom="4dp"/>
+
                     <TextView
-                        android:id="@+id/tvIntensityAlert"
-                        android:layout_width="wrap_content"
+                        android:id="@+id/tvDailyTip"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="Recent Intensity: Normal"
-                        android:textColor="#666666"
-                        android:layout_marginTop="4dp"
-                        android:textSize="13sp"/>
+                        android:text="Get your personalized Indian diet plan based on nutrition science for optimal health."
+                        android:textColor="#555555"
+                        android:textSize="12sp"
+                        android:lineSpacingMultiplier="1.2"/>
                 </LinearLayout>
-            </androidx.cardview.widget.CardView>
+            </LinearLayout>
+
 
 
             <!-- Breakfast -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="24dp"
+                android:layout_marginTop="28dp"
                 android:text="BREAKFAST"
-                android:textColor="#666666"
+                android:textColor="#888888"
                 android:textSize="12sp"
                 android:letterSpacing="0.1"
                 android:textStyle="bold" />
@@ -115,10 +115,10 @@
                 android:id="@+id/cardBreakfast"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
+                android:layout_marginTop="12dp"
                 app:cardBackgroundColor="#FFFFFF"
                 app:cardCornerRadius="20dp"
-                app:cardElevation="4dp">
+                app:cardElevation="2dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -129,7 +129,14 @@
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:orientation="horizontal">
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+
+                        <ImageView
+                            android:layout_width="56dp"
+                            android:layout_height="56dp"
+                            android:src="@drawable/ic_placeholder_food"
+                            android:layout_marginEnd="16dp"/>
 
                         <LinearLayout
                             android:layout_width="0dp"
@@ -143,7 +150,7 @@
                                 android:layout_height="wrap_content"
                                 android:text="Not generated yet"
                                 android:textColor="#121212"
-                                android:textSize="18sp"
+                                android:textSize="16sp"
                                 android:textStyle="bold" />
 
                             <TextView
@@ -152,19 +159,20 @@
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="4dp"
                                 android:text="-- kcal | -- protein"
-                                android:textColor="#666666" />
+                                android:textColor="#888888"
+                                android:textSize="13sp"/>
                         </LinearLayout>
 
                         <Button
                             android:id="@+id/btnGenerateBreakfast"
                             android:layout_width="wrap_content"
-                            android:layout_height="40dp"
-                            android:layout_gravity="center_vertical"
-                            android:background="@drawable/button_background"
+                            android:layout_height="36dp"
+                            android:background="@drawable/bg_button_gradient"
                             android:text="GENERATE"
                             android:textColor="#FFFFFF"
-                            android:textSize="12sp"
+                            android:textSize="11sp"
                             android:textStyle="bold"
+                            android:paddingHorizontal="20dp"
                             app:backgroundTint="@null" />
                     </LinearLayout>
 
@@ -225,7 +233,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="24dp"
                 android:text="LUNCH"
-                android:textColor="#666666"
+                android:textColor="#888888"
                 android:textSize="12sp"
                 android:letterSpacing="0.1"
                 android:textStyle="bold" />
@@ -234,10 +242,10 @@
                 android:id="@+id/cardLunch"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
+                android:layout_marginTop="12dp"
                 app:cardBackgroundColor="#FFFFFF"
                 app:cardCornerRadius="20dp"
-                app:cardElevation="4dp">
+                app:cardElevation="2dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -248,7 +256,14 @@
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:orientation="horizontal">
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+
+                        <ImageView
+                            android:layout_width="56dp"
+                            android:layout_height="56dp"
+                            android:src="@drawable/ic_placeholder_food"
+                            android:layout_marginEnd="16dp"/>
 
                         <LinearLayout
                             android:layout_width="0dp"
@@ -262,7 +277,7 @@
                                 android:layout_height="wrap_content"
                                 android:text="Not generated yet"
                                 android:textColor="#121212"
-                                android:textSize="18sp"
+                                android:textSize="16sp"
                                 android:textStyle="bold" />
 
                             <TextView
@@ -271,19 +286,20 @@
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="4dp"
                                 android:text="-- kcal | -- protein"
-                                android:textColor="#666666" />
+                                android:textColor="#888888"
+                                android:textSize="13sp"/>
                         </LinearLayout>
 
                         <Button
                             android:id="@+id/btnGenerateLunch"
                             android:layout_width="wrap_content"
-                            android:layout_height="40dp"
-                            android:layout_gravity="center_vertical"
-                            android:background="@drawable/button_background"
+                            android:layout_height="36dp"
+                            android:background="@drawable/bg_button_gradient"
                             android:text="GENERATE"
                             android:textColor="#FFFFFF"
-                            android:textSize="12sp"
+                            android:textSize="11sp"
                             android:textStyle="bold"
+                            android:paddingHorizontal="20dp"
                             app:backgroundTint="@null" />
                     </LinearLayout>
 
@@ -344,7 +360,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="24dp"
                 android:text="DINNER"
-                android:textColor="#666666"
+                android:textColor="#888888"
                 android:textSize="12sp"
                 android:letterSpacing="0.1"
                 android:textStyle="bold" />
@@ -353,10 +369,10 @@
                 android:id="@+id/cardDinner"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
+                android:layout_marginTop="12dp"
                 app:cardBackgroundColor="#FFFFFF"
                 app:cardCornerRadius="20dp"
-                app:cardElevation="4dp">
+                app:cardElevation="2dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -367,7 +383,14 @@
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:orientation="horizontal">
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+
+                        <ImageView
+                            android:layout_width="56dp"
+                            android:layout_height="56dp"
+                            android:src="@drawable/ic_placeholder_food"
+                            android:layout_marginEnd="16dp"/>
 
                         <LinearLayout
                             android:layout_width="0dp"
@@ -381,7 +404,7 @@
                                 android:layout_height="wrap_content"
                                 android:text="Not generated yet"
                                 android:textColor="#121212"
-                                android:textSize="18sp"
+                                android:textSize="16sp"
                                 android:textStyle="bold" />
 
                             <TextView
@@ -390,19 +413,20 @@
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="4dp"
                                 android:text="-- kcal | -- protein"
-                                android:textColor="#666666" />
+                                android:textColor="#888888"
+                                android:textSize="13sp"/>
                         </LinearLayout>
 
                         <Button
                             android:id="@+id/btnGenerateDinner"
                             android:layout_width="wrap_content"
-                            android:layout_height="40dp"
-                            android:layout_gravity="center_vertical"
-                            android:background="@drawable/button_background"
+                            android:layout_height="36dp"
+                            android:background="@drawable/bg_button_gradient"
                             android:text="GENERATE"
                             android:textColor="#FFFFFF"
-                            android:textSize="12sp"
+                            android:textSize="11sp"
                             android:textStyle="bold"
+                            android:paddingHorizontal="20dp"
                             app:backgroundTint="@null" />
                     </LinearLayout>
 
@@ -463,7 +487,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="24dp"
                 android:text="SNACKS"
-                android:textColor="#666666"
+                android:textColor="#888888"
                 android:textSize="12sp"
                 android:letterSpacing="0.1"
                 android:textStyle="bold" />
@@ -472,10 +496,10 @@
                 android:id="@+id/cardSnacks"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
+                android:layout_marginTop="12dp"
                 app:cardBackgroundColor="#FFFFFF"
                 app:cardCornerRadius="20dp"
-                app:cardElevation="4dp">
+                app:cardElevation="2dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -486,7 +510,14 @@
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:orientation="horizontal">
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+
+                        <ImageView
+                            android:layout_width="56dp"
+                            android:layout_height="56dp"
+                            android:src="@drawable/ic_placeholder_food"
+                            android:layout_marginEnd="16dp"/>
 
                         <LinearLayout
                             android:layout_width="0dp"
@@ -500,7 +531,7 @@
                                 android:layout_height="wrap_content"
                                 android:text="Not generated yet"
                                 android:textColor="#121212"
-                                android:textSize="18sp"
+                                android:textSize="16sp"
                                 android:textStyle="bold" />
 
                             <TextView
@@ -509,19 +540,20 @@
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="4dp"
                                 android:text="-- kcal | -- protein"
-                                android:textColor="#666666" />
+                                android:textColor="#888888"
+                                android:textSize="13sp"/>
                         </LinearLayout>
 
                         <Button
                             android:id="@+id/btnGenerateSnack"
                             android:layout_width="wrap_content"
-                            android:layout_height="40dp"
-                            android:layout_gravity="center_vertical"
-                            android:background="@drawable/button_background"
+                            android:layout_height="36dp"
+                            android:background="@drawable/bg_button_gradient"
                             android:text="GENERATE"
                             android:textColor="#FFFFFF"
-                            android:textSize="12sp"
+                            android:textSize="11sp"
                             android:textStyle="bold"
+                            android:paddingHorizontal="20dp"
                             app:backgroundTint="@null" />
                     </LinearLayout>
 
@@ -576,6 +608,11 @@
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
 
+            <!-- Bottom Spacing -->
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="100dp"/>
+
         </LinearLayout>
     </ScrollView>
 
@@ -596,24 +633,13 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginEnd="24dp"
-        android:layout_marginBottom="16dp"
+        android:layout_marginBottom="24dp"
         android:src="@android:drawable/ic_menu_share"
         app:backgroundTint="#25D366"
         app:tint="#FFFFFF"
-        app:layout_constraintBottom_toTopOf="@id/fabMode"
-        app:layout_constraintEnd_toEndOf="parent" />
-
-    <!-- Floating Moon Button (Existing) -->
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/fabMode"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginEnd="24dp"
-        android:layout_marginBottom="24dp"
-        android:src="@android:drawable/ic_menu_recent_history"
-        app:backgroundTint="#FFFFFF"
-        app:tint="#121212"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
+
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>

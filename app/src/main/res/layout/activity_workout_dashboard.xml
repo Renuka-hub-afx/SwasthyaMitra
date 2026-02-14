@@ -220,230 +220,221 @@
                             android:orientation="vertical"
                             android:padding="20dp">
 
-                            <!-- Exercise Name -->
+                            <!-- Exercise Counter -->
+                            <TextView
+                                android:id="@+id/tvExerciseCounter"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Exercise 1 of 3"
+                                android:textSize="12sp"
+                                android:textColor="#999999"
+                                android:layout_marginBottom="8dp"/>
+
+                            <!-- Exercise Name (Title Style) -->
                             <TextView
                                 android:id="@+id/tvAiExerciseName"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="CAT-COW STRETCH 💪"
-                                android:textSize="22sp"
+                                android:text="Cat (Yoga Pose / Stretching)"
+                                android:textSize="18sp"
                                 android:textStyle="bold"
-                                android:textColor="#333333"
+                                android:textColor="#E91E63"
+                                android:layout_marginBottom="8dp"/>
+
+                            <!-- Target Info -->
+                            <TextView
+                                android:id="@+id/tvAiExerciseTarget"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="Target: Abs"
+                                android:textSize="14sp"
+                                android:textColor="#666666"
                                 android:layout_marginBottom="12dp"/>
 
-                            <!-- Target & Equipment Row -->
+                            <!-- Stats Row (Compact) -->
                             <LinearLayout
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:orientation="horizontal"
                                 android:layout_marginBottom="12dp">
-
-                                <TextView
-                                    android:id="@+id/tvAiExerciseTarget"
-                                    android:layout_width="0dp"
-                                    android:layout_height="wrap_content"
-                                    android:layout_weight="1"
-                                    android:text="🎯 Target: spine"
-                                    android:textSize="14sp"
-                                    android:textColor="#666666"/>
-
-                                <TextView
-                                    android:id="@+id/tvAiExerciseEquipment"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:text="🏋️ Equipment: body weight"
-                                    android:textSize="14sp"
-                                    android:textColor="#666666"/>
-                            </LinearLayout>
-
-                            <!-- Stats Row -->
-                            <LinearLayout
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:orientation="horizontal"
-                                android:layout_marginBottom="16dp">
 
                                 <TextView
                                     android:id="@+id/tvAiExerciseCalories"
                                     android:layout_width="0dp"
                                     android:layout_height="wrap_content"
                                     android:layout_weight="1"
-                                    android:text="🔥 ~150 kcal"
-                                    android:textStyle="bold"
-                                    android:textSize="15sp"
-                                    android:textColor="#E64A19"/>
+                                    android:text="🔥 ~10 kcal"
+                                    android:textSize="14sp"
+                                    android:textColor="#666666"/>
 
                                 <TextView
                                     android:id="@+id/tvAiExerciseDuration"
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
-                                    android:text="⏱️ 15m"
-                                    android:textStyle="bold"
-                                    android:textSize="15sp"
-                                    android:textColor="@color/purple_500"/>
+                                    android:text="⏱️ 5 mins"
+                                    android:textSize="14sp"
+                                    android:textColor="#666666"/>
                             </LinearLayout>
 
-                            <!-- Reason / Description -->
+                            <!-- Simple Description -->
                             <TextView
                                 android:id="@+id/tvAiExerciseReason"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:text="The Cat-Cow Stretch is perfect for easing menstrual cramps and improving circulation with gentle spinal movement."
+                                android:text="Gentle stretching to ease tension and prepare the body for movement."
                                 android:textSize="14sp"
                                 android:textColor="#555555"
                                 android:lineSpacingMultiplier="1.3"
-                                android:layout_marginBottom="16dp"/>
+                                android:layout_marginBottom="12dp"/>
 
-                            <!-- Age Explanation Section -->
+                            <!-- Age Insight -->
                             <LinearLayout
+                                android:id="@+id/layoutAgeInsight"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:orientation="vertical"
-                                android:background="#FFF3E0"
+                                android:background="#FFF8E1"
                                 android:padding="12dp"
-                                android:layout_marginBottom="12dp">
-                                
+                                android:layout_marginBottom="8dp"
+                                android:visibility="visible">
+
                                 <TextView
                                     android:id="@+id/tvAiExerciseAgeExplanation"
                                     android:layout_width="match_parent"
                                     android:layout_height="wrap_content"
-                                    android:text="💡 Age 23: At 23, this exercise helps maintain spine mobility and relieve stress, which is beneficial for overall well-being."
+                                    android:text="💡 Age Insight: Suitable for all ages."
                                     android:textSize="13sp"
-                                    android:textColor="#E65100"
-                                    android:lineSpacingMultiplier="1.3"/>
+                                    android:textColor="#F57C00"
+                                    android:lineSpacingMultiplier="1.2"/>
                             </LinearLayout>
 
-                            <!-- Gender Note Section -->
+                            <!-- For You (Gender) -->
                             <LinearLayout
+                                android:id="@+id/layoutGenderNote"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:orientation="vertical"
                                 android:background="#FCE4EC"
                                 android:padding="12dp"
-                                android:layout_marginBottom="12dp">
-                                
+                                android:layout_marginBottom="8dp"
+                                android:visibility="visible">
+
                                 <TextView
                                     android:id="@+id/tvAiExerciseGenderNote"
                                     android:layout_width="match_parent"
                                     android:layout_height="wrap_content"
-                                    android:text="🌸 Excellent for pelvic circulation and relieving menstrual discomfort."
+                                    android:text="✨ For You: Beneficial for both men and women."
                                     android:textSize="13sp"
                                     android:textColor="#C2185B"
-                                    android:lineSpacingMultiplier="1.3"/>
+                                    android:lineSpacingMultiplier="1.2"/>
                             </LinearLayout>
 
-                            <!-- Motivational Message Section -->
+                            <!-- PRO TIPS Section -->
                             <LinearLayout
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:orientation="vertical"
-                                android:background="#F3E5F5"
-                                android:padding="12dp"
-                                android:layout_marginBottom="16dp">
-                                
-                                <TextView
-                                    android:id="@+id/tvAiExerciseMotivation"
-                                    android:layout_width="match_parent"
-                                    android:layout_height="wrap_content"
-                                    android:text="💕 This flowing movement is like a gentle massage for your spine. Perfect for today!"
-                                    android:textSize="14sp"
-                                    android:textStyle="italic"
-                                    android:textColor="#7B1FA2"
-                                    android:lineSpacingMultiplier="1.3"/>
-                            </LinearLayout>
-
-                            <!-- Goal Alignment Section -->
-                            <LinearLayout
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:orientation="vertical"
-                                android:background="#E3F2FD"
-                                android:padding="12dp"
-                                android:layout_marginBottom="16dp">
-                                
-                                <TextView
-                                    android:layout_width="match_parent"
-                                    android:layout_height="wrap_content"
-                                    android:text="🎯 GOAL ALIGNMENT:"
-                                    android:textSize="12sp"
-                                    android:textStyle="bold"
-                                    android:textColor="#1565C0"
-                                    android:layout_marginBottom="4dp"/>
-                                
-                                <TextView
-                                    android:id="@+id/tvAiExerciseGoalAlignment"
-                                    android:layout_width="match_parent"
-                                    android:layout_height="wrap_content"
-                                    android:text="For weight loss: This gentle movement increases blood flow and metabolism, preparing your body for more intense activity. Burns ~150 calories through sustained movement."
-                                    android:textSize="13sp"
-                                    android:textColor="#0D47A1"
-                                    android:lineSpacingMultiplier="1.3"/>
-                            </LinearLayout>
-
-                            <!-- Instructions Section -->
-                            <TextView
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:text="📝 HOW TO DO IT:"
-                                android:textSize="14sp"
-                                android:textStyle="bold"
-                                android:textColor="#333333"
-                                android:layout_marginBottom="8dp"/>
-
-                            <LinearLayout
-                                android:id="@+id/llInstructions"
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:orientation="vertical"
-                                android:layout_marginBottom="16dp">
-                                <!-- Instructions will be added dynamically -->
-                            </LinearLayout>
-
-                            <!-- Pro Tips Section -->
-                            <TextView
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:text="✨ PRO TIPS:"
-                                android:textSize="14sp"
-                                android:textStyle="bold"
-                                android:textColor="#4CAF50"
-                                android:layout_marginBottom="8dp"/>
-
-                            <LinearLayout
-                                android:id="@+id/llTips"
+                                android:id="@+id/layoutProTips"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:orientation="vertical"
                                 android:background="#E8F5E9"
                                 android:padding="12dp"
-                                android:layout_marginBottom="16dp">
-                                <!-- Tips will be added dynamically -->
+                                android:layout_marginBottom="8dp"
+                                android:visibility="visible">
+
+                                <TextView
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:text="✅ PRO TIPS:"
+                                    android:textSize="12sp"
+                                    android:textStyle="bold"
+                                    android:textColor="#2E7D32"
+                                    android:layout_marginBottom="4dp"/>
+
+                                <LinearLayout
+                                    android:id="@+id/llTips"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:orientation="vertical">
+                                    <!-- Tips added dynamically -->
+                                </LinearLayout>
                             </LinearLayout>
 
-                            <!-- Common Mistakes Section -->
-                            <TextView
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:text="⚠️ AVOID THESE MISTAKES:"
-                                android:textSize="14sp"
-                                android:textStyle="bold"
-                                android:textColor="#F44336"
-                                android:layout_marginBottom="8dp"/>
-
+                            <!-- AVOID MISTAKES Section -->
                             <LinearLayout
-                                android:id="@+id/llCommonMistakes"
+                                android:id="@+id/layoutAvoidMistakes"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:orientation="vertical"
                                 android:background="#FFEBEE"
                                 android:padding="12dp"
-                                android:layout_marginBottom="20dp">
-                                <!-- Mistakes will be added dynamically -->
+                                android:layout_marginBottom="12dp"
+                                android:visibility="visible">
+
+                                <TextView
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:text="⚠️ AVOID THESE MISTAKES:"
+                                    android:textSize="12sp"
+                                    android:textStyle="bold"
+                                    android:textColor="#C62828"
+                                    android:layout_marginBottom="4dp"/>
+
+                                <LinearLayout
+                                    android:id="@+id/llCommonMistakes"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:orientation="vertical">
+                                    <!-- Mistakes added dynamically -->
+                                </LinearLayout>
+                            </LinearLayout>
+
+                            <!-- Motivational Message (Only for Period Mode) -->
+                            <LinearLayout
+                                android:id="@+id/layoutMotivation"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="vertical"
+                                android:background="#F3E5F5"
+                                android:padding="12dp"
+                                android:layout_marginBottom="12dp"
+                                android:visibility="gone">
+
+                                <TextView
+                                    android:id="@+id/tvAiExerciseMotivation"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:text="💕 Stretch like a kitty cat! Feel your spine wake up."
+                                    android:textSize="14sp"
+                                    android:textStyle="italic"
+                                    android:textColor="#7B1FA2"
+                                    android:lineSpacingMultiplier="1.2"/>
+                            </LinearLayout>
+
+                            <!-- Hidden sections -->
+                            <TextView
+                                android:id="@+id/tvAiExerciseEquipment"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:visibility="gone"/>
+
+                            <TextView
+                                android:id="@+id/tvAiExerciseGoalAlignment"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:visibility="gone"/>
+
+                            <!-- Instructions Section (Hidden) -->
+                            <LinearLayout
+                                android:id="@+id/llInstructions"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="vertical"
+                                android:visibility="gone">
+                                <!-- Instructions added dynamically -->
                             </LinearLayout>
 
                             <!-- Counter Text -->
                             <TextView
-                                android:id="@+id/tvExerciseCounter"
+                                android:id="@+id/tvExerciseCounterBottom"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:text="Exercise 1 of 3"
@@ -493,25 +484,8 @@
                 </ScrollView>
             </androidx.cardview.widget.CardView>
 
-            <!-- Video Recommendations List -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="RECOMMENDED FOR YOU"
-                android:textSize="12sp"
-                android:textStyle="bold"
-                android:textColor="#999999"
-                android:letterSpacing="0.1"
-                android:layout_marginBottom="12dp"/>
 
-            <LinearLayout
-                android:id="@+id/llVideoListContainer"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:layout_marginBottom="24dp">
-                <!-- Items will be added here dynamically -->
-            </LinearLayout>
+
 
             <!-- Workout Stats Card -->
             <androidx.cardview.widget.CardView

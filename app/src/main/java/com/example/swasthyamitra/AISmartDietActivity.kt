@@ -25,8 +25,7 @@ class AISmartDietActivity : AppCompatActivity() {
     private var isGenerating = false
     private var currentPlan: AIDietPlanService.MealPlan? = null
 
-    private lateinit var tvMetabolicStatus: TextView
-    private lateinit var tvIntensityAlert: TextView
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -62,10 +61,9 @@ class AISmartDietActivity : AppCompatActivity() {
 
 
             // Status Views
-            tvMetabolicStatus = findViewById(R.id.tvMetabolicStatus)
-            tvIntensityAlert = findViewById(R.id.tvIntensityAlert)
 
-            checkMetabolicStatus()
+
+
             setupMealActionButtons()
             setupShareButton()
         } catch (e: Throwable) {
@@ -183,32 +181,7 @@ class AISmartDietActivity : AppCompatActivity() {
         }
     }
 
-    private fun checkMetabolicStatus() {
-        val userId = authHelper.getCurrentUser()?.uid ?: return
-        lifecycleScope.launch {
-            try {
-                // Fetch status from the engine
-                val exerciseLogs = authHelper.getRecentExerciseLogs(userId, 3)
-                val weightLogs = authHelper.getRecentWeightLogs(userId, 14)
-                
-                val hadHighIntensity = exerciseLogs.any { 
-                    (it["intensity"] as? String)?.contains("High", ignoreCase = true) == true || 
-                    (it["type"] as? String)?.contains("HIIT", ignoreCase = true) == true 
-                }
-                
-                // Simplified plateau check
-                val isPlateau = weightLogs.size >= 5 && weightLogs.mapNotNull { it["weight"] as? Double }.distinct().size <= 1
 
-                runOnUiThread {
-                    tvIntensityAlert.text = if (hadHighIntensity) "Recent Intensity: HIGH 🔥" else "Recent Intensity: Normal"
-                    tvMetabolicStatus.text = if (isPlateau) "Metabolic Status: PLATEAU DETECTED ⚖️" else "Metabolic Status: Active Meta"
-                }
-
-            } catch (e: Exception) {
-                Log.e(TAG, "Error checking metabolic status: ${e.message}")
-            }
-        }
-    }
 
     private fun generateFullSmartPlan() {
         if (isGenerating) return
@@ -222,7 +195,7 @@ class AISmartDietActivity : AppCompatActivity() {
                     currentPlan = plan
                     updateUI(plan)
                     showActionButtons()
-                    checkMetabolicStatus() // Refresh status
+
                     Toast.makeText(this@AISmartDietActivity, "✨ Personalized Smarter Plan Generated!", Toast.LENGTH_LONG).show()
                 }.onFailure { e ->
                     Toast.makeText(this@AISmartDietActivity, "Generation failed: ${e.message}", Toast.LENGTH_SHORT).show()

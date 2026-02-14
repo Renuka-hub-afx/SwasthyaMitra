@@ -21,6 +21,19 @@ service cloud.firestore {
       return isAuthenticated() && request.resource != null && request.resource.data.userId == request.auth.uid;
     }
 
+    // Validation helpers
+    function isValidStepCount(steps) {
+      return steps is int && steps >= 0 && steps <= 100000;
+    }
+
+    function isValidCalories(calories) {
+      return calories is number && calories >= 0 && calories <= 10000;
+    }
+
+    function isValidDate(date) {
+      return date is string && date.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$');
+    }
+
     // ==================== MAIN USER COLLECTION ====================
     // All user data MUST be nested under /users/{userId}
     match /users/{userId} {
@@ -32,11 +45,32 @@ service cloud.firestore {
         allow read, write: if isOwner(userId);
       }
 
+      // PHASE 1.1: Daily Steps Collection (NEW - Hybrid Step Counter)
+      // Stores daily step counts from hardware sensor with validation
+      match /daily_steps/{date} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId) &&
+                        willOwnResource() &&
+                        isValidStepCount(request.resource.data.steps) &&
+                        isValidDate(date);
+        allow update: if isOwner(userId) &&
+                        ownsResource() &&
+                        isValidStepCount(request.resource.data.steps);
+        allow delete: if isOwner(userId);
+      }
+
+      // Step data (real-time tracking) - Alternative structure
+      match /step_data/{dataId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId) && willOwnResource();
+        allow update, delete: if isOwner(userId) && ownsResource();
+      }
+
       // Food intake logs (7+ days history)
       match /foodLogs/{logId} {
         allow read: if isOwner(userId);
-        allow create: if isOwner(userId);
-        allow update, delete: if isOwner(userId);
+        allow create: if isOwner(userId) && willOwnResource();
+        allow update, delete: if isOwner(userId) && ownsResource();
       }
 
       // Water/hydration logs
@@ -53,21 +87,25 @@ service cloud.firestore {
         allow update, delete: if isOwner(userId);
       }
 
-      // Exercise logs (AI + Manual)
+      // Exercise logs (AI + Manual) - PHASE 1: Enhanced with AI exercise tracking
       match /exercise_logs/{logId} {
         allow read: if isOwner(userId);
-        allow create: if isOwner(userId);
-        allow update, delete: if isOwner(userId);
+        allow create: if isOwner(userId) &&
+                        willOwnResource() &&
+                        request.resource.data.caloriesBurned >= 0;
+        allow update, delete: if isOwner(userId) && ownsResource();
       }
 
       // Weight tracking logs
       match /weightLogs/{logId} {
         allow read: if isOwner(userId);
-        allow create: if isOwner(userId);
+        allow create: if isOwner(userId) &&
+                        request.resource.data.weightKg > 0 &&
+                        request.resource.data.weightKg < 500;
         allow update, delete: if isOwner(userId);
       }
 
-      // Sleep logs
+      // Sleep logs - Enhanced with sleep cycle tracking
       match /sleep_logs/{logId} {
         allow read: if isOwner(userId);
         allow create: if isOwner(userId);
@@ -93,7 +131,7 @@ service cloud.firestore {
         allow update, delete: if isOwner(userId);
       }
 
-      // Workout plans
+      // Workout plans and sessions
       match /workouts/{workoutId} {
         allow read: if isOwner(userId);
         allow create: if isOwner(userId);
@@ -112,24 +150,24 @@ service cloud.firestore {
         allow update, delete: if isOwner(userId);
       }
 
-      // Progress tracking
+      // Progress tracking and analytics
       match /progress/{progressId} {
         allow read: if isOwner(userId);
         allow create: if isOwner(userId);
         allow update, delete: if isOwner(userId);
       }
 
-      // Streaks and gamification
+      // Streaks and gamification data
       match /streaks/{streakId} {
         allow read, write: if isOwner(userId);
       }
 
-      // Challenges
+      // User-specific challenges
       match /challenges/{challengeId} {
         allow read, write: if isOwner(userId);
       }
 
-      // Safety contacts
+      // Safety contacts for Ghost Mode
       match /safety_contacts/{contactId} {
         allow read, write: if isOwner(userId);
       }
@@ -157,6 +195,20 @@ service cloud.firestore {
 
       // Calorie balance tracking
       match /calorie_logs/{logId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId);
+        allow update, delete: if isOwner(userId);
+      }
+
+      // GPS tracking logs (Ghost Mode safety tracking)
+      match /gps_logs/{logId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId);
+        allow update, delete: if isOwner(userId);
+      }
+
+      // SOS/Emergency alerts
+      match /sos_alerts/{alertId} {
         allow read: if isOwner(userId);
         allow create: if isOwner(userId);
         allow update, delete: if isOwner(userId);
@@ -209,6 +261,12 @@ service cloud.firestore {
 
     // Health tips and insights
     match /healthTips/{tipId} {
+      allow read: if isAuthenticated();
+      allow write: if false;
+    }
+
+    // Workout templates (global library)
+    match /workoutTemplates/{templateId} {
       allow read: if isAuthenticated();
       allow write: if false;
     }

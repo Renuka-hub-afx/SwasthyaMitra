@@ -39,21 +39,8 @@ class homepage : AppCompatActivity() {
     private lateinit var pbCarbs: ProgressBar
     private lateinit var pbFats: ProgressBar
 
-    // AI Recommendation UI
-    private lateinit var cardAiExercise: androidx.cardview.widget.CardView
-    private lateinit var tvRecExerciseName: TextView
-    private lateinit var tvRecTargetMuscle: TextView
-    private lateinit var tvRecReason: TextView
-    private lateinit var btnViewExerciseDetails: MaterialButton
-    private lateinit var btnLogRecExercise: MaterialButton
-    private lateinit var btnRegenerateExercise: MaterialButton
-    private lateinit var ivExerciseGif: android.widget.ImageView
-    private lateinit var tvAgeExplanation: TextView
-    private lateinit var tvGenderNote: TextView
-    private lateinit var tvMotivationalMessage: TextView
-    private lateinit var tvExerciseCalories: TextView
-    private lateinit var tvExerciseDuration: TextView
-    private var currentRecommendedExercise: com.example.swasthyamitra.ai.AIExerciseRecommendationService.ExerciseRec? = null
+    // AI Recommendation UI - REMOVED: Now only in Workout Dashboard
+    // All AI exercise functionality moved to WorkoutDashboardActivity
 
     private lateinit var menuHome: LinearLayout
     private lateinit var menuProgress: LinearLayout
@@ -165,25 +152,8 @@ class homepage : AppCompatActivity() {
             tvWaterTotal = findViewById(R.id.tv_water_total)
             waterProgressBar = findViewById(R.id.waterProgressBar)
 
-            // Initialize AI Exercise views (optional - may not exist in all layouts)
-            try {
-                cardAiExercise = findViewById(R.id.card_ai_exercise)
-                tvRecExerciseName = findViewById(R.id.tv_rec_exercise_name)
-                tvRecTargetMuscle = findViewById(R.id.tv_rec_target_muscle)
-                tvRecReason = findViewById(R.id.tv_rec_reason)
-                btnViewExerciseDetails = findViewById(R.id.btn_view_exercise_details)
-                btnLogRecExercise = findViewById(R.id.btn_log_rec_exercise)
-                btnRegenerateExercise = findViewById(R.id.btn_regenerate_exercise)
-                ivExerciseGif = findViewById(R.id.iv_exercise_gif)
-                tvAgeExplanation = findViewById(R.id.tv_age_explanation)
-                tvGenderNote = findViewById(R.id.tv_gender_note)
-                tvMotivationalMessage = findViewById(R.id.tv_motivational_message)
-                tvExerciseCalories = findViewById(R.id.tv_exercise_calories)
-                tvExerciseDuration = findViewById(R.id.tv_exercise_duration)
-                Log.d("Homepage", "AI Exercise views initialized")
-            } catch (e: Exception) {
-                Log.w("Homepage", "AI Exercise views not found in layout (optional): ${e.message}")
-            }
+            // AI Exercise views removed - functionality now only in Workout Dashboard
+            // To use AI Exercise, tap "Workout" card to go to WorkoutDashboardActivity
 
             // Food details view (optional)
             try {
@@ -234,8 +204,9 @@ class homepage : AppCompatActivity() {
                         tvSteps.text = steps.toString()
                     }
                 }
-                stepManager.start()
-                Log.d("Homepage", "Step manager started successfully")
+                // Enable hybrid validation for accurate step counting
+                stepManager.start(enableHybridValidation = true)
+                Log.d("Homepage", "Step manager started with hybrid validation")
             } catch (e: Exception) {
                 Log.e("Homepage", "Error starting step manager: ${e.message}", e)
                 // Set default value if step manager fails
@@ -274,7 +245,7 @@ class homepage : AppCompatActivity() {
 
                             // Trigger AI refreshes for specialized mode
                             updateAICoachMessage()
-                            updateAIExerciseRecommendation()
+                            // AI Exercise removed from homepage - now only in WorkoutDashboardActivity
 
                             val status = if (isChecked) "activated 🌸" else "deactivated"
                             Toast.makeText(this@homepage, "Period Mode $status", Toast.LENGTH_SHORT).show()
@@ -330,34 +301,8 @@ class homepage : AppCompatActivity() {
             // - Enhanced Progress Dashboard with graphs (7/15/30 days)
             // - Insights and analytics
 
-            // AI Exercise button listeners (only if views exist)
-            if (::btnViewExerciseDetails.isInitialized) {
-                btnViewExerciseDetails.setOnClickListener {
-                    showExerciseGuideDialog()
-                }
-            }
-
-            if (::btnLogRecExercise.isInitialized) {
-                btnLogRecExercise.setOnClickListener {
-                    logRecommendedExercise()
-                }
-            }
-
-            if (::btnRegenerateExercise.isInitialized) {
-                btnRegenerateExercise.setOnClickListener {
-                    lifecycleScope.launch {
-                        try {
-                            // Clear existing recommendation to force new generation
-                            firestore.collection("users").document(userId)
-                                .update("currentDailyExercise", null, "lastExerciseDate", null)
-                                .await()
-                            updateAIExerciseRecommendation()
-                        } catch (e: Exception) {
-                            Log.e("Homepage", "Error skipping exercise", e)
-                        }
-                    }
-                }
-            }
+            // AI Exercise functionality removed from homepage
+            // To access AI Exercise: Tap "Workout" card → WorkoutDashboardActivity → "AI Exercise 🤖" button
 
             // Mood details link (optional)
             try {
@@ -477,7 +422,7 @@ class homepage : AppCompatActivity() {
             displayWorkoutStatus()
             displayWaterStatus()
             updateAICoachMessage()
-            updateAIExerciseRecommendation()
+            // AI Exercise removed from homepage - now only in WorkoutDashboardActivity
             updateCalorieBalance()
         }
     }
@@ -772,257 +717,12 @@ class homepage : AppCompatActivity() {
         }
     }
 
-    private fun updateAIExerciseRecommendation() {
-        lifecycleScope.launch {
-            try {
-                // 0. Check if it's time to show the recommendation
-                val userId = authHelper.getCurrentUser()?.uid ?: return@launch
-                val profile = firestore.collection("users").document(userId).get().await()
-                val preferredTime = profile.getString("preferredExerciseTime") ?: "Morning"
-                
-                val calendar = java.util.Calendar.getInstance()
-                val currentHour = calendar.get(java.util.Calendar.HOUR_OF_DAY)
-                
-                val isTimeMatch = when(preferredTime) {
-                    "Morning" -> currentHour in 4..11
-                    "Afternoon" -> currentHour in 12..16
-                    "Evening" -> currentHour in 17..20
-                    "Night" -> currentHour in 21..23 || currentHour in 0..3
-                    else -> true
-                }
+    // AI Exercise recommendation function removed
+    // All AI exercise functionality is now exclusively in WorkoutDashboardActivity
+    // Users access it by: Homepage → Tap "Workout" card → WorkoutDashboardActivity → "AI Exercise 🤖" button
 
-                if (!isTimeMatch) {
-                    runOnUiThread {
-                        cardAiExercise.visibility = View.GONE
-                    }
-                    return@launch
-                }
-
-                // 0.1 Check if already completed today
-                val db = com.google.firebase.database.FirebaseDatabase.getInstance("https://swasthyamitra-ded44-default-rtdb.asia-southeast1.firebasedatabase.app").reference
-                val today = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault()).format(java.util.Date())
-                val completedToday = db.child("users").child(userId).child("completionHistory").child(today).get().await().getValue(Boolean::class.java) ?: false
-                
-                if (completedToday) {
-                    runOnUiThread {
-                        cardAiExercise.visibility = View.GONE
-                    }
-                    return@launch
-                }
-
-                // 0.2 Check if we already have a sticky recommendation for today
-                val lastDate = profile.getString("lastExerciseDate") ?: ""
-                if (lastDate == today) {
-                    val savedExercise = profile.get("currentDailyExercise") as? Map<String, Any>
-                    if (savedExercise != null) {
-                        val rec = com.example.swasthyamitra.ai.AIExerciseRecommendationService.ExerciseRec(
-                            name = savedExercise["name"] as? String ?: "",
-                            targetMuscle = savedExercise["targetMuscle"] as? String ?: "",
-                            bodyPart = savedExercise["bodyPart"] as? String ?: "",
-                            equipment = savedExercise["equipment"] as? String ?: "",
-                            instructions = (savedExercise["instructions"] as? List<String>) ?: emptyList(),
-                            reason = savedExercise["reason"] as? String ?: "",
-                            estimatedCalories = (savedExercise["estimatedCalories"] as? Number)?.toInt() ?: 100,
-                            recommendedDuration = savedExercise["recommendedDuration"] as? String ?: "15 mins"
-                        )
-                        currentRecommendedExercise = rec
-                        runOnUiThread {
-                            tvRecExerciseName.text = rec.name
-                            tvRecTargetMuscle.text = "Target: ${rec.targetMuscle}"
-                            tvRecReason.text = rec.reason
-                            tvExerciseCalories.text = "🔥 ~${rec.estimatedCalories} kcal"
-                            tvExerciseDuration.text = "⏱️ ${rec.recommendedDuration}"
-                            cardAiExercise.visibility = View.VISIBLE
-                            btnRegenerateExercise.isEnabled = true
-                        }
-                        return@launch
-                    }
-                }
-
-                // 1. Calculate burned calories from steps
-                val steps = if (::stepManager.isInitialized) stepManager.dailySteps else 0
-                val burnedFromSteps = (steps * 0.04).toInt()
-
-                // 2. Refresh UI to show loading state
-                runOnUiThread {
-                    tvRecExerciseName.text = "Consulting Coach... 🧠"
-                    btnRegenerateExercise.isEnabled = false
-                }
-
-                val service = com.example.swasthyamitra.ai.AIExerciseRecommendationService.getInstance(this@homepage)
-                val result = service.getExerciseRecommendation(stepCalories = burnedFromSteps)
-                
-                result.onSuccess { recList ->
-                    // Just take the first one for Homepage "Quick Goal"
-                    val rec = recList.firstOrNull()
-                    
-                    if (rec != null) {
-                        currentRecommendedExercise = rec
-    
-                        // Save recommendation for stickiness (just saving the first one)
-                        val exerciseMap = hashMapOf(
-                            "name" to rec.name,
-                            "targetMuscle" to rec.targetMuscle,
-                            "bodyPart" to rec.bodyPart,
-                            "equipment" to rec.equipment,
-                            "instructions" to rec.instructions,
-                            "reason" to rec.reason,
-                            "benefits" to rec.benefits, // Save benefits
-                            "estimatedCalories" to rec.estimatedCalories,
-                            "recommendedDuration" to rec.recommendedDuration
-                        )
-                        
-                        firestore.collection("users").document(userId)
-                            .update("currentDailyExercise", exerciseMap, "lastExerciseDate", today)
-                            .await()
-    
-                        runOnUiThread {
-                            tvRecExerciseName.text = rec.name
-                            tvRecTargetMuscle.text = "Target: ${rec.targetMuscle}"
-                            
-                            // Richer text for Homepage too
-                            tvRecReason.text = "${rec.reason}\n\n💡 Benefit: ${rec.benefits}"
-                            
-                            tvExerciseCalories.text = "🔥 ~${rec.estimatedCalories} kcal"
-                            tvExerciseDuration.text = "⏱️ ${rec.recommendedDuration}"
-                            
-                            // Display GIF if available
-                            if (rec.gifUrl.isNotEmpty()) {
-                                try {
-                                    com.bumptech.glide.Glide.with(this@homepage)
-                                        .load("file:///android_asset/${rec.gifUrl}")
-                                        .into(ivExerciseGif)
-                                    ivExerciseGif.visibility = android.view.View.VISIBLE
-                                } catch (e: Exception) {
-                                    Log.e("Homepage", "Error loading GIF: ${e.message}")
-                                    ivExerciseGif.visibility = android.view.View.GONE
-                                }
-                            } else {
-                                ivExerciseGif.visibility = android.view.View.GONE
-                            }
-                            
-                            // Display age explanation
-                            if (rec.ageExplanation.isNotEmpty()) {
-                                tvAgeExplanation.text = "💡 Age ${profile["age"]}: ${rec.ageExplanation}"
-                                tvAgeExplanation.visibility = android.view.View.VISIBLE
-                            } else {
-                                tvAgeExplanation.visibility = android.view.View.GONE
-                            }
-                            
-                            // Display gender-specific benefits
-                            if (rec.genderNote.isNotEmpty()) {
-                                tvGenderNote.text = "✨ ${rec.genderNote}"
-                                tvGenderNote.visibility = android.view.View.VISIBLE
-                            } else {
-                                tvGenderNote.visibility = android.view.View.GONE
-                            }
-                            
-                            // Display motivational message (Period Mode)
-                            if (rec.motivationalMessage.isNotEmpty()) {
-                                tvMotivationalMessage.text = rec.motivationalMessage
-                                tvMotivationalMessage.visibility = android.view.View.VISIBLE
-                            } else {
-                                tvMotivationalMessage.visibility = android.view.View.GONE
-                            }
-                            
-                            cardAiExercise.visibility = View.VISIBLE
-                            btnRegenerateExercise.isEnabled = true
-                        }
-                    } else {
-                         runOnUiThread {
-                            cardAiExercise.visibility = View.GONE
-                        }
-                    }
-
-                }.onFailure {
-                    currentRecommendedExercise = null
-                    runOnUiThread {
-                        cardAiExercise.visibility = View.GONE
-                        btnRegenerateExercise.isEnabled = true
-                    }
-                }
-            } catch (e: Exception) {
-                Log.e("Homepage", "Error updating exercise rec", e)
-            }
-        }
-    }
-
-    private fun logRecommendedExercise() {
-        val exercise = currentRecommendedExercise ?: return
-        lifecycleScope.launch {
-            try {
-                val db = com.google.firebase.database.FirebaseDatabase.getInstance("https://swasthyamitra-ded44-default-rtdb.asia-southeast1.firebasedatabase.app").reference
-                val today = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault()).format(java.util.Date())
-                
-                // 1. Mark as completed in Realtime DB (for homepage counter)
-                db.child("users").child(userId).child("completionHistory").child(today).setValue(true)
-                
-                // 2. Log full details in Firestore
-                val firestore = com.google.firebase.firestore.FirebaseFirestore.getInstance("renu")
-                val logData = hashMapOf(
-                    "userId" to userId,
-                    "exerciseName" to exercise.name,
-                    "targetMuscle" to exercise.targetMuscle,
-                    "bodyPart" to exercise.bodyPart,
-                    "equipment" to exercise.equipment,
-                    "caloriesBurned" to exercise.estimatedCalories,
-                    "duration" to exercise.recommendedDuration,
-                    "timestamp" to System.currentTimeMillis(),
-                    "date" to today,
-                    "source" to "AI_Recommendation"
-                )
-                firestore.collection("users").document(userId).collection("exercise_logs").add(logData)
-                
-                runOnUiThread {
-                    Toast.makeText(this@homepage, "Great job! Exercise logged successfully ✅", Toast.LENGTH_SHORT).show()
-                    displayWorkoutStatus() // Refresh the counter
-                    cardAiExercise.visibility = View.GONE // Hide after logging
-                }
-            } catch (e: Exception) {
-                Log.e("Homepage", "Error logging exercise", e)
-                Toast.makeText(this@homepage, "Failed to log exercise", Toast.LENGTH_SHORT).show()
-            }
-        }
-    }
-
-    private fun showExerciseGuideDialog() {
-        val exercise = currentRecommendedExercise ?: run {
-            Toast.makeText(this, "No exercise recommended yet", Toast.LENGTH_SHORT).show()
-            return
-        }
-
-        val builder = android.app.AlertDialog.Builder(this)
-        builder.setTitle("${exercise.name.uppercase()} 💪")
-        
-        val message = StringBuilder()
-        message.append("🎯 Target: ${exercise.targetMuscle}\n")
-        message.append("📦 Equipment: ${exercise.equipment}\n\n")
-        
-        // Add age explanation if available
-        if (exercise.ageExplanation.isNotEmpty()) {
-            message.append("💡 Why for your age:\n${exercise.ageExplanation}\n\n")
-        }
-        
-        // Add gender benefits if available
-        if (exercise.genderNote.isNotEmpty()) {
-            message.append("✨ Benefits for you:\n${exercise.genderNote}\n\n")
-        }
-        
-        // Add motivational message if available
-        if (exercise.motivationalMessage.isNotEmpty()) {
-            message.append("🌸 ${exercise.motivationalMessage}\n\n")
-        }
-        
-        message.append("📝 HOW TO DO IT:\n")
-        exercise.instructions.forEachIndexed { index, step ->
-            message.append("${index + 1}. $step\n")
-        }
-        
-        builder.setMessage(message.toString())
-        builder.setPositiveButton("Got it! 👍") { dialog, _ -> dialog.dismiss() }
-        builder.show()
-    }
-
+    // AI Exercise functions removed - All functionality now in WorkoutDashboardActivity
+    // Users tap "Workout" card → WorkoutDashboardActivity → "AI Exercise 🤖" button
 
     private fun getAvatarDrawable(avatarId: String): Int {
         val resName = avatarId.replace("_", "")

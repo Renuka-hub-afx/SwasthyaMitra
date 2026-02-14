@@ -6,12 +6,19 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.os.Build
 import android.util.Log
-import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.example.swasthyamitra.services.StepCounterService
+import com.example.swasthyamitra.step.HybridStepValidator
+import com.example.swasthyamitra.step.ActivityRecognitionReceiver
+import com.example.swasthyamitra.step.FirebaseStepSync
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import com.google.firebase.auth.FirebaseAuth
 
 /**
- * Client wrapper for StepCounterService.
- * UI components use this to get updates without managing Service binding manually.
+ * Enhanced StepManager with Hybrid Validation System
+ * Integrates hardware step sensor with multi-layer validation
+ * Maintains backward compatibility with existing StepCounterService
  */
 class StepManager(private val context: Context, private val onStepUpdate: (Int, Double) -> Unit) {
 
@@ -27,11 +34,32 @@ class StepManager(private val context: Context, private val onStepUpdate: (Int, 
         }
     }
 
+    // Hybrid validation system (optional, can be enabled)
+    private var hybridValidator: HybridStepValidator? = null
+    private var firebaseStepSync: FirebaseStepSync? = null
+    private val scope = CoroutineScope(Dispatchers.Main)
+
     private var isRegistered = false
+    private var useHybridValidation = false // Set to true to enable advanced validation
     var dailySteps: Int = 0
         private set
 
-    fun start() {
+    /**
+     * Start step tracking with optional hybrid validation
+     * @param enableHybridValidation - Enable multi-layer validation (default: false for backward compatibility)
+     */
+    fun start(enableHybridValidation: Boolean = false) {
+        useHybridValidation = enableHybridValidation
+
+        if (useHybridValidation) {
+            startWithHybridValidation()
+        } else {
+            startLegacyMode()
+        }
+    }
+
+    private fun startLegacyMode() {
+        // Original implementation - backward compatible
         // 1. Start the Foreground Service (if not running)
         val serviceIntent = Intent(context, StepCounterService::class.java)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -41,9 +69,6 @@ class StepManager(private val context: Context, private val onStepUpdate: (Int, 
         }
 
         // 2. Register for updates
-        // Note: We used global sendBroadcast in Service, so we register global receiver.
-        // For better security/performance, LocalBroadcastManager is preferred if within app process,
-        // but Service and Activity are same process here. Service used sendBroadcast().
         if (!isRegistered) {
             val filter = IntentFilter(StepCounterService.ACTION_UPDATE_STEPS)
             androidx.core.content.ContextCompat.registerReceiver(
@@ -63,6 +88,69 @@ class StepManager(private val context: Context, private val onStepUpdate: (Int, 
         onStepUpdate(savedSteps, calories)
     }
 
+    private fun startWithHybridValidation() {
+        Log.i("StepManager", "Starting with Hybrid Validation System")
+
+        // Initialize Firebase sync
+        firebaseStepSync = FirebaseStepSync(context)
+
+        // Initialize hybrid validator
+        hybridValidator = HybridStepValidator(context)
+
+        // Setup activity recognition callback
+        ActivityRecognitionReceiver.onActivityChanged = { activity ->
+            hybridValidator?.updateActivityState(activity)
+        }
+
+        // Start validation with callback
+        hybridValidator?.start { validatedSteps, confidence ->
+            dailySteps = validatedSteps
+            val calories = validatedSteps * 0.04 // 0.04 kcal per step
+
+            // Update UI
+            onStepUpdate(validatedSteps, calories)
+
+            // Sync to Firebase (async)
+            syncToFirebase(validatedSteps, confidence)
+
+            Log.d("StepManager", "Validated steps: $validatedSteps (confidence: $confidence%)")
+        }
+
+        // Load initial data from Firebase
+        loadInitialSteps()
+    }
+
+    private fun loadInitialSteps() {
+        scope.launch {
+            val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return@launch
+
+            firebaseStepSync?.getTodaySteps(userId)?.onSuccess { steps ->
+                dailySteps = steps
+                val calories = steps * 0.04
+                onStepUpdate(steps, calories)
+            }
+        }
+    }
+
+    private fun syncToFirebase(steps: Int, confidence: Double) {
+        scope.launch {
+            val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return@launch
+
+            val activityType = ActivityRecognitionReceiver.latestActivity?.let {
+                when (it.type) {
+                    com.google.android.gms.location.DetectedActivity.WALKING -> "WALKING"
+                    com.google.android.gms.location.DetectedActivity.RUNNING -> "RUNNING"
+                    else -> "ON_FOOT"
+                }
+            } ?: "WALKING"
+
+            firebaseStepSync?.syncValidatedSteps(userId, steps, confidence, activityType)
+                ?.onFailure { e ->
+                    Log.e("StepManager", "Firebase sync failed: ${e.message}")
+                }
+        }
+    }
+
     fun stop() {
         if (isRegistered) {
             try {
@@ -72,5 +160,18 @@ class StepManager(private val context: Context, private val onStepUpdate: (Int, 
                 Log.e("StepManager", "Error unregistering receiver", e)
             }
         }
+
+        // Stop hybrid validator if running
+        hybridValidator?.stop()
+        hybridValidator = null
+        ActivityRecognitionReceiver.onActivityChanged = null
+    }
+
+    /**
+     * Get step confidence score (only available in hybrid mode)
+     */
+    fun getConfidenceScore(): Double {
+        // Can be extended to return actual confidence from validator
+        return if (useHybridValidation) 95.0 else 0.0
     }
 }

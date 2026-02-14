@@ -15,10 +15,12 @@ import android.content.pm.PackageManager
 import android.os.Build
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
-import com.example.swasthyamitra.models.WorkoutVideoRepository
+import android.util.Log
+
 import com.google.firebase.database.FirebaseDatabase
+import com.example.swasthyamitra.gamification.XPManager
 import kotlinx.coroutines.launch
-import com.example.swasthyamitra.models.WorkoutVideo
+
 
 class WorkoutDashboardActivity : AppCompatActivity() {
 
@@ -28,26 +30,20 @@ class WorkoutDashboardActivity : AppCompatActivity() {
     
     private lateinit var tvSteps: TextView
     private lateinit var tvCaloriesBurned: TextView
-    private lateinit var tvRecommendationText: TextView
-    private lateinit var tvCalorieStatus: TextView
-    private lateinit var cvVideoRecommendation: CardView
-    private lateinit var tvVideoTitle: TextView
+    // private lateinit var tvRecommendationText: TextView
+    // private lateinit var tvCalorieStatus: TextView
+    // private lateinit var cvVideoRecommendation: CardView
+    // private lateinit var tvVideoTitle: TextView
     private lateinit var btnBackWorkout: View 
 
-    private lateinit var llVideoListContainer: android.widget.LinearLayout
+
     
     // Stats UI
     private lateinit var tvTotalWorkouts: TextView
     private lateinit var tvWorkoutStreak: TextView
     private lateinit var tvTotalMinutes: TextView
     
-    private val startedVideoIds = mutableSetOf<String>()
-    
-    // Cache for recommendations to prevent refresh on Resume
-    private var currentRecommendations: List<WorkoutVideo> = emptyList()
-    private var lastCalorieStatus: String = ""
-    private var lastIntensity: String = ""
-    private var lastGoalType: String = ""
+
     
     private var fitnessData: FitnessData? = null
     
@@ -56,16 +52,6 @@ class WorkoutDashboardActivity : AppCompatActivity() {
     private var currentSteps: Int = 0
     private var goalType: String = ""
     private var targetBase: Int = 2200
-
-    private val requestPermissionLauncher =
-        registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
-            val isActivityRecognitionGranted = permissions[Manifest.permission.ACTIVITY_RECOGNITION] ?: false
-            if (isActivityRecognitionGranted) {
-                // Permission granted, sensor will work
-            } else {
-                 Toast.makeText(this, "Permission required for live step updates", Toast.LENGTH_SHORT).show()
-            }
-        }
 
     // AI Exercise UI
     private lateinit var cardAiExercise: androidx.cardview.widget.CardView
@@ -78,6 +64,7 @@ class WorkoutDashboardActivity : AppCompatActivity() {
     // Button type changed in XML to MaterialButton/Button, keeping reference generic or casting safely
     private lateinit var btnAiExerciseSkip: com.google.android.material.button.MaterialButton
     private lateinit var tvExerciseCounter: TextView
+    private lateinit var tvExerciseCounterBottom: TextView
 
     // New AI UI Elements
     private lateinit var tvAiExerciseTarget: TextView
@@ -96,6 +83,33 @@ class WorkoutDashboardActivity : AppCompatActivity() {
 
     private var currentAiExerciseList: List<com.example.swasthyamitra.ai.AIExerciseRecommendationService.ExerciseRec> = emptyList()
     private var currentExerciseIndex = 0
+
+    // Flag to track if step manager is started
+    private var isStepManagerStarted = false
+
+    private val requestPermissionLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
+            val activityRecognitionGranted = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                permissions[Manifest.permission.ACTIVITY_RECOGNITION] ?: false
+            } else {
+                true
+            }
+
+            if (activityRecognitionGranted) {
+                Log.i("StepCounter", "✅ Activity recognition permission granted")
+                startStepCounterWithHybridValidation()
+            } else {
+                Log.e("StepCounter", "❌ Activity recognition permission denied")
+                Toast.makeText(this,
+                    "⚠️ Step counting requires activity recognition permission for best accuracy",
+                    Toast.LENGTH_LONG).show()
+                // Fall back to legacy mode
+                if (!isStepManagerStarted) {
+                    stepManager.start(enableHybridValidation = false)
+                    isStepManagerStarted = true
+                }
+            }
+        }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -116,21 +130,33 @@ class WorkoutDashboardActivity : AppCompatActivity() {
             }
         }
         
-        // Start immediately to show cached data
-        stepManager.start()
-        
+        // Check permission and start with appropriate mode
         checkAndRequestPermissions()
 
         fetchUserData()
         setupListeners()
     }
     
+    private fun startStepCounterWithHybridValidation() {
+        if (!isStepManagerStarted) {
+            Log.i("StepCounter", "Starting StepManager with hybrid validation")
+            stepManager.start(enableHybridValidation = true)
+            isStepManagerStarted = true
+
+            Toast.makeText(this,
+                "✅ Advanced step counter activated - High accuracy mode!",
+                Toast.LENGTH_SHORT).show()
+        }
+    }
+
     private fun checkAndRequestPermissions() {
         val permissionsToRequest = mutableListOf<String>()
         
+        var hasActivityRecognition = true
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACTIVITY_RECOGNITION) != PackageManager.PERMISSION_GRANTED) {
                 permissionsToRequest.add(Manifest.permission.ACTIVITY_RECOGNITION)
+                hasActivityRecognition = false
             }
         }
         
@@ -142,6 +168,17 @@ class WorkoutDashboardActivity : AppCompatActivity() {
         
         if (permissionsToRequest.isNotEmpty()) {
             requestPermissionLauncher.launch(permissionsToRequest.toTypedArray())
+        } else {
+            // All permissions granted - start with hybrid validation
+            if (hasActivityRecognition) {
+                startStepCounterWithHybridValidation()
+            } else {
+                // No permission, use legacy mode
+                if (!isStepManagerStarted) {
+                    stepManager.start(enableHybridValidation = false)
+                    isStepManagerStarted = true
+                }
+            }
         }
     }
 
@@ -151,7 +188,7 @@ class WorkoutDashboardActivity : AppCompatActivity() {
         // tvRecommendationText = findViewById(R.id.tvRecommendationText) // Old
         // tvCalorieStatus = findViewById(R.id.tvCalorieStatus) // Old
         
-        llVideoListContainer = findViewById(R.id.llVideoListContainer)
+
         btnBackWorkout = findViewById(R.id.btnBackWorkout)
         
         tvTotalWorkouts = findViewById(R.id.tvTotalWorkouts)
@@ -175,6 +212,7 @@ class WorkoutDashboardActivity : AppCompatActivity() {
         
         btnAiExerciseSkip = findViewById(R.id.btnAiExerciseSkip)
         tvExerciseCounter = findViewById(R.id.tvExerciseCounter)
+        tvExerciseCounterBottom = findViewById(R.id.tvExerciseCounterBottom)
 
         // Enhanced Fields
         tvAiExerciseTarget = findViewById(R.id.tvAiExerciseTarget)
@@ -186,7 +224,7 @@ class WorkoutDashboardActivity : AppCompatActivity() {
         llInstructions = findViewById(R.id.llInstructions)
         llTips = findViewById(R.id.llTips)
         llCommonMistakes = findViewById(R.id.llCommonMistakes)
-
+        
         // Exercise Action Buttons
         btnAiExerciseRecommendation = findViewById(R.id.btnAiExerciseRecommendation)
         btnManualExercise = findViewById(R.id.btnManualExercise)
@@ -196,7 +234,6 @@ class WorkoutDashboardActivity : AppCompatActivity() {
         findViewById<View>(R.id.cvGamification).setOnClickListener {
             startActivity(Intent(this, GamificationActivity::class.java))
         }
-        // ... (rest of listeners)
         
         findViewById<View>(R.id.cvInsights).setOnClickListener {
             startActivity(Intent(this, InsightsActivity::class.java))
@@ -240,52 +277,92 @@ class WorkoutDashboardActivity : AppCompatActivity() {
         
         val rec = currentAiExerciseList[currentExerciseIndex]
         
+        // Basic Info - Always show
         tvAiExerciseName.text = rec.name
-        
-        // Basic Fields
+        tvAiExerciseTarget.text = "Target: ${rec.targetMuscle}"
         tvAiExerciseReason.text = rec.reason
         tvAiExerciseCalories.text = "🔥 ~${rec.estimatedCalories} kcal"
         tvAiExerciseDuration.text = "⏱️ ${rec.recommendedDuration}"
-        tvExerciseCounter.text = "Exercise ${currentExerciseIndex + 1} of ${currentAiExerciseList.size}"
+        val counterText = "Exercise ${currentExerciseIndex + 1} of ${currentAiExerciseList.size}"
+        tvExerciseCounter.text = counterText
+        tvExerciseCounterBottom.text = counterText
         
-        // Enhanced Fields
-        tvAiExerciseTarget.text = "🎯 Target: ${rec.targetMuscle}"
-        tvAiExerciseEquipment.text = "🏋️ Equipment: ${rec.equipment}"
-        
-        // Age Explanation
-        if (rec.ageExplanation.isNotEmpty()) {
-            tvAiExerciseAgeExplanation.text = "💡 Age Insight: ${rec.ageExplanation}"
-            (tvAiExerciseAgeExplanation.parent as View).visibility = View.VISIBLE
-        } else {
-            (tvAiExerciseAgeExplanation.parent as View).visibility = View.GONE
+        // Hidden fields
+        tvAiExerciseEquipment.text = "Equipment: ${rec.equipment}"
+        tvAiExerciseGoalAlignment.text = rec.goalAlignment
+
+        // Get user period status
+        lifecycleScope.launch {
+            val userData = authHelper.getUserData(userId).getOrNull()
+            val isOnPeriod = userData?.get("isOnPeriod") as? Boolean ?: false
+
+            runOnUiThread {
+                // Age Explanation - Always show if available
+                val layoutAgeInsight = findViewById<View>(R.id.layoutAgeInsight)
+                if (rec.ageExplanation.isNotEmpty()) {
+                    tvAiExerciseAgeExplanation.text = "💡 Age Insight: ${rec.ageExplanation}"
+                    layoutAgeInsight.visibility = View.VISIBLE
+                } else {
+                    layoutAgeInsight.visibility = View.GONE
+                }
+
+                // Gender Note - Always show if available
+                val layoutGenderNote = findViewById<View>(R.id.layoutGenderNote)
+                if (rec.genderNote.isNotEmpty()) {
+                    tvAiExerciseGenderNote.text = "✨ For You: ${rec.genderNote}"
+                    layoutGenderNote.visibility = View.VISIBLE
+                } else {
+                    layoutGenderNote.visibility = View.GONE
+                }
+
+                // Motivational Message - ONLY show if period mode is active
+                val layoutMotivation = findViewById<View>(R.id.layoutMotivation)
+                if (isOnPeriod && rec.motivationalMessage.isNotEmpty()) {
+                    tvAiExerciseMotivation.text = "💕 ${rec.motivationalMessage}"
+                    layoutMotivation.visibility = View.VISIBLE
+                } else {
+                    layoutMotivation.visibility = View.GONE
+                }
+            }
         }
         
-        // Gender Note
-        if (rec.genderNote.isNotEmpty()) {
-            tvAiExerciseGenderNote.text = "🌸 For You: ${rec.genderNote}"
-            (tvAiExerciseGenderNote.parent as View).visibility = View.VISIBLE
+        // Pro Tips - Always show if available
+        llTips.removeAllViews()
+        val layoutProTips = findViewById<View>(R.id.layoutProTips)
+        if (rec.tips.isNotEmpty()) {
+            layoutProTips.visibility = View.VISIBLE
+            rec.tips.forEach { tip ->
+                val tipView = TextView(this)
+                tipView.text = tip
+                tipView.textSize = 13f
+                tipView.setTextColor(android.graphics.Color.parseColor("#2E7D32"))
+                tipView.setPadding(0, 0, 0, 8)
+                llTips.addView(tipView)
+            }
         } else {
-            (tvAiExerciseGenderNote.parent as View).visibility = View.GONE
+            layoutProTips.visibility = View.GONE
         }
-        
-        // Motivation
-        if (rec.motivationalMessage.isNotEmpty()) {
-            tvAiExerciseMotivation.text = "💕 ${rec.motivationalMessage}"
-            (tvAiExerciseMotivation.parent as View).visibility = View.VISIBLE
+
+        // Common Mistakes - Always show if available
+        llCommonMistakes.removeAllViews()
+        val layoutAvoidMistakes = findViewById<View>(R.id.layoutAvoidMistakes)
+        if (rec.commonMistakes.isNotEmpty()) {
+            layoutAvoidMistakes.visibility = View.VISIBLE
+            rec.commonMistakes.forEach { mistake ->
+                val mistakeView = TextView(this)
+                mistakeView.text = mistake
+                mistakeView.textSize = 13f
+                mistakeView.setTextColor(android.graphics.Color.parseColor("#C62828"))
+                mistakeView.setPadding(0, 0, 0, 8)
+                llCommonMistakes.addView(mistakeView)
+            }
         } else {
-            (tvAiExerciseMotivation.parent as View).visibility = View.GONE
+            layoutAvoidMistakes.visibility = View.GONE
         }
-        
-        // Goal Alignment
-        if (rec.goalAlignment.isNotEmpty()) {
-            tvAiExerciseGoalAlignment.text = rec.goalAlignment
-            (tvAiExerciseGoalAlignment.parent as View).visibility = View.VISIBLE
-        } else {
-            (tvAiExerciseGoalAlignment.parent as View).visibility = View.GONE
-        }
-        
-        // Populate Instructions
+
+        // Instructions - Keep hidden
         llInstructions.removeAllViews()
+        llInstructions.visibility = View.GONE
         rec.instructions.forEachIndexed { index, step ->
             val stepView = TextView(this)
             stepView.text = "${index + 1}. $step"
@@ -295,46 +372,13 @@ class WorkoutDashboardActivity : AppCompatActivity() {
             llInstructions.addView(stepView)
         }
         
-        // Populate Tips
-        llTips.removeAllViews()
-        if (rec.tips.isNotEmpty()) {
-            (llTips.parent as View).visibility = View.VISIBLE // Ensure section header is visible implicitly if wrapped
-            // Actually header text is separate. We might want to toggle header visibility too.
-            // For now, assuming always show section if we have data.
-            
-            rec.tips.forEach { tip ->
-                val tipView = TextView(this)
-                tipView.text = "• $tip"
-                tipView.textSize = 13f
-                tipView.setTextColor(android.graphics.Color.parseColor("#2E7D32")) // Dark Green
-                tipView.setPadding(0, 0, 0, 12)
-                llTips.addView(tipView)
-            }
-        } else {
-            // Locate the header "PRO TIPS" and hide it? 
-            // Implementation shortcut: Tips should be there from AI. If empty, just empty list.
-        }
-
-        // Populate Mistakes
-        llCommonMistakes.removeAllViews()
-        if (rec.commonMistakes.isNotEmpty()) {
-             rec.commonMistakes.forEach { mistake ->
-                val mistakeView = TextView(this)
-                mistakeView.text = "• $mistake"
-                mistakeView.textSize = 13f
-                mistakeView.setTextColor(android.graphics.Color.parseColor("#C62828")) // Dark Red
-                mistakeView.setPadding(0, 0, 0, 12)
-                llCommonMistakes.addView(mistakeView)
-            }
-        }
-        
         // Reset Done button state
         val btnDone = findViewById<Button>(R.id.btnAiExerciseDone)
         btnDone.isEnabled = true
         btnDone.text = "I DID IT! 💪"
         btnDone.alpha = 1.0f
 
-        // Load GIF/Image from assets - hide if no image available
+        // Load GIF/Image from assets - ALWAYS TRY TO SHOW
         if (rec.gifUrl.isNotEmpty()) {
             ivAiExerciseGif.visibility = View.VISIBLE
             
@@ -342,10 +386,14 @@ class WorkoutDashboardActivity : AppCompatActivity() {
             val encodedPath = rec.gifUrl.replace(" ", "%20")
             val fullPath = "file:///android_asset/$encodedPath"
             
+            Log.d("WorkoutDashboard", "Loading GIF from: $fullPath")
+
             try {
                  // Use Glide to load
                  com.bumptech.glide.Glide.with(this)
                     .load(fullPath)
+                    .placeholder(R.drawable.ic_workout_placeholder)
+                    .error(R.drawable.ic_workout_placeholder)
                     .into(ivAiExerciseGif)
             } catch (e: Exception) {
                 ivAiExerciseGif.visibility = View.GONE
@@ -357,7 +405,7 @@ class WorkoutDashboardActivity : AppCompatActivity() {
     }
 
     private fun markAiExerciseComplete() {
-        val exercise = currentAiExerciseList[currentExerciseIndex] ?: return
+        val exercise = currentAiExerciseList.getOrNull(currentExerciseIndex) ?: return
         btnAiExerciseDone.isEnabled = false
         btnAiExerciseDone.text = "Saving..."
 
@@ -365,29 +413,35 @@ class WorkoutDashboardActivity : AppCompatActivity() {
         val userRef = db.child("users").child(userId)
         val today = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.US).format(java.util.Date())
 
-        // 1. Log to Firestore (for Homepage stats)
+        // 1. Log to Firestore "renu" database (for Homepage stats)
         val logData = hashMapOf(
             "userId" to userId,
             "date" to today,
             "exerciseName" to exercise.name,
+            "targetMuscle" to exercise.targetMuscle,
+            "bodyPart" to exercise.bodyPart,
             "caloriesBurned" to exercise.estimatedCalories,
             "duration" to 15, // Default or parse from string
-            "timestamp" to System.currentTimeMillis()
+            "timestamp" to com.google.firebase.Timestamp.now(),
+            "source" to "AI_Recommendation"
         )
         
-        com.google.firebase.firestore.FirebaseFirestore.getInstance()
+        // Use "renu" Firestore database
+        com.google.firebase.firestore.FirebaseFirestore.getInstance("renu")
             .collection("users")
             .document(userId)
             .collection("exercise_logs")
             .add(logData)
-            .addOnSuccessListener {
+            .addOnSuccessListener { documentReference ->
+                 Log.d("WorkoutDashboard", "Exercise logged to Firestore (renu): ${documentReference.id}")
                  // 2. Update RTDB (for Workout Dashboard stats)
                  updateRTDBStats(exercise, userRef, today)
             }
             .addOnFailureListener { e ->
+                Log.e("WorkoutDashboard", "Failed to log to Firestore: ${e.message}", e)
                 Toast.makeText(this, "Failed to log: ${e.message}", Toast.LENGTH_SHORT).show()
                 btnAiExerciseDone.isEnabled = true
-                btnAiExerciseDone.text = "Mark as Done ✅"
+                btnAiExerciseDone.text = "I DID IT! 💪"
             }
     }
 
@@ -400,7 +454,7 @@ class WorkoutDashboardActivity : AppCompatActivity() {
             val session = WorkoutSession(
                 id = sessionId,
                 date = today,
-                category = "AI Comp.",
+                category = "AI Exercise",
                 videoId = "ai_${System.currentTimeMillis()}", // Dummy ID
                 duration = 15,
                 completed = true,
@@ -423,10 +477,22 @@ class WorkoutDashboardActivity : AppCompatActivity() {
             
             userRef.setValue(updatedData)
                 .addOnSuccessListener {
+                    Log.d("WorkoutDashboard", "Exercise saved to RTDB: ${exercise.name}")
+
+                    // PHASE 2.2: Award XP for AI Exercise (+75 XP)
+                    val xpManager = XPManager(userId)
+                    xpManager.awardXP(XPManager.XPSource.AI_EXERCISE) { leveledUp, newLevel ->
+                        runOnUiThread {
+                            if (leveledUp) {
+                                showLevelUpToast(newLevel)
+                            }
+                            Toast.makeText(this, "✅ Saved! +150 XP & ${exercise.estimatedCalories} kcal | +75 XP!", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+
                     runOnUiThread {
                         btnAiExerciseDone.text = "Completed! 🎉"
-                        Toast.makeText(this, "Logged! +150 XP & ${exercise.estimatedCalories} kcal", Toast.LENGTH_SHORT).show()
-                        
+
                         // Update UI Stats
                         tvTotalWorkouts.text = updatedHistory.size.toString()
                         tvTotalMinutes.text = updatedData.totalWorkoutMinutes.toString()
@@ -437,13 +503,28 @@ class WorkoutDashboardActivity : AppCompatActivity() {
                         // Refresh cache
                         this.fitnessData = updatedData
                         
-                        // Auto-advance to next exercise after 1s delay
+                        // Auto-advance to next exercise after 1.2s delay
                         android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
                             currentExerciseIndex++
                             displayCurrentExercise()
                         }, 1200)
                     }
                 }
+                .addOnFailureListener { e ->
+                    Log.e("WorkoutDashboard", "Failed to save to RTDB: ${e.message}", e)
+                    runOnUiThread {
+                        Toast.makeText(this, "RTDB save failed: ${e.message}", Toast.LENGTH_SHORT).show()
+                        btnAiExerciseDone.isEnabled = true
+                        btnAiExerciseDone.text = "I DID IT! 💪"
+                    }
+                }
+        }.addOnFailureListener { e ->
+            Log.e("WorkoutDashboard", "Failed to fetch RTDB data: ${e.message}", e)
+            runOnUiThread {
+                Toast.makeText(this, "Failed to fetch data: ${e.message}", Toast.LENGTH_SHORT).show()
+                btnAiExerciseDone.isEnabled = true
+                btnAiExerciseDone.text = "I DID IT! 💪"
+            }
         }
     }
 
@@ -458,7 +539,7 @@ class WorkoutDashboardActivity : AppCompatActivity() {
         lifecycleScope.launch {
             authHelper.getUserGoal(userId).onSuccess { goal ->
                 goalType = goal["goalType"] as? String ?: "Maintenance"
-                updateVideoList("Balanced", "Moderate") // Load generic first
+
                 // AI recommendation is now loaded only when button is clicked
             }
             
@@ -533,6 +614,15 @@ class WorkoutDashboardActivity : AppCompatActivity() {
         displayCurrentExercise()
     }
 
+    // PHASE 2.2: Level-Up Toast Notification
+    private fun showLevelUpToast(newLevel: Int) {
+        Toast.makeText(
+            this,
+            "🎉 LEVEL UP! You're now Level $newLevel! 🎉",
+            Toast.LENGTH_LONG
+        ).show()
+    }
+
     private fun checkWorkoutStatusAndStats() {
         val db = FirebaseDatabase.getInstance("https://swasthyamitra-ded44-default-rtdb.asia-southeast1.firebasedatabase.app").reference
         val userRef = db.child("users").child(userId)
@@ -557,217 +647,6 @@ class WorkoutDashboardActivity : AppCompatActivity() {
             }
         }
     }
-
-    private fun handleWorkoutCompletion(video: WorkoutVideo, btnComplete: Button) {
-        btnComplete.isEnabled = false 
-        btnComplete.text = "..."
-
-        val dbUrl = "https://swasthyamitra-ded44-default-rtdb.asia-southeast1.firebasedatabase.app"
-        val db = FirebaseDatabase.getInstance(dbUrl).reference
-        val userRef = db.child("users").child(userId)
-        val today = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.US).format(java.util.Date())
-        
-        userRef.get().addOnSuccessListener { snapshot ->
-            val data = snapshot.getValue(FitnessData::class.java) ?: FitnessData()
-            
-            // Calculate estimated calories (approx 6 kcal/min * duration)
-            val estimatedCalories = video.durationMinutes * 6
-            
-            val session = WorkoutSession(
-                id = java.util.UUID.randomUUID().toString(),
-                date = today,
-                category = video.category,
-                videoId = video.videoId,
-                duration = video.durationMinutes,
-                completed = true,
-                timestamp = System.currentTimeMillis(),
-                caloriesBurned = estimatedCalories
-            )
-
-            val updatedHistory = data.workoutHistory.toMutableMap()
-            updatedHistory[session.id] = session
-            val updatedCompletion = data.completionHistory.toMutableMap()
-            updatedCompletion[today] = true
-
-            val updatedData = data.copy(
-                xp = data.xp + 100,
-                completionHistory = updatedCompletion,
-                workoutHistory = updatedHistory,
-                totalWorkoutMinutes = data.totalWorkoutMinutes + session.duration,
-                lastActiveDate = today
-            )
-            
-            userRef.setValue(updatedData)
-                .addOnSuccessListener {
-                    runOnUiThread {
-                        btnComplete.text = "Done ✅"
-                        btnComplete.alpha = 0.6f
-                        tvTotalWorkouts.text = updatedHistory.size.toString()
-                        tvTotalMinutes.text = updatedData.totalWorkoutMinutes.toString()
-                        Toast.makeText(this, "Workout saved! +100 XP", Toast.LENGTH_SHORT).show()
-                        
-                        // Refresh cache and list state
-                        checkWorkoutStatusAndStats()
-                    }
-                }
-                .addOnFailureListener { e ->
-                    btnComplete.isEnabled = true
-                    btnComplete.text = "Complete"
-                    Toast.makeText(this, "Failed: ${e.message}", Toast.LENGTH_SHORT).show()
-                }
-        }
-    }
-
-    private fun updateAIRecommendation(forceRefresh: Boolean = false) {
-        val netCalories = consumedCalories - burnedCalories
-        val diff = netCalories - targetBase
-
-        val statusText: String
-        val recommendation: String
-
-        val diffAbs = Math.abs(diff).toInt()
-        val calorieStatus = when {
-            diff > 100 -> "High"
-            diff < -100 -> "Low"
-            else -> "Balanced"
-        }
-        
-        // Get AI recommendations
-        val intensity = when {
-            diff > 200 -> "High"
-            diff < -200 -> "Low"
-            else -> "Moderate"
-        }
-        
-        // Only update recommendation if state actually changed or forced
-        if (forceRefresh || calorieStatus != lastCalorieStatus || intensity != lastIntensity || goalType != lastGoalType) {
-            lastCalorieStatus = calorieStatus
-            lastIntensity = intensity
-            lastGoalType = goalType
-            
-            val videos = WorkoutVideoRepository.getSmartRecommendation(goalType, calorieStatus, intensity)
-            val totalDuration = WorkoutVideoRepository.getTotalDuration(videos)
-
-            statusText = if (calorieStatus == "Balanced") "Status: Calories on target" 
-                         else "Status: $diffAbs kcal ${if(diff>0) "above" else "below"} target"
-            
-            // AI-powered personalized recommendations
-            recommendation = when {
-                goalType.contains("Loss", ignoreCase = true) && calorieStatus == "High" -> {
-                    "⚡ High calorie intake detected! We've selected intense HIIT workouts to maximize fat burn. Total: $totalDuration min"
-                }
-                goalType.contains("Loss", ignoreCase = true) && calorieStatus == "Low" -> {
-                    "💪 Lower calorie intake - we've balanced cardio with moderate intensity to avoid burnout. Total: $totalDuration min"
-                }
-                goalType.contains("Loss", ignoreCase = true) -> {
-                    "🔥 Perfect balance! Your HIIT & cardio mix will optimize fat burning. Total: $totalDuration min"
-                }
-                goalType.contains("Gain", ignoreCase = true) && calorieStatus == "High" -> {
-                    "💪 Excellent! High calories + strength training = optimal muscle growth. Total: $totalDuration min"
-                }
-                goalType.contains("Gain", ignoreCase = true) && calorieStatus == "Low" -> {
-                    "⚠️ Low calories may limit gains. We've added lighter exercises - consider eating more. Total: $totalDuration min"
-                }
-                goalType.contains("Gain", ignoreCase = true) -> {
-                    "🏋️ Great! Your strength training routine will support muscle building. Total: $totalDuration min"
-                }
-                calorieStatus == "High" -> {
-                    "🧘 Maintenance mode: We've added cardio to burn extra calories while staying balanced. Total: $totalDuration min"
-                }
-                calorieStatus == "Low" -> {
-                    "🌸 Gentle recovery workout selected - yoga & stretching to energize without overexertion. Total: $totalDuration min"
-                }
-                else -> {
-                    "✨ Perfectly balanced! Your yoga & flexibility routine maintains wellness. Total: $totalDuration min"
-                }
-            }
-
-            runOnUiThread {
-                // tvCalorieStatus.text = statusText // Old UI
-                // tvRecommendationText.text = recommendation // Old UI
-                updateVideoList(calorieStatus, intensity)
-            }
-        }
-    }
-
-    private fun updateVideoList(calorieStatus: String, intensity: String) {
-        if (goalType.isEmpty()) return
-        
-        // Get AI-powered recommendations
-        currentRecommendations = WorkoutVideoRepository.getSmartRecommendation(goalType, calorieStatus, intensity)
-        val videos = currentRecommendations
-        
-        val today = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.US).format(java.util.Date())
-        
-        runOnUiThread {
-            llVideoListContainer.removeAllViews()
-            
-            val inflater = android.view.LayoutInflater.from(this)
-            
-            for (video in videos) {
-                val itemView = inflater.inflate(R.layout.item_workout_video_card, llVideoListContainer, false)
-                
-                val tvTitle = itemView.findViewById<TextView>(R.id.tvVideoTitle)
-                val tvType = itemView.findViewById<TextView>(R.id.tvObjType)
-                val tvDur = itemView.findViewById<TextView>(R.id.tvDuration)
-                val btnStart = itemView.findViewById<Button>(R.id.btnStartWorkout)
-                val btnComplete = itemView.findViewById<Button>(R.id.btnCompleteWorkout)
-                
-                tvTitle.text = video.title
-                tvType.text = video.category.uppercase()
-                tvDur.text = "• ${video.durationMinutes} min"
-                
-                // Check if already completed today
-                val isCompleted = fitnessData?.workoutHistory?.values?.any { 
-                    it.videoId == video.videoId && it.date == today 
-                } ?: false
-
-                if (isCompleted) {
-                    btnStart.isEnabled = false
-                    btnStart.alpha = 0.5f
-                    btnComplete.text = "Done ✅"
-                    btnComplete.isEnabled = false
-                    btnComplete.alpha = 0.8f
-                } else {
-                    // Visual state based on whether it was started
-                    if (startedVideoIds.contains(video.videoId)) {
-                        btnComplete.alpha = 1.0f
-                        btnComplete.isEnabled = true
-                    } else {
-                        btnComplete.alpha = 0.5f 
-                        btnComplete.isEnabled = false // Disable until started
-                    }
-                }
-                
-                btnStart.setOnClickListener {
-                    startedVideoIds.add(video.videoId)
-                    btnComplete.alpha = 1.0f
-                    btnComplete.isEnabled = true
-                    
-                    // Simple YouTube launch
-                    val intent = Intent(Intent.ACTION_VIEW, android.net.Uri.parse("https://www.youtube.com/watch?v=${video.videoId}"))
-                    try {
-                        startActivity(intent)
-                        Toast.makeText(this, "✅ Video launched: ${video.title}", Toast.LENGTH_SHORT).show()
-                    } catch (e: Exception) {
-                        Toast.makeText(this, "Video feature demonstrated!", Toast.LENGTH_LONG).show()
-                    }
-                }
-                
-                btnComplete.setOnClickListener {
-                    if (startedVideoIds.contains(video.videoId)) {
-                         handleWorkoutCompletion(video, btnComplete)
-                    } else {
-                        Toast.makeText(this, "Please start the video properly 🎥", Toast.LENGTH_SHORT).show()
-                    }
-                }
-                
-                llVideoListContainer.addView(itemView)
-            }
-        }
-    }
-
-
     override fun onDestroy() {
         super.onDestroy()
         stepManager.stop()

@@ -28,6 +28,10 @@ import com.example.swasthyamitra.features.steps.StepVerifier
 // import com.google.android.gms.location.DetectedActivity
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.SetOptions
+import com.example.swasthyamitra.GamificationRepository
+import com.example.swasthyamitra.FitnessData
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -248,10 +252,70 @@ class StepCounterService : Service(), SensorEventListener {
         val userId = FirebaseAuth.getInstance().currentUser?.uid
         if (userId != null) {
             try {
+                // Save to RTDB (existing)
                 FirebaseDatabase.getInstance("https://swasthyamitra-ded44-default-rtdb.asia-southeast1.firebasedatabase.app")
                     .getReference("dailyActivity").child(userId).child(lastDate).child("steps")
                     .setValue(dailySteps)
-            } catch (e: Exception) {}
+
+                // Save to Firestore (NEW - Phase 1.1)
+                syncToFirestore(dailySteps)
+
+                // Check shield earning at 5,000 steps (NEW - Phase 1.2)
+                checkShieldEarning(dailySteps)
+
+            } catch (e: Exception) {
+                Log.e("StepCounterService", "Error saving data: ${e.message}", e)
+            }
+        }
+    }
+
+    // PHASE 1.1: Firestore Step Sync
+    private fun syncToFirestore(steps: Int) {
+        val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return
+        val today = SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date())
+
+        try {
+            FirebaseFirestore.getInstance("renu")
+                .collection("users")
+                .document(userId)
+                .collection("daily_steps")
+                .document(today)
+                .set(hashMapOf(
+                    "steps" to steps,
+                    "timestamp" to com.google.firebase.Timestamp.now(),
+                    "source" to "hardware_sensor",
+                    "userId" to userId,
+                    "date" to today
+                ), SetOptions.merge())
+
+            Log.d("StepCounterService", "✅ Synced $steps steps to Firestore")
+        } catch (e: Exception) {
+            Log.e("StepCounterService", "❌ Firestore sync failed: ${e.message}", e)
+        }
+    }
+
+    // PHASE 1.2: Shield Earning on 5,000 Steps
+    private fun checkShieldEarning(steps: Int) {
+        if (steps == 5000) {  // Exactly at goal
+            val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return
+
+            try {
+                val database = FirebaseDatabase.getInstance(
+                    "https://swasthyamitra-ded44-default-rtdb.asia-southeast1.firebasedatabase.app"
+                ).reference
+
+                val repository = GamificationRepository(database, userId)
+
+                // Fetch current data and update steps
+                database.child("users").child(userId).get().addOnSuccessListener { snapshot ->
+                    val data = snapshot.getValue(FitnessData::class.java) ?: FitnessData()
+                    repository.updateSteps(data, steps) { updatedData ->
+                        Log.d("StepCounterService", "✅ Shield earning check complete: ${updatedData.shields} shields")
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e("StepCounterService", "❌ Shield earning check failed: ${e.message}", e)
+            }
         }
     }
 

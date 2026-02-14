@@ -223,6 +223,10 @@
             android:name=".receivers.ActivityUpdateReceiver"
             android:exported="false" />
 
+        <!-- Activity Recognition Receiver for Hybrid Step Validation -->
+        <receiver
+            android:name=".step.ActivityRecognitionReceiver"
+            android:exported="false" />
 
         <service
             android:name=".services.StepCounterService"
@@ -256,12 +260,6 @@
             </intent-filter>
         </receiver>
 
-        <!-- Auto Behavior Tracking Service -->
-        <service
-            android:name=".services.UserBehaviorTracker"
-            android:enabled="true"
-            android:exported="false"
-            android:foregroundServiceType="health" />
 
         <!-- Progress Dashboard Activity -->
         <activity

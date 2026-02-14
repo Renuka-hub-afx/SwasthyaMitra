@@ -255,74 +255,49 @@ class AIExerciseRecommendationService private constructor(private val context: C
             }
 
             val promptText = """
-                ### ✅ Final AI Prompt – Closed-Loop Exercise Recommendation System
+                ### ✅ Exercise Workout Generator
 
-                You are a certified **Sports Scientist and Fitness Coach AI**.
+                You are a **Fitness Coach** creating detailed workouts.
 
-                **User Details:**
-                * Age: **$age**
-                * Gender: **$gender**
-                * Weight: **$weight kg**
-                * Fitness Goal: **$goalType**
-                * Current Mood: **$mood**
-                * Period Status: **${if (isOnPeriod) "Active" else "Inactive"}**
-                * Today’s Calorie Intake: **$consumed kcal** / Target: $targetCalories
+                **User:** Age $age | Gender $gender | Goal $goalType | Mood $mood
+                Period: ${if (isOnPeriod) "Active (gentle only)" else "Inactive"}
+                Calories: $consumed/$targetCalories
 
-                **Available Exercises (Filtered Local Database):**
-                $simplifiedList
-                (Each exercise contains: name, target, bodyPart, gifUrl, instructions.)
+                **Exercises Available:** $simplifiedList
 
-                ---
+                ### Task: 3 exercises (Warm-up → Main → Cool-down)
 
-                ### 🎯 Task
+                ### Rules:
+                ${if (isOnPeriod) "**PERIOD MODE**: Only yoga/stretching. NO jumping/heavy!" else "Match intensity to mood"}
+                - Reason: 1-2 sentences explaining why this exercise
+                - Age/gender notes: Provide meaningful insights
+                - Tips: 2-3 practical tips for better execution
+                - Mistakes: 2-3 common mistakes to avoid
+                - Motivational message: ONLY if period active
 
-                Generate a **complete workout session of 3 DISTINCT exercises** (~15 minutes each), arranged logically in sequence (Warm-up → Main Exercise → Finisher/Stretch).
-
-                ---
-
-                ### 🧠 Closed-Loop Logic Rules (MANDATORY)
-
-                1. If **Period Mode is ACTIVE**, suggest ONLY gentle, restorative, low-impact movements. Avoid HIIT, jumps, heavy core pressure, or inversions.
-                2. Adjust intensity based on **Mood**:
-                   * Sad / Low → Gentle, rhythmic, endorphin-boosting.
-                   * Angry / Energetic → High-intensity or strength-focused.
-                   * Stressed → Mobility + controlled breathing.
-                3. If calorie intake exceeds target ($targetCalories) → include calorie-burning cardio.
-                4. If calorie intake is low → avoid overtraining; suggest moderate intensity.
-                5. If Goal = Weight Loss → prioritize fat-burning efficiency.
-                6. If Goal = Muscle Gain → prioritize strength-based movements.
-                6. If Goal = Muscle Gain → prioritize strength-based movements.
-                7. Ensure exercises are age-appropriate and safe.
-                8. Include period-specific advice/tips ONLY if Period Status is Active. Otherwise, focus on general form.
-
-                ---
-
-                ### 📌 Output Format (Strict JSON Array)
-
-                Return a valid JSON Array containing exactly 3 exercise objects.
-                For each object, use this EXACT structure:
-
+                ### Output JSON (3 exercises):
                 [
-                    {
-                      "name": "EXACT name from Available Exercises list",
-                      "targetMuscle": "Body part targeted",
-                      "bodyPart": "Broader body region",
-                      "equipment": "Required equipment or 'Bodyweight'",
-                      "instructions": ["Step 1...", "Step 2..."],
-                      "reason": "Why this fits the sequence and user's current state",
-                      "benefits": "Personalized benefits (3-4 lines) explaining importance for THIS ${age}yo ${gender}",
-                      "ageExplanation": "Safety note specific to age $age",
-                      "genderNote": "Specific benefit for $gender",
-                      "motivationalMessage": "Short motivational closing line for this exercise",
-                      "estimatedCalories": 150,
-                      "recommendedDuration": "15 mins",
-                      "intensity": "${if (isOnPeriod) "light" else "light, moderate, or high"}",
-                      "goalAlignment": "How this specific movement aids '$goalType'",
-                      "tips": ["Pro tip 1", "Pro tip 2"],
-                      "commonMistakes": ["Mistake 1", "Mistake 2"]
-                    },
-                    ... (Total 3 items)
+                  {
+                    "name": "Exercise name from list",
+                    "targetMuscle": "Target area",
+                    "bodyPart": "Body region",
+                    "equipment": "Bodyweight or equipment",
+                    "instructions": ["Step 1", "Step 2", "Step 3"],
+                    "reason": "Why this exercise is good for you now",
+                    "benefits": "How it helps your fitness goals",
+                    "ageExplanation": "How age $age benefits from this",
+                    "genderNote": "Specific benefit for $gender",
+                    "motivationalMessage": "${if (isOnPeriod) "Period-friendly encouragement" else ""}",
+                    "estimatedCalories": ${if (isOnPeriod) 50 else 120},
+                    "recommendedDuration": "15 mins",
+                    "intensity": "${if (isOnPeriod) "light" else "moderate"}",
+                    "goalAlignment": "How it helps $goalType",
+                    "tips": ["Tip 1: Keep your back straight", "Tip 2: Breathe deeply"],
+                    "commonMistakes": ["Mistake 1: Arching back too much", "Mistake 2: Holding breath"]
+                  }
                 ]
+                
+                Make sure tips and mistakes are specific and actionable!
             """.trimIndent()
 
             val config = generationConfig {
