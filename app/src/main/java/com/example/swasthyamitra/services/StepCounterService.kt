@@ -5,382 +5,251 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.app.Service
-import android.content.BroadcastReceiver
-import android.content.Context
 import android.content.Intent
-import android.content.IntentFilter
-import android.content.SharedPreferences
-import android.hardware.Sensor
-import android.hardware.SensorEvent
-import android.hardware.SensorEventListener
-import android.hardware.SensorManager
-import android.os.Binder
 import android.os.Build
 import android.os.IBinder
-import android.content.pm.ServiceInfo
 import android.util.Log
 import androidx.core.app.NotificationCompat
-import com.example.swasthyamitra.MainActivity
+import androidx.lifecycle.MutableLiveData
 import com.example.swasthyamitra.R
-import com.example.swasthyamitra.features.steps.StepVerifier
-// import com.google.android.gms.location.ActivityRecognition
-// import com.google.android.gms.location.ActivityRecognitionResult
-// import com.google.android.gms.location.DetectedActivity
+import com.example.swasthyamitra.homepage
+import com.example.swasthyamitra.utils.StepTracker
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
-import com.example.swasthyamitra.GamificationRepository
-import com.example.swasthyamitra.FitnessData
 import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
+import java.util.*
+import kotlin.concurrent.fixedRateTimer
 
-class StepCounterService : Service(), SensorEventListener {
+class StepCounterService : Service() {
 
-    companion object {
-        const val NOTIFICATION_ID = 888
-        const val CHANNEL_ID = "StepCounterChannel"
-        const val ACTION_UPDATE_STEPS = "com.example.swasthyamitra.UPDATE_STEPS"
-        const val ACTION_ACTIVITY_UPDATE = "com.example.swasthyamitra.ACTIVITY_UPDATE"
-    }
-
-    private lateinit var sensorManager: SensorManager
-    private var stepSensor: Sensor? = null
-    private var accelSensor: Sensor? = null
+    private var stepTracker: StepTracker? = null
+    private var currentSteps = 0
+    private var currentCalories = 0
+    private var sessionStartTime = 0L
+    private var saveTimer: Timer? = null
     
-    // Core Logic
-    private val stepVerifier = StepVerifier()
-    private val binder = LocalBinder()
-    private lateinit var activityRecognitionClient: com.google.android.gms.location.ActivityRecognitionClient
-    private lateinit var activityUpdatePendingIntent: PendingIntent
-
-    // Internal Receiver for activity updates forwarded by the global receiver
-    private val activityUpdateReceiver = object : BroadcastReceiver() {
-        override fun onReceive(context: Context?, intent: Intent?) {
-            if (intent?.action == ACTION_ACTIVITY_UPDATE) {
-                val type = intent.getIntExtra("activity_type", -1)
-                val confidence = intent.getIntExtra("confidence", 0)
-                
-                if (type != -1) {
-                    stepVerifier.currentActivityType = type
-                    stepVerifier.currentConfidence = confidence
-                    Log.d("StepCounterService", "Updated verifier activity: $type ($confidence%)")
-                }
-            }
-        }
-    }
-    // Persistence
-    private lateinit var prefs: SharedPreferences
-    private var dailySteps = 0
-    private var lastDate = ""
-    private var lastSensorValue: Float? = null
-    private var lastUpdateTime: Long = 0L
-
-    inner class LocalBinder : Binder() {
-        fun getService(): StepCounterService = this@StepCounterService
-    }
-
-    override fun onBind(intent: Intent?): IBinder {
-        return binder
+    private val db = FirebaseFirestore.getInstance()
+    private val auth = FirebaseAuth.getInstance()
+    
+    companion object {
+        private const val NOTIFICATION_ID = 1001
+        private const val CHANNEL_ID = "step_counter_channel"
+        
+        // LiveData for broadcasting to UI
+        val stepsLive = MutableLiveData<Int>()
+        val caloriesLive = MutableLiveData<Int>()
+        val isRunningLive = MutableLiveData<Boolean>()
+        
+        const val ACTION_START = "ACTION_START"
+        const val ACTION_STOP = "ACTION_STOP"
     }
 
     override fun onCreate() {
         super.onCreate()
-        Log.d("StepCounterService", "Service Created")
-        
-        prefs = getSharedPreferences("StepCounterPrefs", Context.MODE_PRIVATE)
-        loadData()
-        
-        sensorManager = getSystemService(Context.SENSOR_SERVICE) as SensorManager
-        stepSensor = sensorManager.getDefaultSensor(Sensor.TYPE_STEP_COUNTER)
-        accelSensor = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
-        
-        startForegroundService()
-        registerSensors()
-        
-        // Initialize Activity Recognition
-        activityRecognitionClient = com.google.android.gms.location.ActivityRecognition.getClient(this)
-        val intent = Intent(this, com.example.swasthyamitra.receivers.ActivityUpdateReceiver::class.java)
-        activityUpdatePendingIntent = PendingIntent.getBroadcast(
-            this,
-            0,
-            intent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
-        
-        // Register local receiver for updates
-        val filter = IntentFilter(ACTION_ACTIVITY_UPDATE)
-        androidx.core.content.ContextCompat.registerReceiver(
-            this,
-            activityUpdateReceiver,
-            filter,
-            androidx.core.content.ContextCompat.RECEIVER_NOT_EXPORTED
-        )
-        
-        requestActivityUpdates()
-    }
-    
-    private fun requestActivityUpdates() {
-        if (androidx.core.app.ActivityCompat.checkSelfPermission(
-                this,
-                android.Manifest.permission.ACTIVITY_RECOGNITION
-            ) == android.content.pm.PackageManager.PERMISSION_GRANTED
-        ) {
-            activityRecognitionClient.requestActivityUpdates(3000L, activityUpdatePendingIntent)
-                .addOnSuccessListener {
-                    Log.d("StepCounterService", "Activity Recognition updates requested successfully")
-                }
-                .addOnFailureListener { e ->
-                    Log.e("StepCounterService", "Failed to request activity updates", e)
-                }
-        } else {
-            Log.w("StepCounterService", "Activity Recognition permission not granted")
-        }
-    }
-    
-    private fun startForegroundService() {
         createNotificationChannel()
-        
-        val notificationIntent = Intent(this, MainActivity::class.java)
-        val pendingIntent = PendingIntent.getActivity(
-            this, 0, notificationIntent,
-            PendingIntent.FLAG_IMMUTABLE
-        )
-
-        val notification: Notification = NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle("SwasthyaMitra Step Tracker")
-            .setContentText("Steps today: $dailySteps")
-            .setSmallIcon(R.drawable.ic_launcher_foreground)
-            .setContentIntent(pendingIntent)
-            .setOngoing(true)
-            .build()
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-            startForeground(
-                NOTIFICATION_ID,
-                notification,
-                ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC
-            )
-        } else {
-            startForeground(NOTIFICATION_ID, notification)
-        }
-    }
-
-    private fun registerSensors() {
-        stepSensor?.let {
-            sensorManager.registerListener(this, it, SensorManager.SENSOR_DELAY_FASTEST)
-        }
-        accelSensor?.let {
-            sensorManager.registerListener(this, it, SensorManager.SENSOR_DELAY_GAME)
-        }
+        isRunningLive.postValue(false)
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        when (intent?.action) {
+            ACTION_START -> startTracking()
+            ACTION_STOP -> stopTracking()
+        }
         return START_STICKY
     }
 
-    override fun onSensorChanged(event: SensorEvent?) {
-        event ?: return
-        when (event.sensor.type) {
-            Sensor.TYPE_STEP_COUNTER -> processStepUpdate(event.values[0])
-            Sensor.TYPE_ACCELEROMETER -> {
-                val x = event.values[0]
-                val y = event.values[1]
-                val z = event.values[2]
-                val magnitude = Math.sqrt((x * x + y * y + z * z).toDouble())
-                stepVerifier.currentMagnitude = magnitude
-            }
-        }
-    }
-
-    private fun processStepUpdate(rawSteps: Float) {
-        val today = getTodayDate()
-        
-        if (today != lastDate) {
-            dailySteps = 0
-            lastDate = today
-            lastSensorValue = rawSteps
-            saveData()
-            updateNotification()
-            broadcastUpdate()
-            return
-        }
-
-        if (lastSensorValue == null) {
-            lastSensorValue = rawSteps
+    private fun startTracking() {
+        if (stepTracker != null) {
+            Log.d("StepCounterService", "Already tracking")
             return
         }
         
-        if (rawSteps < lastSensorValue!!) {
-            lastSensorValue = rawSteps
-            return
-        }
-
-        val diff = (rawSteps - lastSensorValue!!).toInt()
+        sessionStartTime = System.currentTimeMillis()
         
-        if (diff > 0) {
-            var validatedSteps = 0
-            // Process each step individually to satisfy interval/consistency checks
-            for (i in 1..diff) {
-                validatedSteps += stepVerifier.verifyStep()
-            }
-
-            if (validatedSteps > 0) {
-                 dailySteps += validatedSteps
-                 lastSensorValue = rawSteps
-                 saveData()
-                 updateNotification()
-                 broadcastUpdate()
-            } else {
-                Log.d("StepCounterService", "Steps rejected by verifier")
-                lastSensorValue = rawSteps
-            }
-        }
-    }
-
-    override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {}
-
-    private fun saveData() {
-        prefs.edit().apply {
-            putInt("daily_steps", dailySteps)
-            putFloat("last_sensor_value", lastSensorValue ?: -1f)
-            putString("last_date", lastDate)
-            apply()
-        }
-        
-        val userId = FirebaseAuth.getInstance().currentUser?.uid
-        if (userId != null) {
-            try {
-                // Save to RTDB (existing)
-                FirebaseDatabase.getInstance("https://swasthyamitra-ded44-default-rtdb.asia-southeast1.firebasedatabase.app")
-                    .getReference("dailyActivity").child(userId).child(lastDate).child("steps")
-                    .setValue(dailySteps)
-
-                // Save to Firestore (NEW - Phase 1.1)
-                syncToFirestore(dailySteps)
-
-                // Check shield earning at 5,000 steps (NEW - Phase 1.2)
-                checkShieldEarning(dailySteps)
-
-            } catch (e: Exception) {
-                Log.e("StepCounterService", "Error saving data: ${e.message}", e)
-            }
-        }
-    }
-
-    // PHASE 1.1: Firestore Step Sync
-    private fun syncToFirestore(steps: Int) {
-        val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return
-        val today = SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date())
-
-        try {
-            FirebaseFirestore.getInstance("renu")
-                .collection("users")
-                .document(userId)
-                .collection("daily_steps")
-                .document(today)
-                .set(hashMapOf(
-                    "steps" to steps,
-                    "timestamp" to com.google.firebase.Timestamp.now(),
-                    "source" to "hardware_sensor",
-                    "userId" to userId,
-                    "date" to today
-                ), SetOptions.merge())
-
-            Log.d("StepCounterService", "✅ Synced $steps steps to Firestore")
-        } catch (e: Exception) {
-            Log.e("StepCounterService", "❌ Firestore sync failed: ${e.message}", e)
-        }
-    }
-
-    // PHASE 1.2: Shield Earning on 5,000 Steps
-    private fun checkShieldEarning(steps: Int) {
-        if (steps == 5000) {  // Exactly at goal
-            val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return
-
-            try {
-                val database = FirebaseDatabase.getInstance(
-                    "https://swasthyamitra-ded44-default-rtdb.asia-southeast1.firebasedatabase.app"
-                ).reference
-
-                val repository = GamificationRepository(database, userId)
-
-                // Fetch current data and update steps
-                database.child("users").child(userId).get().addOnSuccessListener { snapshot ->
-                    val data = snapshot.getValue(FitnessData::class.java) ?: FitnessData()
-                    repository.updateSteps(data, steps) { updatedData ->
-                        Log.d("StepCounterService", "✅ Shield earning check complete: ${updatedData.shields} shields")
-                    }
-                }
-            } catch (e: Exception) {
-                Log.e("StepCounterService", "❌ Shield earning check failed: ${e.message}", e)
-            }
-        }
-    }
-
-    private fun loadData() {
-        val today = getTodayDate()
-        val savedDate = prefs.getString("last_date", "") ?: ""
-        
-        if (savedDate == today) {
-            dailySteps = prefs.getInt("daily_steps", 0)
-            lastSensorValue = prefs.getFloat("last_sensor_value", -1f)
-            if (lastSensorValue == -1f) lastSensorValue = null
-            lastDate = savedDate
-        } else {
-            dailySteps = 0
-            lastDate = today
-            lastSensorValue = null
-        }
-    }
-
-    private fun updateNotification() {
-        val notification = NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle("SwasthyaMitra Step Tracker")
-            .setContentText("Steps today: $dailySteps")
-            .setSmallIcon(R.drawable.ic_launcher_foreground)
-            .setOngoing(true)
-            .setOnlyAlertOnce(true)
-            .build()
+        // Fetch existing step data from Firestore for today
+        fetchTodayStepsFromFirestore { existingSteps, existingCalories ->
+            // Set initial values from Firestore (or 0 if no data)
+            currentSteps = existingSteps
+            currentCalories = existingCalories
             
-        val mNotificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        mNotificationManager.notify(NOTIFICATION_ID, notification)
+            // Broadcast initial values to UI
+            stepsLive.postValue(currentSteps)
+            caloriesLive.postValue(currentCalories)
+            
+            Log.d("StepCounterService", "Resuming from Firestore: $currentSteps steps, $currentCalories kcal")
+            
+            // Start foreground service with notification
+            startForeground(NOTIFICATION_ID, createNotification())
+            
+            // Initialize step tracker with offset
+            val baseSteps = currentSteps
+            stepTracker = StepTracker(this) { newSteps ->
+                // Add new steps to existing count
+                currentSteps = baseSteps + newSteps
+                currentCalories = com.example.swasthyamitra.utils.CalorieCalculator.calculateFromStepsInt(currentSteps)
+                
+                // Broadcast to UI
+                stepsLive.postValue(currentSteps)
+                caloriesLive.postValue(currentCalories)
+                
+                // Update notification
+                updateNotification()
+            }
+            
+            if (stepTracker?.isSensorAvailable() == true) {
+                stepTracker?.start()
+                isRunningLive.postValue(true)
+                
+                // Start periodic save timer (every 5 minutes)
+                startPeriodicSave()
+                
+                Log.d("StepCounterService", "Step tracking started")
+            } else {
+                Log.e("StepCounterService", "Accelerometer not available")
+                stopSelf()
+            }
+        }
     }
     
-    private fun broadcastUpdate() {
-        val intent = Intent(ACTION_UPDATE_STEPS)
-        intent.putExtra("steps", dailySteps)
-        val calories = dailySteps * 0.04
-        intent.putExtra("calories", calories)
-        intent.setPackage(packageName)
-        sendBroadcast(intent)
+    // Fetch today's step data from Firestore
+    private fun fetchTodayStepsFromFirestore(callback: (Int, Int) -> Unit) {
+        val userId = auth.currentUser?.uid
+        if (userId == null) {
+            Log.w("StepCounterService", "User not logged in, starting from 0")
+            callback(0, 0)
+            return
+        }
+        
+        val today = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+        val docRef = db.collection("users").document(userId)
+            .collection("daily_steps").document(today)
+        
+        docRef.get()
+            .addOnSuccessListener { document ->
+                if (document.exists()) {
+                    val steps = document.getLong("steps")?.toInt() ?: 0
+                    val calories = document.getLong("calories")?.toInt() ?: 0
+                    Log.d("StepCounterService", "Found existing data: $steps steps, $calories kcal")
+                    callback(steps, calories)
+                } else {
+                    Log.d("StepCounterService", "No existing data for today, starting from 0")
+                    callback(0, 0)
+                }
+            }
+            .addOnFailureListener { e ->
+                Log.e("StepCounterService", "Failed to fetch existing data", e)
+                callback(0, 0)
+            }
+    }
+
+    private fun stopTracking() {
+        // Save final data to Firestore
+        saveToFirestore()
+        
+        // Stop timer
+        saveTimer?.cancel()
+        saveTimer = null
+        
+        // Stop step tracker
+        stepTracker?.stop()
+        stepTracker = null
+        
+        isRunningLive.postValue(false)
+        
+        // Stop foreground service
+        stopForeground(true)
+        stopSelf()
+        
+        Log.d("StepCounterService", "Step tracking stopped")
+    }
+
+    private fun startPeriodicSave() {
+        // Save to Firestore every 5 minutes
+        saveTimer = fixedRateTimer("FirestoreSave", false, 5 * 60 * 1000L, 5 * 60 * 1000L) {
+            saveToFirestore()
+        }
+    }
+
+    private fun saveToFirestore() {
+        val userId = auth.currentUser?.uid ?: return
+        val today = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+        
+        if (currentSteps == 0) return // Nothing to save
+        
+        val docRef = db.collection("users").document(userId)
+            .collection("daily_steps").document(today)
+        
+        // Save absolute values (not increment) since we resume from existing data
+        val data = hashMapOf(
+            "date" to today,
+            "steps" to currentSteps,  // Absolute value
+            "calories" to currentCalories,  // Absolute value
+            "lastUpdated" to FieldValue.serverTimestamp()
+        )
+        
+        // Add session info
+        val session = hashMapOf(
+            "startTime" to sessionStartTime,
+            "endTime" to System.currentTimeMillis(),
+            "steps" to currentSteps,
+            "calories" to currentCalories
+        )
+        
+        docRef.set(data, SetOptions.merge())
+            .addOnSuccessListener {
+                // Add session to array
+                docRef.update("sessions", FieldValue.arrayUnion(session))
+                Log.d("StepCounterService", "Saved to Firestore: $currentSteps steps, $currentCalories kcal")
+            }
+            .addOnFailureListener { e ->
+                Log.e("StepCounterService", "Failed to save to Firestore", e)
+            }
     }
 
     private fun createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val serviceChannel = NotificationChannel(
+            val channel = NotificationChannel(
                 CHANNEL_ID,
-                "Step Counter Service",
+                "Step Counter",
                 NotificationManager.IMPORTANCE_LOW
-            )
+            ).apply {
+                description = "Shows live step count and calories burned"
+                setShowBadge(false)
+            }
+            
             val manager = getSystemService(NotificationManager::class.java)
-            manager.createNotificationChannel(serviceChannel)
+            manager.createNotificationChannel(channel)
         }
     }
 
-    private fun getTodayDate(): String {
-        return SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date())
+    private fun createNotification(): Notification {
+        val intent = Intent(this, homepage::class.java)
+        val pendingIntent = PendingIntent.getActivity(
+            this, 0, intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+        
+        return NotificationCompat.Builder(this, CHANNEL_ID)
+            .setContentTitle("🚶 Step Counter Active")
+            .setContentText("Steps: $currentSteps | Calories: $currentCalories kcal")
+            .setSmallIcon(R.drawable.ic_walk)
+            .setOngoing(true)
+            .setContentIntent(pendingIntent)
+            .build()
     }
+
+    private fun updateNotification() {
+        val notification = createNotification()
+        val manager = getSystemService(NotificationManager::class.java)
+        manager.notify(NOTIFICATION_ID, notification)
+    }
+
+    override fun onBind(intent: Intent?): IBinder? = null
 
     override fun onDestroy() {
         super.onDestroy()
-        sensorManager.unregisterListener(this)
-        try {
-            unregisterReceiver(activityUpdateReceiver)
-            activityRecognitionClient.removeActivityUpdates(activityUpdatePendingIntent)
-        } catch (e: Exception) {
-            Log.e("StepCounterService", "Error cleaning up", e)
-        }
+        stopTracking()
     }
 }

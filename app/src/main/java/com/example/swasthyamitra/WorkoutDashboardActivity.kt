@@ -25,7 +25,7 @@ import kotlinx.coroutines.launch
 class WorkoutDashboardActivity : AppCompatActivity() {
 
     private lateinit var authHelper: FirebaseAuthHelper
-    private lateinit var stepManager: StepManager
+
     private var userId: String = ""
     
     private lateinit var tvSteps: TextView
@@ -80,12 +80,16 @@ class WorkoutDashboardActivity : AppCompatActivity() {
     // Exercise Action Buttons
     private lateinit var btnAiExerciseRecommendation: com.google.android.material.button.MaterialButton
     private lateinit var btnManualExercise: com.google.android.material.button.MaterialButton
+    
+    // Step Tracking Control Buttons
+    private lateinit var btnStartStepTracking: com.google.android.material.button.MaterialButton
+    private lateinit var btnStopStepTracking: com.google.android.material.button.MaterialButton
 
     private var currentAiExerciseList: List<com.example.swasthyamitra.ai.AIExerciseRecommendationService.ExerciseRec> = emptyList()
     private var currentExerciseIndex = 0
 
     // Flag to track if step manager is started
-    private var isStepManagerStarted = false
+    // private var isStepManagerStarted = false
 
     private val requestPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
@@ -104,10 +108,8 @@ class WorkoutDashboardActivity : AppCompatActivity() {
                     "⚠️ Step counting requires activity recognition permission for best accuracy",
                     Toast.LENGTH_LONG).show()
                 // Fall back to legacy mode
-                if (!isStepManagerStarted) {
-                    stepManager.start(enableHybridValidation = false)
-                    isStepManagerStarted = true
-                }
+                // Step tracking removed
+
             }
         }
 
@@ -121,14 +123,9 @@ class WorkoutDashboardActivity : AppCompatActivity() {
 
         initViews()
         
-        stepManager = StepManager(this) { steps, burned ->
-            runOnUiThread {
-                tvSteps.text = steps.toString()
-                tvCaloriesBurned.text = String.format("%.1f kcal burned", burned)
-                burnedCalories = burned
-                currentSteps = steps
-            }
-        }
+        // Observe StepCounterService for live step and calorie updates
+        // Service is NOT auto-started - user controls it with Start/Stop buttons
+        observeStepCounterService()
         
         // Check permission and start with appropriate mode
         checkAndRequestPermissions()
@@ -137,16 +134,55 @@ class WorkoutDashboardActivity : AppCompatActivity() {
         setupListeners()
     }
     
-    private fun startStepCounterWithHybridValidation() {
-        if (!isStepManagerStarted) {
-            Log.i("StepCounter", "Starting StepManager with hybrid validation")
-            stepManager.start(enableHybridValidation = true)
-            isStepManagerStarted = true
-
-            Toast.makeText(this,
-                "✅ Advanced step counter activated - High accuracy mode!",
-                Toast.LENGTH_SHORT).show()
+    
+    // Observe StepCounterService LiveData for cross-UI synchronization
+    private fun observeStepCounterService() {
+        // Observe steps from service
+        com.example.swasthyamitra.services.StepCounterService.stepsLive.observe(this) { steps ->
+            currentSteps = steps
+            tvSteps.text = "$steps"
+            
+            // Calculate and update calories using centralized calculator
+            val calories = com.example.swasthyamitra.utils.CalorieCalculator.calculateFromSteps(steps)
+            burnedCalories = calories
+            tvCaloriesBurned.text = com.example.swasthyamitra.utils.CalorieCalculator.formatCaloriesWithSuffix(calories, "kcal burned")
+            
+            Log.d("WorkoutDashboard", "Steps updated: $steps, Calories: $calories")
         }
+        
+        // Observe calories directly from service (already calculated)
+        com.example.swasthyamitra.services.StepCounterService.caloriesLive.observe(this) { calories ->
+            burnedCalories = calories.toDouble()
+            tvCaloriesBurned.text = com.example.swasthyamitra.utils.CalorieCalculator.formatCaloriesWithSuffix(calories.toDouble(), "kcal burned")
+        }
+    }
+    
+    // Start step counter service
+    private fun startStepCounterService() {
+        val intent = Intent(this, com.example.swasthyamitra.services.StepCounterService::class.java)
+        intent.action = com.example.swasthyamitra.services.StepCounterService.ACTION_START
+        
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            startForegroundService(intent)
+        } else {
+            startService(intent)
+        }
+        
+        Log.d("WorkoutDashboard", "StepCounterService started")
+    }
+    
+    // Stop step counter service
+    private fun stopStepCounterService() {
+        val intent = Intent(this, com.example.swasthyamitra.services.StepCounterService::class.java)
+        intent.action = com.example.swasthyamitra.services.StepCounterService.ACTION_STOP
+        startService(intent)
+        
+        Log.d("WorkoutDashboard", "StepCounterService stopped")
+    }
+    
+    private fun startStepCounterWithHybridValidation() {
+        // Step tracking now handled by StepCounterService
+        // This activity just observes the LiveData
     }
 
     private fun checkAndRequestPermissions() {
@@ -174,10 +210,8 @@ class WorkoutDashboardActivity : AppCompatActivity() {
                 startStepCounterWithHybridValidation()
             } else {
                 // No permission, use legacy mode
-                if (!isStepManagerStarted) {
-                    stepManager.start(enableHybridValidation = false)
-                    isStepManagerStarted = true
-                }
+                // Step tracking removed
+
             }
         }
     }
@@ -228,6 +262,10 @@ class WorkoutDashboardActivity : AppCompatActivity() {
         // Exercise Action Buttons
         btnAiExerciseRecommendation = findViewById(R.id.btnAiExerciseRecommendation)
         btnManualExercise = findViewById(R.id.btnManualExercise)
+        
+        // Step Tracking Control Buttons
+        btnStartStepTracking = findViewById(R.id.btnStartStepTracking)
+        btnStopStepTracking = findViewById(R.id.btnStopStepTracking)
     }
 
     private fun setupListeners() {
@@ -246,6 +284,21 @@ class WorkoutDashboardActivity : AppCompatActivity() {
 
         btnBackWorkout.setOnClickListener {
             finish()
+        }
+        
+        // Step Tracking Control
+        btnStartStepTracking.setOnClickListener {
+            startStepCounterService()
+            btnStartStepTracking.isEnabled = false
+            btnStopStepTracking.isEnabled = true
+            Toast.makeText(this, "Step tracking started! Walk to count steps", Toast.LENGTH_SHORT).show()
+        }
+        
+        btnStopStepTracking.setOnClickListener {
+            stopStepCounterService()
+            btnStartStepTracking.isEnabled = true
+            btnStopStepTracking.isEnabled = false
+            Toast.makeText(this, "Step tracking stopped", Toast.LENGTH_SHORT).show()
         }
         
         findViewById<View>(R.id.btnAiExerciseDone).setOnClickListener {
@@ -649,6 +702,5 @@ class WorkoutDashboardActivity : AppCompatActivity() {
     }
     override fun onDestroy() {
         super.onDestroy()
-        stepManager.stop()
     }
 }

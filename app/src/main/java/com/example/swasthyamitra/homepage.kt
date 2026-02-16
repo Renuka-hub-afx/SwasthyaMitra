@@ -17,12 +17,18 @@ import java.util.Calendar
 import androidx.cardview.widget.CardView
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
+import androidx.core.content.ContextCompat
+import androidx.activity.result.contract.ActivityResultContracts
+import com.example.swasthyamitra.services.TrackingService
 
 
 class homepage : AppCompatActivity() {
 
     private lateinit var authHelper: FirebaseAuthHelper
-    private lateinit var stepManager: StepManager
+
     private var userId: String = ""
     private lateinit var firestore: FirebaseFirestore
 
@@ -75,6 +81,11 @@ class homepage : AppCompatActivity() {
     private var userName: String = ""
     private var isOnPeriod: Boolean = false
     private val hydrationRepo = com.example.swasthyamitra.data.repository.HydrationRepository()
+    
+    // Cached Metabolic Data for Real-time Updates
+    private var cachedFoodCalories = 0
+    private var cachedWorkoutCalories = 0
+    private var cachedTargetCalories = 2000
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -95,15 +106,14 @@ class homepage : AppCompatActivity() {
             Log.d("Homepage", "AuthHelper initialized successfully")
 
             // Initialize Firestore with error handling
-            try {
-                firestore = FirebaseFirestore.getInstance("renu")
-                Log.d("Homepage", "Firestore 'renu' database initialized successfully")
+            // Initialize Firestore
+            firestore = try {
+                FirebaseFirestore.getInstance("renu")
             } catch (e: Exception) {
-                Log.e("Homepage", "Error initializing named Firestore database: ${e.message}", e)
-                // Fallback to default instance
-                firestore = FirebaseFirestore.getInstance()
-                Log.d("Homepage", "Using default Firestore instance as fallback")
+                Log.w("Homepage", "Could not get 'renu' Firestore, falling back to default: ${e.message}")
+                FirebaseFirestore.getInstance()
             }
+            Log.d("Homepage", "Firestore initialized successfully")
 
             // Get userId from intent or from current Firebase user
             userId = intent.getStringExtra("USER_ID") ?: authHelper.getCurrentUser()?.uid ?: ""
@@ -197,21 +207,16 @@ class homepage : AppCompatActivity() {
             updateDateDisplay()
             loadUserData()
 
-            // Initialize Step Tracking
-            try {
-                stepManager = StepManager(this) { steps, _ ->
-                    runOnUiThread {
-                        tvSteps.text = steps.toString()
-                    }
-                }
-                // Enable hybrid validation for accurate step counting
-                stepManager.start(enableHybridValidation = true)
-                Log.d("Homepage", "Step manager started with hybrid validation")
-            } catch (e: Exception) {
-                Log.e("Homepage", "Error starting step manager: ${e.message}", e)
-                // Set default value if step manager fails
-                tvSteps.text = "0"
-            }
+
+            updateDateDisplay()
+            loadUserData()
+
+            // Step counter service is controlled by user from Workout Dashboard
+            // NOT auto-started to prevent false counts when picking up phone
+            // User must tap "Start Tracking" button in Workout section
+            
+            // Observe service LiveData (in case it's already running)
+            observeStepCounterService()
 
             cardWorkout.setOnClickListener {
                 val intent = Intent(this, WorkoutDashboardActivity::class.java)
@@ -548,7 +553,7 @@ class homepage : AppCompatActivity() {
                     tvCoachMessage.text = "Coach is analyzing your progress... 🔍"
                 }
 
-                val steps = if (::stepManager.isInitialized) stepManager.dailySteps else 0
+                val steps = 0 // StepManager removed
                 val service = com.example.swasthyamitra.ai.AICoachMessageService.getInstance(this@homepage)
                 val result = service.getCoachMessage(userId, steps)
                 
@@ -712,9 +717,8 @@ class homepage : AppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
-        if (::stepManager.isInitialized) {
-            stepManager.stop()
-        }
+        // Service continues running in background
+        // User can stop it via notification or manually
     }
 
     // AI Exercise recommendation function removed
@@ -740,6 +744,43 @@ class homepage : AppCompatActivity() {
         finish()
     }
 
+    // Step counter service management
+    private fun startStepCounterService() {
+        val intent = Intent(this, com.example.swasthyamitra.services.StepCounterService::class.java)
+        intent.action = com.example.swasthyamitra.services.StepCounterService.ACTION_START
+        
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            startForegroundService(intent)
+        } else {
+            startService(intent)
+        }
+        
+        Log.d("Homepage", "StepCounterService started")
+    }
+    
+    private fun observeStepCounterService() {
+        // Observe steps from service
+        com.example.swasthyamitra.services.StepCounterService.stepsLive.observe(this) { steps ->
+            runOnUiThread {
+                if (::tvSteps.isInitialized) tvSteps.text = "$steps"
+                
+                // Real-time Calorie Update using centralized calculator
+                val stepCalories = com.example.swasthyamitra.utils.CalorieCalculator.calculateFromStepsInt(steps)
+                val totalOut = cachedWorkoutCalories + stepCalories
+                val netBalance = cachedFoodCalories - totalOut
+                
+                if (::tvCaloriesOut.isInitialized) {
+                    updateCalorieBalanceUI(cachedFoodCalories, totalOut, netBalance, cachedTargetCalories)
+                }
+            }
+        }
+        
+        // Observe service status
+        com.example.swasthyamitra.services.StepCounterService.isRunningLive.observe(this) { isRunning ->
+            Log.d("Homepage", "Service running: $isRunning")
+        }
+    }
+
 
     
     // ========== Calorie Balance Tracking ==========
@@ -756,6 +797,7 @@ class homepage : AppCompatActivity() {
                 goalsResult.onSuccess { goal ->
                     targetCalories = (goal["dailyCalories"] as? Number)?.toInt() ?: 2000
                 }
+                cachedTargetCalories = targetCalories
                 
                 // 2. Calculate Calories In (from food logs)
                 val caloriesIn = calculateCaloriesIn(today)
@@ -792,6 +834,8 @@ class homepage : AppCompatActivity() {
                 totalCalories += calories
             }
             totalCalories
+            cachedFoodCalories = totalCalories // Cache it
+            totalCalories
         } catch (e: Exception) {
             Log.e("Homepage", "Error calculating calories in", e)
             0
@@ -802,12 +846,15 @@ class homepage : AppCompatActivity() {
         return try {
             var totalCalories = 0
             
-            // 1. Calories from steps
-            val steps = if (::stepManager.isInitialized) stepManager.dailySteps else 0
-            val stepCalories = (steps * 0.04).toInt() // ~0.04 kcal per step
-            totalCalories += stepCalories
+            // 1. Calories from steps - handled dynamically in UI, but needed for initial storage/calculation
+            // We return 0 here for "base" calculation if we want, OR we can exclude steps from this internal flow
+            // But let's keep it simple: Access LiveData
+             //val steps = 0 // StepManager removed
+             //val stepCalories = (steps * 0.04).toInt() 
+             //totalCalories += stepCalories
             
             // 2. Calories from logged workouts
+            // IMPORTANT: Only query workouts here, steps are added dynamically in UI or via LiveData
             val workoutLogs = firestore.collection("users").document(userId).collection("exercise_logs")
                 .whereEqualTo("date", date)
                 .get()
@@ -818,7 +865,11 @@ class homepage : AppCompatActivity() {
                 totalCalories += calories
             }
             
-            totalCalories
+            cachedWorkoutCalories = totalCalories // Cache pure workout calories (without steps)
+            
+            // Return total including CURRENT steps for the initial load
+            val currentSteps = TrackingService.stepsLive.value ?: 0
+            totalCalories + (currentSteps * 0.04).toInt()
         } catch (e: Exception) {
             Log.e("Homepage", "Error calculating calories out", e)
             0

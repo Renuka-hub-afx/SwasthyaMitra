@@ -115,6 +115,44 @@
                         android:textSize="14sp"
                         android:layout_marginTop="8dp"/>
 
+                    <!-- Step Tracking Control Buttons -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginTop="16dp"
+                        android:gravity="center">
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnStartStepTracking"
+                            android:layout_width="0dp"
+                            android:layout_height="48dp"
+                            android:layout_weight="1"
+                            android:text="▶ Start Tracking"
+                            android:textSize="13sp"
+                            android:textStyle="bold"
+                            app:backgroundTint="#4CAF50"
+                            app:cornerRadius="24dp"
+                            android:layout_marginEnd="8dp"/>
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnStopStepTracking"
+                            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                            android:layout_width="0dp"
+                            android:layout_height="48dp"
+                            android:layout_weight="1"
+                            android:text="⏸ Stop Tracking"
+                            android:textSize="13sp"
+                            android:textStyle="bold"
+                            android:textColor="#F44336"
+                            app:strokeColor="#F44336"
+                            app:strokeWidth="2dp"
+                            app:cornerRadius="24dp"
+                            android:layout_marginStart="8dp"
+                            android:enabled="false"/>
+
+                    </LinearLayout>
+
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
 
