@@ -177,6 +177,69 @@ class AIExerciseRecommendationService private constructor(private val context: C
             } catch (e: Exception) {
                 Log.e(TAG, "Error loading exercise3.csv: ${e.message}")
             }
+
+            // 4. Load combined_exercises.json (enhanced metadata with gender/age/period tags)
+            try {
+                val jsonString = context.assets.open("combined_exercises.json").bufferedReader().use { it.readText() }
+                val jsonArray = org.json.JSONArray(jsonString)
+                
+                for (i in 0 until jsonArray.length()) {
+                    val obj = jsonArray.getJSONObject(i)
+                    val name = obj.optString("name", "").trim()
+                    if (name.isEmpty()) continue
+                    
+                    val gifUrl = obj.optString("gifUrl", "")
+                    val isPeriodSafe = obj.optBoolean("periodModeSafe", false)
+                    
+                    // Build rich details from enhanced metadata
+                    val targetMuscles = mutableListOf<String>()
+                    val tmArr = obj.optJSONArray("targetMuscles")
+                    if (tmArr != null) {
+                        for (j in 0 until tmArr.length()) targetMuscles.add(tmArr.getString(j))
+                    }
+                    val bodyParts = mutableListOf<String>()
+                    val bpArr = obj.optJSONArray("bodyParts")
+                    if (bpArr != null) {
+                        for (j in 0 until bpArr.length()) bodyParts.add(bpArr.getString(j))
+                    }
+                    val intensityLevel = obj.optString("intensityLevel", "moderate")
+                    val periodBenefits = obj.optString("periodBenefits", "")
+                    
+                    val details = buildString {
+                        append("Target: ${targetMuscles.joinToString(", ")}")
+                        append(", BodyPart: ${bodyParts.joinToString(", ")}")
+                        append(", Intensity: $intensityLevel")
+                        if (isPeriodSafe && periodBenefits.isNotEmpty()) {
+                            append(", PeriodBenefit: $periodBenefits")
+                        }
+                    }
+                    
+                    val nameLower = name.lowercase()
+                    
+                    // If already exists, just update the gif map (don't add duplicate)
+                    if (gifMap.containsKey(nameLower)) {
+                        // Merge: update gif path if combined has a better one
+                        if (gifUrl.isNotEmpty() && gifMap[nameLower]?.isEmpty() == true) {
+                            gifMap[nameLower] = gifUrl
+                        }
+                    } else {
+                        // New exercise from combined_exercises.json
+                        exercises.add(ExerciseData(
+                            name = name,
+                            type = "combined",
+                            path = gifUrl,
+                            details = details,
+                            isPeriodSafe = isPeriodSafe
+                        ))
+                        if (gifUrl.isNotEmpty()) {
+                            gifMap[nameLower] = gifUrl
+                        }
+                    }
+                }
+                Log.d(TAG, "Loaded combined_exercises.json, total exercises: ${exercises.size}")
+            } catch (e: Exception) {
+                Log.e(TAG, "Error loading combined_exercises.json: ${e.message}")
+            }
             
             // Update the class-level map
             exerciseGifMap = gifMap

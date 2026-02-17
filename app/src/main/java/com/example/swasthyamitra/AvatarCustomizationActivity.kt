@@ -88,8 +88,16 @@ class AvatarCustomizationActivity : AppCompatActivity() {
     private val pickMedia = registerForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
         if (uri != null) {
             Log.d("PhotoPicker", "Selected URI: $uri")
-            val flag = android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION
-            contentResolver.takePersistableUriPermission(uri, flag)
+            
+            try {
+                // Take persistable URI permission
+                val flag = android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION
+                contentResolver.takePersistableUriPermission(uri, flag)
+                Log.d("PhotoPicker", "Persistable permission granted for: $uri")
+            } catch (e: SecurityException) {
+                Log.e("PhotoPicker", "Failed to take persistable permission: ${e.message}")
+                // Continue anyway - the URI might still work in the current session
+            }
             
             // Update State
             selectedGalleryUri = uri
@@ -101,6 +109,8 @@ class AvatarCustomizationActivity : AppCompatActivity() {
             adapter.updateData(emptyList()) 
             
             addToHistory()
+        } else {
+            Log.d("PhotoPicker", "No image selected")
         }
     }
 

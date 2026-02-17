@@ -6,7 +6,6 @@
     android:orientation="vertical"
     android:background="@drawable/background_main">
 
-    <!-- Standard Gradient Header -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -26,18 +25,20 @@
                 android:layout_width="40dp"
                 android:layout_height="40dp"
                 android:background="?attr/selectableItemBackgroundBorderless"
-                android:src="@drawable/ic_back"
-                app:tint="#FFFFFF"
+                android:contentDescription="Go back"
+                android:padding="8dp"
                 android:scaleType="centerInside"
-                android:padding="8dp"/>
+                android:src="@drawable/ic_back"
+                app:tint="@color/white" />
 
             <TextView
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
+                android:fontFamily="sans-serif-medium"
                 android:gravity="center"
                 android:text="Safety Ghost &amp; Tracker"
-                android:textColor="#FFFFFF"
+                android:textColor="@color/white"
                 android:textSize="20sp"
                 android:textStyle="bold" />
 
@@ -45,114 +46,110 @@
                 android:layout_width="40dp"
                 android:layout_height="40dp" />
         </LinearLayout>
-        
-        <TextView
-             android:id="@+id/tvSafetyStatus"
-             android:layout_width="wrap_content"
-             android:layout_height="wrap_content"
-             android:layout_gravity="center"
-             android:layout_marginTop="8dp"
-             android:text="Safety Ghost: Inactive"
-             android:textColor="#EFEFEF"
-             android:textSize="14sp"/>
 
+        <TextView
+            android:id="@+id/tvSafetyStatus"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginTop="8dp"
+            android:text="Safety Ghost: Inactive"
+            android:textColor="#FFFFFFCC"
+            android:textSize="13sp" />
     </LinearLayout>
 
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:clipToPadding="false"
         android:fillViewport="true">
-        
+
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:gravity="center_horizontal"
             android:orientation="vertical"
-            android:padding="24dp"
-            android:gravity="center_horizontal">
+            android:padding="24dp">
 
-            <!-- Distance Card -->
-            <androidx.cardview.widget.CardView
+            <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                app:cardCornerRadius="16dp"
-                app:cardElevation="2dp"
-                android:layout_marginBottom="32dp"
-                app:cardBackgroundColor="#FFFFFF">
-                
+                android:layout_marginBottom="28dp"
+                app:cardBackgroundColor="@color/card_background"
+                app:cardCornerRadius="20dp"
+                app:cardElevation="2dp">
+
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:gravity="center"
                     android:orientation="vertical"
-                    android:padding="32dp"
-                    android:gravity="center">
-                    
+                    android:padding="32dp">
+
                     <ImageView
-                        android:layout_width="64dp"
-                        android:layout_height="64dp"
+                        android:layout_width="56dp"
+                        android:layout_height="56dp"
+                        android:layout_marginBottom="16dp"
                         android:src="@android:drawable/ic_menu_mylocation"
-                        app:tint="#7B2CBF"
-                        android:layout_marginBottom="16dp"/>
-                    
+                        app:tint="@color/purple_500" />
+
                     <TextView
                         android:id="@+id/tvDistance"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="0.00 km"
+                        android:textColor="@color/text_primary"
                         android:textSize="36sp"
-                        android:textStyle="bold"
-                        android:textColor="#333333"/>
-                        
+                        android:textStyle="bold" />
+
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="DISTANCE COVERED"
-                        android:textSize="12sp"
+                        android:layout_marginTop="4dp"
                         android:letterSpacing="0.1"
-                        android:textColor="#999999"
-                        android:layout_marginTop="4dp"/>
+                        android:text="DISTANCE COVERED"
+                        android:textColor="@color/text_hint"
+                        android:textSize="11sp" />
                 </LinearLayout>
-            </androidx.cardview.widget.CardView>
+            </com.google.android.material.card.MaterialCardView>
 
             <EditText
                 android:id="@+id/etContactNumber"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="Emergency Contact Number"
+                android:layout_marginBottom="24dp"
+                android:background="@drawable/edittext_background"
+                android:hint="Emergency contact number"
                 android:inputType="phone"
-                android:background="@drawable/shape_edit_text_bg"
-                android:backgroundTint="#FFFFFF"
-                android:elevation="2dp"
                 android:padding="16dp"
-                android:textColor="#333333"
-                android:textColorHint="#757575"
-                android:layout_marginBottom="24dp"/>
+                android:textColor="@color/text_primary"
+                android:textColorHint="@color/text_hint"
+                android:textSize="15sp" />
 
             <Button
                 android:id="@+id/btnStartRun"
                 android:layout_width="match_parent"
-                android:layout_height="60dp"
-                android:text="Start Run"
-                android:textSize="18sp"
-                android:textStyle="bold"
-                app:backgroundTint="@null"
+                android:layout_height="56dp"
+                android:layout_marginBottom="16dp"
                 android:background="@drawable/button_background"
-                android:textColor="#FFFFFF"
-                android:layout_marginBottom="24dp"
-                app:cornerRadius="12dp"/>
+                android:stateListAnimator="@null"
+                android:text="Start Run"
+                android:textColor="@color/white"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                app:backgroundTint="@null" />
 
             <Button
                 android:id="@+id/btnSOS"
                 android:layout_width="match_parent"
-                android:layout_height="70dp"
-                android:text="HOLD FOR SOS 🆘"
-                android:textSize="20sp"
-                android:textStyle="bold"
-                app:backgroundTint="@null"
+                android:layout_height="64dp"
                 android:background="@drawable/button_background"
-                android:textColor="#FFFFFF"
-                app:cornerRadius="12dp"/>
-                
+                android:stateListAnimator="@null"
+                android:text="HOLD FOR SOS"
+                android:textColor="@color/white"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                app:backgroundTint="@null" />
         </LinearLayout>
     </ScrollView>
-
 </LinearLayout>

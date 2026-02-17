@@ -13,6 +13,8 @@ class BootReceiver : BroadcastReceiver() {
             Log.d("BootReceiver", "Boot completed, starting StepCounterService")
             
             val serviceIntent = Intent(context, StepCounterService::class.java)
+            serviceIntent.action = StepCounterService.ACTION_START
+            
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 context.startForegroundService(serviceIntent)
             } else {

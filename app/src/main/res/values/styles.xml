@@ -1,7 +1,141 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- Base App Theme -->
+    <style name="AppTheme" parent="Theme.Material3.Light.NoActionBar">
+        <item name="colorPrimary">@color/purple_500</item>
+        <item name="colorAccent">@color/pink_500</item>
+        <item name="android:windowBackground">@drawable/background_main</item>
+    </style>
+
+    <!-- ======================== -->
+    <!-- BUTTON STYLES            -->
+    <!-- ======================== -->
+
+    <!-- Primary Button - Gradient pill -->
+    <style name="AppButton" parent="Widget.Material3.Button">
+        <item name="android:background">@drawable/button_background</item>
+        <item name="android:textColor">@color/text_white</item>
+        <item name="android:textSize">15sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:paddingVertical">14dp</item>
+        <item name="android:paddingHorizontal">32dp</item>
+        <item name="android:elevation">2dp</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:stateListAnimator">@null</item>
+    </style>
+
+    <!-- Small inline button -->
+    <style name="AppButtonSmall">
+        <item name="android:background">@drawable/button_background</item>
+        <item name="android:textColor">@color/text_white</item>
+        <item name="android:textSize">12sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:paddingVertical">8dp</item>
+        <item name="android:paddingHorizontal">20dp</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+    </style>
+
+    <!-- ======================== -->
+    <!-- CARD STYLES              -->
+    <!-- ======================== -->
+
+    <style name="AppCard">
+        <item name="android:background">@drawable/bg_white_rounded_card</item>
+        <item name="android:padding">20dp</item>
+        <item name="android:elevation">2dp</item>
+    </style>
+
+    <!-- ======================== -->
+    <!-- TEXT STYLES              -->
+    <!-- ======================== -->
+
+    <!-- Screen Title (28sp) -->
+    <style name="TextHeadingLarge">
+        <item name="android:textSize">28sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">@color/text_primary</item>
+        <item name="android:fontFamily">sans-serif</item>
+    </style>
+
+    <!-- Section/Header Title (20sp) -->
+    <style name="TextHeadingMedium">
+        <item name="android:textSize">20sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">@color/text_primary</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+    </style>
+
+    <!-- Card Title (16sp) -->
+    <style name="TextHeadingSmall">
+        <item name="android:textSize">16sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">@color/text_primary</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+    </style>
+
+    <!-- Body text (14sp) -->
+    <style name="TextBody">
+        <item name="android:textSize">14sp</item>
+        <item name="android:textColor">@color/text_secondary</item>
+        <item name="android:fontFamily">sans-serif</item>
+        <item name="android:lineSpacingMultiplier">1.2</item>
+    </style>
+
+    <!-- Caption / Label (12sp) -->
+    <style name="TextLabel">
+        <item name="android:textSize">12sp</item>
+        <item name="android:textColor">@color/text_secondary</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+    </style>
+
+    <!-- Overline (10sp, uppercase) -->
+    <style name="TextOverline">
+        <item name="android:textSize">10sp</item>
+        <item name="android:textColor">@color/text_hint</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:letterSpacing">0.1</item>
+        <item name="android:textAllCaps">true</item>
+    </style>
+
+    <!-- White header text -->
+    <style name="TextHeaderWhite">
+        <item name="android:textSize">20sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">@color/text_white</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+    </style>
+
+    <!-- ======================== -->
+    <!-- SHAPES                   -->
+    <!-- ======================== -->
+
     <style name="CircleShapeAppearance">
         <item name="cornerFamily">rounded</item>
         <item name="cornerSize">50%</item>
+    </style>
+
+    <!-- ======================== -->
+    <!-- INPUT STYLES             -->
+    <!-- ======================== -->
+
+    <style name="AppEditText">
+        <item name="android:background">@drawable/edittext_background</item>
+        <item name="android:padding">16dp</item>
+        <item name="android:textColor">@color/text_primary</item>
+        <item name="android:textColorHint">@color/text_hint</item>
+        <item name="android:textSize">15sp</item>
+        <item name="android:fontFamily">sans-serif</item>
+    </style>
+
+    <!-- ======================== -->
+    <!-- SECTION HEADER           -->
+    <!-- ======================== -->
+
+    <style name="SectionHeader">
+        <item name="android:textSize">18sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">@color/text_primary</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:paddingBottom">12dp</item>
     </style>
 </resources>

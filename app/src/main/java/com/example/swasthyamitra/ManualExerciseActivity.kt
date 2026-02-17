@@ -6,6 +6,7 @@ import android.view.View
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import com.example.swasthyamitra.auth.FirebaseAuthHelper
+import com.example.swasthyamitra.gamification.XPManager
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.firestore.FirebaseFirestore
 import java.text.SimpleDateFormat
@@ -211,7 +212,6 @@ class ManualExerciseActivity : AppCompatActivity() {
             updatedCompletion[today] = true
 
             val updatedData = data.copy(
-                xp = data.xp + 100,
                 completionHistory = updatedCompletion,
                 workoutHistory = updatedHistory,
                 totalWorkoutMinutes = data.totalWorkoutMinutes + duration,
@@ -220,9 +220,14 @@ class ManualExerciseActivity : AppCompatActivity() {
 
             userRef.setValue(updatedData)
                 .addOnSuccessListener {
-                    runOnUiThread {
-                        Toast.makeText(this, "Exercise logged! +100 XP & $calories kcal", Toast.LENGTH_LONG).show()
-                        finish()
+                    // Award XP via XPManager (single source of truth)
+                    val xpManager = XPManager(userId)
+                    xpManager.awardXP(XPManager.XPSource.COMPLETE_WORKOUT) { leveledUp, newLevel ->
+                        runOnUiThread {
+                            val levelMsg = if (leveledUp) " Level Up! 🎉" else ""
+                            Toast.makeText(this, "Exercise logged! +${XPManager.XPSource.COMPLETE_WORKOUT.xpAmount} XP & $calories kcal$levelMsg", Toast.LENGTH_LONG).show()
+                            finish()
+                        }
                     }
                 }
                 .addOnFailureListener { e ->

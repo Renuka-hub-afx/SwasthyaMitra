@@ -7,5 +7,10 @@ data class ExerciseLog(
     val caloriesBurned: Int = 0,
     val duration: Int = 0, // In minutes
     val timestamp: Long = 0L,
-    val date: String = "" // Format: yyyy-MM-dd
+    val date: String = "", // Format: yyyy-MM-dd
+    val intensity: String = "",
+    val source: String = "", // "Manual", "AI_Recommendation", "Search"
+    val notes: String = "",
+    val targetMuscle: String = "",
+    val bodyPart: String = ""
 )

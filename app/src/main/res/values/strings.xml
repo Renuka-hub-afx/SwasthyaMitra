@@ -5,4 +5,7 @@
     <string name="kcal_suffix">%d kcal</string>
     <string name="days_suffix">%d days</string>
     <string name="count_only">%d</string>
+    <string name="welcome_to">WELCOME\nTO</string>
+    <string name="logo_desc">SwasthyaMitra Logo</string>
+    <string name="get_started_btn">GET STARTED</string>
 </resources>

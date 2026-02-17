@@ -569,10 +569,13 @@ class FirebaseAuthHelper(private val context: Context) {
                 .add(weightData)
                 .await()
             
-            // Also update current weight in user profile
-            updateUserPhysicalStats(userId, 0.0, weight, "", 0) // Validating parameters might be needed, ignoring for now as update helper might overwrite
-            // Actually updateUserPhysicalStats requires all params. Let's just update weight field directly
-            firestore.collection("users").document(userId).update("weight", weight).await()
+            // Update only the weight field in user profile (don't overwrite height/gender/age)
+            firestore.collection("users").document(userId).update(
+                mapOf(
+                    "weight" to weight,
+                    "updatedAt" to System.currentTimeMillis()
+                )
+            ).await()
 
             Result.success(Unit)
         } catch (e: Exception) {
@@ -648,7 +651,12 @@ class FirebaseAuthHelper(private val context: Context) {
                 "caloriesBurned" to exerciseLog.caloriesBurned,
                 "duration" to exerciseLog.duration,
                 "timestamp" to exerciseLog.timestamp,
-                "date" to exerciseLog.date
+                "date" to exerciseLog.date,
+                "intensity" to exerciseLog.intensity,
+                "source" to exerciseLog.source,
+                "notes" to exerciseLog.notes,
+                "targetMuscle" to exerciseLog.targetMuscle,
+                "bodyPart" to exerciseLog.bodyPart
             )
             
             val docRef = userExerciseLogsRef.add(exerciseData).await()
@@ -684,14 +692,27 @@ class FirebaseAuthHelper(private val context: Context) {
                 .await()
             
             val logs = querySnapshot.documents.mapNotNull { doc ->
+                // Handle both Long timestamps and Firestore Timestamp objects
+                val ts = try {
+                    doc.getLong("timestamp") ?: run {
+                        // Fallback: read as Firestore Timestamp (from markAiExerciseComplete legacy)
+                        (doc.get("timestamp") as? com.google.firebase.Timestamp)?.toDate()?.time ?: 0L
+                    }
+                } catch (e: Exception) { 0L }
+
                 ExerciseLog(
                     logId = doc.id,
                     userId = doc.getString("userId") ?: "",
                     exerciseName = doc.getString("exerciseName") ?: "",
                     caloriesBurned = (doc.getLong("caloriesBurned") ?: 0).toInt(),
                     duration = (doc.getLong("duration") ?: 0).toInt(),
-                    timestamp = doc.getLong("timestamp") ?: 0L,
-                    date = doc.getString("date") ?: ""
+                    timestamp = ts,
+                    date = doc.getString("date") ?: "",
+                    intensity = doc.getString("intensity") ?: "",
+                    source = doc.getString("source") ?: "",
+                    notes = doc.getString("notes") ?: "",
+                    targetMuscle = doc.getString("targetMuscle") ?: "",
+                    bodyPart = doc.getString("bodyPart") ?: ""
                 )
             }
             
@@ -715,14 +736,25 @@ class FirebaseAuthHelper(private val context: Context) {
                 .await()
             
             val logs = querySnapshot.documents.mapNotNull { doc ->
+                val ts = try {
+                    doc.getLong("timestamp") ?: run {
+                        (doc.get("timestamp") as? com.google.firebase.Timestamp)?.toDate()?.time ?: 0L
+                    }
+                } catch (e: Exception) { 0L }
+
                 ExerciseLog(
                     logId = doc.id,
                     userId = doc.getString("userId") ?: "",
                     exerciseName = doc.getString("exerciseName") ?: "",
                     caloriesBurned = (doc.getLong("caloriesBurned") ?: 0).toInt(),
                     duration = (doc.getLong("duration") ?: 0).toInt(),
-                    timestamp = doc.getLong("timestamp") ?: 0L,
-                    date = doc.getString("date") ?: ""
+                    timestamp = ts,
+                    date = doc.getString("date") ?: "",
+                    intensity = doc.getString("intensity") ?: "",
+                    source = doc.getString("source") ?: "",
+                    notes = doc.getString("notes") ?: "",
+                    targetMuscle = doc.getString("targetMuscle") ?: "",
+                    bodyPart = doc.getString("bodyPart") ?: ""
                 )
             }
             

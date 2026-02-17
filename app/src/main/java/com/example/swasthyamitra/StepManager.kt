@@ -62,6 +62,7 @@ class StepManager(private val context: Context, private val onStepUpdate: (Int, 
         // Original implementation - backward compatible
         // 1. Start the Foreground Service (if not running)
         val serviceIntent = Intent(context, StepCounterService::class.java)
+        serviceIntent.action = StepCounterService.ACTION_START
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             context.startForegroundService(serviceIntent)
         } else {
@@ -80,9 +81,11 @@ class StepManager(private val context: Context, private val onStepUpdate: (Int, 
             isRegistered = true
         }
         
-        // 3. Trigger initial fetch from Prefs for instant UI
+        // 3. Trigger initial fetch from Prefs for instant UI (with date check)
         val prefs = context.getSharedPreferences("StepCounterPrefs", Context.MODE_PRIVATE)
-        val savedSteps = prefs.getInt("daily_steps", 0)
+        val savedDate = prefs.getString("last_date", "")
+        val today = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault()).format(java.util.Date())
+        val savedSteps = if (savedDate == today) prefs.getInt("daily_steps", 0) else 0
         val calories = savedSteps * 0.04
         dailySteps = savedSteps
         onStepUpdate(savedSteps, calories)

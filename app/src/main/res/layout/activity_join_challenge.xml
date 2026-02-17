@@ -4,8 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="@drawable/background_main"
-    android:padding="16dp">
+    android:background="@drawable/background_main">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -26,17 +25,20 @@
                 android:layout_width="40dp"
                 android:layout_height="40dp"
                 android:background="?attr/selectableItemBackgroundBorderless"
-                android:src="@drawable/ic_back"
+                android:contentDescription="Go back"
+                android:padding="8dp"
                 android:scaleType="centerInside"
-                android:padding="8dp"/>
+                android:src="@drawable/ic_back"
+                app:tint="@color/white" />
 
             <TextView
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
+                android:fontFamily="sans-serif-medium"
                 android:gravity="center"
                 android:text="Join Challenge"
-                android:textColor="#FFFFFF"
+                android:textColor="@color/white"
                 android:textSize="20sp"
                 android:textStyle="bold" />
 
@@ -61,7 +63,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="⚔️"
+                android:text="&#x2694;&#xFE0F;"
                 android:textSize="64sp"
                 android:layout_marginTop="32dp"
                 android:layout_marginBottom="24dp" />
@@ -70,9 +72,10 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Enter the challenge code to join"
-                android:textSize="16sp"
-                android:textColor="#666666"
+                android:textSize="15sp"
+                android:textColor="@color/text_secondary"
                 android:gravity="center"
+                android:fontFamily="sans-serif"
                 android:layout_marginBottom="32dp" />
 
             <com.google.android.material.textfield.TextInputLayout
@@ -81,29 +84,29 @@
                 android:hint="Challenge Code"
                 style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                 android:layout_marginBottom="32dp"
-                app:boxStrokeColor="#7B2CBF"
-                app:hintTextColor="#7B2CBF">
+                app:boxStrokeColor="@color/purple_500"
+                app:hintTextColor="@color/purple_500">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/etChallengeCode"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:inputType="textCapCharacters"
+                    android:textSize="15sp"
                     android:maxLength="6" />
             </com.google.android.material.textfield.TextInputLayout>
 
             <Button
                 android:id="@+id/btnJoinChallenge"
                 android:layout_width="match_parent"
-                android:layout_height="60dp"
+                android:layout_height="56dp"
                 android:text="Join Challenge"
-                android:textSize="18sp"
+                android:textSize="16sp"
                 android:textStyle="bold"
-                android:backgroundTint="#E91E63"
-                android:textColor="@android:color/white"
-                app:cornerRadius="12dp" />
-
+                android:textColor="@color/white"
+                android:background="@drawable/button_background"
+                android:stateListAnimator="@null"
+                app:backgroundTint="@null" />
         </LinearLayout>
     </ScrollView>
-
 </LinearLayout>

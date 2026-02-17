@@ -161,13 +161,21 @@ class AISmartDietActivity : AppCompatActivity() {
             // Parse protein value (remove 'g' suffix if present)
             val proteinValue = meal.protein.replace("g", "").trim().toDoubleOrNull() ?: 0.0
             
+            // Estimate carbs and fat from remaining calories after protein
+            // Protein = 4 cal/g, Carbs = 4 cal/g, Fat = 9 cal/g
+            val proteinCalories = proteinValue * 4
+            val remainingCalories = (meal.calories - proteinCalories).coerceAtLeast(0.0)
+            // Approximate split: 60% carbs, 40% fat of remaining calories
+            val estimatedCarbs = (remainingCalories * 0.60 / 4)
+            val estimatedFat = (remainingCalories * 0.40 / 9)
+            
             val foodLogData = hashMapOf(
                 "userId" to userId,
                 "foodName" to meal.item,
                 "calories" to meal.calories,
                 "protein" to proteinValue,
-                "carbs" to 0.0,  // Not provided by AI, default to 0
-                "fat" to 0.0,     // Not provided by AI, default to 0
+                "carbs" to estimatedCarbs,
+                "fat" to estimatedFat,
                 "mealType" to mealType,
                 "timestamp" to System.currentTimeMillis(),
                 "date" to currentDate,

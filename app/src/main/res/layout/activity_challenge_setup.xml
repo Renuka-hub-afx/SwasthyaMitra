@@ -6,39 +6,39 @@
     android:orientation="vertical"
     android:background="@drawable/background_main">
 
-    <!-- Header -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@drawable/button_background"
         android:elevation="4dp"
+        android:gravity="center_vertical"
         android:orientation="horizontal"
-        android:padding="16dp"
-        android:gravity="center_vertical">
+        android:padding="16dp">
 
         <ImageButton
             android:id="@+id/btnBack"
             android:layout_width="40dp"
             android:layout_height="40dp"
             android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Go back"
+            android:padding="8dp"
             android:src="@drawable/ic_back"
-            android:contentDescription="Back"
-            app:tint="#FFFFFF" />
+            app:tint="@color/white" />
 
         <TextView
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
+            android:fontFamily="sans-serif-medium"
+            android:gravity="center"
             android:text="Create Challenge"
-            android:textColor="#FFFFFF"
+            android:textColor="@color/white"
             android:textSize="20sp"
-            android:textStyle="bold"
-            android:gravity="center"/>
+            android:textStyle="bold" />
 
         <View
             android:layout_width="40dp"
             android:layout_height="40dp" />
-
     </LinearLayout>
 
     <ScrollView
@@ -57,32 +57,35 @@
                 android:layout_height="wrap_content"
                 android:text="Challenge Name"
                 android:textStyle="bold"
-                android:textColor="#333333"
-                android:layout_marginBottom="8dp"/>
+                android:textColor="@color/text_primary"
+                android:textSize="14sp"
+                android:fontFamily="sans-serif-medium"
+                android:layout_marginBottom="8dp" />
 
             <EditText
                 android:id="@+id/etChallengeName"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="Enter name"
-                android:padding="12dp"
-                android:background="@drawable/shape_edit_text_bg"
+                android:hint="Enter challenge name"
+                android:padding="16dp"
+                android:background="@drawable/edittext_background"
+                android:textColor="@color/text_primary"
+                android:textColorHint="@color/text_hint"
+                android:textSize="15sp"
                 android:minHeight="48dp"
-                android:layout_marginBottom="24dp"/>
-
-            <!-- Placeholder for other fields if needed, simplified for now -->
+                android:layout_marginBottom="32dp" />
 
             <Button
                 android:id="@+id/btnCreateChallenge"
                 android:layout_width="match_parent"
-                android:layout_height="60dp"
+                android:layout_height="56dp"
                 android:text="Create Challenge"
                 android:textStyle="bold"
+                android:textSize="16sp"
+                android:textColor="@color/white"
                 android:background="@drawable/button_background"
-                app:backgroundTint="@null" 
-                android:textColor="#FFFFFF"
-                app:cornerRadius="12dp"/>
-
+                android:stateListAnimator="@null"
+                app:backgroundTint="@null" />
         </LinearLayout>
     </ScrollView>
 </LinearLayout>

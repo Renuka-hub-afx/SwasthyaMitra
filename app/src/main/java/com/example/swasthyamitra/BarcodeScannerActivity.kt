@@ -29,6 +29,8 @@ class BarcodeScannerActivity : AppCompatActivity() {
     private lateinit var binding: ActivityBarcodeScannerBinding
     private lateinit var cameraExecutor: ExecutorService
     private var camera: Camera? = null
+    @Volatile
+    private var isProcessingBarcode = false  // Debounce flag
     
     companion object {
         private const val CAMERA_PERMISSION_CODE = 100
@@ -132,9 +134,13 @@ class BarcodeScannerActivity : AppCompatActivity() {
 
 
     private fun processBarcode(barcodes: List<Barcode>) {
-        if (barcodes.isNotEmpty()) {
+        if (barcodes.isNotEmpty() && !isProcessingBarcode) {
+            isProcessingBarcode = true  // Lock: prevent duplicate scans
             val barcode = barcodes[0]
-            val barcodeValue = barcode.displayValue ?: return
+            val barcodeValue = barcode.displayValue ?: run {
+                isProcessingBarcode = false
+                return
+            }
 
             runOnUiThread {
                 binding.tvBarcodeResult.text = "Barcode: $barcodeValue"

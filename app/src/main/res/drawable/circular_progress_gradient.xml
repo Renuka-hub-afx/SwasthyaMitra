@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Circular Progress Bar with Button Gradient Colors -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Background Circle (Gray) -->
+    <item>
+        <shape android:shape="ring"
+            android:innerRadiusRatio="2.5"
+            android:thickness="6dp"
+            android:useLevel="false">
+            <solid android:color="@color/gray_100" />
+        </shape>
+    </item>
+    
+    <!-- Progress Circle (Purple to Pink Gradient) -->
+    <item>
+        <rotate
+            android:fromDegrees="0"
+            android:toDegrees="360">
+            <shape android:shape="ring"
+                android:innerRadiusRatio="2.5"
+                android:thickness="6dp"
+                android:useLevel="true">
+                <gradient
+                    android:type="sweep"
+                    android:startColor="@color/button_start"
+                    android:centerColor="@color/pink_500"
+                    android:endColor="@color/button_end"
+                    android:angle="0" />
+            </shape>
+        </rotate>
+    </item>
+</layer-list>

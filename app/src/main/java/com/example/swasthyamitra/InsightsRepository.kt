@@ -114,20 +114,29 @@ class InsightsRepository(private val authHelper: FirebaseAuthHelper, private val
     
     private suspend fun getStepsForDate(date: String): Int {
         return try {
-            val prefs = authHelper.getContext().getSharedPreferences("StepCounterPrefs", android.content.Context.MODE_PRIVATE)
-            val savedDate = prefs.getString("last_date", "")
             val today = dateFormat.format(Date())
 
-            val steps = if (date == today && date == savedDate) {
-                prefs.getInt("daily_steps", 0)
-            } else {
-                // Try to get from Realtime Database
-                val db = FirebaseDatabase.getInstance("https://swasthyamitra-ded44-default-rtdb.asia-southeast1.firebasedatabase.app").reference
-                val snapshot = db.child("dailyActivity").child(userId).child(date).child("steps").get().await()
-                snapshot.getValue(Long::class.java)?.toInt() ?: 0
+            // For today, try SharedPreferences first (fastest, written by step services)
+            if (date == today) {
+                val prefs = authHelper.getContext().getSharedPreferences("StepCounterPrefs", android.content.Context.MODE_PRIVATE)
+                val savedDate = prefs.getString("last_date", "")
+                if (savedDate == today) {
+                    val steps = prefs.getInt("daily_steps", 0)
+                    if (steps > 0) {
+                        Log.d("InsightsRepository", "Steps for $date (from prefs): $steps")
+                        return steps
+                    }
+                }
             }
 
-            Log.d("InsightsRepository", "Steps for $date: $steps")
+            // Fallback: query Firestore daily_steps collection (works for any date)
+            val defaultDb = FirebaseFirestore.getInstance()
+            val doc = defaultDb.collection("users").document(userId)
+                .collection("daily_steps").document(date)
+                .get().await()
+            val steps = doc.getLong("steps")?.toInt() ?: 0
+
+            Log.d("InsightsRepository", "Steps for $date (from Firestore): $steps")
             steps
         } catch (e: Exception) {
             Log.e("InsightsRepository", "Error getting steps for $date", e)

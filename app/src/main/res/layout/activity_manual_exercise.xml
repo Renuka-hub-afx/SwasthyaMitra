@@ -6,7 +6,6 @@
     android:orientation="vertical"
     android:background="@drawable/background_main">
 
-    <!-- Header -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -26,25 +25,26 @@
                 android:layout_width="40dp"
                 android:layout_height="40dp"
                 android:background="?attr/selectableItemBackgroundBorderless"
-                android:src="@drawable/ic_back"
-                app:tint="#FFFFFF"
+                android:contentDescription="Go back"
+                android:padding="8dp"
                 android:scaleType="centerInside"
-                android:padding="8dp"/>
+                android:src="@drawable/ic_back"
+                app:tint="@color/white" />
 
             <TextView
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
+                android:fontFamily="sans-serif-medium"
                 android:gravity="center"
                 android:text="Log Manual Exercise"
-                android:textColor="#FFFFFF"
-                android:textSize="22sp"
+                android:textColor="@color/white"
+                android:textSize="20sp"
                 android:textStyle="bold" />
 
             <View
                 android:layout_width="40dp"
                 android:layout_height="40dp" />
-
         </LinearLayout>
     </LinearLayout>
 
@@ -52,23 +52,24 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
+        android:clipToPadding="false"
         android:fillViewport="true">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="16dp">
+            android:padding="20dp">
 
-            <!-- Exercise Name -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Exercise Name"
-                android:textColor="#333333"
+                android:textColor="@color/text_primary"
                 android:textSize="14sp"
                 android:textStyle="bold"
-                android:layout_marginTop="8dp"/>
+                android:fontFamily="sans-serif-medium"
+                android:layout_marginTop="8dp" />
 
             <EditText
                 android:id="@+id/etExerciseName"
@@ -76,19 +77,21 @@
                 android:layout_height="50dp"
                 android:background="@drawable/edittext_background"
                 android:hint="e.g., Running, Push-ups, Yoga"
+                android:textColorHint="@color/text_hint"
                 android:padding="12dp"
-                android:textSize="16sp"
+                android:textColor="@color/text_primary"
+                android:textSize="15sp"
                 android:layout_marginTop="8dp"
-                android:layout_marginBottom="16dp"/>
+                android:layout_marginBottom="16dp" />
 
-            <!-- Time Selection -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Time Performed"
-                android:textColor="#333333"
+                android:textColor="@color/text_primary"
                 android:textSize="14sp"
-                android:textStyle="bold"/>
+                android:textStyle="bold"
+                android:fontFamily="sans-serif-medium" />
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -108,8 +111,8 @@
                     android:paddingStart="12dp"
                     android:paddingEnd="12dp"
                     android:text="00:00"
-                    android:textSize="16sp"
-                    android:textColor="#333333"/>
+                    android:textSize="15sp"
+                    android:textColor="@color/text_primary" />
 
                 <Button
                     android:id="@+id/btnSelectTime"
@@ -117,19 +120,21 @@
                     android:layout_height="50dp"
                     android:text="Select Time"
                     android:background="@drawable/button_background"
-                    android:textColor="#FFFFFF"
-                    android:layout_marginStart="8dp"/>
-
+                    android:textColor="@color/white"
+                    android:textSize="13sp"
+                    android:stateListAnimator="@null"
+                    app:backgroundTint="@null"
+                    android:layout_marginStart="8dp" />
             </LinearLayout>
 
-            <!-- Duration -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Duration (minutes)"
-                android:textColor="#333333"
+                android:textColor="@color/text_primary"
                 android:textSize="14sp"
-                android:textStyle="bold"/>
+                android:textStyle="bold"
+                android:fontFamily="sans-serif-medium" />
 
             <EditText
                 android:id="@+id/etDuration"
@@ -137,20 +142,22 @@
                 android:layout_height="50dp"
                 android:background="@drawable/edittext_background"
                 android:hint="e.g., 30"
+                android:textColorHint="@color/text_hint"
                 android:inputType="number"
                 android:padding="12dp"
-                android:textSize="16sp"
+                android:textColor="@color/text_primary"
+                android:textSize="15sp"
                 android:layout_marginTop="8dp"
-                android:layout_marginBottom="16dp"/>
+                android:layout_marginBottom="16dp" />
 
-            <!-- Intensity -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Intensity Level"
-                android:textColor="#333333"
+                android:textColor="@color/text_primary"
                 android:textSize="14sp"
-                android:textStyle="bold"/>
+                android:textStyle="bold"
+                android:fontFamily="sans-serif-medium" />
 
             <Spinner
                 android:id="@+id/spinnerIntensity"
@@ -159,16 +166,16 @@
                 android:background="@drawable/edittext_background"
                 android:padding="12dp"
                 android:layout_marginTop="8dp"
-                android:layout_marginBottom="16dp"/>
+                android:layout_marginBottom="16dp" />
 
-            <!-- Calories -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Calories Burned"
-                android:textColor="#333333"
+                android:textColor="@color/text_primary"
                 android:textSize="14sp"
-                android:textStyle="bold"/>
+                android:textStyle="bold"
+                android:fontFamily="sans-serif-medium" />
 
             <EditText
                 android:id="@+id/etCalories"
@@ -176,20 +183,22 @@
                 android:layout_height="50dp"
                 android:background="@drawable/edittext_background"
                 android:hint="e.g., 200 (auto-calculated)"
+                android:textColorHint="@color/text_hint"
                 android:inputType="number"
                 android:padding="12dp"
-                android:textSize="16sp"
+                android:textColor="@color/text_primary"
+                android:textSize="15sp"
                 android:layout_marginTop="8dp"
-                android:layout_marginBottom="16dp"/>
+                android:layout_marginBottom="16dp" />
 
-            <!-- Notes (Optional) -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Notes (Optional)"
-                android:textColor="#333333"
+                android:textColor="@color/text_primary"
                 android:textSize="14sp"
-                android:textStyle="bold"/>
+                android:textStyle="bold"
+                android:fontFamily="sans-serif-medium" />
 
             <EditText
                 android:id="@+id/etNotes"
@@ -197,45 +206,50 @@
                 android:layout_height="100dp"
                 android:background="@drawable/edittext_background"
                 android:hint="How did it feel? Any observations?"
+                android:textColorHint="@color/text_hint"
                 android:gravity="top|start"
                 android:padding="12dp"
-                android:textSize="16sp"
+                android:textColor="@color/text_primary"
+                android:textSize="15sp"
                 android:layout_marginTop="8dp"
-                android:layout_marginBottom="24dp"/>
+                android:layout_marginBottom="24dp" />
 
-            <!-- Action Buttons -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:gravity="center"
-                android:layout_marginTop="16dp">
+                android:layout_marginTop="8dp"
+                android:layout_marginBottom="24dp">
 
                 <Button
                     android:id="@+id/btnCancel"
                     android:layout_width="0dp"
-                    android:layout_height="50dp"
+                    android:layout_height="52dp"
                     android:layout_weight="1"
                     android:text="Cancel"
-                    android:background="@android:color/darker_gray"
-                    android:textColor="#FFFFFF"
-                    android:layout_marginEnd="8dp"/>
+                    android:background="@drawable/button_background"
+                    android:textColor="@color/white"
+                    android:textSize="15sp"
+                    android:textStyle="bold"
+                    android:stateListAnimator="@null"
+                    app:backgroundTint="@null"
+                    android:layout_marginEnd="8dp" />
 
                 <Button
                     android:id="@+id/btnSaveExercise"
                     android:layout_width="0dp"
-                    android:layout_height="50dp"
+                    android:layout_height="52dp"
                     android:layout_weight="1"
                     android:text="Save Exercise"
                     android:background="@drawable/button_background"
-                    android:textColor="#FFFFFF"
-                    android:layout_marginStart="8dp"/>
-
+                    android:textColor="@color/white"
+                    android:textSize="15sp"
+                    android:textStyle="bold"
+                    android:stateListAnimator="@null"
+                    app:backgroundTint="@null"
+                    android:layout_marginStart="8dp" />
             </LinearLayout>
-
         </LinearLayout>
-
     </ScrollView>
-
 </LinearLayout>
-

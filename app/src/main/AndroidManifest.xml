@@ -13,6 +13,7 @@
     <uses-permission android:name="android.permission.HIGH_SAMPLING_RATE_SENSORS" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
@@ -205,6 +206,16 @@
             android:exported="false"
             android:screenOrientation="portrait" />
 
+        <activity
+            android:name=".MapActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name=".StepSessionHistoryActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+
 
         <activity
             android:name=".ui.hydration.HydrationActivity"
@@ -234,6 +245,12 @@
             android:enabled="true"
             android:exported="false"
             android:foregroundServiceType="health" />
+
+        <service
+            android:name=".services.UnifiedStepTrackingService"
+            android:enabled="true"
+            android:exported="false"
+            android:foregroundServiceType="location|health" />
 
         <receiver
             android:name=".services.ActivityTransitionReceiver"

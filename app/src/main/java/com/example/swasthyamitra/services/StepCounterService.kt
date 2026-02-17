@@ -5,6 +5,7 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.app.Service
+import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.os.IBinder
@@ -28,10 +29,12 @@ class StepCounterService : Service() {
     private var currentSteps = 0
     private var currentCalories = 0
     private var sessionStartTime = 0L
+    private var sessionStartDate = ""  // Track the date when session started
     private var saveTimer: Timer? = null
     
     private val db = FirebaseFirestore.getInstance()
     private val auth = FirebaseAuth.getInstance()
+    private val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
     
     companion object {
         private const val NOTIFICATION_ID = 1001
@@ -44,6 +47,7 @@ class StepCounterService : Service() {
         
         const val ACTION_START = "ACTION_START"
         const val ACTION_STOP = "ACTION_STOP"
+        const val ACTION_UPDATE_STEPS = "com.example.swasthyamitra.step.UPDATE_STEPS"
     }
 
     override fun onCreate() {
@@ -66,7 +70,11 @@ class StepCounterService : Service() {
             return
         }
         
+        // IMMEDIATE REQUIREMENT: Call startForeground within 5 seconds of service start
+        startForeground(NOTIFICATION_ID, createNotification())
+        
         sessionStartTime = System.currentTimeMillis()
+        sessionStartDate = dateFormat.format(Date())
         
         // Fetch existing step data from Firestore for today
         fetchTodayStepsFromFirestore { existingSteps, existingCalories ->
@@ -80,8 +88,8 @@ class StepCounterService : Service() {
             
             Log.d("StepCounterService", "Resuming from Firestore: $currentSteps steps, $currentCalories kcal")
             
-            // Start foreground service with notification
-            startForeground(NOTIFICATION_ID, createNotification())
+            // Update notification with actual data
+            updateNotification()
             
             // Initialize step tracker with offset
             val baseSteps = currentSteps
@@ -90,9 +98,18 @@ class StepCounterService : Service() {
                 currentSteps = baseSteps + newSteps
                 currentCalories = com.example.swasthyamitra.utils.CalorieCalculator.calculateFromStepsInt(currentSteps)
                 
-                // Broadcast to UI
+                // Broadcast to UI (LiveData)
                 stepsLive.postValue(currentSteps)
                 caloriesLive.postValue(currentCalories)
+                
+                // Save to SharedPreferences for offline access
+                saveToSharedPreferences()
+                
+                // Broadcast via Intent (for StepManager)
+                val broadcastIntent = Intent(ACTION_UPDATE_STEPS)
+                broadcastIntent.putExtra("steps", currentSteps)
+                broadcastIntent.putExtra("calories", currentCalories.toDouble())
+                sendBroadcast(broadcastIntent)
                 
                 // Update notification
                 updateNotification()
@@ -122,7 +139,7 @@ class StepCounterService : Service() {
             return
         }
         
-        val today = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+        val today = dateFormat.format(Date())
         val docRef = db.collection("users").document(userId)
             .collection("daily_steps").document(today)
         
@@ -174,18 +191,40 @@ class StepCounterService : Service() {
 
     private fun saveToFirestore() {
         val userId = auth.currentUser?.uid ?: return
-        val today = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+        val today = dateFormat.format(Date())
         
         if (currentSteps == 0) return // Nothing to save
         
+        // Handle cross-midnight: if the date has changed since session started,
+        // we must NOT carry old-day steps into the new day's document.
+        if (sessionStartDate.isNotEmpty() && today != sessionStartDate) {
+            Log.d("StepCounterService", "Date changed from $sessionStartDate to $today — resetting for new day")
+            // Save final count for old day first (using the old date)
+            saveForDate(userId, sessionStartDate, currentSteps, currentCalories)
+            // Reset for new day
+            currentSteps = 0
+            currentCalories = 0
+            sessionStartDate = today
+            sessionStartTime = System.currentTimeMillis()
+            stepsLive.postValue(0)
+            caloriesLive.postValue(0)
+            saveToSharedPreferences()
+            return
+        }
+        
+        saveForDate(userId, today, currentSteps, currentCalories)
+        saveToSharedPreferences()
+    }
+    
+    private fun saveForDate(userId: String, date: String, steps: Int, calories: Int) {
         val docRef = db.collection("users").document(userId)
-            .collection("daily_steps").document(today)
+            .collection("daily_steps").document(date)
         
         // Save absolute values (not increment) since we resume from existing data
         val data = hashMapOf(
-            "date" to today,
-            "steps" to currentSteps,  // Absolute value
-            "calories" to currentCalories,  // Absolute value
+            "date" to date,
+            "steps" to steps,  // Absolute value
+            "calories" to calories,  // Absolute value
             "lastUpdated" to FieldValue.serverTimestamp()
         )
         
@@ -193,19 +232,35 @@ class StepCounterService : Service() {
         val session = hashMapOf(
             "startTime" to sessionStartTime,
             "endTime" to System.currentTimeMillis(),
-            "steps" to currentSteps,
-            "calories" to currentCalories
+            "steps" to steps,
+            "calories" to calories
         )
         
         docRef.set(data, SetOptions.merge())
             .addOnSuccessListener {
                 // Add session to array
                 docRef.update("sessions", FieldValue.arrayUnion(session))
-                Log.d("StepCounterService", "Saved to Firestore: $currentSteps steps, $currentCalories kcal")
+                Log.d("StepCounterService", "Saved to Firestore ($date): $steps steps, $calories kcal")
             }
             .addOnFailureListener { e ->
                 Log.e("StepCounterService", "Failed to save to Firestore", e)
             }
+    }
+    
+    /**
+     * Save current step data to SharedPreferences with date tracking.
+     * Used by StepManager, InsightsRepository, and GamificationActivity for instant offline access.
+     */
+    private fun saveToSharedPreferences() {
+        val today = dateFormat.format(Date())
+        val prefs = getSharedPreferences("StepCounterPrefs", Context.MODE_PRIVATE)
+        prefs.edit().apply {
+            putInt("daily_steps", currentSteps)
+            putInt("daily_calories", currentCalories)
+            putString("last_date", today)
+            putLong("last_updated", System.currentTimeMillis())
+            apply()
+        }
     }
 
     private fun createNotificationChannel() {

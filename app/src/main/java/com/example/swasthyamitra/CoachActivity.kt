@@ -9,6 +9,10 @@ import android.os.Bundle
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.lifecycleScope
+import com.example.swasthyamitra.data.repository.HydrationRepository
+import com.google.firebase.auth.FirebaseAuth
+import kotlinx.coroutines.launch
 
 class CoachActivity : AppCompatActivity(), SensorEventListener {
 
@@ -28,7 +32,7 @@ class CoachActivity : AppCompatActivity(), SensorEventListener {
         tvHydration = findViewById(R.id.tvHydration)
 
         setupSensors()
-        checkHydrationLogic(28, 6.0) 
+        loadRealHydrationData()
     }
 
     private fun setupSensors() {
@@ -69,18 +73,63 @@ class CoachActivity : AppCompatActivity(), SensorEventListener {
         }
     }
 
-    private fun checkHydrationLogic(temperature: Int, distanceKm: Double) {
-        val message = if (temperature > 30 && distanceKm >= 5) {
-            "It's hot ($temperature°C) & you ran $distanceKm km. Drink 500ml water now!"
-        } else if (temperature > 25 && distanceKm >= 5) {
-             "Good run! Stay hydrated. Drink ~250ml water."
-        } else {
-             "Hydration: Remember to drink water regularly throughout the day."
+    /**
+     * Load real hydration data from Firebase and give contextual advice
+     */
+    private fun loadRealHydrationData() {
+        val userId = FirebaseAuth.getInstance().currentUser?.uid
+        if (userId == null) {
+            tvHydration.text = "Hydration: Please log in to see your data."
+            return
         }
-        
-        tvHydration.text = message
-        if (message.contains("Drink")) {
-            tvHydration.setTextColor(ContextCompat.getColor(this, android.R.color.holo_blue_bright))
+
+        lifecycleScope.launch {
+            try {
+                val hydrationRepo = HydrationRepository()
+                val waterResult = hydrationRepo.getTodayWaterTotal(userId)
+                val waterMl = waterResult.getOrDefault(0)
+                val dailyGoal = 2000
+
+                val message = when {
+                    waterMl >= dailyGoal -> "💧 Great job! You've hit your water goal ($waterMl ml). Stay hydrated!"
+                    waterMl >= dailyGoal * 0.75 -> "💧 Almost there! $waterMl / $dailyGoal ml. Just a few more glasses!"
+                    waterMl >= dailyGoal * 0.5 -> "💧 You're halfway ($waterMl / $dailyGoal ml). Keep drinking water!"
+                    waterMl > 0 -> "💧 $waterMl / $dailyGoal ml so far. Try to drink more water today!"
+                    else -> "💧 No water logged today. Remember to drink at least $dailyGoal ml!"
+                }
+
+                runOnUiThread {
+                    tvHydration.text = message
+                    if (waterMl >= dailyGoal) {
+                        tvHydration.setTextColor(ContextCompat.getColor(this@CoachActivity, android.R.color.holo_green_dark))
+                    } else if (waterMl > 0) {
+                        tvHydration.setTextColor(ContextCompat.getColor(this@CoachActivity, android.R.color.holo_blue_bright))
+                    }
+                }
+            } catch (e: Exception) {
+                runOnUiThread {
+                    tvHydration.text = "Hydration: Remember to drink water regularly throughout the day."
+                }
+            }
         }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        // Unregister sensor listener to prevent memory leak
+        sensorManager.unregisterListener(this)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // Re-register sensor listener
+        if (accelerometer != null) {
+            sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_UI)
+        }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        sensorManager.unregisterListener(this)
     }
 }

@@ -402,14 +402,16 @@ class EnhancedProgressDashboardActivity : AppCompatActivity() {
                 }
 
                 // Stage 3: Sleep Saint (7 nights of good sleep)
-                val sevenDaysAgo = Calendar.getInstance().apply {
+                val sevenDaysAgoCal = Calendar.getInstance().apply {
                     add(Calendar.DAY_OF_YEAR, -7)
-                }.timeInMillis
+                }
+                val sdf = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
+                val sevenDaysAgoDate = sdf.format(sevenDaysAgoCal.time)
 
                 val sleepLogs = firestore.collection("users")
                     .document(userId)
                     .collection("sleep_logs")
-                    .whereGreaterThan("timestamp", sevenDaysAgo)
+                    .whereGreaterThanOrEqualTo("date", sevenDaysAgoDate)
                     .get()
                     .await()
 
@@ -428,10 +430,13 @@ class EnhancedProgressDashboardActivity : AppCompatActivity() {
                 }
 
                 // Stage 4: Zen Master (7 days of mood tracking)
-                if (unlockedStages >= 3) {
+                val moodDays = getActivityCount(firestore, userId, "mood_logs", 7)
+                if (moodDays >= 7 && unlockedStages >= 3) {
                     unlockStage(4, "🧘", "#E1BEE7")
                     unlockedStages++
                     currentStage = 5
+                } else if (unlockedStages >= 3) {
+                    binding.tvCurrentActivity.text = "$moodDays / 7 mood logs"
                 }
 
                 // Stage 5: Nutrition Ninja (21 meals logged)
@@ -494,8 +499,32 @@ class EnhancedProgressDashboardActivity : AppCompatActivity() {
         days: Int
     ): Int {
         return try {
-            // Simplified: return 0 for now, can be implemented with step tracking data
-            0
+            // Step data is in the DEFAULT Firestore instance, not "renu"
+            val defaultDb = com.google.firebase.firestore.FirebaseFirestore.getInstance()
+            val sdf = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
+            val calendar = java.util.Calendar.getInstance()
+            var qualifyingDays = 0
+
+            for (i in 0 until days) {
+                val dateStr = sdf.format(calendar.time)
+                val doc = defaultDb.collection("users")
+                    .document(userId)
+                    .collection("daily_steps")
+                    .document(dateStr)
+                    .get()
+                    .await()
+
+                if (doc.exists()) {
+                    val steps = doc.getLong("totalSteps")?.toInt()
+                        ?: doc.getLong("steps")?.toInt()
+                        ?: 0
+                    if (steps >= targetSteps) {
+                        qualifyingDays++
+                    }
+                }
+                calendar.add(java.util.Calendar.DAY_OF_YEAR, -1)
+            }
+            qualifyingDays
         } catch (e: Exception) {
             0
         }

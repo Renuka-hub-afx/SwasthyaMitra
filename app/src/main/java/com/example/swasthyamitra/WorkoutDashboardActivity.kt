@@ -135,25 +135,43 @@ class WorkoutDashboardActivity : AppCompatActivity() {
     }
     
     
-    // Observe StepCounterService LiveData for cross-UI synchronization
+    // Observe both UnifiedStepTrackingService and legacy StepCounterService
     private fun observeStepCounterService() {
-        // Observe steps from service
-        com.example.swasthyamitra.services.StepCounterService.stepsLive.observe(this) { steps ->
-            currentSteps = steps
-            tvSteps.text = "$steps"
-            
-            // Calculate and update calories using centralized calculator
-            val calories = com.example.swasthyamitra.utils.CalorieCalculator.calculateFromSteps(steps)
-            burnedCalories = calories
-            tvCaloriesBurned.text = com.example.swasthyamitra.utils.CalorieCalculator.formatCaloriesWithSuffix(calories, "kcal burned")
-            
-            Log.d("WorkoutDashboard", "Steps updated: $steps, Calories: $calories")
+        // Primary: Observe UnifiedStepTrackingService (GPS-enhanced)
+        com.example.swasthyamitra.services.UnifiedStepTrackingService.stepsLive.observe(this) { steps ->
+            if (steps > 0) {
+                currentSteps = steps
+                tvSteps.text = "$steps"
+                Log.d("WorkoutDashboard", "Unified steps: $steps")
+            }
         }
-        
-        // Observe calories directly from service (already calculated)
-        com.example.swasthyamitra.services.StepCounterService.caloriesLive.observe(this) { calories ->
-            burnedCalories = calories.toDouble()
-            tvCaloriesBurned.text = com.example.swasthyamitra.utils.CalorieCalculator.formatCaloriesWithSuffix(calories.toDouble(), "kcal burned")
+        com.example.swasthyamitra.services.UnifiedStepTrackingService.caloriesLive.observe(this) { calories ->
+            if (calories > 0) {
+                burnedCalories = calories.toDouble()
+                tvCaloriesBurned.text = com.example.swasthyamitra.utils.CalorieCalculator.formatCaloriesWithSuffix(calories.toDouble(), "kcal burned")
+            }
+        }
+        // Update button states based on unified service
+        com.example.swasthyamitra.services.UnifiedStepTrackingService.isTrackingLive.observe(this) { tracking ->
+            btnStartStepTracking.isEnabled = !tracking
+            btnStopStepTracking.isEnabled = tracking
+            if (tracking) {
+                btnStartStepTracking.text = "\uD83D\uDDFA\uFE0F View Live Map"
+            } else {
+                btnStartStepTracking.text = "\u25B6 Start Tracking"
+            }
+        }
+
+        // Fallback: Observe legacy StepCounterService
+        com.example.swasthyamitra.services.StepCounterService.stepsLive.observe(this) { steps ->
+            val unifiedSteps = com.example.swasthyamitra.services.UnifiedStepTrackingService.stepsLive.value ?: 0
+            if (unifiedSteps == 0 && steps > 0) {
+                currentSteps = steps
+                tvSteps.text = "$steps"
+                val calories = com.example.swasthyamitra.utils.CalorieCalculator.calculateFromSteps(steps)
+                burnedCalories = calories
+                tvCaloriesBurned.text = com.example.swasthyamitra.utils.CalorieCalculator.formatCaloriesWithSuffix(calories, "kcal burned")
+            }
         }
     }
     
@@ -286,18 +304,25 @@ class WorkoutDashboardActivity : AppCompatActivity() {
             finish()
         }
         
-        // Step Tracking Control
+        // Step Tracking Control — launches unified GPS + Step tracker
         btnStartStepTracking.setOnClickListener {
-            startStepCounterService()
-            btnStartStepTracking.isEnabled = false
-            btnStopStepTracking.isEnabled = true
-            Toast.makeText(this, "Step tracking started! Walk to count steps", Toast.LENGTH_SHORT).show()
+            val unifiedTracking = com.example.swasthyamitra.services.UnifiedStepTrackingService.isTrackingLive.value ?: false
+            if (unifiedTracking) {
+                // Already tracking — open live map
+                startActivity(Intent(this, MapActivity::class.java))
+            } else {
+                // Launch MapActivity which starts UnifiedStepTrackingService
+                val intent = Intent(this, MapActivity::class.java)
+                intent.putExtra("AUTO_START", true)
+                startActivity(intent)
+            }
         }
         
         btnStopStepTracking.setOnClickListener {
-            stopStepCounterService()
-            btnStartStepTracking.isEnabled = true
-            btnStopStepTracking.isEnabled = false
+            // Stop the unified service
+            val intent = Intent(this, com.example.swasthyamitra.services.UnifiedStepTrackingService::class.java)
+            intent.action = com.example.swasthyamitra.services.UnifiedStepTrackingService.ACTION_STOP
+            startService(intent)
             Toast.makeText(this, "Step tracking stopped", Toast.LENGTH_SHORT).show()
         }
         
@@ -475,8 +500,10 @@ class WorkoutDashboardActivity : AppCompatActivity() {
             "bodyPart" to exercise.bodyPart,
             "caloriesBurned" to exercise.estimatedCalories,
             "duration" to 15, // Default or parse from string
-            "timestamp" to com.google.firebase.Timestamp.now(),
-            "source" to "AI_Recommendation"
+            "timestamp" to System.currentTimeMillis(),
+            "source" to "AI_Recommendation",
+            "intensity" to exercise.intensity,
+            "notes" to ""
         )
         
         // Use "renu" Firestore database
@@ -521,7 +548,6 @@ class WorkoutDashboardActivity : AppCompatActivity() {
             updatedCompletion[today] = true
 
             val updatedData = data.copy(
-                xp = data.xp + 150, // Bonus XP for AI task
                 completionHistory = updatedCompletion,
                 workoutHistory = updatedHistory,
                 totalWorkoutMinutes = data.totalWorkoutMinutes + session.duration,
@@ -532,14 +558,14 @@ class WorkoutDashboardActivity : AppCompatActivity() {
                 .addOnSuccessListener {
                     Log.d("WorkoutDashboard", "Exercise saved to RTDB: ${exercise.name}")
 
-                    // PHASE 2.2: Award XP for AI Exercise (+75 XP)
+                    // Award XP only via XPManager (single source of truth, +75 XP)
                     val xpManager = XPManager(userId)
                     xpManager.awardXP(XPManager.XPSource.AI_EXERCISE) { leveledUp, newLevel ->
                         runOnUiThread {
                             if (leveledUp) {
                                 showLevelUpToast(newLevel)
                             }
-                            Toast.makeText(this, "✅ Saved! +150 XP & ${exercise.estimatedCalories} kcal | +75 XP!", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(this, "✅ Saved! +75 XP & ${exercise.estimatedCalories} kcal!", Toast.LENGTH_SHORT).show()
                         }
                     }
 

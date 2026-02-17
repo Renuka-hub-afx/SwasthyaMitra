@@ -81,6 +81,7 @@ class homepage : AppCompatActivity() {
     private var userName: String = ""
     private var isOnPeriod: Boolean = false
     private val hydrationRepo = com.example.swasthyamitra.data.repository.HydrationRepository()
+    private lateinit var avatarManager: AvatarManager
     
     // Cached Metabolic Data for Real-time Updates
     private var cachedFoodCalories = 0
@@ -207,10 +208,6 @@ class homepage : AppCompatActivity() {
             updateDateDisplay()
             loadUserData()
 
-
-            updateDateDisplay()
-            loadUserData()
-
             // Step counter service is controlled by user from Workout Dashboard
             // NOT auto-started to prevent false counts when picking up phone
             // User must tap "Start Tracking" button in Workout section
@@ -236,6 +233,18 @@ class homepage : AppCompatActivity() {
             cardExerciseLog.setOnClickListener {
                 val intent = Intent(this, ExerciseLogActivity::class.java)
                 startActivity(intent)
+            }
+
+            // Profile Image Click Listener -> Avatar Customization
+            try {
+                val cardProfileImage: androidx.cardview.widget.CardView = findViewById(R.id.card_profile_image)
+                cardProfileImage.setOnClickListener {
+                    val intent = Intent(this, AvatarCustomizationActivity::class.java)
+                    intent.putExtra("USER_ID", userId)
+                    startActivity(intent)
+                }
+            } catch (e: Exception) {
+                Log.e("Homepage", "Error setting profile listener: ${e.message}")
             }
 
             // Period mode listener (only if chip exists)
@@ -423,6 +432,7 @@ class homepage : AppCompatActivity() {
         super.onResume()
         updateDateDisplay() // Refresh date every time screen is shown
         if (userId.isNotEmpty()) {
+            loadProfileImage() // REFRESH PROFILE IMAGE when returning from customization
             displayNutritionBreakdown()
             displayWorkoutStatus()
             displayWaterStatus()
@@ -442,13 +452,8 @@ class homepage : AppCompatActivity() {
                     userName = userData["name"] as? String ?: "User"
                     tvUserName.text = "Hello, $userName!"
                     
-                    val avatarId = userData["selected_avatar_id"] as? String
-                    if (avatarId != null) {
-                        val avatarResId = getAvatarDrawable(avatarId)
-                        if (avatarResId != 0) {
-                            findViewById<android.widget.ImageView>(R.id.iv_user_profile).setImageResource(avatarResId)
-                        }
-                    }
+                    // Load profile image from AvatarManager (supports both gallery and avatar)
+                    loadProfileImage()
 
                     // Load Period Mode status
                     isOnPeriod = userData["isOnPeriod"] as? Boolean ?: false
@@ -679,24 +684,31 @@ class homepage : AppCompatActivity() {
 
     private fun displayNutritionBreakdown() {
         lifecycleScope.launch {
+            // Calculate macro targets based on user's calorie goal
+            // Default ratios: ~30% protein, ~40% carbs, ~30% fat
+            val targetCalories = cachedTargetCalories
+            val proteinTarget = (targetCalories * 0.30 / 4).toInt()  // 4 cal per gram
+            val carbsTarget = (targetCalories * 0.40 / 4).toInt()    // 4 cal per gram
+            val fatTarget = (targetCalories * 0.30 / 9).toInt()      // 9 cal per gram
+
             authHelper.getTodayFoodLogs(userId).onSuccess { logs ->
                 if (logs.isNotEmpty()) {
                     val totalProtein = logs.sumOf { it.protein }
                     val totalCarbs = logs.sumOf { it.carbs }
                     val totalFat = logs.sumOf { it.fat }
                     
-                    tvProteinValue.text = "${totalProtein.toInt()}g / 120g"
-                    tvCarbsValue.text = "${totalCarbs.toInt()}g / 200g"
-                    tvFatsValue.text = "${totalFat.toInt()}g / 65g"
+                    tvProteinValue.text = "${totalProtein.toInt()}g / ${proteinTarget}g"
+                    tvCarbsValue.text = "${totalCarbs.toInt()}g / ${carbsTarget}g"
+                    tvFatsValue.text = "${totalFat.toInt()}g / ${fatTarget}g"
                     
-                    pbProtein.progress = ((totalProtein / 120) * 100).toInt().coerceIn(0, 100)
-                    pbCarbs.progress = ((totalCarbs / 200) * 100).toInt().coerceIn(0, 100)
-                    pbFats.progress = ((totalFat / 65) * 100).toInt().coerceIn(0, 100)
+                    pbProtein.progress = ((totalProtein / proteinTarget) * 100).toInt().coerceIn(0, 100)
+                    pbCarbs.progress = ((totalCarbs / carbsTarget) * 100).toInt().coerceIn(0, 100)
+                    pbFats.progress = ((totalFat / fatTarget) * 100).toInt().coerceIn(0, 100)
                 } else {
                     // No food logged - show zeros
-                    tvProteinValue.text = "0g / 120g"
-                    tvCarbsValue.text = "0g / 200g"
-                    tvFatsValue.text = "0g / 65g"
+                    tvProteinValue.text = "0g / ${proteinTarget}g"
+                    tvCarbsValue.text = "0g / ${carbsTarget}g"
+                    tvFatsValue.text = "0g / ${fatTarget}g"
                     
                     pbProtein.progress = 0
                     pbCarbs.progress = 0
@@ -704,9 +716,9 @@ class homepage : AppCompatActivity() {
                 }
             }.onFailure {
                 // Error fetching logs - show zeros
-                tvProteinValue.text = "0g / 120g"
-                tvCarbsValue.text = "0g / 200g"
-                tvFatsValue.text = "0g / 65g"
+                tvProteinValue.text = "0g / ${proteinTarget}g"
+                tvCarbsValue.text = "0g / ${carbsTarget}g"
+                tvFatsValue.text = "0g / ${fatTarget}g"
                 
                 pbProtein.progress = 0
                 pbCarbs.progress = 0
@@ -728,14 +740,7 @@ class homepage : AppCompatActivity() {
     // AI Exercise functions removed - All functionality now in WorkoutDashboardActivity
     // Users tap "Workout" card → WorkoutDashboardActivity → "AI Exercise 🤖" button
 
-    private fun getAvatarDrawable(avatarId: String): Int {
-        val resName = avatarId.replace("_", "")
-        return try {
-            resources.getIdentifier(resName, "drawable", packageName)
-        } catch (e: Exception) {
-            0
-        }
-    }
+
 
     private fun navigateToLogin() {
         val intent = Intent(this, LoginActivity::class.java)
@@ -759,18 +764,42 @@ class homepage : AppCompatActivity() {
     }
     
     private fun observeStepCounterService() {
-        // Observe steps from service
+        // Fetch today's accumulated steps from Firestore on cold start
+        // Uses the DEFAULT Firestore instance (where step services save data)
+        fetchTodayStepsFromFirestore()
+        
+        // Primary: Observe UnifiedStepTrackingService (GPS-enhanced)
+        com.example.swasthyamitra.services.UnifiedStepTrackingService.stepsLive.observe(this) { steps ->
+            if (steps > 0) {
+                runOnUiThread {
+                    if (::tvSteps.isInitialized) tvSteps.text = "$steps"
+                    
+                    val stepCalories = com.example.swasthyamitra.utils.CalorieCalculator.calculateFromStepsInt(steps)
+                    val totalOut = cachedWorkoutCalories + stepCalories
+                    val netBalance = cachedFoodCalories - totalOut
+                    
+                    if (::tvCaloriesOut.isInitialized) {
+                        updateCalorieBalanceUI(cachedFoodCalories, totalOut, netBalance, cachedTargetCalories)
+                    }
+                }
+            }
+        }
+        
+        // Fallback: Observe legacy StepCounterService
         com.example.swasthyamitra.services.StepCounterService.stepsLive.observe(this) { steps ->
-            runOnUiThread {
-                if (::tvSteps.isInitialized) tvSteps.text = "$steps"
-                
-                // Real-time Calorie Update using centralized calculator
-                val stepCalories = com.example.swasthyamitra.utils.CalorieCalculator.calculateFromStepsInt(steps)
-                val totalOut = cachedWorkoutCalories + stepCalories
-                val netBalance = cachedFoodCalories - totalOut
-                
-                if (::tvCaloriesOut.isInitialized) {
-                    updateCalorieBalanceUI(cachedFoodCalories, totalOut, netBalance, cachedTargetCalories)
+            // Only use legacy if unified service has no data
+            val unifiedSteps = com.example.swasthyamitra.services.UnifiedStepTrackingService.stepsLive.value ?: 0
+            if (unifiedSteps == 0 && steps > 0) {
+                runOnUiThread {
+                    if (::tvSteps.isInitialized) tvSteps.text = "$steps"
+                    
+                    val stepCalories = com.example.swasthyamitra.utils.CalorieCalculator.calculateFromStepsInt(steps)
+                    val totalOut = cachedWorkoutCalories + stepCalories
+                    val netBalance = cachedFoodCalories - totalOut
+                    
+                    if (::tvCaloriesOut.isInitialized) {
+                        updateCalorieBalanceUI(cachedFoodCalories, totalOut, netBalance, cachedTargetCalories)
+                    }
                 }
             }
         }
@@ -779,6 +808,48 @@ class homepage : AppCompatActivity() {
         com.example.swasthyamitra.services.StepCounterService.isRunningLive.observe(this) { isRunning ->
             Log.d("Homepage", "Service running: $isRunning")
         }
+    }
+    
+    /**
+     * Fetch today's step count from Firestore (default instance) so the homepage
+     * shows accumulated steps even when no tracking service is currently running.
+     */
+    private fun fetchTodayStepsFromFirestore() {
+        if (userId.isEmpty()) return
+        
+        val defaultDb = com.google.firebase.firestore.FirebaseFirestore.getInstance()
+        val today = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault()).format(java.util.Date())
+        
+        defaultDb.collection("users").document(userId)
+            .collection("daily_steps").document(today)
+            .get()
+            .addOnSuccessListener { document ->
+                if (document.exists()) {
+                    val steps = document.getLong("steps")?.toInt() ?: 0
+                    if (steps > 0) {
+                        // Only update if no service is currently providing live data
+                        val unifiedSteps = com.example.swasthyamitra.services.UnifiedStepTrackingService.stepsLive.value ?: 0
+                        val legacySteps = com.example.swasthyamitra.services.StepCounterService.stepsLive.value ?: 0
+                        if (unifiedSteps == 0 && legacySteps == 0) {
+                            runOnUiThread {
+                                if (::tvSteps.isInitialized) tvSteps.text = "$steps"
+                                
+                                val stepCalories = com.example.swasthyamitra.utils.CalorieCalculator.calculateFromStepsInt(steps)
+                                val totalOut = cachedWorkoutCalories + stepCalories
+                                val netBalance = cachedFoodCalories - totalOut
+                                
+                                if (::tvCaloriesOut.isInitialized) {
+                                    updateCalorieBalanceUI(cachedFoodCalories, totalOut, netBalance, cachedTargetCalories)
+                                }
+                            }
+                            Log.d("Homepage", "Loaded $steps steps from Firestore for today")
+                        }
+                    }
+                }
+            }
+            .addOnFailureListener { e ->
+                Log.e("Homepage", "Failed to fetch today's steps from Firestore", e)
+            }
     }
 
 
@@ -918,7 +989,85 @@ class homepage : AppCompatActivity() {
         tvCalorieStatus.text = statusMessage
     }
 
-
+    /**
+     * Load profile image from AvatarManager
+     * Supports both gallery images and preset avatars
+     */
+    private fun loadProfileImage() {
+        try {
+            // Initialize AvatarManager if not already initialized
+            if (!::avatarManager.isInitialized) {
+                avatarManager = AvatarManager(this)
+            }
+            
+            val profileImageView = findViewById<android.widget.ImageView>(R.id.iv_user_profile)
+            val mode = avatarManager.getProfileMode()
+            val galleryUri = avatarManager.getGalleryUri()
+            val avatarId = avatarManager.getAvatarId()
+            
+            Log.d("Homepage", "Loading profile image - Mode: $mode, GalleryUri: $galleryUri, AvatarId: $avatarId")
+            
+            when (mode) {
+                ProfileMode.GALLERY_PHOTO -> {
+                    if (galleryUri != null) {
+                        try {
+                            profileImageView.setImageURI(galleryUri)
+                            profileImageView.scaleType = android.widget.ImageView.ScaleType.CENTER_CROP
+                            Log.d("Homepage", "Gallery image loaded successfully")
+                        } catch (e: Exception) {
+                            Log.e("Homepage", "Failed to load gallery image: ${e.message}")
+                            // Fall back to default avatar
+                            profileImageView.setImageResource(R.drawable.coach)
+                        }
+                    } else {
+                        Log.w("Homepage", "Gallery mode but no URI found, using default")
+                        profileImageView.setImageResource(R.drawable.coach)
+                    }
+                }
+                ProfileMode.PRESET_AVATAR -> {
+                    if (avatarId != null) {
+                        val avatarResId = getAvatarDrawable(avatarId)
+                        if (avatarResId != 0) {
+                            profileImageView.setImageResource(avatarResId)
+                            profileImageView.scaleType = android.widget.ImageView.ScaleType.FIT_CENTER
+                            Log.d("Homepage", "Avatar loaded successfully: $avatarId")
+                        } else {
+                            Log.w("Homepage", "Avatar ID not found: $avatarId, using default")
+                            profileImageView.setImageResource(R.drawable.coach)
+                        }
+                    } else {
+                        Log.w("Homepage", "Avatar mode but no ID found, using default")
+                        profileImageView.setImageResource(R.drawable.coach)
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            Log.e("Homepage", "Error loading profile image: ${e.message}")
+            // Set default image on error
+            findViewById<android.widget.ImageView>(R.id.iv_user_profile).setImageResource(R.drawable.coach)
+        }
+    }
+    
+    private fun getAvatarDrawable(avatarId: String): Int {
+        return when (avatarId) {
+            "avatar1" -> R.drawable.avatar1
+            "avatar2" -> R.drawable.avatar2
+            "avatar3" -> R.drawable.avatar3
+            "avatar4" -> R.drawable.avatar4
+            "avatar5" -> R.drawable.avatar5
+            "avatar6" -> R.drawable.avatar6
+            "avatar7" -> R.drawable.avatar7
+            "avatar8" -> R.drawable.avatar8
+            "avatar9" -> R.drawable.avatar9
+            "avatar10" -> R.drawable.avatar10
+            "avatar11" -> R.drawable.avatar11
+            "avatar12" -> R.drawable.avatar12
+            "avatar13" -> R.drawable.avatar13
+            "coach" -> R.drawable.coach
+            "gallery_selection" -> 0 // Gallery images don't have a drawable ID
+            else -> 0
+        }
+    }
 
 }
 

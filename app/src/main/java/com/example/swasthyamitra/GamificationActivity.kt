@@ -27,7 +27,6 @@ import android.view.Gravity
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import android.widget.LinearLayout
-import com.google.firebase.firestore.FirebaseFirestore
 import com.example.swasthyamitra.auth.FirebaseAuthHelper
 import java.util.Calendar
 import java.util.Locale
@@ -51,7 +50,7 @@ class GamificationActivity : AppCompatActivity() {
     private lateinit var comebackBonusContainer: FrameLayout
 
     private val DAILY_GOAL = 5000 
-    private val LEVEL_XP_THRESHOLD = 1000
+    private val LEVEL_XP_THRESHOLD = 100  // Must match XPManager.XP_PER_LEVEL
 
     private lateinit var tvSteps: TextView
     private lateinit var tvStepMain: TextView
@@ -94,12 +93,8 @@ class GamificationActivity : AppCompatActivity() {
         
         try {
             if (FirebaseApp.getApps(this).isNotEmpty()) {
-                // Original line: database = FirebaseDatabase.getInstance("https://swasthyamitra-ded44-default-rtdb.asia-southeast1.firebasedatabase.app").reference
-                // The instruction was syntactically incorrect, assuming the intent was to initialize FirebaseFirestore.
-                // If the intent was to replace FirebaseDatabase with FirebaseFirestore, further changes would be needed for 'database' variable type and usage.
-                // For now, initializing firestore as a separate instance as per the instruction's text.
-                val firestore = FirebaseFirestore.getInstance("renu") // Initializing FirebaseFirestore with the specified name
-                database = FirebaseDatabase.getInstance("https://swasthyamitra-ded44-default-rtdb.asia-southeast1.firebasedatabase.app").reference // Keeping original FirebaseDatabase initialization
+
+                database = FirebaseDatabase.getInstance("https://swasthyamitra-ded44-default-rtdb.asia-southeast1.firebasedatabase.app").reference
                 repository = GamificationRepository(database!!, userId)
                 syncWithFirebase()
             } else {
@@ -230,7 +225,15 @@ class GamificationActivity : AppCompatActivity() {
     }
 
     private fun isRecent(date: String): Boolean {
-        return true 
+        return try {
+            val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.US)
+            val parsed = sdf.parse(date) ?: return false
+            val diffMs = System.currentTimeMillis() - parsed.time
+            val diffDays = diffMs / (24 * 60 * 60 * 1000)
+            diffDays <= 3 // Consider "recent" if within 3 days
+        } catch (e: Exception) {
+            false
+        }
     }
 
     private fun generateCalendar() {
@@ -345,7 +348,10 @@ class GamificationActivity : AppCompatActivity() {
         val prefs = getSharedPreferences("FitnessQuestPrefs", Context.MODE_PRIVATE)
         
         val stepPrefs = getSharedPreferences("StepCounterPrefs", Context.MODE_PRIVATE)
-        val steps = stepPrefs.getInt("daily_steps", 0)
+        // Date check: only use saved steps if they're from today
+        val savedDate = stepPrefs.getString("last_date", "")
+        val today = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault()).format(java.util.Date())
+        val steps = if (savedDate == today) stepPrefs.getInt("daily_steps", 0) else 0
         
         val streak = prefs.getInt("streak", 0)
         val shields = prefs.getInt("shields", 0)

@@ -1,624 +1,340 @@
-# 🏥 SwasthyaMitra - Complete Project Documentation
-
-## 📚 **COMPLETE DOCUMENTATION INDEX**
-
-> **🎊 NEW: Comprehensive implementation guides now available!**
-
-### **⭐ Essential Guides (Start Here):**
-
-1. **[📘 MASTER IMPLEMENTATION GUIDE](MASTER_IMPLEMENTATION_GUIDE.md)** ⭐ **PRIMARY REFERENCE**
-   - 2,394 lines of complete implementation details
-   - Module-by-module breakdown (37 activities documented)
-   - Architecture, design patterns, code examples
-   - Firebase integration, AI/ML systems
-   - Testing, deployment, troubleshooting
-
-2. **[🚀 QUICK REFERENCE GUIDE](QUICK_REFERENCE.md)** ⭐ **QUICK START**
-   - Fast navigation with line numbers
-   - Status dashboard (85% complete)
-   - 5-minute development setup
-   - Testing checklist & troubleshooting
-   - Performance metrics & FAQ
-
-3. **[🔐 FIREBASE RULES COMPLETE](FIREBASE_RULES_COMPLETE.md)** ⭐ **SECURITY**
-   - Complete Firestore & RTDB security rules
-   - Deployment instructions
-   - Validation rules & testing
-
-### **📖 Additional Documentation:**
-
-- **[Implementation Plan](COMPLETE_IMPLEMENTATION_PLAN.md)** - 4-phase development roadmap
-- **[Phase 1 & 2 Progress](PHASE_1_2_IMPLEMENTATION_COMPLETE.md)** - Current status (85% complete)
-- **[Step Counter Details](STEP_COUNTER_FIX_IMPLEMENTED.md)** - Hybrid validation (98% accuracy)
-- **[DOCS/](DOCS/)** - 21 feature-specific documentation files
-
----
-
-## 📋 Table of Contents
-
-1. [Project Overview](#project-overview)
-2. [Quick Start Guide](#quick-start-guide)
-3. [Feature Documentation](#feature-documentation)
-4. [Technical Documentation](#technical-documentation)
-5. [Database Schema](#database-schema)
-6. [API Reference](#api-reference)
-7. [Troubleshooting](#troubleshooting)
-
----
+# SwasthyaMitra - Complete Health & Fitness Companion
 
 ## 📱 Project Overview
 
-**SwasthyaMitra** is a comprehensive AI-powered health and wellness Android application specifically designed for Indian users, combining traditional health tracking with cutting-edge AI technology.
+**SwasthyaMitra** (Sanskrit: स्वास्थ्यमित्र - "Health Friend") is a comprehensive Android health and fitness application designed to help users achieve their wellness goals through AI-powered recommendations, gamification, and real-time tracking.
 
-### Key Statistics
-- **Activities**: 40+ screens
-- **AI Services**: 4 specialized AI engines
-- **Database Collections**: 20+ Firestore collections
-- **Indian Foods**: 2000+ items in database
-- **Technologies**: Kotlin, Firebase, Gemini AI, Material Design 3
-
-### Core Capabilities
-✅ Food logging with 2000+ Indian foods  
-✅ AI-powered diet planning using Gemini 2.0  
-✅ Exercise tracking with AI recommendations  
-✅ Hydration and water intake monitoring  
-✅ Weight and progress tracking with graphs  
-✅ Gamification with 6-stage achievement system  
-✅ Women's health tracking (period, symptoms)  
-✅ Safety features (SOS, run tracking)  
-✅ Mood and wellness monitoring  
+### 🎯 Vision
+To provide a holistic, intelligent, and engaging platform that makes health management accessible, personalized, and enjoyable for everyone.
 
 ---
 
-## 🚀 Quick Start Guide
+## ✨ Key Features
+
+### 1. **User Management & Authentication**
+- Secure Firebase Authentication
+- User profile management with customizable avatars
+- Personalized health metrics tracking
+- [📖 Detailed Documentation](docs/01_authentication.md)
+
+### 2. **AI-Powered Smart Diet Planning**
+- Gemini AI integration for personalized meal recommendations
+- Calorie and macro-nutrient tracking
+- Indian cuisine-focused meal plans
+- Quick food logging from meal cards
+- [📖 Detailed Documentation](docs/02_smart_diet.md)
+
+### 3. **Exercise & Workout Management**
+- Manual exercise logging with 800+ exercises database
+- Real-time calorie burn calculation
+- Exercise history and analytics
+- Workout dashboard with progress tracking
+- [📖 Detailed Documentation](docs/03_exercise_tracking.md)
+
+### 4. **Step Counter & Activity Tracking**
+- Real-time step counting using accelerometer
+- Hybrid validation system for accuracy
+- Foreground service for continuous tracking
+- Daily step goals and calorie burn tracking
+- [📖 Detailed Documentation](docs/04_step_counter.md)
+
+### 5. **Sleep Tracker**
+- Sleep duration tracking
+- Sleep quality analysis
+- Historical sleep patterns
+- Personalized sleep recommendations
+- [📖 Detailed Documentation](docs/05_sleep_tracker.md)
+
+### 6. **Weight Progress Monitoring**
+- Weight logging and trend analysis
+- BMI calculation and tracking
+- Predictive weight projection using linear regression
+- Visual progress charts
+- [📖 Detailed Documentation](docs/06_weight_progress.md)
+
+### 7. **Mood-Based Recommendations**
+- Mood tracking and analysis
+- AI-powered activity suggestions based on mood
+- Emotional wellness support
+- [📖 Detailed Documentation](docs/07_mood_recommendations.md)
+
+### 8. **Barcode Scanner for Nutrition**
+- Real-time barcode scanning
+- Nutrition information lookup
+- Quick food logging
+- [📖 Detailed Documentation](docs/08_barcode_scanner.md)
+
+### 9. **Gamification System**
+- Points and XP system
+- Achievement badges (Bronze, Silver, Gold, Platinum)
+- Daily streaks tracking
+- Leaderboards and challenges
+- [📖 Detailed Documentation](docs/09_gamification.md)
+
+### 10. **AI Coach**
+- Personalized health coaching
+- Context-aware recommendations
+- Women's health mode support
+- [📖 Detailed Documentation](docs/10_ai_coach.md)
+
+### 11. **Safety & Emergency Features**
+- SOS emergency contacts
+- Location sharing
+- Safety check-ins
+- [📖 Detailed Documentation](docs/11_safety_features.md)
+
+### 12. **Smart Pantry Management**
+- Ingredient inventory tracking
+- Expiry date monitoring
+- Recipe suggestions based on available ingredients
+- [📖 Detailed Documentation](docs/12_smart_pantry.md)
+
+---
+
+## 🏗️ Technical Architecture
+
+### Technology Stack
+
+#### **Frontend**
+- **Language**: Kotlin
+- **UI Framework**: Android XML Layouts, Material Design Components
+- **Architecture**: MVVM (Model-View-ViewModel)
+- **Navigation**: Intent-based navigation
+
+#### **Backend & Services**
+- **Authentication**: Firebase Authentication
+- **Database**: Cloud Firestore (NoSQL)
+- **Storage**: Firebase Storage
+- **AI/ML**: Google Gemini AI API
+- **Maps**: Google Maps SDK
+- **Barcode**: ML Kit Barcode Scanning
+
+#### **Sensors & Hardware**
+- Accelerometer (Step counting)
+- Camera (Barcode scanning)
+- GPS (Location tracking)
+
+#### **Key Libraries**
+- MPAndroidChart (Data visualization)
+- Glide (Image loading)
+- Gson (JSON parsing)
+- Kotlin Coroutines (Asynchronous operations)
+- Material Components (UI)
+
+### Project Structure
+
+```
+SwasthyaMitra/
+├── app/
+│   ├── src/
+│   │   ├── main/
+│   │   │   ├── java/com/example/swasthyamitra/
+│   │   │   │   ├── activities/          # All activity classes
+│   │   │   │   ├── adapters/            # RecyclerView adapters
+│   │   │   │   ├── ai/                  # AI service classes
+│   │   │   │   ├── auth/                # Authentication logic
+│   │   │   │   ├── data/                # Data models
+│   │   │   │   ├── fragments/           # Fragment classes
+│   │   │   │   ├── models/              # Data classes
+│   │   │   │   ├── notifications/       # Notification handlers
+│   │   │   │   ├── receivers/           # Broadcast receivers
+│   │   │   │   ├── repository/          # Data repositories
+│   │   │   │   ├── services/            # Background services
+│   │   │   │   ├── step/                # Step tracking logic
+│   │   │   │   ├── utils/               # Utility classes
+│   │   │   │   └── ui/                  # Custom UI components
+│   │   │   ├── res/
+│   │   │   │   ├── layout/              # XML layouts
+│   │   │   │   ├── drawable/            # Images & drawables
+│   │   │   │   ├── values/              # Colors, strings, themes
+│   │   │   │   └── mipmap/              # App icons
+│   │   │   └── assets/                  # CSV data files
+│   │   └── AndroidManifest.xml
+│   └── build.gradle
+├── docs/                                # Feature documentation
+├── firestore.rules                      # Firestore security rules
+├── firebase.json                        # Firebase configuration
+└── README.md                            # This file
+```
+
+---
+
+## 🚀 Getting Started
 
 ### Prerequisites
-```
-- Android Studio Hedgehog (2023.1.1) or later
-- JDK 17+
-- Android SDK 24+ (Target: 35)
-- Firebase project configured
-- google-services.json file
-```
+- Android Studio Arctic Fox or later
+- JDK 11 or higher
+- Android SDK (API 26+)
+- Firebase project setup
+- Google Gemini API key
 
 ### Installation Steps
 
-**1. Clone & Setup**
-```bash
-git clone <your-repo-url>
-cd SwasthyaMitra
-```
+1. **Clone the Repository**
+   ```bash
+   git clone https://github.com/yourusername/SwasthyaMitra.git
+   cd SwasthyaMitra
+   ```
 
-**2. Configure Firebase**
-- Place `google-services.json` in `app/` directory
-- Ensure Firebase Authentication is enabled
-- Create Firestore database named "renu"
-- Enable Firebase AI (Gemini integration)
+2. **Firebase Setup**
+   - Create a Firebase project at [Firebase Console](https://console.firebase.google.com/)
+   - Download `google-services.json` and place it in `app/` directory
+   - Enable Authentication (Email/Password)
+   - Enable Cloud Firestore
+   - Enable Firebase Storage
 
-**3. Build**
-```bash
-./gradlew assembleDebug
-```
+3. **API Keys Configuration**
+   - Get Gemini API key from [Google AI Studio](https://makersuite.google.com/app/apikey)
+   - Add to `local.properties`:
+     ```
+     GEMINI_API_KEY=your_api_key_here
+     ```
 
-**4. Install**
-```bash
-adb install -r app/build/outputs/apk/debug/app-debug.apk
-```
-
-**5. First Launch**
-- Sign up with email/password
-- Complete onboarding (profile → goal → lifestyle)
-- Start tracking your health!
-
----
-
-## 📚 Feature Documentation
-
-All features are documented in detail in `DOCS/FEATURES/`:
-
-| Feature | File | Description |
-|---------|------|-------------|
-| Authentication | [01_AUTHENTICATION.md](DOCS/FEATURES/01_AUTHENTICATION.md) | Login, signup, onboarding flow |
-| Food Logging | [02_FOOD_LOGGING.md](DOCS/FEATURES/02_FOOD_LOGGING.md) | Food search, barcode scan, manual entry |
-| AI Diet Plans | [03_AI_DIET.md](DOCS/FEATURES/03_AI_DIET.md) | Gemini-powered meal recommendations |
-| Exercise Tracking | [04_EXERCISE.md](DOCS/FEATURES/04_EXERCISE.md) | Workouts, AI suggestions, logging |
-| Progress Dashboard | [05_PROGRESS.md](DOCS/FEATURES/05_PROGRESS.md) | Graphs, analytics, streaks |
-| Gamification | [06_GAMIFICATION.md](DOCS/FEATURES/06_GAMIFICATION.md) | 6-stage system, achievements |
-| Women's Health | [07_WOMENS_HEALTH.md](DOCS/FEATURES/07_WOMENS_HEALTH.md) | Period tracking, symptoms |
-| Safety | [08_SAFETY.md](DOCS/FEATURES/08_SAFETY.md) | SOS alerts, run tracking |
-| Hydration | [09_HYDRATION.md](DOCS/FEATURES/09_HYDRATION.md) | Water tracking, reminders |
-| Smart Pantry | [10_SMART_PANTRY.md](DOCS/FEATURES/10_SMART_PANTRY.md) | Recipe from ingredients photo |
+4. **Build and Run**
+   ```bash
+   ./gradlew assembleDebug
+   ```
+   Or use Android Studio's Run button
 
 ---
 
-## 🛠️ Technical Documentation
+## 📊 Database Schema
 
-### Architecture
-```
-SwasthyaMitra follows MVVM (Model-View-ViewModel) architecture:
+### Firestore Collections Structure
 
-Presentation Layer (Activities/Fragments)
-         ↓
-View Models (Data binding)
-         ↓
-Repositories (Data access)
-         ↓
-Data Sources (Firebase, Local DB)
-```
-
-### Tech Stack
-
-**Frontend**
-- Language: Kotlin 1.9
-- Min SDK: 24 (Android 7.0)
-- Target SDK: 35 (Android 15)
-- UI: Material Design 3, XML layouts
-
-**Backend**
-- Auth: Firebase Authentication
-- Database: Cloud Firestore ("renu" instance)
-- AI: Firebase AI + Gemini 2.0 Flash
-- Storage: Firebase Realtime Database (legacy)
-
-**Key Libraries**
-```gradle
-// Core
-implementation 'androidx.core:core-ktx:1.13.1'
-implementation 'androidx.appcompat:appcompat:1.7.0'
-
-// UI
-implementation 'com.google.android.material:material:1.12.0'
-implementation 'androidx.cardview:cardview:1.0.0'
-
-// Firebase
-implementation platform('com.google.firebase:firebase-bom:33.7.0')
-implementation 'com.google.firebase:firebase-auth-ktx'
-implementation 'com.google.firebase:firebase-firestore-ktx'
-implementation 'com.google.firebase:firebase-database-ktx'
-implementation 'com.google.firebase:firebase-ai'
-
-// Charts & Graphs
-implementation 'com.github.PhilJay:MPAndroidChart:v3.1.0'
-
-// Image Loading
-implementation 'com.github.bumptech.glide:glide:4.16.0'
-
-// ML Kit (Barcode)
-implementation 'com.google.mlkit:barcode-scanning:17.2.0'
-
-// Networking
-implementation 'com.squareup.retrofit2:retrofit:2.9.0'
-implementation 'com.squareup.retrofit2:converter-gson:2.9.0'
-
-// Coroutines
-implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3'
-implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.3'
-```
-
-### Project Structure
-```
-app/src/main/java/com/example/swasthyamitra/
-├── MainActivity.kt              # Entry point
-├── homepage.kt                  # Main dashboard
-├── LoginActivity.kt             # Authentication
-├── UserApplication.kt           # App initialization
-│
-├── ai/                          # AI Services (4 files)
-│   ├── AIDietPlanService.kt     # Gemini diet planning
-│   ├── AIPantryService.kt       # Recipe from photo
-│   ├── AICoachMessageService.kt # Motivational messages
-│   └── AIExerciseRecommendationService.kt
-│
-├── auth/                        # Authentication
-│   └── FirebaseAuthHelper.kt    # Auth wrapper
-│
-├── data/
-│   ├── models/                  # Data classes
-│   │   ├── FoodLog.kt
-│   │   ├── IndianFood.kt
-│   │   └── ... (10+ models)
-│   │
-│   └── repository/              # Data access
-│       ├── IndianFoodRepository.kt
-│       ├── HydrationRepository.kt
-│       └── ...
-│
-├── ui/                          # UI Components
-│   ├── EnhancedProgressDashboardActivity.kt
-│   └── hydration/
-│       └── HydrationActivity.kt
-│
-├── services/                    # Background services
-│   └── SafetyMonitorService.kt
-│
-├── adapters/                    # RecyclerView adapters
-│   ├── RecommendationAdapter.kt
-│   ├── FoodSearchAdapter.kt
-│   └── ...
-│
-├── notifications/               # WorkManager tasks
-│   ├── WaterNotificationWorker.kt
-│   └── MealEventWorker.kt
-│
-├── ml/                          # ML/Analytics
-│   ├── EnhancedProgressAnalyzer.kt
-│   └── ProgressAnalyzer.kt
-│
-└── utils/                       # Utilities
-    ├── StepManager.kt
-    └── ...
-```
-
----
-
-## 🗄️ Database Schema
-
-### Firestore Structure
 ```
 users/
-  {userId}/                      # User document
-    name: string
-    age: number
-    gender: string
-    height: number
-    weight: number
-    email: string
-    isOnPeriod: boolean
-    avatar: string
-    
-    foodLogs/                    # Subcollection
-      {logId}/
-        foodName: string
-        calories: number
-        protein: number
-        carbs: number
-        fat: number
-        mealType: string         # breakfast/lunch/dinner/snack
-        date: string             # YYYY-MM-DD
-        timestamp: timestamp
-        userId: string
-    
-    exercise_logs/
-      {logId}/
-        exerciseName: string
-        durationMinutes: number
-        caloriesBurned: number
-        date: string
-        timestamp: timestamp
-    
-    hydration_logs/
-      {logId}/
-        amountMl: number
-        date: string
-        timestamp: timestamp
-    
-    weightLogs/
-      {logId}/
-        weightKg: number
-        date: string
-        timestamp: timestamp
-    
-    goals/
-      {goalId}/
-        goalType: string         # Weight Loss/Gain/Maintain
-        targetWeight: number
-        dailyCalories: number
-        bmr: number
-        tdee: number
-        createdAt: timestamp
-    
-    lifestyle/
-      {lifestyleId}/
-        activityLevel: string    # Sedentary/Lightly/Moderately/Very Active
-        dietPreference: string   # Vegetarian/Non-Vegetarian/Vegan
-        wakeTime: string
-        sleepTime: string
-        availableExerciseTime: string
-        preferredExerciseTime: string
-        targetWeight: number
-    
-    meal_feedback/               # AI learning data
-      {feedbackId}/
-        mealName: string
-        liked: boolean
-        timestamp: timestamp
-    
-    user_preferences/            # Personalization
-      {prefId}/
-        favoriteF oods: array
-        dislikedFoods: array
-        allergens: array
-    
-    period_logs/                 # Women's health
-      {logId}/
-        date: string
-        flow: string             # light/medium/heavy
-        symptoms: array
-        mood: string
-    
-    mood_logs/                   # Wellness
-      {logId}/
-        mood: string
-        date: string
-        timestamp: timestamp
+  └── {userId}/
+      ├── profile (document)
+      ├── daily_steps/ (subcollection)
+      ├── exercise_logs/ (subcollection)
+      ├── food_logs/ (subcollection)
+      ├── sleep_logs/ (subcollection)
+      ├── weight_logs/ (subcollection)
+      ├── mood_logs/ (subcollection)
+      ├── gamification/ (subcollection)
+      └── pantry_items/ (subcollection)
 ```
 
-**Database Instance**: `renu`  
-**Location**: Default (us-central)  
-**Rules**: User-isolated (each user can only access their own data)
-
-[Full Database Schema →](DOCS/DATABASE_SCHEMA.md)
+[📖 Complete Database Documentation](docs/database_schema.md)
 
 ---
 
-## 🔌 API Reference
+## 🎨 Design System
 
-### Firebase AI (Gemini)
+### Color Palette
+- **Primary**: Purple (#7B2CBF)
+- **Secondary**: Pink (#E91E63)
+- **Background**: Light Gray (#FAFAFA)
+- **Success**: Green (#388E3C)
+- **Warning**: Orange (#F57C00)
 
-**Model**: `gemini-2.0-flash`  
-**Backend**: `googleAI()`
+### Typography
+- **Headers**: Bold, 20-24sp
+- **Body**: Regular, 14-16sp
+- **Captions**: 12sp
 
-**Key Services**:
-
-1. **AIDietPlanService**
-```kotlin
-suspend fun generateSmartDietPlan(): Result<MealPlan>
-// Returns: Personalized meal plan with breakfast/lunch/dinner/snacks
-```
-
-2. **AIPantryService**
-```kotlin
-suspend fun analyzeIngredientsAndGenerateRecipe(bitmap: Bitmap): Result<RecipeResult>
-// Input: Photo of ingredients
-// Returns: Recipe with detected ingredients
-```
-
-3. **AICoachMessageService**
-```kotlin
-suspend fun getCoachMessage(userId: String, steps: Int): Result<String>
-// Returns: Personalized motivational message
-```
-
-4. **AIExerciseRecommendationService**
-```kotlin
-suspend fun getExerciseRecommendation(userId: String): Result<ExerciseRec>
-// Returns: Personalized exercise with instructions
-```
-
-### External APIs
-
-**Open Food Facts API**
-```kotlin
-interface OpenFoodFactsApi {
-    @GET("api/v0/product/{barcode}.json")
-    suspend fun getProduct(@Path("barcode") barcode: String): Response<ProductResponse>
-}
-```
-**Base URL**: `https://world.openfoodfacts.org/`
+### UI Components
+- Material Design 3 components
+- Custom gradient buttons
+- Card-based layouts
+- Bottom navigation
 
 ---
 
-## 🔧 Configuration
+## 🔒 Security & Privacy
 
-### Firebase Configuration
+### Data Protection
+- All user data encrypted in transit (HTTPS)
+- Firebase Authentication for secure access
+- Firestore security rules for data access control
+- No third-party data sharing
 
-**1. firebase.json**
-```json
-{
-  "firestore": {
-    "rules": "firestore.rules",
-    "indexes": "firestore.indexes.json"
-  },
-  "database": {
-    "rules": "database.rules.json"
-  }
-}
-```
-
-**2. Firestore Rules** (firestore.rules)
-- User data isolation
-- Read/Write permissions based on userId
-- Validation rules for data integrity
-
-**3. Required Firebase Services**
-- ✅ Authentication (Email/Password)
-- ✅ Cloud Firestore (database: "renu")
-- ✅ Firebase AI
-- ✅ Realtime Database (legacy support)
+### Permissions Required
+- **Camera**: Barcode scanning
+- **Location**: Safety features, map tracking
+- **Activity Recognition**: Step counting
+- **Foreground Service**: Continuous step tracking
+- **Boot Completed**: Auto-start step counter
 
 ---
 
-## 🐛 Troubleshooting
+## 📈 Performance Optimizations
 
-### Common Issues
-
-**1. App crashes on login**
-```
-Error: UserApplication is null
-Solution: Ensure Firebase is initialized in UserApplication.kt
-Check: google-services.json is in app/ directory
-```
-
-**2. Food logging not saving**
-```
-Error: Permission denied on foodLogs collection
-Solution: Deploy firestore.rules with proper user isolation
-Command: firebase deploy --only firestore:rules
-```
-
-**3. AI features not working**
-```
-Error: Firebase AI not initialized
-Solution: Enable Firebase AI in Firebase Console
-Check: Ensure Gemini API is enabled
-```
-
-**4. Homepage not opening**
-```
-Error: Missing views in layout
-Solution: Check all findViewById calls have corresponding IDs
-Verify: activity_homepage.xml is complete
-```
-
-**5. Build fails**
-```
-Error: Compilation errors
-Solution: ./gradlew clean build
-Check: All dependencies are synced
-```
-
-### Debug Commands
-```bash
-# View logs
-adb logcat -s SwasthyaMitra:* AndroidRuntime:E
-
-# Clear app data
-adb shell pm clear com.example.swasthyamitra
-
-# Reinstall
-adb install -r app/build/outputs/apk/debug/app-debug.apk
-
-# Check current activity
-adb shell dumpsys activity | findstr "mResumedActivity"
-```
+1. **Lazy Loading**: RecyclerViews with pagination
+2. **Image Caching**: Glide for efficient image loading
+3. **Background Processing**: Coroutines for async operations
+4. **Foreground Services**: Efficient step counting
+5. **Data Batching**: Periodic Firestore writes to reduce costs
 
 ---
 
-## 📊 Performance Optimization
+## 🧪 Testing
 
-### Best Practices Implemented
-1. **Lazy Loading**: AI services instantiated only when needed
-2. **Caching**: Food database cached in memory
-3. **Coroutines**: All network calls run on IO dispatcher
-4. **Image Optimization**: Glide for efficient image loading
-5. **Database Indexing**: Firestore indexes for common queries
+### Unit Tests
+- Repository layer tests
+- Utility function tests
+- Data validation tests
 
-### Recommended Optimizations
-- [ ] Implement pagination for food search (currently loads all)
-- [ ] Add offline mode with local SQLite cache
-- [ ] Optimize AI prompts to reduce token usage
-- [ ] Implement image compression before upload
-- [ ] Add ProGuard rules for release build
+### Integration Tests
+- Firebase integration tests
+- API integration tests
 
----
-
-## 🔐 Security
-
-### Implemented Security Measures
-- Firebase Authentication for user management
-- Firestore security rules enforce data isolation
-- No hardcoded API keys (uses google-services.json)
-- Sensitive data stored securely in SharedPreferences
-- HTTPS for all network calls
-
-### Security Rules Example
-```javascript
-rules_version = '2';
-service cloud.firestore {
-  match /databases/{database}/documents {
-    match /users/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
-      
-      match /{document=**} {
-        allow read, write: if request.auth != null && request.auth.uid == userId;
-      }
-    }
-  }
-}
-```
-
----
-
-## 📈 Analytics & Monitoring
-
-### Built-in Tracking
-- User progress metrics (weight, calories, steps)
-- AI interaction logs (meal feedback, preferences)
-- Feature usage (which screens are visited)
-- Error logging (Firebase Crashlytics ready)
-
-### Metrics Dashboard
-Access Firebase Console → Firestore → "renu" database to view:
-- Total users
-- Active users (last 7/30 days)
-- Food logs per user
-- AI requests count
-- Average session duration
-
----
-
-## 🎯 Future Enhancements
-
-### Version 1.1 (Planned)
-- [ ] Social features (friend challenges, leaderboards)
-- [ ] Recipe sharing community
-- [ ] Meal plan calendar with notifications
-- [ ] Export data (PDF/CSV reports)
-- [ ] Dark mode support
-
-### Version 1.2 (Planned)
-- [ ] Wearable integration (Google Fit, Fitbit)
-- [ ] Voice commands for logging
-- [ ] Advanced barcode scanner with nutrition analysis
-- [ ] Multi-language support (Hindi, Tamil, etc.)
-- [ ] Offline mode with sync
-
-### Version 2.0 (Future)
-- [ ] Telemedicine integration
-- [ ] Video consultations with nutritionists
-- [ ] Grocery list generator based on meal plan
-- [ ] Restaurant menu analyzer
-- [ ] Family health tracking
+### UI Tests
+- Espresso UI tests for critical flows
 
 ---
 
 ## 🤝 Contributing
 
-### Development Setup
+We welcome contributions! Please follow these steps:
+
 1. Fork the repository
-2. Create feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit changes (`git commit -m 'Add amazing feature'`)
-4. Push to branch (`git push origin feature/amazing-feature`)
-5. Open Pull Request
-
-### Code Standards
-- Follow Kotlin coding conventions
-- Use meaningful variable/function names
-- Add comments for complex logic
-- Write unit tests for new features
-- Update documentation
+2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
 
 ---
 
-## 📄 License
+## 📝 License
 
-This project is proprietary and confidential. All rights reserved.
-
----
-
-## 👨‍💻 Developer Information
-
-**Project**: SwasthyaMitra  
-**Developer**: Renu Kumari  
-**Version**: 1.0.0  
-**Last Updated**: February 12, 2026  
-**Firebase Project**: swasthyamitra-ded44  
-**Database**: Firestore "renu" instance  
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ---
 
-## 📞 Support & Contact
+## 👥 Team
 
-For technical issues or questions:
-1. Check this documentation
-2. Review [Feature Guides](DOCS/FEATURES/)
-3. Check [Database Schema](DOCS/DATABASE_SCHEMA.md)
-4. Review Firebase Console logs
-5. Check logcat output
+- **Developer**: [Your Name]
+- **Project Guide**: [Guide Name]
+- **Institution**: [Your Institution]
 
 ---
 
-**Built with ❤️ for India's Health & Wellness**
+## 📞 Contact & Support
 
-*Complete documentation for SwasthyaMitra Android App*
+- **Email**: support@swasthyamitra.com
+- **GitHub Issues**: [Report a bug](https://github.com/yourusername/SwasthyaMitra/issues)
+- **Documentation**: [Full Docs](docs/)
 
+---
+
+## 🙏 Acknowledgments
+
+- Google Gemini AI for intelligent recommendations
+- Firebase for backend infrastructure
+- Material Design for UI components
+- Open-source community for libraries and tools
+
+---
+
+## 📚 Additional Resources
+
+- [User Manual](docs/user_manual.md)
+- [API Documentation](docs/api_documentation.md)
+- [Troubleshooting Guide](docs/troubleshooting.md)
+- [FAQ](docs/faq.md)
+
+---
+
+**Made with ❤️ for a healthier tomorrow**

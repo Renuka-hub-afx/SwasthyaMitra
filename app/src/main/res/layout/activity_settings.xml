@@ -4,38 +4,49 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="@drawable/background_main"
-    android:padding="16dp">
+    android:background="@drawable/background_main">
 
-    <!-- Header -->
+    <!-- Gradient Header -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
+        android:background="@drawable/button_background"
+        android:elevation="4dp"
         android:gravity="center_vertical"
-        android:paddingBottom="24dp">
+        android:orientation="horizontal"
+        android:padding="16dp">
 
         <ImageView
             android:id="@+id/btnBack"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:src="@drawable/ic_back" 
-            android:contentDescription="Back"
-            app:tint="@color/black"/>
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Go back"
+            android:padding="8dp"
+            android:src="@drawable/ic_back"
+            app:tint="@color/white" />
 
         <TextView
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
             android:text="Settings"
-            android:textSize="24sp"
+            android:textColor="@color/white"
+            android:textSize="20sp"
             android:textStyle="bold"
-            android:textColor="@color/purple_500"
-            android:layout_marginStart="16dp"/>
+            android:fontFamily="sans-serif-medium" />
+
+        <View
+            android:layout_width="40dp"
+            android:layout_height="40dp" />
     </LinearLayout>
 
     <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:clipToPadding="false"
+        android:padding="20dp">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -49,16 +60,18 @@
                 android:text="Hydration"
                 android:textColor="@color/purple_500"
                 android:textStyle="bold"
-                android:textSize="16sp"
+                android:textSize="14sp"
+                android:fontFamily="sans-serif-medium"
+                android:letterSpacing="0.05"
                 android:layout_marginBottom="12dp"
-                android:layout_marginTop="8dp"/>
+                android:layout_marginTop="4dp" />
 
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                app:cardCornerRadius="16dp"
-                app:cardElevation="0dp"
-                app:cardBackgroundColor="@android:color/white"
+                app:cardCornerRadius="20dp"
+                app:cardElevation="2dp"
+                app:cardBackgroundColor="@color/card_background"
                 android:layout_marginBottom="24dp">
 
                 <LinearLayout
@@ -68,7 +81,6 @@
                     android:gravity="center_vertical"
                     android:padding="16dp">
 
-                    <!-- Icon -->
                     <FrameLayout
                         android:layout_width="48dp"
                         android:layout_height="48dp"
@@ -78,7 +90,7 @@
                             android:layout_height="24dp"
                             android:layout_gravity="center"
                             android:src="@drawable/ic_water_drop"
-                            app:tint="@color/purple_500"/>
+                            app:tint="@color/purple_500" />
                     </FrameLayout>
 
                     <LinearLayout
@@ -94,15 +106,15 @@
                             android:text="Water Reminders"
                             android:textSize="16sp"
                             android:textStyle="bold"
-                            android:textColor="@color/black"/>
+                            android:textColor="@color/text_primary" />
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Hourly checks during active hours"
+                            android:text="Hourly reminders during active hours"
                             android:textSize="12sp"
-                            android:textColor="#9E9E9E"
-                            android:layout_marginTop="2dp"/>
+                            android:textColor="@color/text_hint"
+                            android:layout_marginTop="2dp" />
                     </LinearLayout>
 
                     <com.google.android.material.switchmaterial.SwitchMaterial
@@ -110,7 +122,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         app:thumbTint="@color/white"
-                        app:trackTint="@color/selector_switch_track"/>
+                        app:trackTint="@color/selector_switch_track" />
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
@@ -118,18 +130,20 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Nutrition"
+                android:text="Meal Reminders"
                 android:textColor="@color/purple_500"
                 android:textStyle="bold"
-                android:textSize="16sp"
-                android:layout_marginBottom="12dp"/>
+                android:textSize="14sp"
+                android:fontFamily="sans-serif-medium"
+                android:letterSpacing="0.05"
+                android:layout_marginBottom="12dp" />
 
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                app:cardCornerRadius="16dp"
-                app:cardElevation="0dp"
-                app:cardBackgroundColor="@android:color/white"
+                app:cardCornerRadius="20dp"
+                app:cardElevation="2dp"
+                app:cardBackgroundColor="@color/card_background"
                 android:layout_marginBottom="24dp">
 
                 <LinearLayout
@@ -154,7 +168,7 @@
                                 android:layout_height="24dp"
                                 android:layout_gravity="center"
                                 android:src="@drawable/ic_food_apple"
-                                app:tint="@color/purple_500"/>
+                                app:tint="@color/purple_500" />
                         </FrameLayout>
 
                         <TextView
@@ -162,10 +176,10 @@
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:text="Breakfast (8:00 AM)"
-                            android:textSize="16sp"
+                            android:textSize="15sp"
                             android:textStyle="bold"
-                            android:textColor="@color/black"
-                            android:layout_marginStart="16dp"/>
+                            android:textColor="@color/text_primary"
+                            android:layout_marginStart="16dp" />
 
                         <com.google.android.material.switchmaterial.SwitchMaterial
                             android:id="@+id/switchBreakfast"
@@ -174,8 +188,12 @@
                             app:thumbTint="@color/white"
                             app:trackTint="@color/selector_switch_track" />
                     </LinearLayout>
-                    
-                    <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#F5F5F5" android:layout_marginStart="80dp"/>
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:background="@color/gray_100"
+                        android:layout_marginStart="80dp" />
 
                     <!-- Lunch -->
                     <LinearLayout
@@ -185,7 +203,7 @@
                         android:gravity="center_vertical"
                         android:padding="16dp">
 
-                         <FrameLayout
+                        <FrameLayout
                             android:layout_width="48dp"
                             android:layout_height="48dp"
                             android:background="@drawable/bg_circle_soft_pink">
@@ -194,7 +212,7 @@
                                 android:layout_height="24dp"
                                 android:layout_gravity="center"
                                 android:src="@drawable/ic_food_apple"
-                                app:tint="@color/purple_500"/>
+                                app:tint="@color/purple_500" />
                         </FrameLayout>
 
                         <TextView
@@ -202,10 +220,10 @@
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:text="Lunch (1:00 PM)"
-                            android:textSize="16sp"
+                            android:textSize="15sp"
                             android:textStyle="bold"
-                            android:textColor="@color/black"
-                            android:layout_marginStart="16dp"/>
+                            android:textColor="@color/text_primary"
+                            android:layout_marginStart="16dp" />
 
                         <com.google.android.material.switchmaterial.SwitchMaterial
                             android:id="@+id/switchLunch"
@@ -215,7 +233,11 @@
                             app:trackTint="@color/selector_switch_track" />
                     </LinearLayout>
 
-                    <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#F5F5F5" android:layout_marginStart="80dp"/>
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:background="@color/gray_100"
+                        android:layout_marginStart="80dp" />
 
                     <!-- Dinner -->
                     <LinearLayout
@@ -225,7 +247,7 @@
                         android:gravity="center_vertical"
                         android:padding="16dp">
 
-                         <FrameLayout
+                        <FrameLayout
                             android:layout_width="48dp"
                             android:layout_height="48dp"
                             android:background="@drawable/bg_circle_soft_pink">
@@ -234,7 +256,7 @@
                                 android:layout_height="24dp"
                                 android:layout_gravity="center"
                                 android:src="@drawable/ic_food_apple"
-                                app:tint="@color/purple_500"/>
+                                app:tint="@color/purple_500" />
                         </FrameLayout>
 
                         <TextView
@@ -242,10 +264,10 @@
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:text="Dinner (8:00 PM)"
-                            android:textSize="16sp"
+                            android:textSize="15sp"
                             android:textStyle="bold"
-                            android:textColor="@color/black"
-                            android:layout_marginStart="16dp"/>
+                            android:textColor="@color/text_primary"
+                            android:layout_marginStart="16dp" />
 
                         <com.google.android.material.switchmaterial.SwitchMaterial
                             android:id="@+id/switchDinner"
@@ -264,16 +286,18 @@
                 android:text="Lifestyle"
                 android:textColor="@color/purple_500"
                 android:textStyle="bold"
-                android:textSize="16sp"
-                android:layout_marginBottom="12dp"/>
+                android:textSize="14sp"
+                android:fontFamily="sans-serif-medium"
+                android:letterSpacing="0.05"
+                android:layout_marginBottom="12dp" />
 
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                app:cardCornerRadius="16dp"
-                app:cardElevation="0dp"
-                app:cardBackgroundColor="@android:color/white"
-                android:layout_marginBottom="16dp">
+                app:cardCornerRadius="20dp"
+                app:cardElevation="2dp"
+                app:cardBackgroundColor="@color/card_background"
+                android:layout_marginBottom="24dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -291,7 +315,7 @@
                             android:layout_height="24dp"
                             android:layout_gravity="center"
                             android:src="@drawable/ic_ai_stars"
-                            app:tint="@color/purple_500"/>
+                            app:tint="@color/purple_500" />
                     </FrameLayout>
 
                     <LinearLayout
@@ -307,15 +331,15 @@
                             android:text="Events &amp; Wishes"
                             android:textSize="16sp"
                             android:textStyle="bold"
-                            android:textColor="@color/black"/>
+                            android:textColor="@color/text_primary" />
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Birthdays and Festival Greetings"
+                            android:text="Birthday and festival greetings"
                             android:textSize="12sp"
-                            android:textColor="#9E9E9E"
-                            android:layout_marginTop="2dp"/>
+                            android:textColor="@color/text_hint"
+                            android:layout_marginTop="2dp" />
                     </LinearLayout>
 
                     <com.google.android.material.switchmaterial.SwitchMaterial
@@ -323,11 +347,13 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         app:thumbTint="@color/white"
-                        app:trackTint="@color/selector_switch_track"/>
+                        app:trackTint="@color/selector_switch_track" />
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
-            
-            <View android:layout_width="match_parent" android:layout_height="50dp"/>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="50dp" />
 
         </LinearLayout>
     </ScrollView>

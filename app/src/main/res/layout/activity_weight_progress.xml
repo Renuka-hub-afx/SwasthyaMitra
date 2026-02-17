@@ -6,52 +6,52 @@
     android:orientation="vertical"
     android:background="@drawable/background_main">
 
-    <!-- Custom Header -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
+        android:background="@drawable/button_background"
+        android:elevation="4dp"
         android:gravity="center_vertical"
+        android:orientation="horizontal"
         android:padding="16dp">
 
         <ImageView
             android:id="@+id/btnBack"
             android:layout_width="40dp"
             android:layout_height="40dp"
-            android:src="@drawable/ic_back"
-            android:background="@drawable/circular_background"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Go back"
             android:padding="8dp"
-            app:tint="#212121"
-            android:clickable="true"
-            android:focusable="true"/>
+            android:src="@drawable/ic_back"
+            app:tint="@color/white" />
 
         <TextView
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
+            android:fontFamily="sans-serif-medium"
+            android:gravity="center"
             android:text="Weight Progress"
+            android:textColor="@color/white"
             android:textSize="20sp"
-            android:textStyle="bold"
-            android:textColor="#212121"
-            android:gravity="center"/>
+            android:textStyle="bold" />
 
         <ImageView
             android:id="@+id/btnMore"
             android:layout_width="40dp"
             android:layout_height="40dp"
-            android:src="@drawable/ic_more_vert"
-            android:background="@drawable/circular_background"
             android:padding="8dp"
-            app:tint="#212121"
-            android:visibility="invisible"/>
+            android:src="@drawable/ic_more_vert"
+            app:tint="@color/white"
+            android:visibility="invisible" />
     </LinearLayout>
 
-    <!-- Time Range Toggle -->
     <com.google.android.material.button.MaterialButtonToggleGroup
         android:id="@+id/toggleGroup"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
+        android:layout_marginTop="16dp"
         android:layout_marginBottom="8dp"
         app:singleSelection="true"
         app:checkedButton="@id/btnWeekly"
@@ -63,7 +63,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Weekly"
-            android:textColor="#7B2CBF"/>
+            android:textColor="@color/purple_500" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnBiWeekly"
@@ -71,7 +71,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="15 Days"
-            android:textColor="#757575"/>
+            android:textColor="@color/text_secondary" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnMonthly"
@@ -79,24 +79,22 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Monthly"
-            android:textColor="#757575"/>
-
+            android:textColor="@color/text_secondary" />
     </com.google.android.material.button.MaterialButtonToggleGroup>
 
-    <!-- Chart Card -->
-    <androidx.cardview.widget.CardView
+    <com.google.android.material.card.MaterialCardView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_margin="16dp"
-        app:cardCornerRadius="16dp"
-        app:cardElevation="8dp"
-        app:cardBackgroundColor="#FFFFFF">
+        app:cardCornerRadius="20dp"
+        app:cardElevation="2dp"
+        app:cardBackgroundColor="@color/card_background">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="16dp">
+            android:padding="20dp">
 
             <TextView
                 android:layout_width="wrap_content"
@@ -104,16 +102,16 @@
                 android:text="Weight Trend"
                 android:textSize="18sp"
                 android:textStyle="bold"
-                android:textColor="#212121"
-                android:layout_marginBottom="16dp"/>
+                android:textColor="@color/text_primary"
+                android:fontFamily="sans-serif-medium"
+                android:layout_marginBottom="16dp" />
 
             <com.github.mikephil.charting.charts.LineChart
                 android:id="@+id/weightChart"
                 android:layout_width="match_parent"
                 android:layout_height="250dp" />
-
         </LinearLayout>
-    </androidx.cardview.widget.CardView>
+    </com.google.android.material.card.MaterialCardView>
 
     <TextView
         android:layout_width="match_parent"
@@ -121,17 +119,19 @@
         android:text="Recent Logs"
         android:textSize="16sp"
         android:textStyle="bold"
-        android:textColor="#424242"
-        android:layout_marginHorizontal="16dp"
-        android:layout_marginTop="8dp"
-        android:layout_marginBottom="8dp"/>
+        android:textColor="@color/text_primary"
+        android:fontFamily="sans-serif-medium"
+        android:layout_marginHorizontal="20dp"
+        android:layout_marginTop="4dp"
+        android:layout_marginBottom="8dp" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/weightHistoryRecyclerView"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:paddingHorizontal="16dp"/>
+        android:paddingHorizontal="16dp"
+        android:clipToPadding="false" />
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/addWeightFab"
@@ -140,7 +140,7 @@
         android:layout_gravity="end|bottom"
         android:layout_margin="16dp"
         android:src="@drawable/ic_add"
-        app:backgroundTint="#7B2CBF"
-        app:tint="@android:color/white"/>
+        app:backgroundTint="@color/purple_500"
+        app:tint="@color/white" />
 
 </LinearLayout>

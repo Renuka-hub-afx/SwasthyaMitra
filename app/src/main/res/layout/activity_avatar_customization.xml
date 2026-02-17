@@ -6,45 +6,50 @@
     android:layout_height="match_parent"
     android:background="@drawable/background_main">
 
-    <!-- Header -->
-    <ImageButton
-        android:id="@+id/btn_back"
-        android:layout_width="48dp"
-        android:layout_height="48dp"
-        android:layout_margin="8dp"
-        android:padding="12dp"
-        android:background="?attr/selectableItemBackgroundBorderless"
-        android:contentDescription="Back"
-        android:src="@drawable/ic_back"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:tint="#000000" />
-
-    <TextView
-        android:id="@+id/tvTitle"
-        android:layout_width="wrap_content"
+    <!-- Gradient Header -->
+    <LinearLayout
+        android:id="@+id/layoutHeader"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Edit Avatar"
-        android:textColor="#000000"
-        android:textSize="20sp"
-        android:textStyle="bold"
-        app:layout_constraintBottom_toBottomOf="@id/btn_back"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@id/btn_back" />
-
-    <TextView
-        android:id="@+id/btn_reset"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:background="@drawable/button_background"
+        android:elevation="4dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
         android:padding="16dp"
-        android:text="Reset"
-        android:textColor="#D500F9"
-        android:textSize="16sp"
-        android:textStyle="bold"
-        app:layout_constraintBottom_toBottomOf="@id/btn_back"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent">
+
+        <ImageButton
+            android:id="@+id/btn_back"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Back"
+            android:padding="8dp"
+            android:src="@drawable/ic_back"
+            app:tint="@color/white" />
+
+        <TextView
+            android:id="@+id/tvTitle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:fontFamily="sans-serif-medium"
+            android:gravity="center"
+            android:text="Edit Avatar"
+            android:textColor="@color/white"
+            android:textSize="20sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/btn_reset"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:padding="8dp"
+            android:text="Reset"
+            android:textColor="@color/white"
+            android:textSize="14sp"
+            android:textStyle="bold" />
+    </LinearLayout>
 
     <!-- Undo/Redo -->
     <LinearLayout
@@ -52,10 +57,10 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
-        android:layout_marginTop="8dp"
+        android:layout_marginTop="12dp"
         android:orientation="horizontal"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/btn_back">
+        app:layout_constraintTop_toBottomOf="@id/layoutHeader">
 
         <ImageButton
             android:id="@+id/btn_undo"
@@ -65,7 +70,7 @@
             android:background="@drawable/circular_background"
             android:padding="8dp"
             android:src="@drawable/ic_undo"
-            app:tint="#757575" />
+            app:tint="@color/text_secondary" />
 
         <ImageButton
             android:id="@+id/btn_redo"
@@ -74,7 +79,7 @@
             android:background="@drawable/circular_background"
             android:padding="8dp"
             android:src="@drawable/ic_redo"
-            app:tint="#757575" />
+            app:tint="@color/text_secondary" />
     </LinearLayout>
 
     <!-- Main Avatar Display -->
@@ -88,15 +93,13 @@
         app:layout_constraintBottom_toTopOf="@id/category_scroll_view"
         app:layout_constraintTop_toBottomOf="@id/layout_undo_redo">
 
-        <!-- Layer 1: Base Body Scheme (Face, Neck, Skin) -->
         <ImageView
             android:id="@+id/iv_base"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:scaleType="fitCenter"
             android:src="@drawable/vector_base_girl" />
-        
-        <!-- Layer 2: Outfit (Sits on neck) -->
+
         <ImageView
             android:id="@+id/iv_outfit"
             android:layout_width="match_parent"
@@ -104,26 +107,20 @@
             android:scaleType="fitCenter"
             android:src="@drawable/vector_outfit_kimono" />
 
-        <!-- Layer 3: Eyes (Sits on face) -->
         <ImageView
             android:id="@+id/iv_eyes"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:scaleType="fitCenter"
             android:src="@drawable/vector_eyes_glasses" />
-            
-        <!-- Layer 4: Hair (Sits on top of everything) -->
+
         <ImageView
             android:id="@+id/iv_hair"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:scaleType="fitCenter"
             android:src="@drawable/vector_hair_messy_brown" />
-
-
     </FrameLayout>
-
-
 
     <!-- Categories -->
     <HorizontalScrollView
@@ -137,42 +134,41 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:gravity="center_horizontal"
             android:orientation="horizontal"
-            android:paddingHorizontal="16dp"
-            android:gravity="center_horizontal">
+            android:paddingHorizontal="16dp">
 
             <TextView
                 android:id="@+id/cat_gallery"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:drawableTop="@drawable/ic_gallery"
                 android:drawablePadding="8dp"
+                android:drawableTop="@drawable/ic_gallery"
                 android:gravity="center"
                 android:padding="12dp"
                 android:text="Gallery"
+                android:textColor="@color/text_secondary"
                 android:textSize="14sp"
-                android:textColor="#757575"
-                app:drawableTint="#757575" />
+                app:drawableTint="@color/text_secondary" />
 
             <View
                 android:layout_width="16dp"
-                android:layout_height="match_parent"/>
+                android:layout_height="match_parent" />
 
             <TextView
                 android:id="@+id/cat_avatar"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:drawableTop="@drawable/ic_avatar_icon"
                 android:drawablePadding="8dp"
+                android:drawableTop="@drawable/ic_avatar_icon"
                 android:gravity="center"
                 android:padding="12dp"
                 android:text="Avatar"
+                android:textColor="@color/purple_500"
                 android:textSize="14sp"
-                android:textColor="#D500F9"
-                app:drawableTint="#D500F9" />
-
+                app:drawableTint="@color/purple_500" />
         </LinearLayout>
     </HorizontalScrollView>
 
@@ -189,8 +185,8 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:gravity="center_vertical"
             android:layout_marginBottom="16dp"
+            android:gravity="center_vertical"
             android:orientation="horizontal">
 
             <TextView
@@ -198,18 +194,18 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
+                android:fontFamily="sans-serif-medium"
                 android:text="Hairstyles"
-                android:textColor="#000000"
+                android:textColor="@color/text_primary"
                 android:textSize="18sp"
                 android:textStyle="bold" />
 
-            <!-- Colors (Mock) -->
             <View
                 android:layout_width="24dp"
                 android:layout_height="24dp"
                 android:layout_marginEnd="8dp"
                 android:background="@drawable/circle_dot"
-                android:backgroundTint="#D500F9" />
+                android:backgroundTint="@color/purple_500" />
 
             <View
                 android:layout_width="24dp"
@@ -231,18 +227,21 @@
             android:layout_width="match_parent"
             android:layout_height="120dp"
             android:orientation="horizontal"
-            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" 
-            tools:listitem="@layout/item_avatar"/>
+            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+            tools:listitem="@layout/item_avatar" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_save"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
+            android:layout_height="52dp"
+            android:layout_marginTop="12dp"
+            android:background="@drawable/button_background"
             android:text="Save"
-            app:backgroundTint="#D500F9"
+            android:textColor="@color/white"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            app:backgroundTint="@null"
             app:cornerRadius="24dp" />
-
     </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

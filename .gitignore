@@ -61,3 +61,6 @@ ehthumbs.db
 *.stacktrace
 **/gradlew.bat~
 **/gradlew~
+
+# Temporary Gradle Files
+.gradle_temp/

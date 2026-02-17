@@ -20,7 +20,9 @@ import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
+import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -106,7 +108,24 @@ class BadgesActivity : AppCompatActivity() {
             val foodCount = foodResult.getOrNull()?.size ?: 0
             val isNutritionDone = foodCount >= 3
 
-            // 3. Fetch RTDB for Steps and Workouts
+            // 3. Sleep Data from Firestore
+            val sleepDb = FirebaseFirestore.getInstance("renu")
+            val today = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+            val sleepResult = try {
+                val sleepLogs = sleepDb.collection("users")
+                    .document(userId)
+                    .collection("sleep_logs")
+                    .whereEqualTo("date", today)
+                    .limit(1)
+                    .get()
+                    .await()
+                if (sleepLogs.documents.isNotEmpty()) {
+                    val duration = sleepLogs.documents[0].getDouble("durationHours") ?: 0.0
+                    duration >= 7.0
+                } else false
+            } catch (e: Exception) { false }
+
+            // 4. Fetch RTDB for Steps and Workouts
             val db = FirebaseDatabase.getInstance("https://swasthyamitra-ded44-default-rtdb.asia-southeast1.firebasedatabase.app").reference
             val userRef = db.child("users").child(userId)
             
@@ -118,8 +137,8 @@ class BadgesActivity : AppCompatActivity() {
                     val currentSteps = fitnessData.steps
                     val isStepsDone = currentSteps >= 10000
                     
-                    // Sleep (Placeholder)
-                    val isSleepDone = false 
+                    // Sleep from Firestore query above
+                    val isSleepDone = sleepResult
                     
                     // Meditation
                     val hasMeditation = fitnessData.workoutHistory.values.any { 
