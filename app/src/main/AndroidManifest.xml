@@ -82,10 +82,6 @@
             android:exported="false" />
 
         <activity
-            android:name=".SafetyActivity"
-            android:exported="false" />
-
-        <activity
             android:name=".StreakDetailsActivity"
             android:exported="false"
             android:screenOrientation="portrait" />
@@ -99,10 +95,6 @@
             android:name=".JoinChallengeActivity"
             android:exported="false"
             android:screenOrientation="portrait" />
-
-        <activity
-            android:name=".CoachActivity"
-            android:exported="false" />
 
         <activity
             android:name=".SleepTrackerActivity"
@@ -160,11 +152,6 @@
             android:exported="false"
             android:screenOrientation="portrait" />
 
-
-        <activity
-            android:name=".MealPlanActivity"
-            android:exported="false"
-            android:screenOrientation="portrait" />
 
         <activity
             android:name=".SmartPantryActivity"
@@ -273,12 +260,6 @@
         </receiver>
 
 
-        <!-- Progress Dashboard Activity -->
-        <activity
-            android:name=".ui.ProgressDashboardActivity"
-            android:exported="false"
-            android:screenOrientation="portrait" />
-
         <!-- Enhanced Progress Dashboard with Graphs -->
         <activity
             android:name=".ui.EnhancedProgressDashboardActivity"
@@ -297,7 +278,7 @@
 
         <meta-data
             android:name="com.google.android.geo.API_KEY"
-            android:value="AIzaSyCbQS3zxm_B3ndUYkPz2S1Sn2bbf_fDa-w" />
+            android:value="${MAPS_API_KEY}" />
 
         <!-- Firebase Auto-Initialization -->
         <meta-data

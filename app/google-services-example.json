@@ -2,7 +2,7 @@
   "project_info": {
     "project_number": "YOUR_PROJECT_NUMBER",
     "project_id": "YOUR_PROJECT_ID",
-    "storage_bucket": "YOUR_STORAGE_BUCKET"
+    "storage_bucket": "YOUR_PROJECT_ID.firebasestorage.app"
   },
   "client": [
     {
@@ -15,7 +15,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "YOUR_API_KEY"
+          "current_key": "YOUR_FIREBASE_API_KEY"
         }
       ],
       "services": {
