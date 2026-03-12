@@ -15,7 +15,6 @@ import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.swasthyamitra.auth.FirebaseAuthHelper
 import com.example.swasthyamitra.data.repository.HydrationRepository
-import com.example.swasthyamitra.models.WorkoutVideo
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase

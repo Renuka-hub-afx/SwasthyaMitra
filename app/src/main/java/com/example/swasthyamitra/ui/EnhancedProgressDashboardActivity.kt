@@ -133,17 +133,17 @@ class EnhancedProgressDashboardActivity : AppCompatActivity() {
                 xAxis.apply {
                     position = XAxis.XAxisPosition.BOTTOM
                     setDrawGridLines(false)
-                    textColor = Color.WHITE
+                    textColor = Color.BLACK
                 }
 
                 axisLeft.apply {
                     setDrawGridLines(true)
-                    gridColor = Color.parseColor("#30FFFFFF")
-                    textColor = Color.WHITE
+                    gridColor = Color.parseColor("#30000000")
+                    textColor = Color.BLACK
                 }
 
                 axisRight.isEnabled = false
-                legend.textColor = Color.WHITE
+                legend.textColor = Color.BLACK
             }
         }
     }
@@ -219,7 +219,7 @@ class EnhancedProgressDashboardActivity : AppCompatActivity() {
                 lineWidth = 3f
                 circleRadius = 5f
                 setDrawCircleHole(false)
-                valueTextColor = Color.WHITE
+                valueTextColor = Color.BLACK
                 valueTextSize = 10f
                 mode = LineDataSet.Mode.CUBIC_BEZIER
                 setDrawFilled(true)
@@ -261,7 +261,7 @@ class EnhancedProgressDashboardActivity : AppCompatActivity() {
                 lineWidth = 3f
                 circleRadius = 5f
                 setDrawCircleHole(false)
-                valueTextColor = Color.WHITE
+                valueTextColor = Color.BLACK
                 valueTextSize = 10f
                 mode = LineDataSet.Mode.CUBIC_BEZIER
                 setDrawFilled(true)
@@ -303,7 +303,7 @@ class EnhancedProgressDashboardActivity : AppCompatActivity() {
                 lineWidth = 3f
                 circleRadius = 5f
                 setDrawCircleHole(false)
-                valueTextColor = Color.WHITE
+                valueTextColor = Color.BLACK
                 valueTextSize = 10f
                 mode = LineDataSet.Mode.CUBIC_BEZIER
                 setDrawFilled(true)
@@ -346,7 +346,7 @@ class EnhancedProgressDashboardActivity : AppCompatActivity() {
                 lineWidth = 3f
                 circleRadius = 5f
                 setDrawCircleHole(false)
-                valueTextColor = Color.WHITE
+                valueTextColor = Color.BLACK
                 valueTextSize = 10f
                 mode = LineDataSet.Mode.CUBIC_BEZIER
                 setDrawFilled(true)
@@ -376,9 +376,9 @@ class EnhancedProgressDashboardActivity : AppCompatActivity() {
                 val firestore = com.google.firebase.firestore.FirebaseFirestore.getInstance("renu")
 
                 // Get user's activity data
-                val hydrationDays = getActivityCount(firestore, userId, "hydration_logs", 7)
+                val hydrationDays = getActivityCount(firestore, userId, "waterLogs", 7)
                 val stepDays = getStepDays(firestore, userId, 10000, 7)
-                val mealCount = getActivityCount(firestore, userId, "foodLogs", 7)
+                val mealCount = getTotalDocCount(firestore, userId, "foodLogs", 7)
                 val workoutCount = getActivityCount(firestore, userId, "exercise_logs", 7)
 
                 // Calculate current stage
@@ -441,14 +441,14 @@ class EnhancedProgressDashboardActivity : AppCompatActivity() {
 
                 // Stage 5: Nutrition Ninja (21 meals logged)
                 if (mealCount >= 21 && unlockedStages >= 4) {
-                    unlockStage(5, "✓", "#FFFFFF")
+                    unlockStage(5, "🍽️", "#FFFFFF")
                     unlockedStages++
                     currentStage = 6
                 }
 
                 // Stage 6: Iron Legend (7 workouts)
                 if (workoutCount >= 7 && unlockedStages >= 5) {
-                    unlockStage(6, "H", "#E1BEE7")
+                    unlockStage(6, "🏋️", "#E1BEE7")
                     unlockedStages++
                 }
 
@@ -487,6 +487,39 @@ class EnhancedProgressDashboardActivity : AppCompatActivity() {
 
             // Count unique dates
             snapshot.documents.mapNotNull { it.getString("date") }.distinct().size
+        } catch (e: Exception) {
+            0
+        }
+    }
+
+    /**
+     * Count total documents (not unique dates) for a collection in the last N days.
+     * Used for Stage 5: Nutrition Ninja which needs 21 total meal logs.
+     */
+    private suspend fun getTotalDocCount(
+        firestore: com.google.firebase.firestore.FirebaseFirestore,
+        userId: String,
+        collection: String,
+        days: Int
+    ): Int {
+        return try {
+            val calendar = java.util.Calendar.getInstance()
+            calendar.add(java.util.Calendar.DAY_OF_YEAR, -days)
+            val startDate = String.format(
+                "%04d-%02d-%02d",
+                calendar.get(java.util.Calendar.YEAR),
+                calendar.get(java.util.Calendar.MONTH) + 1,
+                calendar.get(java.util.Calendar.DAY_OF_MONTH)
+            )
+
+            val snapshot = firestore.collection("users")
+                .document(userId)
+                .collection(collection)
+                .whereGreaterThanOrEqualTo("date", startDate)
+                .get()
+                .await()
+
+            snapshot.size()
         } catch (e: Exception) {
             0
         }

@@ -45,7 +45,6 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
     private lateinit var binding: ActivityMapBinding
     private var googleMap: GoogleMap? = null
     private var isTracking = false
-    private var isGhostMode = false
 
     // SOS support
     private lateinit var sosManager: SOSManager
@@ -84,16 +83,10 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
 
         setupListeners()
         observeUnifiedService()
-        observeGhostMode()
         
         // Auto-start if launched with that intent
         if (intent.getBooleanExtra("AUTO_START", false)) {
             // Will start after map is ready and permissions checked
-        }
-        
-        // Handle entry from Ghost Mode button
-        if (intent.getBooleanExtra("START_GHOST", false)) {
-            sendGhostCommand()
         }
     }
 
@@ -104,10 +97,6 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
 
         binding.btnBack.setOnClickListener {
             finish()
-        }
-
-        binding.btnToggleGhost.setOnClickListener {
-            sendGhostCommand()
         }
 
         binding.btnSOS.setOnClickListener {
@@ -168,13 +157,6 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
         startService(intent)
     }
 
-    private fun sendGhostCommand() {
-        // Ghost mode still handled by TrackingService for safety
-        val intent = Intent(this, TrackingService::class.java).apply {
-            action = "ACTION_TOGGLE_GHOST"
-        }
-        startService(intent)
-    }
 
     // -------- Observe UnifiedStepTrackingService --------
 
@@ -231,16 +213,6 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
         }
     }
 
-    private fun observeGhostMode() {
-        TrackingService.isGhostModeLive.observe(this) { ghost ->
-            isGhostMode = ghost
-            binding.btnToggleGhost.alpha = if (isGhostMode) 1.0f else 0.5f
-            binding.btnSOS.visibility = if (isGhostMode && isTracking) View.VISIBLE else View.GONE
-            binding.llEmergencyContact.visibility = if (isGhostMode) View.VISIBLE else View.GONE
-
-            if (isGhostMode) loadEmergencyContact()
-        }
-    }
 
     // -------- SOS / Safety --------
 
@@ -358,8 +330,8 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
 
     private fun showSafetyCheckDialog() {
         androidx.appcompat.app.AlertDialog.Builder(this)
-            .setTitle("Safety Check \u26A0\uFE0F")
-            .setMessage("No movement detected in Ghost Mode. Are you safe?")
+            .setTitle("Safety Check ⚠️")
+            .setMessage("No movement detected. Are you safe?")
             .setPositiveButton("I'm Safe") { d, _ -> d.dismiss() }
             .setCancelable(false)
             .show()

@@ -7,6 +7,7 @@ import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import com.example.swasthyamitra.auth.FirebaseAuthHelper
 import com.example.swasthyamitra.gamification.XPManager
+import com.example.swasthyamitra.utils.Constants
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.firestore.FirebaseFirestore
 import java.text.SimpleDateFormat
@@ -222,10 +223,10 @@ class ManualExerciseActivity : AppCompatActivity() {
                 .addOnSuccessListener {
                     // Award XP via XPManager (single source of truth)
                     val xpManager = XPManager(userId)
-                    xpManager.awardXP(XPManager.XPSource.COMPLETE_WORKOUT) { leveledUp, newLevel ->
+                    xpManager.awardXP(Constants.XPSource.COMPLETE_WORKOUT) { leveledUp, newLevel ->
                         runOnUiThread {
                             val levelMsg = if (leveledUp) " Level Up! 🎉" else ""
-                            Toast.makeText(this, "Exercise logged! +${XPManager.XPSource.COMPLETE_WORKOUT.xpAmount} XP & $calories kcal$levelMsg", Toast.LENGTH_LONG).show()
+                            Toast.makeText(this, "Exercise logged! +${Constants.XP.COMPLETE_WORKOUT} XP & $calories kcal$levelMsg", Toast.LENGTH_LONG).show()
                             finish()
                         }
                     }

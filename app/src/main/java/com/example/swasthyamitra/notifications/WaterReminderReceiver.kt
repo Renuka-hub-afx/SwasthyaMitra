@@ -1,5 +1,6 @@
 package com.example.swasthyamitra.notifications
 
+import android.app.AlarmManager
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
@@ -19,8 +20,8 @@ import com.example.swasthyamitra.ui.hydration.HydrationActivity
 class WaterReminderReceiver : BroadcastReceiver() {
     
     companion object {
-        const val CHANNEL_ID = "water_reminder_channel"
-        const val CHANNEL_NAME = "Water Reminders"
+        const val CHANNEL_ID = "channel_water_reminders"
+        const val CHANNEL_NAME = "Hydration Reminders"
         const val NOTIFICATION_ID_BASE = 3000
         
         // Notification action keys
@@ -134,6 +135,37 @@ class WaterReminderReceiver : BroadcastReceiver() {
             Log.d("WaterReminderReceiver", "Notification shown with ID: $notificationId")
         } catch (e: SecurityException) {
             Log.e("WaterReminderReceiver", "Permission denied for notification", e)
+        }
+
+        // Re-schedule this alarm for the same time tomorrow so reminders persist daily
+        rescheduleForNextDay(context, reminderId)
+    }
+
+    /**
+     * Re-schedule the same alarm for the next day (24 hours later)
+     * so alarm-based water reminders repeat daily.
+     */
+    private fun rescheduleForNextDay(context: Context, reminderId: Int) {
+        try {
+            val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+            val intent = Intent(context, WaterReminderReceiver::class.java).apply {
+                putExtra("REMINDER_ID", reminderId)
+            }
+            val pendingIntent = PendingIntent.getBroadcast(
+                context,
+                WaterReminderManager.REMINDER_REQUEST_CODE_BASE + reminderId,
+                intent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+            val nextTrigger = System.currentTimeMillis() + 24 * 60 * 60 * 1000L // 24 hours later
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, nextTrigger, pendingIntent)
+            } else {
+                alarmManager.setExact(AlarmManager.RTC_WAKEUP, nextTrigger, pendingIntent)
+            }
+            Log.d("WaterReminderReceiver", "Re-scheduled reminder #$reminderId for next day")
+        } catch (e: Exception) {
+            Log.e("WaterReminderReceiver", "Error re-scheduling alarm", e)
         }
     }
     

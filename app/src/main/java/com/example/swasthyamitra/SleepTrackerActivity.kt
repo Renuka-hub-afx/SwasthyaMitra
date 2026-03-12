@@ -9,6 +9,9 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.example.swasthyamitra.databinding.ActivitySleepTrackerBinding
+import com.example.swasthyamitra.utils.Constants
+import com.example.swasthyamitra.utils.DailySummaryAggregator
+import com.example.swasthyamitra.gamification.XPManager
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -371,6 +374,29 @@ class SleepTrackerActivity : AppCompatActivity() {
                     .add(sleepLog)
                     .await()
 
+                // Update DailySummary with sleep metrics
+                try {
+                    val aggregator = DailySummaryAggregator(userId)
+                    aggregator.updateSleepMetrics(
+                        date = today,
+                        sleepMinutes = (hours * 60).toInt()
+                    )
+                } catch (e: Exception) {
+                    Log.e(TAG, "Failed to update daily summary: ${e.message}")
+                }
+                
+                // Award XP for logging sleep
+                try {
+                    val xpManager = XPManager(userId)
+                    xpManager.awardXP(Constants.XPSource.LOG_SLEEP) { leveledUp, newLevel ->
+                        if (leveledUp) {
+                            Log.d(TAG, "User leveled up to $newLevel!")
+                        }
+                    }
+                } catch (e: Exception) {
+                    Log.e(TAG, "Failed to award XP: ${e.message}")
+                }
+
                 // Mark as logged today
                 hasLoggedToday = true
                 sleepPrefs.edit().putString(KEY_LAST_LOGGED_DATE, today).apply()
@@ -483,6 +509,29 @@ class SleepTrackerActivity : AppCompatActivity() {
                     .collection("sleep_logs")
                     .add(sleepLog)
                     .await()
+
+                // Update DailySummary with sleep metrics
+                try {
+                    val aggregator = DailySummaryAggregator(userId)
+                    aggregator.updateSleepMetrics(
+                        date = today,
+                        sleepMinutes = (durationHours * 60).toInt()
+                    )
+                } catch (e: Exception) {
+                    Log.e(TAG, "Failed to update daily summary: ${e.message}")
+                }
+                
+                // Award XP for logging sleep
+                try {
+                    val xpManager = XPManager(userId)
+                    xpManager.awardXP(Constants.XPSource.LOG_SLEEP) { leveledUp, newLevel ->
+                        if (leveledUp) {
+                            Log.d(TAG, "User leveled up to $newLevel!")
+                        }
+                    }
+                } catch (e: Exception) {
+                    Log.e(TAG, "Failed to award XP: ${e.message}")
+                }
 
                 // Mark as logged today
                 hasLoggedToday = true

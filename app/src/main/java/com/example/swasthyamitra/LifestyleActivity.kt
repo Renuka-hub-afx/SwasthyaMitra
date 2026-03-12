@@ -368,16 +368,15 @@ class LifestyleActivity : AppCompatActivity() {
     /**
      * Adjust calories based on weight goal
      * Weight Loss: -500 kcal/day (0.5kg loss per week)
-     * Weight Gain: +300-500 kcal/day
+     * Weight Gain: +300 kcal/day
      * Maintenance: Keep TDEE as is
      */
     private fun adjustCaloriesForGoal(tdee: Double, goalType: String): Double {
         return when (goalType) {
             "Lose Weight" -> tdee - 500
-            "Gain Muscle" -> tdee + 400
+            "Gain Muscle" -> tdee + 300
             "Maintain Weight" -> tdee
-            "General Health" -> tdee
-            else -> tdee
+            else -> tdee  // Fallback covers any legacy "General Health" data
         }
     }
 

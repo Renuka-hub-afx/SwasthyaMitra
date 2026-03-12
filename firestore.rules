@@ -1,281 +1,290 @@
 rules_version = '2';
 
+// ═══════════════════════════════════════════════════════════════════════
+// SwasthyaMitra — Firestore Security Rules (Database: "renu")
+// Generated from codebase scan — covers ALL active collection paths
+// ═══════════════════════════════════════════════════════════════════════
+
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // ==================== HELPER FUNCTIONS ====================
-    
+    // ────────────────── HELPER FUNCTIONS ──────────────────
+
+    // Check if the request comes from an authenticated user
     function isAuthenticated() {
       return request.auth != null;
     }
 
+    // Check if the authenticated user matches the userId path param
     function isOwner(userId) {
       return isAuthenticated() && request.auth.uid == userId;
     }
-    
-    function ownsResource() {
-      return isAuthenticated() && resource != null && resource.data.userId == request.auth.uid;
-    }
 
+    // Check if the incoming document's userId field matches the caller
     function willOwnResource() {
-      return isAuthenticated() && request.resource != null && request.resource.data.userId == request.auth.uid;
+      return isAuthenticated()
+          && request.resource != null
+          && request.resource.data.userId == request.auth.uid;
     }
 
-    // Validation helpers
+    // Validation: step count between 0 and 200,000
     function isValidStepCount(steps) {
-      return steps is int && steps >= 0 && steps <= 100000;
+      return steps is int && steps >= 0 && steps <= 200000;
     }
 
-    function isValidCalories(calories) {
-      return calories is number && calories >= 0 && calories <= 10000;
+    // Validation: calorie value between 0 and 50,000
+    function isValidCalories(cal) {
+      return cal is number && cal >= 0 && cal <= 50000;
     }
 
-    function isValidDate(date) {
-      return date is string && date.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$');
+    // Validation: weight between 1 kg and 500 kg
+    function isValidWeight(w) {
+      return w is number && w > 0 && w < 500;
     }
 
-    // ==================== MAIN USER COLLECTION ====================
-    // All user data MUST be nested under /users/{userId}
+    // Validation: ISO date string yyyy-MM-dd
+    function isValidDateString(d) {
+      return d is string && d.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$');
+    }
+
+    // ══════════════════════════════════════════════════════
+    //  1. USERS COLLECTION  —  /users/{userId}
+    //     Profile data: height, weight, gender, age, avatar,
+    //     emergencyContacts, eatingPreference, etc.
+    // ══════════════════════════════════════════════════════
     match /users/{userId} {
-      // User can read and write their own profile
+
+      // Only the owner can read/write their own profile
       allow read, write: if isOwner(userId);
 
-      // User goals subcollection
+      // ──────── 1a. Goals ────────
+      // Fields: dailyCalories, targetWeight, activityLevel, dietPreference
       match /goals/{goalId} {
         allow read, write: if isOwner(userId);
       }
 
-      // PHASE 1.1: Daily Steps Collection (NEW - Hybrid Step Counter)
-      // Stores daily step counts from hardware sensor with validation
-      match /daily_steps/{date} {
-        allow read: if isOwner(userId);
-        allow create: if isOwner(userId) &&
-                        willOwnResource() &&
-                        isValidStepCount(request.resource.data.steps) &&
-                        isValidDate(date);
-        allow update: if isOwner(userId) &&
-                        ownsResource() &&
-                        isValidStepCount(request.resource.data.steps);
-        allow delete: if isOwner(userId);
-      }
-
-      // Step data (real-time tracking) - Alternative structure
-      match /step_data/{dataId} {
-        allow read: if isOwner(userId);
-        allow create: if isOwner(userId) && willOwnResource();
-        allow update, delete: if isOwner(userId) && ownsResource();
-      }
-
-      // Food intake logs (7+ days history)
+      // ──────── 1b. Food / Nutrition Logs ────────
+      // Fields: foodName, calories, protein, carbs, fat, mealType,
+      //         timestamp, userId, servingSize, date
       match /foodLogs/{logId} {
         allow read: if isOwner(userId);
-        allow create: if isOwner(userId) && willOwnResource();
-        allow update, delete: if isOwner(userId) && ownsResource();
-      }
-
-      // Water/hydration logs
-      match /waterLogs/{logId} {
-        allow read: if isOwner(userId);
-        allow create: if isOwner(userId);
+        allow create: if isOwner(userId)
+                      && willOwnResource()
+                      && isValidCalories(request.resource.data.calories);
         allow update, delete: if isOwner(userId);
       }
 
-      // Hydration logs (alternative naming)
-      match /hydration_logs/{logId} {
-        allow read: if isOwner(userId);
-        allow create: if isOwner(userId);
-        allow update, delete: if isOwner(userId);
-      }
-
-      // Exercise logs (AI + Manual) - PHASE 1: Enhanced with AI exercise tracking
+      // ──────── 1c. Exercise Logs ────────
+      // Fields: exerciseName, caloriesBurned, durationMinutes,
+      //         timestamp, userId, source, category
       match /exercise_logs/{logId} {
         allow read: if isOwner(userId);
-        allow create: if isOwner(userId) &&
-                        willOwnResource() &&
-                        request.resource.data.caloriesBurned >= 0;
-        allow update, delete: if isOwner(userId) && ownsResource();
-      }
-
-      // Weight tracking logs
-      match /weightLogs/{logId} {
-        allow read: if isOwner(userId);
-        allow create: if isOwner(userId) &&
-                        request.resource.data.weightKg > 0 &&
-                        request.resource.data.weightKg < 500;
+        allow create: if isOwner(userId)
+                      && willOwnResource()
+                      && request.resource.data.caloriesBurned >= 0;
         allow update, delete: if isOwner(userId);
       }
 
-      // Sleep logs - Enhanced with sleep cycle tracking
+      // ──────── 1d. Sleep Logs ────────
+      // Fields: bedtime, wakeTime, durationHours, quality,
+      //         timestamp, date
       match /sleep_logs/{logId} {
         allow read: if isOwner(userId);
         allow create: if isOwner(userId);
         allow update, delete: if isOwner(userId);
       }
 
-      // Meal feedback for AI learning
-      match /meal_feedback/{feedbackId} {
-        allow read: if isOwner(userId);
-        allow create: if isOwner(userId);
-        allow update, delete: if isOwner(userId);
-      }
-
-      // User dietary preferences
-      match /user_preferences/{preferenceId} {
-        allow read, write: if isOwner(userId);
-      }
-
-      // Health metrics (BP, heart rate, glucose, etc.)
-      match /health_metrics/{metricId} {
-        allow read: if isOwner(userId);
-        allow create: if isOwner(userId);
-        allow update, delete: if isOwner(userId);
-      }
-
-      // Workout plans and sessions
-      match /workouts/{workoutId} {
-        allow read: if isOwner(userId);
-        allow create: if isOwner(userId);
-        allow update, delete: if isOwner(userId);
-      }
-
-      // Lifestyle data
-      match /lifestyle/{lifestyleId} {
-        allow read, write: if isOwner(userId);
-      }
-
-      // Mood tracking
+      // ──────── 1e. Mood Logs ────────
+      // Fields: mood, note, timestamp, moodScore
       match /mood_logs/{moodId} {
         allow read: if isOwner(userId);
         allow create: if isOwner(userId);
         allow update, delete: if isOwner(userId);
       }
 
-      // Progress tracking and analytics
-      match /progress/{progressId} {
+      // ──────── 1f. Weight Logs ────────
+      // Fields: weightKg, timestamp, date
+      match /weightLogs/{logId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId)
+                      && isValidWeight(request.resource.data.weightKg);
+        allow update, delete: if isOwner(userId);
+      }
+
+      // ──────── 1g. Water / Hydration Logs ────────
+      // Fields: amountMl, timestamp, date
+      match /waterLogs/{logId} {
         allow read: if isOwner(userId);
         allow create: if isOwner(userId);
         allow update, delete: if isOwner(userId);
       }
 
-      // Streaks and gamification data
-      match /streaks/{streakId} {
+      // ──────── 1h. Walking Sessions (GPS Tracking) ────────
+      // Fields: distance, duration, calories, routePoints,
+      //         startTime, endTime, userId
+      match /walking_sessions/{sessionId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId) && willOwnResource();
+        allow update, delete: if isOwner(userId);
+      }
+
+      // ──────── 1i. Step Sessions ────────
+      // Fields: steps, startTime, endTime, durationMinutes,
+      //         caloriesBurned, distanceKm, timestamp
+      match /step_sessions/{sessionId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId);
+        allow update, delete: if isOwner(userId);
+      }
+
+      // ──────── 1j. Daily Steps ────────
+      // NOTE: This subcollection is used on BOTH the "renu" and
+      //       default Firestore instances. Rules here cover "renu".
+      //       See separate default-instance rules if deployed.
+      // Fields: steps, date, lastUpdated, userId, source
+      match /daily_steps/{date} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId)
+                      && isValidStepCount(request.resource.data.steps);
+        allow update: if isOwner(userId)
+                      && isValidStepCount(request.resource.data.steps);
+        allow delete: if isOwner(userId);
+      }
+      
+      // ──────── 1k. Daily Summary (Auto-Aggregated Health Data) ────────
+      // Fields: totalCaloriesConsumed, totalCaloriesBurned, totalProtein,
+      //         totalCarbs, totalFat, waterIntakeML, waterGoalML, waterProgress,
+      //         steps, stepGoal, stepProgress, exerciseMinutes, exerciseCalories,
+      //         sleepMinutes, moodLogged, weightLogged, updatedAt
+      match /dailySummary/{date} {
+        allow read, write: if isOwner(userId) && isValidDateString(date);
+      }
+      
+      // ──────── 1l. Gamification Data (Migrated from RTDB) ────────
+      // Fields: xp, level, streak, shields, lastActiveDate, lastXPAward,
+      //         lastXPSource, updatedAt
+      match /gamificationData/{doc} {
+        allow read: if isOwner(userId);
+        allow create, update: if isOwner(userId)
+          && request.resource.data.xp is int
+          && request.resource.data.level is int
+          && request.resource.data.streak is int
+          && request.resource.data.shields is int;
+        allow delete: if false; // Prevent accidental deletion
+      }
+      
+      // ──────── 1m. User Preferences (Food Likes/Dislikes/Allergies) ────────
+      // Fields: dislikedFoods, favoriteFoods, allergies, cuisinePreferences,
+      //         spiceLevel, mealComplexity, lastUpdated
+      match /preferences/{doc} {
         allow read, write: if isOwner(userId);
       }
-
-      // User-specific challenges
-      match /challenges/{challengeId} {
+      
+      // ──────── 1n. AI Generated Meal Plans (User-Centric Recommendations) ────────
+      // Fields: date, breakfast, lunch, dinner, snack, postWorkout, dailyTip,
+      //         totalCalories, status, appliedPreferences, diversityScore, userRating
+      match /ai_meal_plans/{planId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId)
+          && request.resource.data.date is string
+          && request.resource.data.totalCalories is int
+          && request.resource.data.totalCalories >= 0;
+        allow update: if isOwner(userId)
+          && request.resource.data.keys().hasOnly(['status', 'userRating']);
+        allow delete: if false; // Preserve history for ML learning
+      }
+      
+      // ──────── 1o. Recommendations (Individual Meal Suggestions) ────────
+      // Fields: status, suggestedFoods, mealType, reason, matchScore,
+      //         excludedFoods, nutritionalFit, createdAt
+      match /recommendations/{recId} {
         allow read, write: if isOwner(userId);
       }
-
-      // Safety contacts for Ghost Mode
-      match /safety_contacts/{contactId} {
-        allow read, write: if isOwner(userId);
-      }
-
-      // Menstrual cycle tracking
-      match /period_logs/{logId} {
-        allow read: if isOwner(userId);
-        allow create: if isOwner(userId);
-        allow update, delete: if isOwner(userId);
-      }
-
-      // AI Recommendations (user-specific)
-      match /recommendations/{recommendationId} {
-        allow read: if isOwner(userId);
-        allow create: if isOwner(userId);
-        allow update, delete: if isOwner(userId);
-      }
-
-      // Activity logs from auto-tracking
-      match /activity_logs/{logId} {
-        allow read: if isOwner(userId);
-        allow create: if isOwner(userId);
-        allow update, delete: if isOwner(userId);
-      }
-
-      // Calorie balance tracking
-      match /calorie_logs/{logId} {
-        allow read: if isOwner(userId);
-        allow create: if isOwner(userId);
-        allow update, delete: if isOwner(userId);
-      }
-
-      // GPS tracking logs (Ghost Mode safety tracking)
-      match /gps_logs/{logId} {
-        allow read: if isOwner(userId);
-        allow create: if isOwner(userId);
-        allow update, delete: if isOwner(userId);
-      }
-
-      // SOS/Emergency alerts
-      match /sos_alerts/{alertId} {
-        allow read: if isOwner(userId);
-        allow create: if isOwner(userId);
-        allow update, delete: if isOwner(userId);
-      }
-
-      // RECURSIVE WILDCARD: Allows access to ANY future subcollections
-      // This ensures new features work without rule updates
-      match /{document=**} {
-        allow read, write: if isOwner(userId);
+      
+      // ──────── 1p. Meal Feedback (User Ratings & Learning Data) ────────
+      // Fields: mealName, mealType, action, reason, rating, willEatAgain,
+      //         aiGenerated, timestamp, date
+      match /meal_feedback/{feedbackId} {
+        allow read, create: if isOwner(userId);
+        allow update, delete: if false; // Append-only for ML training
       }
     }
 
-    // ==================== ROOT LEVEL COLLECTIONS ====================
-
-    // Global AI Recommendations (shared templates)
-    match /global_recommendations/{recommendationId} {
-      allow read: if isAuthenticated();
-      allow write: if false; // Only admin/cloud functions
+    // ══════════════════════════════════════════════════════
+    //  2. EMERGENCY EVENTS  —  /emergency_events/{eventId}
+    //     Created by SOSManager when user triggers SOS.
+    //     Fields: userId, latitude, longitude, reason,
+    //             batteryPercentage, timestamp
+    // ══════════════════════════════════════════════════════
+    match /emergency_events/{eventId} {
+      // Any authenticated user can create an emergency event
+      allow create: if isAuthenticated() && willOwnResource();
+      // Only the creator can read their own events
+      allow read: if isAuthenticated()
+                  && resource.data.userId == request.auth.uid;
+      // No updates or deletes — emergency records are immutable
+      allow update, delete: if false;
     }
 
-    // Festival Calendar (Global Read-Only)
-    match /festivalCalendar/{eventId} {
-      allow read: if isAuthenticated();
-      allow write: if false; // Only admins via Firebase Console/Cloud Functions
-    }
-
-    // Food database (for barcode scanning and search)
-    match /foodDatabase/{foodId} {
-      allow read: if isAuthenticated();
-      allow write: if false; // Populated by admin/Cloud Functions
-    }
-
-    // Exercise database (for AI recommendations)
-    match /exerciseDatabase/{exerciseId} {
-      allow read: if isAuthenticated();
-      allow write: if false; // Populated by admin/Cloud Functions
-    }
-
-    // Recipe database (for AI meal planning)
-    match /recipeDatabase/{recipeId} {
-      allow read: if isAuthenticated();
-      allow write: if false; // Populated by admin/Cloud Functions
-    }
-
-    // Supplement database
-    match /supplementDatabase/{supplementId} {
-      allow read: if isAuthenticated();
+    // ══════════════════════════════════════════════════════
+    //  3. RECOMMENDATIONS  —  /recommendations/{recId}
+    //     AI-generated meal recommendations.
+    //     Fields: userId, status, suggestedFoods[], createdAt,
+    //             mealType, reason
+    // ══════════════════════════════════════════════════════
+    match /recommendations/{recId} {
+      // Users can only read their own recommendations
+      allow read: if isAuthenticated()
+                  && resource.data.userId == request.auth.uid;
+      // Created by Cloud Functions / admin — clients cannot write
       allow write: if false;
     }
 
-    // Health tips and insights
-    match /healthTips/{tipId} {
-      allow read: if isAuthenticated();
-      allow write: if false;
+    // ══════════════════════════════════════════════════════
+    //  4. MEAL FEEDBACK  —  /meal_feedback/{feedbackId}
+    //     User feedback on AI-generated meals (Ate/Skipped/New).
+    //     Fields: userId, mealName, mealType, action,
+    //             reason, timestamp, date
+    // ══════════════════════════════════════════════════════
+    match /meal_feedback/{feedbackId} {
+      allow create: if isAuthenticated() && willOwnResource();
+      allow read: if isAuthenticated()
+                  && resource.data.userId == request.auth.uid;
+      // Feedback is append-only
+      allow update, delete: if false;
     }
 
-    // Workout templates (global library)
-    match /workoutTemplates/{templateId} {
-      allow read: if isAuthenticated();
-      allow write: if false;
+    // ══════════════════════════════════════════════════════
+    //  5. USER PREFERENCES  —  /user_preferences/{userId}
+    //     AI diet preferences (document ID = userId).
+    //     Fields: dislikedFoods[], favoriteFoods[], lastUpdated
+    // ══════════════════════════════════════════════════════
+    match /user_preferences/{userId} {
+      allow read, write: if isOwner(userId);
     }
 
-    // ==================== DENY ALL OTHER PATHS ====================
-    // Explicitly deny access to any other collections not listed above
-    // This prevents accidental writes to root-level collections
+    // ══════════════════════════════════════════════════════
+    //  6. AI GENERATED PLANS  —  /ai_generated_plans/{planId}
+    //     Full AI-generated meal plans saved per user.
+    //     Fields: userId, generatedAt, date, breakfast{},
+    //             lunch{}, snack{}, dinner{}, postWorkout{},
+    //             dailyTip, totalCalories, status
+    // ══════════════════════════════════════════════════════
+    match /ai_generated_plans/{planId} {
+      allow create: if isAuthenticated() && willOwnResource();
+      allow read: if isAuthenticated()
+                  && resource.data.userId == request.auth.uid;
+      // Plans are immutable once generated
+      allow update, delete: if false;
+    }
+
+    // ══════════════════════════════════════════════════════
+    //  DENY ALL OTHER PATHS
+    //  Any collection not explicitly listed above is blocked.
+    // ══════════════════════════════════════════════════════
     match /{document=**} {
       allow read, write: if false;
     }
   }
 }
+

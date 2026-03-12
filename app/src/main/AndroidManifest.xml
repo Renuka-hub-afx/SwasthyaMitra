@@ -31,9 +31,15 @@
         <package android:name="com.google.android.youtube" />
         <package android:name="com.whatsapp" />
         <package android:name="com.whatsapp.w4b" />
+        <package android:name="com.facebook.orca" />
+        <package android:name="com.facebook.mlite" />
         <intent>
             <action android:name="android.intent.action.VIEW" />
             <data android:scheme="https" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.SENDTO" />
+            <data android:scheme="smsto" />
         </intent>
     </queries>
 
@@ -212,14 +218,6 @@
         <receiver
             android:name=".notifications.WaterReminderReceiver"
             android:exported="false" />
-
-        <receiver
-            android:name=".reminders.ExerciseReminderReceiver"
-            android:exported="false" />
-
-
-
-
 
         <service
             android:name=".services.TrackingService"

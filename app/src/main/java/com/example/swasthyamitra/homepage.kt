@@ -23,6 +23,12 @@ import android.os.Build
 import androidx.core.content.ContextCompat
 import androidx.activity.result.contract.ActivityResultContracts
 import com.example.swasthyamitra.services.TrackingService
+import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.WorkManager
+import com.example.swasthyamitra.notifications.MealEventWorker
+import com.example.swasthyamitra.notifications.WaterNotificationWorker
+import java.util.concurrent.TimeUnit
 
 
 class homepage : AppCompatActivity() {
@@ -127,6 +133,9 @@ class homepage : AppCompatActivity() {
             }
 
             Log.d("Homepage", "Homepage initialized for user: $userId")
+
+            // Auto-start notification workers (water & meal reminders)
+            initNotificationWorkers()
 
             // DISABLED: Auto-tracking service (requires health permissions)
             // Start auto-tracking service for this user
@@ -363,33 +372,42 @@ class homepage : AppCompatActivity() {
     }
 
     private fun handleMoodSelection(mood: String) {
-        // 1. Local Analysis
-        val analyzer = com.example.swasthyamitra.ai.LocalMoodAnalyzer()
-        val analysis = analyzer.analyze(mood)
+        // Default intensity/energy values — AI recommendation screen handles the actual analysis
+        val defaultIntensity = when (mood.lowercase()) {
+            "happy", "excited"          -> 0.7f
+            "calm", "relaxed"           -> 0.4f
+            "tired", "exhausted"        -> 0.5f
+            "sad", "down"               -> 0.6f
+            "stressed", "anxious"       -> 0.8f
+            else                        -> 0.5f
+        }
+        val defaultEnergy = when (mood.lowercase()) {
+            "happy", "excited"          -> 0.8f
+            "calm", "relaxed"           -> 0.6f
+            "tired", "exhausted"        -> 0.2f
+            "sad", "down"               -> 0.3f
+            "stressed", "anxious"       -> 0.4f
+            else                        -> 0.5f
+        }
 
-        // 2. Create Data Object
+        // Create MoodData with defaults — AI will generate the real suggestion in MoodRecommendationActivity
         val moodData = com.example.swasthyamitra.models.MoodData(
             userId = userId,
             mood = mood,
-            intensity = analysis.intensity,
-            energy = analysis.energy,
-            suggestion = analysis.suggestion,
+            intensity = defaultIntensity,
+            energy = defaultEnergy,
+            suggestion = "",   // Will be filled by AI on the recommendation screen
             timestamp = System.currentTimeMillis(),
             date = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault()).format(java.util.Date())
         )
 
-        // 3. Save to Repository (Background)
+        // Save to Repository in background
         val repo = com.example.swasthyamitra.repository.MoodRepository()
         lifecycleScope.launch {
             repo.saveMood(userId, moodData)
-            
-            // 4. Update Coach Message Immediately (Offline Fallback)
-            runOnUiThread {
-                tvCoachMessage.text = "I notice you're feeling $mood. ${analysis.suggestion}"
-            }
         }
 
-        // 5. Navigate to Recommendation Page
+        // Navigate to AI Recommendation Screen
         val intent = Intent(this, MoodRecommendationActivity::class.java)
         intent.putExtra("MOOD_DATA", com.google.gson.Gson().toJson(moodData))
         startActivity(intent)
@@ -426,6 +444,50 @@ class homepage : AppCompatActivity() {
         val dateFormat = java.text.SimpleDateFormat("EEEE, MMM dd", java.util.Locale.getDefault())
         val currentDate = dateFormat.format(calendar.time)
         tvDate.text = currentDate
+    }
+
+    /**
+     * Initialize notification workers on app launch.
+     * Uses KEEP policy so existing schedules aren't replaced if already running.
+     * Respects user's toggle preferences from Settings.
+     */
+    private fun initNotificationWorkers() {
+        try {
+            val prefs = getSharedPreferences("app_settings", MODE_PRIVATE)
+            val workManager = WorkManager.getInstance(this)
+
+            // Water reminders (default ON)
+            if (prefs.getBoolean("pref_water", true)) {
+                val waterRequest = PeriodicWorkRequestBuilder<WaterNotificationWorker>(
+                    1, TimeUnit.HOURS
+                ).build()
+                workManager.enqueueUniquePeriodicWork(
+                    "WaterReminderWork",
+                    ExistingPeriodicWorkPolicy.KEEP,
+                    waterRequest
+                )
+                Log.d("Homepage", "Water reminder worker enqueued")
+            }
+
+            // Meal reminders (default ON)
+            val b = prefs.getBoolean("pref_breakfast", true)
+            val l = prefs.getBoolean("pref_lunch", true)
+            val d = prefs.getBoolean("pref_dinner", true)
+            val e = prefs.getBoolean("pref_events", true)
+            if (b || l || d || e) {
+                val mealRequest = PeriodicWorkRequestBuilder<MealEventWorker>(
+                    1, TimeUnit.HOURS
+                ).build()
+                workManager.enqueueUniquePeriodicWork(
+                    "MealEventWork",
+                    ExistingPeriodicWorkPolicy.KEEP,
+                    mealRequest
+                )
+                Log.d("Homepage", "Meal reminder worker enqueued")
+            }
+        } catch (e: Exception) {
+            Log.e("Homepage", "Error initializing notification workers: ${e.message}")
+        }
     }
 
     override fun onResume() {
@@ -684,12 +746,21 @@ class homepage : AppCompatActivity() {
 
     private fun displayNutritionBreakdown() {
         lifecycleScope.launch {
-            // Calculate macro targets based on user's calorie goal
-            // Default ratios: ~30% protein, ~40% carbs, ~30% fat
+            // Calculate macro targets based on user's calorie goal and goal type
             val targetCalories = cachedTargetCalories
-            val proteinTarget = (targetCalories * 0.30 / 4).toInt()  // 4 cal per gram
-            val carbsTarget = (targetCalories * 0.40 / 4).toInt()    // 4 cal per gram
-            val fatTarget = (targetCalories * 0.30 / 9).toInt()      // 9 cal per gram
+            
+            // Goal-specific macro ratios (protein/carbs/fat percentages)
+            val (proteinPercent, carbsPercent, fatPercent) = when {
+                goalType.contains("Lose", ignoreCase = true) || 
+                goalType.contains("Loss", ignoreCase = true) -> Triple(0.30, 0.40, 0.30)
+                goalType.contains("Gain", ignoreCase = true) || 
+                goalType.contains("Muscle", ignoreCase = true) -> Triple(0.25, 0.50, 0.25)
+                else -> Triple(0.20, 0.50, 0.30) // Stay Healthy or default
+            }
+            
+            val proteinTarget = (targetCalories * proteinPercent / 4).toInt()  // 4 cal per gram
+            val carbsTarget = (targetCalories * carbsPercent / 4).toInt()      // 4 cal per gram
+            val fatTarget = (targetCalories * fatPercent / 9).toInt()          // 9 cal per gram
 
             authHelper.getTodayFoodLogs(userId).onSuccess { logs ->
                 if (logs.isNotEmpty()) {
@@ -825,7 +896,7 @@ class homepage : AppCompatActivity() {
             .get()
             .addOnSuccessListener { document ->
                 if (document.exists()) {
-                    val steps = document.getLong("steps")?.toInt() ?: 0
+                    val steps = document.getLong("totalSteps")?.toInt() ?: 0
                     if (steps > 0) {
                         // Only update if no service is currently providing live data
                         val unifiedSteps = com.example.swasthyamitra.services.UnifiedStepTrackingService.stepsLive.value ?: 0

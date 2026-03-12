@@ -15,9 +15,9 @@ class AIMoodRecommendationService(private val context: Context) {
     private val TAG = "AIMoodRecService"
 
     data class RecommendationResult(
-        val foodRecommendation: String,
-        val exerciseRecommendation: String,
-        val wellnessTip: String
+        val whatToEat: String,
+        val howToMove: String,
+        val mindfulnessTip: String
     )
 
     suspend fun getMoodBasedRecommendations(
@@ -42,25 +42,25 @@ class AIMoodRecommendationService(private val context: Context) {
                 **TASK:**
                 Provide 3 specific recommendations to help the user feel better or maintain their positive state.
                 
-                1. **Food Recommendation**: deeply comforting but healthy food specific to their mood.
+                1. **What to eat**: deeply comforting but healthy food specific to their mood.
                    - If Sad: suggest warm, comforting foods (e.g., soup, dark chocolate).
                    - If Tired: suggest energy-boosting foods (not caffeine).
                    - If Stressed: suggest anxiety-reducing foods.
                    - If Happy: suggest celebratory but healthy meals.
                 
-                2. **Exercise Recommendation**: immediate physical activity to match their energy.
+                2. **How to move**: immediate physical activity to match their energy.
                    - If Stressed/Anxious: Yoga or heavy lifting (release tension).
                    - If Tired: Light stretching or a short walk.
                    - If Sad: Gentle movement to release endorphins.
                    - If Happy: Challenge workout.
                 
-                3. **Wellness Tip**: A quick, actionable tip (breathing, journaling, gratitude).
+                3. **Mindfulness tip**: A quick, actionable tip (breathing, journaling, gratitude).
                 
                 **OUTPUT FORMAT:**
                 Strictly return the result in this format with these separators:
-                [FOOD] ...recommendation...
-                [EXERCISE] ...recommendation...
-                [TIP] ...tip...
+                [EAT] ...what to eat...
+                [MOVE] ...how to move...
+                [MINDFUL] ...mindfulness tip...
                 
                 Keep each recommendation concise (1-2 sentences). Be supportive and kind.
             """.trimIndent()
@@ -75,11 +75,11 @@ class AIMoodRecommendationService(private val context: Context) {
             val text = response.text ?: throw Exception("Empty AI response")
 
             // Parse the response
-            val food = text.substringAfter("[FOOD]").substringBefore("[EXERCISE]").trim()
-            val exercise = text.substringAfter("[EXERCISE]").substringBefore("[TIP]").trim()
-            val tip = text.substringAfter("[TIP]").trim()
+            val eat = text.substringAfter("[EAT]").substringBefore("[MOVE]").trim()
+            val move = text.substringAfter("[MOVE]").substringBefore("[MINDFUL]").trim()
+            val mindful = text.substringAfter("[MINDFUL]").trim()
 
-            Result.success(RecommendationResult(food, exercise, tip))
+            Result.success(RecommendationResult(eat, move, mindful))
 
         } catch (e: Exception) {
             Log.e(TAG, "AI Generation Error", e)

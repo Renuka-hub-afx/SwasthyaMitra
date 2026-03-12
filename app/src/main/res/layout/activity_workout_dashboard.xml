@@ -154,6 +154,76 @@
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
+            <!-- SOS Emergency Card -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardCornerRadius="20dp"
+                app:cardElevation="2dp"
+                app:cardBackgroundColor="@color/card_background"
+                android:layout_marginBottom="16dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="20dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="🆘 EMERGENCY SOS"
+                        android:textSize="13sp"
+                        android:textColor="@color/error_red"
+                        android:textStyle="bold"
+                        android:letterSpacing="0.08"
+                        android:layout_marginBottom="12dp" />
+
+                    <!-- Emergency Contact Input -->
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="12dp"
+                        app:boxCornerRadiusTopStart="12dp"
+                        app:boxCornerRadiusTopEnd="12dp"
+                        app:boxCornerRadiusBottomStart="12dp"
+                        app:boxCornerRadiusBottomEnd="12dp"
+                        android:hint="Emergency contact phone number">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/etSosEmergencyContact"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="phone"
+                            android:textSize="15sp" />
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <!-- SOS Button -->
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnSOS"
+                        android:layout_width="match_parent"
+                        android:layout_height="56dp"
+                        android:text="🚨 SEND SOS via Messenger"
+                        android:textSize="15sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/white"
+                        app:backgroundTint="@color/error_red"
+                        app:cornerRadius="16dp"
+                        app:icon="@android:drawable/ic_dialog_alert"
+                        app:iconGravity="textStart"
+                        app:iconTint="@color/white" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Sends your live location &amp; help alert to your emergency contact via Messenger"
+                        android:textSize="11sp"
+                        android:textColor="@color/text_hint"
+                        android:gravity="center"
+                        android:layout_marginTop="8dp" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
             <!-- Exercise Action Buttons -->
             <LinearLayout
                 android:layout_width="match_parent"
@@ -609,74 +679,19 @@
             </com.google.android.material.card.MaterialCardView>
 
             <!-- Modules -->
-            <TextView
-                android:layout_width="wrap_content"
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/cvGamification"
+                style="@style/Widget.MaterialComponents.Button.UnelevatedButton"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Tools &amp; Modules"
-                android:textSize="18sp"
+                android:layout_marginBottom="12dp"
+                android:text="🏆  LEADERBOARD"
+                android:textColor="@color/white"
                 android:textStyle="bold"
-                android:textColor="@color/text_primary"
-                android:layout_marginBottom="12dp" />
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:weightSum="2"
-                android:layout_marginBottom="12dp">
-
-                <!-- Gamification -->
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/cvGamification"
-                    style="@style/Widget.MaterialComponents.Button.UnelevatedButton"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:layout_marginEnd="8dp"
-                    android:text="🏆\n\nLEADER\nBOARD"
-                    android:textColor="@color/white"
-                    android:textStyle="bold"
-                    android:paddingVertical="16dp"
-                    android:background="@drawable/button_background"
-                    app:backgroundTint="@null"
-                    app:cornerRadius="12dp" />
-
-                <!-- Insights -->
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/cvInsights"
-                    style="@style/Widget.MaterialComponents.Button.UnelevatedButton"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:layout_marginStart="8dp"
-                    android:text="📊\n\nWORKOUT\nINSIGHTS"
-                    android:textColor="@color/white"
-                    android:textStyle="bold"
-                    android:paddingVertical="16dp"
-                    android:background="@drawable/button_background"
-                    app:backgroundTint="@null"
-                    app:cornerRadius="12dp" />
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal">
-
-                <!-- Safety -->
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/cvSafety"
-                    style="@style/Widget.MaterialComponents.Button.UnelevatedButton"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="👻 GHOST MODE"
-                    android:textColor="@color/white"
-                    android:textStyle="bold"
-                    android:paddingVertical="16dp"
-                    android:background="@drawable/button_background"
-                    app:backgroundTint="@null"
-                    app:cornerRadius="12dp" />
-            </LinearLayout>
+                android:paddingVertical="16dp"
+                android:background="@drawable/button_background"
+                app:backgroundTint="@null"
+                app:cornerRadius="12dp" />
 
         </LinearLayout>
     </ScrollView>

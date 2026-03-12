@@ -206,7 +206,7 @@
                     android:layout_marginTop="4dp"
                     android:paddingHorizontal="16dp"
                     android:paddingVertical="4dp"
-                    android:background="@drawable/bmi_category_background" />
+                    android:background="@drawable/bg_active_badge" />
 
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>

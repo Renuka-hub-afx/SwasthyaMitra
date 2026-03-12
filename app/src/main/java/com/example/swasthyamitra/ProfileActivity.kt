@@ -241,6 +241,10 @@ class ProfileActivity : AppCompatActivity() {
     }
 
     private fun handleLogout() {
+        // Clear cached login state so next user goes through onboarding
+        getSharedPreferences("UserPreferences", MODE_PRIVATE).edit().clear().apply()
+        getSharedPreferences("app_settings", MODE_PRIVATE).edit().clear().apply()
+
         FirebaseAuth.getInstance().signOut()
         Toast.makeText(this, "Logged out successfully", Toast.LENGTH_SHORT).show()
 

@@ -26,6 +26,7 @@ import com.example.swasthyamitra.homepage
 import com.example.swasthyamitra.models.StepSession
 import com.example.swasthyamitra.step.StepGpsValidator
 import com.example.swasthyamitra.utils.CalorieCalculator
+import com.example.swasthyamitra.utils.DailySummaryAggregator
 import com.google.android.gms.location.*
 import com.google.android.gms.maps.model.LatLng
 import com.google.firebase.auth.FirebaseAuth
@@ -37,6 +38,8 @@ import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.concurrent.fixedRateTimer
 import kotlin.math.sqrt
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 
 /**
  * Unified Step Tracking Service — combines GPS location tracking
@@ -614,6 +617,36 @@ class UnifiedStepTrackingService : Service(), SensorEventListener {
                 db.collection("users").document(userId)
                     .collection("daily_steps").document(date)
                     .update("hourlySteps.$hour", steps)
+
+                // Update DailySummary with step metrics
+                val stepGoal = 10000 // Default, should be fetched from user preferences
+                try {
+                    val aggregator = DailySummaryAggregator(userId)
+                    GlobalScope.launch {
+                        aggregator.updateStepMetrics(
+                            date = date,
+                            steps = steps,
+                            stepGoal = stepGoal,
+                            distanceMeters = totalGpsDistance
+                        )
+                    }
+                } catch (e: Exception) {
+                    Log.e(TAG, "Failed to update daily summary: ${e.message}")
+                }
+                
+                // Award XP if step goal reached
+                if (steps >= stepGoal) {
+                    try {
+                        val xpManager = com.example.swasthyamitra.gamification.XPManager(userId)
+                        xpManager.awardXP(com.example.swasthyamitra.utils.Constants.XPSource.REACH_STEP_GOAL) { leveledUp, newLevel ->
+                            if (leveledUp) {
+                                Log.d(TAG, "User leveled up to $newLevel!")
+                            }
+                        }
+                    } catch (e: Exception) {
+                        Log.e(TAG, "Failed to award XP: ${e.message}")
+                    }
+                }
 
                 Log.d(TAG, "Saved ($date): $steps steps, $calories cal")
             }

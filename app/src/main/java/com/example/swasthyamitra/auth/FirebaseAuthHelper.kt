@@ -4,6 +4,10 @@ import android.content.Context
 import android.util.Log
 import com.example.swasthyamitra.models.FoodLog
 import com.example.swasthyamitra.models.ExerciseLog
+import com.example.swasthyamitra.utils.Constants
+import com.example.swasthyamitra.utils.DailySummaryAggregator
+import com.example.swasthyamitra.utils.DateTimeHelper
+import com.example.swasthyamitra.gamification.XPManager
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.FirebaseFirestore
@@ -29,6 +33,21 @@ class FirebaseAuthHelper(private val context: Context) {
 
     // Check if user is logged in
     fun isUserLoggedIn(): Boolean = auth.currentUser != null
+
+    /**
+     * Updates the lastActive timestamp for a user in Firestore.
+     * Called whenever user performs any action (logging food, water, exercise, etc.)
+     */
+    suspend fun updateLastActive(userId: String) {
+        try {
+            firestore.collection("users")
+                .document(userId)
+                .update("lastActive", DateTimeHelper.currentISO8601())
+                .await()
+        } catch (e: Exception) {
+            Log.e("FirebaseAuthHelper", "Failed to update lastActive: ${e.message}")
+        }
+    }
 
     // Sign up with email and password
     suspend fun signUpWithEmail(
@@ -350,6 +369,35 @@ class FirebaseAuthHelper(private val context: Context) {
             
             val docRef = userFoodLogsRef.add(foodData).await()
             
+            // Update DailySummary with food metrics
+            try {
+                val aggregator = DailySummaryAggregator(foodLog.userId)
+                aggregator.updateFoodMetrics(
+                    date = foodLog.date,
+                    calories = foodLog.calories,
+                    protein = foodLog.protein,
+                    carbs = foodLog.carbs,
+                    fat = foodLog.fat
+                )
+            } catch (e: Exception) {
+                Log.e("FirebaseAuthHelper", "Failed to update daily summary: ${e.message}")
+            }
+            
+            // Award XP for logging meal
+            try {
+                val xpManager = XPManager(foodLog.userId)
+                xpManager.awardXP(Constants.XPSource.LOG_MEAL) { leveledUp, newLevel ->
+                    if (leveledUp) {
+                        Log.d("FirebaseAuthHelper", "User leveled up to $newLevel!")
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e("FirebaseAuthHelper", "Failed to award XP: ${e.message}")
+            }
+            
+            // Update lastActive timestamp
+            updateLastActive(foodLog.userId)
+            
             // Trigger cleanup of old logs (keep last 30 days)
             cleanOldFoodLogs(foodLog.userId)
 
@@ -569,6 +617,29 @@ class FirebaseAuthHelper(private val context: Context) {
                 .add(weightData)
                 .await()
             
+            // Mark weight logged in daily summary
+            try {
+                val aggregator = DailySummaryAggregator(userId)
+                aggregator.markWeightLogged(date)
+            } catch (e: Exception) {
+                Log.e("FirebaseAuthHelper", "Failed to update daily summary: ${e.message}")
+            }
+            
+            // Award XP for logging weight
+            try {
+                val xpManager = XPManager(userId)
+                xpManager.awardXP(Constants.XPSource.LOG_WEIGHT) { leveledUp, newLevel ->
+                    if (leveledUp) {
+                        Log.d("FirebaseAuthHelper", "User leveled up to $newLevel!")
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e("FirebaseAuthHelper", "Failed to award XP: ${e.message}")
+            }
+            
+            // Update lastActive timestamp
+            updateLastActive(userId)
+            
             // Update only the weight field in user profile (don't overwrite height/gender/age)
             firestore.collection("users").document(userId).update(
                 mapOf(
@@ -660,6 +731,19 @@ class FirebaseAuthHelper(private val context: Context) {
             )
             
             val docRef = userExerciseLogsRef.add(exerciseData).await()
+            
+            // Update DailySummary with exercise metrics
+            try {
+                val aggregator = DailySummaryAggregator(exerciseLog.userId)
+                aggregator.updateExerciseMetrics(
+                    date = exerciseLog.date,
+                    caloriesBurned = exerciseLog.caloriesBurned,
+                    minutes = exerciseLog.duration
+                )
+            } catch (e: Exception) {
+                Log.e("FirebaseAuthHelper", "Failed to update daily summary: ${e.message}")
+            }
+            
             Result.success(docRef.id)
         } catch (e: Exception) {
             Result.failure(e)

@@ -4,6 +4,11 @@
             "database": "renu",
             "rules": "firestore.rules",
             "indexes": "firestore.indexes.json"
+        },
+        {
+            "database": "(default)",
+            "rules": "firestore-default.rules",
+            "indexes": "firestore.indexes.json"
         }
     ],
     "database": {

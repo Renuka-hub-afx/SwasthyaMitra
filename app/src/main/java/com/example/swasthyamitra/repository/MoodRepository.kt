@@ -2,6 +2,9 @@ package com.example.swasthyamitra.repository
 
 import android.util.Log
 import com.example.swasthyamitra.models.MoodData
+import com.example.swasthyamitra.utils.Constants
+import com.example.swasthyamitra.utils.DailySummaryAggregator
+import com.example.swasthyamitra.gamification.XPManager
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import kotlinx.coroutines.tasks.await
@@ -17,6 +20,26 @@ class MoodRepository {
                 .collection("mood_logs")
                 .add(moodData)
                 .await()
+            
+            // Update DailySummary to mark mood logged
+            try {
+                val aggregator = DailySummaryAggregator(userId)
+                aggregator.markMoodLogged(moodData.date)
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to update daily summary: ${e.message}")
+            }
+            
+            // Award XP for logging mood
+            try {
+                val xpManager = XPManager(userId)
+                xpManager.awardXP(Constants.XPSource.LOG_MOOD) { leveledUp, newLevel ->
+                    if (leveledUp) {
+                        Log.d(TAG, "User leveled up to $newLevel!")
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to award XP: ${e.message}")
+            }
             
             // Also update the latest mood in user profile for quick access
             firestore.collection("users").document(userId)

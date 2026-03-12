@@ -1,6 +1,10 @@
 package com.example.swasthyamitra.data.repository
 
 import com.example.swasthyamitra.data.model.WaterLog
+import com.example.swasthyamitra.utils.Constants
+import com.example.swasthyamitra.utils.DailySummaryAggregator
+import com.example.swasthyamitra.utils.WaterGoalCalculator
+import com.example.swasthyamitra.gamification.XPManager
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
 import java.text.SimpleDateFormat
@@ -23,6 +27,33 @@ class HydrationRepository {
             )
             
             getWaterLogsCollection(userId).add(log).await()
+            
+            // Update DailySummary with water metrics
+            try {
+                val aggregator = DailySummaryAggregator(userId)
+                // Calculate water goal (weight × 33ml, default to 2000ml if weight unknown)
+                val waterGoal = 2000 // Default goal, should be fetched from user profile
+                aggregator.updateWaterMetrics(
+                    date = dateStr,
+                    amountML = amountML,
+                    goalML = waterGoal
+                )
+            } catch (e: Exception) {
+                android.util.Log.e("HydrationRepository", "Failed to update daily summary: ${e.message}")
+            }
+            
+            // Award XP for logging water
+            try {
+                val xpManager = XPManager(userId)
+                xpManager.awardXP(Constants.XPSource.LOG_WATER) { leveledUp, newLevel ->
+                    if (leveledUp) {
+                        android.util.Log.d("HydrationRepository", "User leveled up to $newLevel!")
+                    }
+                }
+            } catch (e: Exception) {
+                android.util.Log.e("HydrationRepository", "Failed to award XP: ${e.message}")
+            }
+            
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)

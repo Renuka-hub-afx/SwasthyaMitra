@@ -1,0 +1,46 @@
+rules_version = '2';
+
+// ═══════════════════════════════════════════════════════════════════
+// SwasthyaMitra — Default Firestore Instance Rules
+// Covers: users/{userId}/daily_steps/{date}
+// Used by: FirebaseStepSync, StepCounterService,
+//          UnifiedStepTrackingService, homepage, InsightsRepository
+// ═══════════════════════════════════════════════════════════════════
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isValidStepCount(steps) {
+      return steps is int && steps >= 0 && steps <= 200000;
+    }
+
+    match /users/{userId} {
+      // Profile access on default DB (not primary — kept minimal)
+      allow read: if isOwner(userId);
+
+      // Daily step counts synced from device sensors
+      // Fields: steps, date, lastUpdated, userId, source
+      match /daily_steps/{date} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId)
+                      && isValidStepCount(request.resource.data.steps);
+        allow update: if isOwner(userId)
+                      && isValidStepCount(request.resource.data.steps);
+        allow delete: if isOwner(userId);
+      }
+    }
+
+    // Deny everything else
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

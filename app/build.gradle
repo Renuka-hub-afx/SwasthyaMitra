@@ -4,6 +4,20 @@ plugins {
     alias(libs.plugins.google.gms.google.services)
 }
 
+// Load Maps API key from environment variable or local.properties (kept out of VCS)
+def getMapsApiKey() {
+    def envKey = System.getenv("MAPS_API_KEY")
+    if (envKey) return envKey
+    def localPropsFile = rootProject.file("local.properties")
+    if (localPropsFile.exists()) {
+        def props = new Properties()
+        localPropsFile.withInputStream { props.load(it) }
+        def lp = props.getProperty("MAPS_API_KEY")
+        if (lp) return lp
+    }
+    return ""
+}
+
 android {
     namespace 'com.example.swasthyamitra'
     compileSdk 35
@@ -20,6 +34,8 @@ android {
         vectorDrawables {
             useSupportLibrary true
         }
+        // Manifest placeholder for Maps API key (reads from env or local.properties)
+        manifestPlaceholders = [ MAPS_API_KEY: getMapsApiKey() ]
     }
 
     buildTypes {

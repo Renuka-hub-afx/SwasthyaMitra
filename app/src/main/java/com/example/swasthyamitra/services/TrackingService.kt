@@ -59,7 +59,6 @@ class TrackingService : Service() {
         val distanceLive = MutableLiveData<Double>(0.0)
         val stepsLive = MutableLiveData<Int>(0)
         val paceLive = MutableLiveData<String>("0'00")
-        val isGhostModeLive = MutableLiveData<Boolean>(false)
         val isSOSActiveLive = MutableLiveData<Boolean>(false)
         val countdownLive = MutableLiveData<Int>(-1)
         
@@ -113,7 +112,6 @@ class TrackingService : Service() {
         when (intent?.action) {
             "ACTION_START" -> startTracking()
             "ACTION_STOP" -> stopTracking()
-            "ACTION_TOGGLE_GHOST" -> toggleGhostMode()
             ACTION_CANCEL_SOS -> cancelSOS()
             ACTION_TRIGGER_SOS -> triggerManualSOS(intent.getStringExtra("reason") ?: "Manual SOS")
             "ACTION_ACTIVITY_TRANSITION" -> {
@@ -122,15 +120,6 @@ class TrackingService : Service() {
             }
         }
         return START_STICKY
-    }
-
-    private fun toggleGhostMode() {
-        val current = isGhostModeLive.value ?: false
-        isGhostModeLive.postValue(!current)
-        if (!current) {
-            // Started Ghost Mode
-            Log.d("TrackingService", "Ghost Mode Activated")
-        }
     }
 
     private fun startTracking() {
@@ -183,20 +172,6 @@ class TrackingService : Service() {
             if (!isTracking) return
             
             val location = result.lastLocation ?: return
-            
-            // NEW Safety Monitoring
-            if (isGhostModeLive.value == true && !isPaused) {
-                safetyMonitorManager.updateData(
-                    currentSessionSteps, 
-                    location.latitude, 
-                    location.longitude,
-                    isStill
-                )
-
-                if (safetyMonitorManager.isThresholdExceeded() && !isSOSActiveLive.value!! && countdownLive.value!! == -1) {
-                    startSafetyCountdown()
-                }
-            }
 
             if (isPaused) return
             
@@ -224,8 +199,7 @@ class TrackingService : Service() {
                 paceLive.postValue(String.format("%d'%02d", mins, secs))
             }
             
-            updateNotification("Distance: ${String.format("%.2f", totalDistance / 1000)} km" + 
-                if(isGhostModeLive.value == true) " [Ghost \uD83D\uDC7B]" else "")
+            updateNotification("Distance: ${String.format("%.2f", totalDistance / 1000)} km")
         }
     }
 
@@ -269,20 +243,6 @@ class TrackingService : Service() {
     fun handleActivityTransition(type: Int) {
         isStill = (type == DetectedActivity.STILL)
         
-        // Feed into safety monitor immediately on transition
-        if (isGhostModeLive.value == true && !isPaused) {
-            fusedLocationClient.lastLocation.addOnSuccessListener { location ->
-                location?.let {
-                    safetyMonitorManager.updateData(
-                        currentSessionSteps,
-                        it.latitude,
-                        it.longitude,
-                        isStill
-                    )
-                }
-            }
-        }
-
         if (isStill) {
             updateNotification("Status: Staying Still")
         } else {

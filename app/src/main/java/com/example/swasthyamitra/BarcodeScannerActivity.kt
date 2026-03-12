@@ -182,17 +182,21 @@ class BarcodeScannerActivity : AppCompatActivity() {
                         
                         // Save to database
                         saveFoodLog(barcode, product)
+                    } else {
+                        isProcessingBarcode = false  // Reset so user can scan again
                     }
                 } else {
                     runOnUiThread {
                         binding.tvFoodInfo.text = "Food not found in database"
                     }
+                    isProcessingBarcode = false  // Reset so user can scan another barcode
                 }
             } catch (e: Exception) {
                 Log.e(TAG, "API call failed", e)
                 runOnUiThread {
                     binding.tvFoodInfo.text = "Error fetching food data: ${e.message}"
                 }
+                isProcessingBarcode = false  // Reset so user can retry scanning
             }
         }
     }

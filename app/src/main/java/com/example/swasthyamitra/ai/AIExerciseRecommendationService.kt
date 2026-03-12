@@ -63,7 +63,9 @@ class AIExerciseRecommendationService private constructor(private val context: C
         val type: String, // "json", "folder", or "csv"
         val path: String, // json gif path, folder path, or empty
         val details: String, // instructions or metadata
-        val isPeriodSafe: Boolean = false // Strict filtering flag
+        val isPeriodSafe: Boolean = false, // Strict filtering flag
+        val genderTags: List<String> = emptyList(),  // e.g. ["female", "male", "all"]
+        val ageGroups: List<String> = emptyList()    // e.g. ["18-50", "over50", "all"]
     )
 
     /**
@@ -223,13 +225,27 @@ class AIExerciseRecommendationService private constructor(private val context: C
                             gifMap[nameLower] = gifUrl
                         }
                     } else {
+                        // Read gender & age tags from combined_exercises.json
+                        val genderTagsList = mutableListOf<String>()
+                        val genderTagsArr = obj.optJSONArray("genderTags")
+                        if (genderTagsArr != null) {
+                            for (j in 0 until genderTagsArr.length()) genderTagsList.add(genderTagsArr.getString(j).lowercase())
+                        }
+                        val ageGroupsList = mutableListOf<String>()
+                        val ageGroupsArr = obj.optJSONArray("ageGroups")
+                        if (ageGroupsArr != null) {
+                            for (j in 0 until ageGroupsArr.length()) ageGroupsList.add(ageGroupsArr.getString(j).lowercase())
+                        }
+
                         // New exercise from combined_exercises.json
                         exercises.add(ExerciseData(
                             name = name,
                             type = "combined",
                             path = gifUrl,
                             details = details,
-                            isPeriodSafe = isPeriodSafe
+                            isPeriodSafe = isPeriodSafe,
+                            genderTags = genderTagsList,
+                            ageGroups = ageGroupsList
                         ))
                         if (gifUrl.isNotEmpty()) {
                             gifMap[nameLower] = gifUrl
@@ -269,26 +285,157 @@ class AIExerciseRecommendationService private constructor(private val context: C
             val allExercises = loadAllExercises()
             
             val isOnPeriod = userData["isOnPeriod"] as? Boolean ?: false
+            val genderLower = gender.lowercase()
 
-            // Filter exercises based on context
-            val filteredExercises = if (isOnPeriod) {
-                // strict mode: only period-safe
+            // ─── Step 1: Period-mode or visual filter ───────────────────────
+            val periodOrImageFiltered = if (isOnPeriod) {
                 allExercises.filter { it.isPeriodSafe && it.path.isNotEmpty() }
             } else {
-                // normal mode: only those with images (for quality)
                 allExercises.filter { it.path.isNotEmpty() }
             }
 
-            // Fallback: If strict filtering leaves nothing (unlikely), relax it slightly
-            val usableExercises = if (filteredExercises.isEmpty()) {
-                 allExercises.filter { it.path.isNotEmpty() } 
-            } else {
-                 filteredExercises
+            // ─── Step 2: Gender + Age filter on top ─────────────────────────
+            // For exercises that came from combined_exercises.json (have tags),
+            // keep only those matching the user's gender & age.
+            // For exercises from other sources (no tags), always keep them.
+            val ageGroupKey = when {
+                age < 18         -> "under18"
+                age in 18..50    -> "18-50"
+                else             -> "over50"
             }
 
-            val simplifiedList = usableExercises.joinToString("\n") { "- ${it.name} (${it.details})" }
+            val genderAgeFiltered = periodOrImageFiltered.filter { ex ->
+                // If this exercise has no tags it came from a generic source – keep it
+                if (ex.genderTags.isEmpty() && ex.ageGroups.isEmpty()) return@filter true
+
+                val genderOk = ex.genderTags.isEmpty() ||
+                               ex.genderTags.contains("all") ||
+                               ex.genderTags.contains(genderLower)
+
+                val ageOk = ex.ageGroups.isEmpty() ||
+                            ex.ageGroups.contains("all") ||
+                            ex.ageGroups.contains(ageGroupKey)
+
+                genderOk && ageOk
+            }
+
+            Log.d(TAG, "Gender/Age filter: ${periodOrImageFiltered.size} -> ${genderAgeFiltered.size} exercises for $gender / age $age")
+
+            // ─── Step 3: Fallback if too few results ─────────────────────────
+            val usableExercises = when {
+                genderAgeFiltered.size >= 10 -> genderAgeFiltered          // Enough variety
+                genderAgeFiltered.isNotEmpty() -> genderAgeFiltered        // Use what we have
+                periodOrImageFiltered.isNotEmpty() -> periodOrImageFiltered // Drop gender/age filter
+                else -> allExercises.filter { it.path.isNotEmpty() }        // Last resort
+            }
+
+            // Shuffle and cap the list sent to Gemini (keeps prompt size manageable)
+            val exerciseSample = usableExercises.shuffled().take(60)
+            val simplifiedList = exerciseSample.joinToString("\n") { "- ${it.name} (${it.details})" }
             val goalType = userGoal["goalType"] as? String ?: "General Fitness"
-            
+
+            // Gender-specific coaching context for the prompt
+            val genderContext = when (genderLower) {
+                "female", "woman", "f" -> """
+                    Gender: FEMALE
+                    ======================
+                    MUST PRIORITISE (choose exercises from these categories):
+                    - Lower body strength: Glute bridges, squats, lunges, hip thrusts, clamshells, donkey kicks.
+                    - Core stability: Planks, dead bugs, bird-dogs, Pilates-based moves (NOT crunches).
+                    - Full-body toning: Resistance band work, bodyweight circuits, yoga flows.
+                    - Flexibility & mobility: Hip flexor stretches, hamstring stretches, spinal twists.
+
+                    AVOID unless explicitly requested:
+                    - Heavy barbell bench press, heavy deadlifts, max-weight squats.
+                    - Chest-dominant exercises (push-ups are fine, but not chest fly or cable crossovers as primary).
+
+                    PELVIC FLOOR AWARENESS:
+                    - Avoid extreme impact or heavy lifting if user shows fatigue/period mode.
+                    - Recommend diaphragmatic breathing cues in cool-down.
+
+                    GOAL ALIGNMENT:
+                    - Weight Loss → priority: calorie-burning HIIT-light, glute work.
+                    - Muscle Gain → priority: glutes, legs, shoulders (not bulk chest).
+                    - General Fitness → balanced core + lower body + light cardio.
+                    - Stress/Mood → yoga, walking, stretching.
+
+                    Period active: ${if (isOnPeriod) "YES — gentle yoga/walk ONLY" else "No — normal female protocol"}.
+                """.trimIndent()
+                "male", "man", "m" -> """
+                    Gender: MALE
+                    ======================
+                    MUST PRIORITISE (choose exercises from these categories):
+                    - Upper body compound lifts: Push-ups, pull-ups, dips, bench press, overhead press, rows.
+                    - Lower body compound: Squats, deadlifts, lunges, leg press.
+                    - Core power: Plank variations, hanging knee raises, Russian twists.
+                    - Cardio & endurance: Running, jumping jacks, burpees, cycling.
+
+                    PROGRESSIVE OVERLOAD:
+                    - For each exercise, suggest a progression (e.g., go from push-up → diamond push-up → archer push-up).
+                    - Include a note on rep range: strength (3–5 reps), hypertrophy (8–12 reps), endurance (15+).
+
+                    MUSCLE FOCUS MAP:
+                    - Chest & Triceps → push-ups, dips, bench press.
+                    - Back & Biceps → pull-ups, rows, face pulls.
+                    - Shoulder → overhead press, lateral raises.
+                    - Core → plank, dead bug, leg raises.
+                    - Legs → squats, deadlifts, lunges, calf raises.
+
+                    GOAL ALIGNMENT:
+                    - Weight Loss → HIIT circuits, compound supersets, high rep cardio.
+                    - Muscle Gain → compound lifts with progressive overload, 48-hr muscle rest.
+                    - General Fitness → full body 3-day split.
+                    - Stress/Mood → boxing/cardio to release energy, heavy compound to release tension.
+                """.trimIndent()
+                else -> """
+                    Gender: Not Specified — provide well-rounded, balanced exercises.
+                    Include a mix of: bodyweight cardio, core stability, and flexibility work.
+                    Avoid anything extreme in intensity. Keep it safe and universally accessible.
+                """.trimIndent()
+            }
+
+            // ─── Age-specific coaching context ───────────────────────────────
+            val ageContext = when {
+                age < 18 -> """
+                    Age Group: Teen (under 18)
+                    - AVOID heavy barbell lifts, max-effort powerlifting, and high-impact plyometrics on hard surfaces as growth plates are still developing.
+                    - FOCUS on bodyweight fundamentals (push-ups, squats, lunges), flexibility, and coordination drills.
+                    - Keep sessions fun and varied to build a healthy habit. Duration: 20–30 mins max.
+                    - Intensity: Light to Moderate only.
+                """.trimIndent()
+                age in 18..25 -> """
+                    Age Group: Young Adult (18–25)
+                    - Peak muscle-building years — progressive overload and compound lifts are very effective.
+                    - High intensity workouts (HIIT, strength training) are safe and beneficial.
+                    - Recovery is fast; can train 5–6 days a week with proper nutrition.
+                    - Emphasise learning correct form now to prevent future injuries.
+                """.trimIndent()
+                age in 26..35 -> """
+                    Age Group: Prime Adult (26–35)
+                    - Metabolism starts slowing slightly; combine strength training with cardio for best results.
+                    - Focus on maintaining muscle mass while improving cardiovascular health.
+                    - Warm-up and cool-down become more important. Add mobility work.
+                    - 3–5 workout days per week is ideal.
+                """.trimIndent()
+                age in 36..50 -> """
+                    Age Group: Mid-Adult (36–50)
+                    - Muscle recovery takes longer; ensure at least 1 rest day between heavy sessions.
+                    - PRIORITISE joint-friendly exercises: resistance bands, swimming, yoga, cycling.
+                    - Add balance and core stability work to prevent age-related falls.
+                    - Avoid exercises that put hard strain on knees/lower back without proper warm-up.
+                    - Intensity: Moderate; avoid extended HIIT without medical clearance.
+                """.trimIndent()
+                else -> """
+                    Age Group: Senior (51+)
+                    - SAFETY FIRST: Low-impact exercises only — walking, water aerobics, chair yoga, resistance bands.
+                    - Focus on bone density (weight-bearing), balance, and joint flexibility.
+                    - AVOID heavy compound lifts, explosive plyometrics, and rapid direction changes.
+                    - Sessions should be 15–25 minutes with plenty of rest between sets.
+                    - Always recommend consulting a doctor before high-intensity activity.
+                    - Intensity: Light only.
+                """.trimIndent()
+            }
+
             // Get current time
             val calendar = java.util.Calendar.getInstance()
             val hour = calendar.get(java.util.Calendar.HOUR_OF_DAY)
@@ -303,64 +450,79 @@ class AIExerciseRecommendationService private constructor(private val context: C
             val foodLogs = authHelper.getTodayFoodLogs(userId).getOrNull() ?: emptyList()
             val consumed = foodLogs.sumOf { it.calories }
             val targetCalories = (userGoal["dailyCalories"] as? Number)?.toInt() ?: 2000
-            
-            // Time constraints
-            val workoutTimeLimit = "15 mins" // Fixed per exercise for a session flow
 
-            var periodConstraint = ""
-            if (isOnPeriod) {
-                periodConstraint = """
-                    CRITICAL: User is currently on their period.
-                    - STRICTLY FORBIDDEN: High intensity, jumping, heavy lifting, crunches, or inversions.
-                    - REQUIRED: Gentle stretching, yoga, walking, or light movements.
-                    - Focus on pain relief (cramps) and mood boosting.
-                """.trimIndent()
+            // Safe intensity based on age group
+            val safeIntensity = when {
+                isOnPeriod      -> "light"
+                age < 18        -> "light"
+                age in 18..35   -> if (mood.lowercase() in listOf("tired", "sad", "exhausted")) "light" else "moderate"
+                age in 36..50   -> "moderate"
+                else            -> "light"   // 51+
             }
 
+            val periodConstraint = if (isOnPeriod) """
+                CRITICAL: User is currently on their period.
+                - STRICTLY FORBIDDEN: High intensity, jumping, heavy lifting, crunches, or inversions.
+                - REQUIRED: Gentle stretching, yoga, walking, or light movements.
+                - Focus on pain relief (cramps) and mood boosting.
+            """.trimIndent() else ""
+
             val promptText = """
-                ### ✅ Exercise Workout Generator
+                ### ✅ Personalised Exercise Workout Generator
 
-                You are a **Fitness Coach** creating detailed workouts.
+                You are a **Certified Fitness Coach** creating a safe, personalised workout.
 
-                **User:** Age $age | Gender $gender | Goal $goalType | Mood $mood
-                Period: ${if (isOnPeriod) "Active (gentle only)" else "Inactive"}
-                Calories: $consumed/$targetCalories
+                **User Profile:**
+                - Age: $age | Gender: $gender | Weight: $weight kg
+                - Goal: $goalType | Mood: $mood
+                - Period Active: ${if (isOnPeriod) "YES – gentle mode only" else "No"}
+                - Calories consumed today: $consumed / $targetCalories kcal
+                - Time of day: $timeOfDay
 
-                **Exercises Available:** $simplifiedList
+                **Gender-Specific Coaching Guidelines:**
+                $genderContext
 
-                ### Task: 3 exercises (Warm-up → Main → Cool-down)
+                **Age-Specific Coaching Guidelines (Age $age):**
+                $ageContext
 
-                ### Rules:
-                ${if (isOnPeriod) "**PERIOD MODE**: Only yoga/stretching. NO jumping/heavy!" else "Match intensity to mood"}
-                - Reason: 1-2 sentences explaining why this exercise
-                - Age/gender notes: Provide meaningful insights
-                - Tips: 2-3 practical tips for better execution
-                - Mistakes: 2-3 common mistakes to avoid
-                - Motivational message: ONLY if period active
+                **Pre-filtered Exercise List (already matched to $gender, age group $ageGroupKey):**
+                $simplifiedList
 
-                ### Output JSON (3 exercises):
+                ### Task:
+                Choose exactly 3 exercises in this order: Warm-up → Main → Cool-down.
+                ONLY use exercises from the list above.
+
+                ### Strict Rules:
+                ${if (isOnPeriod) "**⚠ PERIOD MODE ACTIVE**: ONLY yoga/stretching/walking. ABSOLUTELY NO jumping, heavy lifting, crunches, or inversions!" else "- Match intensity ($safeIntensity) to mood ($mood) and time of day ($timeOfDay)"}
+                - CRITICAL GENDER RULE: You MUST follow the Gender Coaching Guidelines above. If the user is FEMALE, the 3 exercises MUST include at least 1 glute/lower-body exercise and 1 core/flexibility exercise. If the user is MALE, the 3 exercises MUST include at least 1 upper-body compound and 1 lower-body compound.
+                - CRITICAL AGE RULE: Follow the Age-Specific Guidelines strictly. Do NOT suggest heavy lifts for seniors (51+) or for teens (under 18).
+                - Each exercise's "reason" field MUST mention the user's gender ($gender) AND age ($age) AND goal ($goalType) specifically — not generic text.
+                - Tips must be actionable form cues, not generic advice.
+                - Mistakes must be ones a beginner of this gender and age group would actually make.
+
+                ### Output JSON (exactly 3 exercises):
                 [
                   {
-                    "name": "Exercise name from list",
-                    "targetMuscle": "Target area",
-                    "bodyPart": "Body region",
-                    "equipment": "Bodyweight or equipment",
+                    "name": "Exercise name EXACTLY as it appears in the list above",
+                    "targetMuscle": "Primary muscle targeted",
+                    "bodyPart": "Body region (e.g. legs, core, upper body)",
+                    "equipment": "Bodyweight / dumbbells / mat etc.",
                     "instructions": ["Step 1", "Step 2", "Step 3"],
-                    "reason": "Why this exercise is good for you now",
-                    "benefits": "How it helps your fitness goals",
-                    "ageExplanation": "How age $age benefits from this",
-                    "genderNote": "Specific benefit for $gender",
-                    "motivationalMessage": "${if (isOnPeriod) "Period-friendly encouragement" else ""}",
-                    "estimatedCalories": ${if (isOnPeriod) 50 else 120},
+                    "reason": "Why this exercise suits a $gender aged $age with $goalType goal right now",
+                    "benefits": "Specific benefits for $gender body composition / physiology",
+                    "ageExplanation": "Why this is ideal / needs modification at age $age",
+                    "genderNote": "Gender-specific advantage or caution for $gender",
+                    "motivationalMessage": "${if (isOnPeriod) "Gentle, supportive period-mode message" else "Short motivating line"}",
+                    "estimatedCalories": ${if (isOnPeriod) 40 else 110},
                     "recommendedDuration": "15 mins",
-                    "intensity": "${if (isOnPeriod) "light" else "moderate"}",
-                    "goalAlignment": "How it helps $goalType",
-                    "tips": ["Tip 1: Keep your back straight", "Tip 2: Breathe deeply"],
-                    "commonMistakes": ["Mistake 1: Arching back too much", "Mistake 2: Holding breath"]
+                    "intensity": "${if (isOnPeriod) "light" else if (mood.lowercase() in listOf("tired", "sad", "exhausted")) "light" else "moderate"}",
+                    "goalAlignment": "How this moves the user closer to $goalType",
+                    "tips": ["Tip 1: specific cue", "Tip 2: breathing/form cue", "Tip 3: progression tip"],
+                    "commonMistakes": ["Mistake 1: describe it", "Mistake 2: describe it"]
                   }
                 ]
                 
-                Make sure tips and mistakes are specific and actionable!
+                Be precise, empathetic, and gender-aware in every field!
             """.trimIndent()
 
             val config = generationConfig {

@@ -325,24 +325,6 @@
         app:layout_constraintTop_toBottomOf="@id/cardStats">
 
         <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnToggleGhost"
-            style="@style/Widget.MaterialComponents.Button.UnelevatedButton"
-            android:layout_width="56dp"
-            android:layout_height="56dp"
-            android:layout_marginBottom="12dp"
-            android:insetLeft="0dp"
-            android:insetTop="0dp"
-            android:insetRight="0dp"
-            android:insetBottom="0dp"
-            app:icon="@drawable/ic_ghost"
-            app:iconGravity="textStart"
-            app:iconPadding="0dp"
-            app:iconSize="28dp"
-            app:backgroundTint="#CC4A148C"
-            app:cornerRadius="28dp"
-            app:elevation="4dp" />
-
-        <com.google.android.material.button.MaterialButton
             android:id="@+id/btnSOS"
             style="@style/Widget.MaterialComponents.Button.UnelevatedButton"
             android:layout_width="56dp"

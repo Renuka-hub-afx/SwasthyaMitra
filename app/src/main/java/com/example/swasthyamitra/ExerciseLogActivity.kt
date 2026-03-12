@@ -391,7 +391,6 @@ class ExerciseLogActivity : AppCompatActivity() {
             updatedCompletion[today] = true
 
             val updatedData = data.copy(
-                xp = data.xp + 100,
                 completionHistory = updatedCompletion,
                 workoutHistory = updatedHistory,
                 totalWorkoutMinutes = data.totalWorkoutMinutes + duration,
@@ -402,7 +401,7 @@ class ExerciseLogActivity : AppCompatActivity() {
                 .addOnSuccessListener {
                     // Award XP
                     val xpManager = XPManager(userId)
-                    xpManager.awardXP(XPManager.XPSource.COMPLETE_WORKOUT) { leveledUp, newLevel ->
+                    xpManager.awardXP(com.example.swasthyamitra.utils.Constants.XPSource.COMPLETE_WORKOUT) { leveledUp, newLevel ->
                         if (leveledUp) {
                             runOnUiThread {
                                 Toast.makeText(this, "🎉 Level Up! Level $newLevel", Toast.LENGTH_SHORT).show()

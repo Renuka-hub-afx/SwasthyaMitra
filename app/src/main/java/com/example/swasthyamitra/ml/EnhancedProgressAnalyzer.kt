@@ -36,7 +36,7 @@ class EnhancedProgressAnalyzer(private val userId: String) {
                 .await()
 
             val dataPoints = logs.documents.mapNotNull { doc ->
-                val weight = (doc.get("weightKg") as? Number)?.toDouble()
+                val weight = (doc.get("weight") as? Number)?.toDouble()
                 val date = doc.getString("date")
                 if (weight != null && date != null) {
                     GraphDataPoint(date, weight.toFloat(), "Weight")
@@ -194,7 +194,7 @@ class EnhancedProgressAnalyzer(private val userId: String) {
 
             logs.documents.forEach { doc ->
                 val date = doc.getString("date") ?: return@forEach
-                val minutes = (doc.get("durationMinutes") as? Number)?.toInt() ?: 0
+                val minutes = (doc.get("duration") as? Number)?.toInt() ?: 0
                 dailyMinutes[date] = (dailyMinutes[date] ?: 0) + minutes
             }
 

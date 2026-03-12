@@ -1,134 +1,246 @@
 package com.example.swasthyamitra
 
-import com.google.firebase.database.DatabaseReference
-import com.example.swasthyamitra.models.DailyActivity
+import android.util.Log
+import com.example.swasthyamitra.utils.Constants
+import com.example.swasthyamitra.utils.DateTimeHelper
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.SetOptions
+import kotlinx.coroutines.tasks.await
 
-class GamificationRepository(private val database: DatabaseReference, private val userId: String) {
+/**
+ * GamificationRepository - Manages streaks, shields, and daily check-ins (Firestore version)
+ * Migrated from Firebase RTDB to Firestore for user-centric architecture.
+ */
+class GamificationRepository(private val userId: String) {
 
-    private val dateFormat = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.US)
-
-    fun validateAndFixStreak(data: FitnessData): FitnessData {
-        if (data.lastActiveDate.isEmpty()) return data
-        
-        val today = dateFormat.format(java.util.Date())
-        if (data.lastActiveDate == today) return data
-
-        val lastDate = try {
-            dateFormat.parse(data.lastActiveDate)
+    private val db: FirebaseFirestore by lazy {
+        try {
+            FirebaseFirestore.getInstance(Constants.Database.FIRESTORE_INSTANCE_NAME)
         } catch (e: Exception) {
-            return data
-        } ?: return data
+            FirebaseFirestore.getInstance()
+        }
+    }
 
-        val todayDate = dateFormat.parse(today) ?: return data
-        
-        // Calculate difference in days
-        val diff = todayDate.time - lastDate.time
-        val daysDiff = java.util.concurrent.TimeUnit.MILLISECONDS.toDays(diff)
-        
-        // Logic:
-        // daysDiff = 1 -> Yesterday (Consecutive) - Good
-        // daysDiff > 1 -> Missed one or more days - Bad
-        
-        if (daysDiff > 1) {
-            val missedDays = (daysDiff - 1).toInt()
+    private val gamificationRef by lazy {
+        db.collection(Constants.Collections.USERS)
+            .document(userId)
+            .collection(Constants.Collections.GAMIFICATION_DATA)
+            .document("current")
+    }
+
+    companion object {
+        private const val TAG = "GamificationRepository"
+    }
+
+    /**
+     * Data class representing gamification data in Firestore
+     */
+    data class GamificationData(
+        val xp: Int = 0,
+        val level: Int = 1,
+        val streak: Int = 0,
+        val shields: Int = 0,
+        val lastActiveDate: String = "",
+        val steps: Int = 0,
+        val updatedAt: String = DateTimeHelper.currentISO8601()
+    )
+
+    /**
+     * Validates and fixes streak based on last active date.
+     * Applies shield protection if available, resets streak if broken.
+     */
+    suspend fun validateAndFixStreak(): GamificationData {
+        return try {
+            val snapshot = gamificationRef.get().await()
+            if (!snapshot.exists()) {
+                return GamificationData()
+            }
+
+            val lastActiveDate = snapshot.getString("lastActiveDate") ?: ""
+            if (lastActiveDate.isEmpty()) return snapshotToData(snapshot)
+
+            val today = DateTimeHelper.currentSimpleDate()
+            if (lastActiveDate == today) return snapshotToData(snapshot)
+
+            val daysDiff = calculateDaysDifference(lastActiveDate, today)
+
+            if (daysDiff > 1) {
+                val missedDays = (daysDiff - 1).toInt()
+                val currentShields = snapshot.getLong("shields")?.toInt() ?: 0
+                val currentStreak = snapshot.getLong("streak")?.toInt() ?: 0
+
+                if (currentShields >= missedDays) {
+                    // Streak protected by shields
+                    Log.d(TAG, "Streak protected! Used $missedDays shields")
+                    val updates = hashMapOf<String, Any>(
+                        "shields" to (currentShields - missedDays),
+                        "updatedAt" to DateTimeHelper.currentISO8601()
+                    )
+                    gamificationRef.set(updates, SetOptions.merge()).await()
+                } else {
+                    // Streak broken
+                    Log.d(TAG, "Streak broken! Resetting to 0")
+                    val updates = hashMapOf<String, Any>(
+                        "streak" to 0,
+                        "updatedAt" to DateTimeHelper.currentISO8601()
+                    )
+                    gamificationRef.set(updates, SetOptions.merge()).await()
+                }
+            }
+
+            gamificationRef.get().await().let { snapshotToData(it) }
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to validate streak: ${e.message}")
+            GamificationData()
+        }
+    }
+
+    /**
+     * Checks in user for the day, increments streak, awards shields at milestones.
+     */
+    suspend fun checkIn(): GamificationData {
+        val today = DateTimeHelper.currentSimpleDate()
+
+        return try {
+            val snapshot = gamificationRef.get().await()
+            val lastActiveDate = snapshot.getString("lastActiveDate") ?: ""
+
+            // Already checked in today
+            if (lastActiveDate == today) {
+                return snapshotToData(snapshot)
+            }
+
+            val currentStreak = snapshot.getLong("streak")?.toInt() ?: 0
+            val currentShields = snapshot.getLong("shields")?.toInt() ?: 0
+
+            val newStreak = currentStreak + 1
+            var newShields = currentShields
+
+            // Award shield every 7 days
+            if (newStreak % Constants.XP.MILESTONE_DAYS == 0 && newStreak > 0) {
+                newShields += Constants.XP.SHIELDS_PER_MILESTONE
+                Log.d(TAG, "Milestone reached! Awarded shield at $newStreak day streak")
+            }
+
+            val updates = hashMapOf<String, Any>(
+                "lastActiveDate" to today,
+                "streak" to newStreak,
+                "shields" to newShields,
+                "updatedAt" to DateTimeHelper.currentISO8601()
+            )
+
+            gamificationRef.set(updates, SetOptions.merge()).await()
             
-            if (data.shields >= missedDays) {
-                // Streak Protected by Shields!
-                // We keep the streak count but deduct shields.
-                // Note: We don't update lastActiveDate here; checkIn will set it to today.
-                return data.copy(
-                    shields = data.shields - missedDays
-                )
+            // Award XP for maintaining streak if streak > 0
+            if (newStreak > 1) {
+                val xpManager = com.example.swasthyamitra.gamification.XPManager(userId)
+                xpManager.awardXPSuspend(Constants.XPSource.MAINTAIN_STREAK)
+            }
+
+            gamificationRef.get().await().let { snapshotToData(it) }
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to check in: ${e.message}")
+            GamificationData()
+        }
+    }
+
+    /**
+     * Gets current gamification data from Firestore
+     */
+    suspend fun getCurrentData(): GamificationData {
+        return try {
+            val snapshot = gamificationRef.get().await()
+            if (snapshot.exists()) {
+                snapshotToData(snapshot)
             } else {
-                // Streak Broken :(
-                return data.copy(
-                    streak = 0
-                )
+                // Initialize with defaults
+                val initialData = GamificationData()
+                gamificationRef.set(initialData).await()
+                initialData
             }
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to get current data: ${e.message}")
+            GamificationData()
         }
-        
-        return data
     }
 
-
-
-    fun checkIn(data: FitnessData, callback: (FitnessData) -> Unit) {
-        val today = dateFormat.format(java.util.Date())
-        
-        // If already checked in today, just return existing data
-        if (data.lastActiveDate == today) {
-            callback(data)
-            return
+    /**
+     * Updates streak count directly (for manual adjustments)
+     */
+    suspend fun updateStreak(newStreak: Int) {
+        try {
+            val updates = hashMapOf<String, Any>(
+                "streak" to newStreak,
+                "updatedAt" to DateTimeHelper.currentISO8601()
+            )
+            gamificationRef.set(updates, SetOptions.merge()).await()
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to update streak: ${e.message}")
         }
+    }
 
-        val newStreak = data.streak + 1
-        var newShields = data.shields
-        
-        // 7-day Bonus Shield!
-        if (newStreak % 7 == 0 && newStreak > 0) {
-            newShields += 1
+    /**
+     * Adds shields to user account
+     */
+    suspend fun addShields(count: Int) {
+        try {
+            val snapshot = gamificationRef.get().await()
+            val currentShields = snapshot.getLong("shields")?.toInt() ?: 0
+            val updates = hashMapOf<String, Any>(
+                "shields" to (currentShields + count),
+                "updatedAt" to DateTimeHelper.currentISO8601()
+            )
+            gamificationRef.set(updates, SetOptions.merge()).await()
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to add shields: ${e.message}")
         }
-        
-        val updatedData = data.copy(
-            lastActiveDate = today,
-            streak = newStreak,
-            shields = newShields,
-            steps = 0 // Reset steps for new day logic if needed, but here we just init
+    }
+
+    /**
+     * Helper: Calculate days difference between two date strings
+     */
+    private fun calculateDaysDifference(startDate: String, endDate: String): Long {
+        val start = DateTimeHelper.parseSimpleDate(startDate) ?: return 0
+        val end = DateTimeHelper.parseSimpleDate(endDate) ?: return 0
+        return DateTimeHelper.daysBetween(start, end)
+    }
+
+    /**
+     * Helper: Convert Firestore snapshot to GamificationData
+     */
+    private fun snapshotToData(snapshot: com.google.firebase.firestore.DocumentSnapshot): GamificationData {
+        return GamificationData(
+            xp = snapshot.getLong("xp")?.toInt() ?: 0,
+            level = snapshot.getLong("level")?.toInt() ?: 1,
+            streak = snapshot.getLong("streak")?.toInt() ?: 0,
+            shields = snapshot.getLong("shields")?.toInt() ?: 0,
+            lastActiveDate = snapshot.getString("lastActiveDate") ?: "",
+            steps = snapshot.getLong("steps")?.toInt() ?: 0,
+            updatedAt = snapshot.getString("updatedAt") ?: DateTimeHelper.currentISO8601()
         )
-        
-        saveData(updatedData)
-        callback(updatedData)
     }
 
-
-
-    fun updateSteps(data: FitnessData, steps: Int, callback: (FitnessData) -> Unit) {
-        val today = dateFormat.format(java.util.Date())
-        var currentData = data.copy(steps = steps)
-        
-        // Logic: Earn Shield if Steps >= 5000
-        if (steps >= 5000) {
-            // Check if already earned a shield today
-            val earnedToday = currentData.activeShields.any { it.acquiredDate == today }
-            
-            if (!earnedToday) {
-                // Award Shield!
-                val newShield = ShieldInstance(
-                    id = java.util.UUID.randomUUID().toString(),
-                    type = ShieldType.FREEZE,
-                    acquiredDate = today,
-                    expiresAt = System.currentTimeMillis() + (30L * 24 * 60 * 60 * 1000) // 30 days validity
-                )
-                
-                val newActiveShields = currentData.activeShields + newShield
-                currentData = currentData.copy(
-                    shields = currentData.shields + 1,
-                    activeShields = newActiveShields
-                )
-            }
+    /**
+     * Migration helper: Migrate data from Firebase RTDB to Firestore
+     * Call this once for existing users to migrate their gamification data
+     */
+    suspend fun migrateFromRTDB(rtdbData: FitnessData) {
+        try {
+            val firestoreData = hashMapOf<String, Any>(
+                "xp" to rtdbData.xp,
+                "level" to rtdbData.level,
+                "streak" to rtdbData.streak,
+                "shields" to rtdbData.shields,
+                "lastActiveDate" to rtdbData.lastActiveDate,
+                "steps" to rtdbData.steps,
+                "updatedAt" to DateTimeHelper.currentISO8601(),
+                "migratedAt" to DateTimeHelper.currentISO8601()
+            )
+            gamificationRef.set(firestoreData).await()
+            Log.d(TAG, "Successfully migrated RTDB data to Firestore for user $userId")
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to migrate RTDB data: ${e.message}")
         }
-        
-        saveData(currentData)
-        callback(currentData)
-    }
-    
-    private fun saveData(data: FitnessData) {
-        val today = dateFormat.format(java.util.Date())
-        
-        // 1. Save User Stats (Streak, Level, XP etc) to 'users'
-        // We exclude daily specific transient data if we want strict separation, 
-        // but for now we update the whole object to `users` to maintain backward compat
-        // AND write specific daily data to `dailyActivity`.
-        database.child("users").child(userId).setValue(data)
-        
-        // 2. Save Daily Activity (Steps, Calories) to 'dailyActivity'
-        val dailyActivity = DailyActivity(
-            date = today,
-            steps = data.steps,
-            calories = (data.steps * 0.04).toInt(), // Approx calories
-            workout = if (data.completionHistory[today] == true) "Completed" else ""
-        )
-        
-        database.child("dailyActivity").child(userId).child(today).setValue(dailyActivity)
     }
 }
+

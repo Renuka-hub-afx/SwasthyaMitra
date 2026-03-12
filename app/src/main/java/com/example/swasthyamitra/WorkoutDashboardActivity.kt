@@ -1,13 +1,17 @@
 package com.example.swasthyamitra
 
+import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.view.View
 import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.cardview.widget.CardView
+import androidx.core.app.ActivityCompat
 import androidx.lifecycle.lifecycleScope
 import com.example.swasthyamitra.auth.FirebaseAuthHelper
 import android.Manifest
@@ -16,9 +20,12 @@ import android.os.Build
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import android.util.Log
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationServices
 
 import com.google.firebase.database.FirebaseDatabase
 import com.example.swasthyamitra.gamification.XPManager
+import com.example.swasthyamitra.utils.Constants
 import kotlinx.coroutines.launch
 
 
@@ -85,6 +92,22 @@ class WorkoutDashboardActivity : AppCompatActivity() {
     private lateinit var btnStartStepTracking: com.google.android.material.button.MaterialButton
     private lateinit var btnStopStepTracking: com.google.android.material.button.MaterialButton
 
+    // SOS Emergency
+    private lateinit var btnSOS: com.google.android.material.button.MaterialButton
+    private lateinit var etSosEmergencyContact: com.google.android.material.textfield.TextInputEditText
+    private lateinit var fusedLocationClient: FusedLocationProviderClient
+
+    private val locationPermissionForSOS =
+        registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
+            if (permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true ||
+                permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true) {
+                performSOSWithLocation()
+            } else {
+                // Send without location
+                sendSOSViaMessenger(null, null)
+            }
+        }
+
     private var currentAiExerciseList: List<com.example.swasthyamitra.ai.AIExerciseRecommendationService.ExerciseRec> = emptyList()
     private var currentExerciseIndex = 0
 
@@ -122,6 +145,8 @@ class WorkoutDashboardActivity : AppCompatActivity() {
         userId = authHelper.getCurrentUser()?.uid ?: ""
 
         initViews()
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
+        loadSosEmergencyContact()
         
         // Observe StepCounterService for live step and calorie updates
         // Service is NOT auto-started - user controls it with Start/Stop buttons
@@ -153,7 +178,7 @@ class WorkoutDashboardActivity : AppCompatActivity() {
         }
         // Update button states based on unified service
         com.example.swasthyamitra.services.UnifiedStepTrackingService.isTrackingLive.observe(this) { tracking ->
-            btnStartStepTracking.isEnabled = !tracking
+            btnStartStepTracking.isEnabled = true
             btnStopStepTracking.isEnabled = tracking
             if (tracking) {
                 btnStartStepTracking.text = "\uD83D\uDDFA\uFE0F View Live Map"
@@ -284,20 +309,15 @@ class WorkoutDashboardActivity : AppCompatActivity() {
         // Step Tracking Control Buttons
         btnStartStepTracking = findViewById(R.id.btnStartStepTracking)
         btnStopStepTracking = findViewById(R.id.btnStopStepTracking)
+
+        // SOS Emergency
+        btnSOS = findViewById(R.id.btnSOS)
+        etSosEmergencyContact = findViewById(R.id.etSosEmergencyContact)
     }
 
     private fun setupListeners() {
         findViewById<View>(R.id.cvGamification).setOnClickListener {
             startActivity(Intent(this, GamificationActivity::class.java))
-        }
-        
-        findViewById<View>(R.id.cvInsights).setOnClickListener {
-            startActivity(Intent(this, InsightsActivity::class.java))
-        }
-
-
-        findViewById<View>(R.id.cvSafety).setOnClickListener {
-            startActivity(Intent(this, SafetyCoreActivity::class.java))
         }
 
         btnBackWorkout.setOnClickListener {
@@ -340,6 +360,15 @@ class WorkoutDashboardActivity : AppCompatActivity() {
 
         btnManualExercise.setOnClickListener {
             startActivity(Intent(this, ManualExerciseActivity::class.java))
+        }
+
+        // SOS Button
+        btnSOS.setOnClickListener {
+            triggerSOS()
+        }
+
+        etSosEmergencyContact.setOnFocusChangeListener { _, hasFocus ->
+            if (!hasFocus) saveSosEmergencyContact()
         }
     }
     
@@ -560,12 +589,12 @@ class WorkoutDashboardActivity : AppCompatActivity() {
 
                     // Award XP only via XPManager (single source of truth, +75 XP)
                     val xpManager = XPManager(userId)
-                    xpManager.awardXP(XPManager.XPSource.AI_EXERCISE) { leveledUp, newLevel ->
+                    xpManager.awardXP(Constants.XPSource.AI_EXERCISE) { leveledUp, newLevel ->
                         runOnUiThread {
                             if (leveledUp) {
                                 showLevelUpToast(newLevel)
                             }
-                            Toast.makeText(this, "✅ Saved! +75 XP & ${exercise.estimatedCalories} kcal!", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(this, "✅ Saved! +${Constants.XP.AI_EXERCISE} XP & ${exercise.estimatedCalories} kcal!", Toast.LENGTH_SHORT).show()
                         }
                     }
 
@@ -726,7 +755,148 @@ class WorkoutDashboardActivity : AppCompatActivity() {
             }
         }
     }
+
+    // -------- SOS Emergency via Messenger --------
+
+    private fun triggerSOS() {
+        val contactNumber = etSosEmergencyContact.text.toString().trim()
+        if (contactNumber.isEmpty()) {
+            Toast.makeText(this, "Please enter an emergency contact number first!", Toast.LENGTH_SHORT).show()
+            etSosEmergencyContact.requestFocus()
+            return
+        }
+
+        // Confirm before sending
+        AlertDialog.Builder(this)
+            .setTitle("\uD83D\uDEA8 Send SOS Alert?")
+            .setMessage("This will open Messenger to send your live location and an emergency help message to $contactNumber.\n\nProceed?")
+            .setPositiveButton("SEND SOS") { _, _ ->
+                saveSosEmergencyContact()
+                // Check location permission
+                if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+                    performSOSWithLocation()
+                } else {
+                    locationPermissionForSOS.launch(arrayOf(
+                        Manifest.permission.ACCESS_FINE_LOCATION,
+                        Manifest.permission.ACCESS_COARSE_LOCATION
+                    ))
+                }
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
+    private fun performSOSWithLocation() {
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
+            ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            sendSOSViaMessenger(null, null)
+            return
+        }
+
+        fusedLocationClient.lastLocation.addOnSuccessListener { location ->
+            if (location != null) {
+                sendSOSViaMessenger(location.latitude, location.longitude)
+            } else {
+                sendSOSViaMessenger(null, null)
+            }
+        }.addOnFailureListener {
+            sendSOSViaMessenger(null, null)
+        }
+    }
+
+    private fun sendSOSViaMessenger(latitude: Double?, longitude: Double?) {
+        val contactNumber = etSosEmergencyContact.text.toString().trim()
+        if (contactNumber.isEmpty()) return
+
+        val timestamp = java.text.SimpleDateFormat("hh:mm a, MMM dd yyyy", java.util.Locale.getDefault()).format(java.util.Date())
+
+        val locationPart = if (latitude != null && longitude != null) {
+            "\uD83D\uDCCD My Live Location:\nhttps://maps.google.com/maps?q=$latitude,$longitude"
+        } else {
+            "\uD83D\uDCCD Location unavailable"
+        }
+
+        val message = "\uD83D\uDEA8 EMERGENCY SOS ALERT \uD83D\uDEA8\n\n" +
+                "I need help! This is an emergency.\n\n" +
+                "$locationPart\n\n" +
+                "\uD83D\uDD52 Time: $timestamp\n" +
+                "Sent from SwasthyaMitra Step Tracker"
+
+        // Try opening Facebook Messenger with the message
+        val messengerSent = openMessengerWithMessage(message)
+        if (!messengerSent) {
+            // Fallback: try SMS intent
+            openSmsWithMessage(contactNumber, message)
+        }
+    }
+
+    private fun openMessengerWithMessage(message: String): Boolean {
+        try {
+            // Facebook Messenger share intent
+            val messengerIntent = Intent(Intent.ACTION_SEND).apply {
+                setPackage("com.facebook.orca")
+                type = "text/plain"
+                putExtra(Intent.EXTRA_TEXT, message)
+            }
+
+            if (messengerIntent.resolveActivity(packageManager) != null) {
+                startActivity(messengerIntent)
+                Toast.makeText(this, "\uD83D\uDEA8 Opening Messenger \u2014 send the SOS message to your contact!", Toast.LENGTH_LONG).show()
+                return true
+            }
+        } catch (e: Exception) {
+            Log.e("WorkoutDashboard", "Messenger not available: ${e.message}")
+        }
+
+        // Try Messenger Lite as fallback
+        try {
+            val liteMsgIntent = Intent(Intent.ACTION_SEND).apply {
+                setPackage("com.facebook.mlite")
+                type = "text/plain"
+                putExtra(Intent.EXTRA_TEXT, message)
+            }
+
+            if (liteMsgIntent.resolveActivity(packageManager) != null) {
+                startActivity(liteMsgIntent)
+                Toast.makeText(this, "\uD83D\uDEA8 Opening Messenger Lite \u2014 send the SOS message!", Toast.LENGTH_LONG).show()
+                return true
+            }
+        } catch (e: Exception) {
+            Log.e("WorkoutDashboard", "Messenger Lite not available: ${e.message}")
+        }
+
+        return false
+    }
+
+    private fun openSmsWithMessage(phoneNumber: String, message: String) {
+        try {
+            val smsUri = Uri.parse("smsto:${Uri.encode(phoneNumber)}")
+            val smsIntent = Intent(Intent.ACTION_SENDTO, smsUri).apply {
+                putExtra("sms_body", message)
+            }
+            startActivity(smsIntent)
+            Toast.makeText(this, "\uD83D\uDEA8 Messenger not found \u2014 opening SMS app instead", Toast.LENGTH_LONG).show()
+        } catch (e: Exception) {
+            Log.e("WorkoutDashboard", "Failed to open SMS: ${e.message}")
+            Toast.makeText(this, "Unable to send SOS. No messaging app found.", Toast.LENGTH_LONG).show()
+        }
+    }
+
+    private fun saveSosEmergencyContact() {
+        val contact = etSosEmergencyContact.text.toString().trim()
+        getSharedPreferences("SafetyPrefs", Context.MODE_PRIVATE)
+            .edit().putString("sos_contact_number", contact).apply()
+    }
+
+    private fun loadSosEmergencyContact() {
+        val prefs = getSharedPreferences("SafetyPrefs", Context.MODE_PRIVATE)
+        val contact = prefs.getString("sos_contact_number", null)
+            ?: prefs.getString("contact_number", "")
+        etSosEmergencyContact.setText(contact)
+    }
+
     override fun onDestroy() {
+        saveSosEmergencyContact()
         super.onDestroy()
     }
 }

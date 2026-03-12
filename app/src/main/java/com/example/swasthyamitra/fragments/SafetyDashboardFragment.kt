@@ -81,22 +81,12 @@ class SafetyDashboardFragment : Fragment() {
     }
 
     private fun observeData() {
-        TrackingService.isGhostModeLive.observe(viewLifecycleOwner) { active ->
-            binding.tvGhostStatus.text = if (active) "ACTIVE" else "INACTIVE"
-            binding.tvGhostStatus.setTextColor(
-                if (active) resources.getColor(R.color.purple_500, null) 
-                else resources.getColor(android.R.color.darker_gray, null)
-            )
-        }
-
         TrackingService.isSOSActiveLive.observe(viewLifecycleOwner) { sosActive ->
             if (sosActive) {
                 binding.btnSOS.text = "SOS\nACTIVE"
                 binding.btnSOS.setBackgroundColor(resources.getColor(android.R.color.black, null))
             } else {
                 binding.btnSOS.text = "SOS"
-                binding.btnSOS.setBackgroundColor(resources.getColor(R.color.purple_500, null)) 
-                // Wait, SOS is red in layout, so I'll stick to that or logic:
                 binding.btnSOS.setBackgroundColor(resources.getColor(android.R.color.holo_red_dark, null))
             }
         }

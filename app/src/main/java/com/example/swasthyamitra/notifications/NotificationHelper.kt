@@ -11,8 +11,10 @@ import android.os.Build
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
+import com.example.swasthyamitra.AISmartDietActivity
 import com.example.swasthyamitra.MainActivity
 import com.example.swasthyamitra.R
+import com.example.swasthyamitra.ui.hydration.HydrationActivity
 
 class NotificationHelper(private val context: Context) {
 
@@ -85,7 +87,15 @@ class NotificationHelper(private val context: Context) {
             else -> System.currentTimeMillis().toInt()
         }
 
-        val intent = Intent(context, MainActivity::class.java).apply {
+        // Navigate to the correct activity based on notification type
+        val targetActivity = when (type) {
+            "Water" -> HydrationActivity::class.java
+            "Meal" -> AISmartDietActivity::class.java
+            "Event" -> MainActivity::class.java
+            else -> MainActivity::class.java
+        }
+
+        val intent = Intent(context, targetActivity).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         }
         val pendingIntent = PendingIntent.getActivity(

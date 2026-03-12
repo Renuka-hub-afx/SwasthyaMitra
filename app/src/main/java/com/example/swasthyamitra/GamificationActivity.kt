@@ -32,6 +32,8 @@ import java.util.Calendar
 import java.util.Locale
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
 
 class GamificationActivity : AppCompatActivity() {
 
@@ -95,7 +97,7 @@ class GamificationActivity : AppCompatActivity() {
             if (FirebaseApp.getApps(this).isNotEmpty()) {
 
                 database = FirebaseDatabase.getInstance("https://swasthyamitra-ded44-default-rtdb.asia-southeast1.firebasedatabase.app").reference
-                repository = GamificationRepository(database!!, userId)
+                repository = GamificationRepository(userId)
                 syncWithFirebase()
             } else {
                 loadLocalData()
@@ -152,22 +154,26 @@ class GamificationActivity : AppCompatActivity() {
             override fun onDataChange(snapshot: DataSnapshot) {
                 val data = snapshot.getValue(FitnessData::class.java)
                 data?.let {
-                    // Auto-fix streak if corrupted
-                    val checkedData = if (::repository.isInitialized) {
-                         repository.validateAndFixStreak(it)
-                    } else it
-                    
-                    currentData = checkedData
+                    currentData = it
                     updateUI(currentData.steps)
                     updateStreakUI()
-                    
-                    // Trigger daily check-in
-                    repository.checkIn(currentData) { updated ->
-                         currentData = updated
-                         runOnUiThread {
-                             updateStreakUI()
-                             saveLocalData()
-                         }
+
+                    // Trigger daily check-in via coroutine (suspend functions)
+                    lifecycleScope.launch {
+                        if (::repository.isInitialized) {
+                            try {
+                                repository.validateAndFixStreak()
+                                val updated = repository.checkIn()
+                                // Reflect streak/shields from Firestore in UI
+                                runOnUiThread {
+                                    tvStreakValue.text = updated.streak.toString()
+                                    tvShieldValue.text = updated.shields.toString()
+                                    saveLocalData()
+                                }
+                            } catch (e: Exception) {
+                                android.util.Log.e("GamificationActivity", "Sync error: ${e.message}")
+                            }
+                        }
                     }
                 }
             }
@@ -177,19 +183,12 @@ class GamificationActivity : AppCompatActivity() {
 
     private fun startStepTracking() {
         stepManager = StepManager(this) { steps, burned ->
-            if (::repository.isInitialized) {
-                repository.updateSteps(currentData, steps) { updated ->
-                    currentData = updated
-                    runOnUiThread {
-                        updateUI(updated.steps)
-                        updateStreakUI()
-                        checkLevelUp()
-                        saveLocalData()
-                    }
-                }
-            } else {
-                 currentData = currentData.copy(steps = steps)
-                 runOnUiThread { updateUI(steps) }
+            currentData = currentData.copy(steps = steps)
+            runOnUiThread {
+                updateUI(steps)
+                updateStreakUI()
+                checkLevelUp()
+                saveLocalData()
             }
         }
         // Enable hybrid validation for accurate step counting
