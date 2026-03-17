@@ -6,6 +6,7 @@
     android:orientation="vertical"
     android:background="@drawable/background_main">
 
+    <!-- Header -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -52,6 +53,7 @@
             android:orientation="vertical"
             android:padding="24dp">
 
+            <!-- Challenge Name -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -73,7 +75,59 @@
                 android:textColorHint="@color/text_hint"
                 android:textSize="15sp"
                 android:minHeight="48dp"
-                android:layout_marginBottom="32dp" />
+                android:layout_marginBottom="24dp" />
+
+            <!-- Friend Email (optional, for sharing) -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Friend's Email (optional)"
+                android:textStyle="bold"
+                android:textColor="@color/text_primary"
+                android:textSize="14sp"
+                android:fontFamily="sans-serif-medium"
+                android:layout_marginBottom="4dp" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Enter your friend's email to pre-fill the share message. No account lookup is performed — the challenge code is how your friend joins."
+                android:textColor="@color/text_hint"
+                android:textSize="12sp"
+                android:layout_marginBottom="8dp" />
+
+            <EditText
+                android:id="@+id/etFriendEmail"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="friend@example.com"
+                android:inputType="textEmailAddress"
+                android:padding="16dp"
+                android:background="@drawable/edittext_background"
+                android:textColor="@color/text_primary"
+                android:textColorHint="@color/text_hint"
+                android:textSize="15sp"
+                android:minHeight="48dp"
+                android:layout_marginBottom="8dp" />
+
+            <!-- Share status hint -->
+            <TextView
+                android:id="@+id/tvFriendStatus"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="13sp"
+                android:paddingBottom="8dp"
+                android:visibility="visible" />
+
+            <!-- Progress indicator -->
+            <ProgressBar
+                android:id="@+id/progressBarSetup"
+                style="?android:attr/progressBarStyle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_marginBottom="12dp"
+                android:visibility="gone" />
 
             <Button
                 android:id="@+id/btnCreateChallenge"
@@ -85,7 +139,9 @@
                 android:textColor="@color/white"
                 android:background="@drawable/button_background"
                 android:stateListAnimator="@null"
+                android:layout_marginTop="8dp"
                 app:backgroundTint="@null" />
+
         </LinearLayout>
     </ScrollView>
 </LinearLayout>

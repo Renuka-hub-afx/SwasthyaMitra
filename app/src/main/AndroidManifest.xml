@@ -103,6 +103,11 @@
             android:screenOrientation="portrait" />
 
         <activity
+            android:name=".ChallengeDetailActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+
+        <activity
             android:name=".SleepTrackerActivity"
             android:exported="false"
             android:screenOrientation="portrait" />

@@ -50,6 +50,8 @@ class GamificationActivity : AppCompatActivity() {
     private lateinit var streakCalendarContainer: LinearLayout
     private lateinit var tvStreakMessage: TextView
     private lateinit var comebackBonusContainer: FrameLayout
+    private lateinit var cvJoinedChallenges: androidx.cardview.widget.CardView
+    private lateinit var challengeListContainer: LinearLayout
 
     private val DAILY_GOAL = 5000 
     private val LEVEL_XP_THRESHOLD = 100  // Must match XPManager.XP_PER_LEVEL
@@ -97,7 +99,14 @@ class GamificationActivity : AppCompatActivity() {
             if (FirebaseApp.getApps(this).isNotEmpty()) {
 
                 database = FirebaseDatabase.getInstance("https://swasthyamitra-ded44-default-rtdb.asia-southeast1.firebasedatabase.app").reference
-                repository = GamificationRepository(userId)
+                val currentUser = authHelper.getCurrentUser()
+                val displayName = currentUser?.displayName
+                    ?: currentUser?.email?.substringBefore("@")
+                    ?: "User"
+                val userEmail = currentUser?.email ?: ""
+                repository = GamificationRepository(userId, displayName, userEmail)
+                // Immediately publish the index so friends can find this user right away
+                repository.publishUserIndex()
                 syncWithFirebase()
             } else {
                 loadLocalData()
@@ -122,6 +131,8 @@ class GamificationActivity : AppCompatActivity() {
         streakCalendarContainer = findViewById(R.id.streakCalendarContainer)
         tvStreakMessage = findViewById(R.id.tvStreakMessage)
         comebackBonusContainer = findViewById(R.id.comebackBonusContainer)
+        cvJoinedChallenges = findViewById(R.id.cvJoinedChallenges)
+        challengeListContainer = findViewById(R.id.challengeListContainer)
     }
 
     private fun setupListeners() {
@@ -154,20 +165,31 @@ class GamificationActivity : AppCompatActivity() {
             override fun onDataChange(snapshot: DataSnapshot) {
                 val data = snapshot.getValue(FitnessData::class.java)
                 data?.let {
+                    // Keep the RTDB data as baseline (steps, xp, level, workoutHistory)
                     currentData = it
                     updateUI(currentData.steps)
                     updateStreakUI()
 
-                    // Trigger daily check-in via coroutine (suspend functions)
+                    // Trigger daily check-in via coroutine (suspended Firestore calls)
                     lifecycleScope.launch {
                         if (::repository.isInitialized) {
                             try {
+                                // Step 1: validate / apply shield if missed a day
                                 repository.validateAndFixStreak()
+                                // Step 2: mark today active, increment streak
                                 val updated = repository.checkIn()
-                                // Reflect streak/shields from Firestore in UI
+
+                                // Step 3: merge fresh Firestore streak data into currentData
+                                // completionHistory, streak, shields now come from Firestore
+                                currentData = currentData.copy(
+                                    streak             = updated.streak,
+                                    shields            = updated.shields,
+                                    lastActiveDate     = updated.lastActiveDate,
+                                    completionHistory  = updated.completionHistory
+                                )
+
                                 runOnUiThread {
-                                    tvStreakValue.text = updated.streak.toString()
-                                    tvShieldValue.text = updated.shields.toString()
+                                    updateStreakUI()
                                     saveLocalData()
                                 }
                             } catch (e: Exception) {
@@ -237,79 +259,116 @@ class GamificationActivity : AppCompatActivity() {
 
     private fun generateCalendar() {
         streakCalendarContainer.removeAllViews()
-        val calendar = Calendar.getInstance()
-        calendar.add(Calendar.DAY_OF_YEAR, -3)
-        
-        val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.US)
+
+        val sdf       = SimpleDateFormat("yyyy-MM-dd", Locale.US)
         val dayFormat = SimpleDateFormat("EEE", Locale.US)
-        val todayStr = SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date())
-        
+        val today     = sdf.format(Date())
+
+        // Build a mutable view of the history so we can add today optimistically
+        val history = currentData.completionHistory.toMutableMap()
+
+        // Always mark today as active in the calendar when we're on the streak screen
+        // (the user is actively using the app right now)
+        if (currentData.lastActiveDate == today || currentData.streak > 0) {
+            history[today] = true
+        }
+
+        // Show 7 days: 3 days ago → today + 3 future placeholders
+        val cal = Calendar.getInstance()
+        cal.add(Calendar.DAY_OF_YEAR, -3)
+
         for (i in 0 until 7) {
-             val dateStr = sdf.format(calendar.time)
-             val dayName = dayFormat.format(calendar.time).uppercase()
-             val dayNumber = calendar.get(Calendar.DAY_OF_MONTH).toString()
-             val isCompleted = currentData.completionHistory[dateStr] == true
-             val isToday = dateStr == todayStr
-             
-             val dayView = createDayView(dayName, dayNumber, isCompleted, isToday)
-             streakCalendarContainer.addView(dayView)
-             
-             calendar.add(Calendar.DAY_OF_YEAR, 1)
+            val dateStr  = sdf.format(cal.time)
+            val dayName  = dayFormat.format(cal.time).uppercase()
+            val dayNum   = cal.get(Calendar.DAY_OF_MONTH).toString()
+            val isToday  = dateStr == today
+            val isFuture = dateStr > today
+
+            // A day is "completed" if it's in the history map OR it's today and we have an active streak
+            val isCompleted = history[dateStr] == true
+
+            streakCalendarContainer.addView(
+                createDayView(dayName, dayNum, isCompleted, isToday, isFuture)
+            )
+            cal.add(Calendar.DAY_OF_YEAR, 1)
         }
     }
     
-    private fun createDayView(day: String, date: String, completed: Boolean, isToday: Boolean): View {
+    private fun createDayView(
+        day: String,
+        date: String,
+        completed: Boolean,
+        isToday: Boolean,
+        isFuture: Boolean = false
+    ): View {
         val layout = LinearLayout(this)
         layout.orientation = LinearLayout.VERTICAL
-        layout.gravity = Gravity.CENTER
-        val params = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
-        params.setMargins(4, 0, 4, 0)
-        layout.layoutParams = params
-        layout.setPadding(8, 16, 8, 16)
-        
-        val shape = android.graphics.drawable.GradientDrawable()
-        shape.shape = android.graphics.drawable.GradientDrawable.OVAL
-        
-        if (isToday) {
-            shape.setColor(0xFF7B2CBF.toInt()) // Purple for Today
-        } else {
-            shape.setColor(0xFFF5F5F5.toInt()) // Light Grey for others
-        }
-        layout.background = shape
-        
-        val sizePx = 140 
+        layout.gravity     = Gravity.CENTER
+
+        val sizePx = 140
         layout.layoutParams = LinearLayout.LayoutParams(sizePx, sizePx).apply {
-             weight = 1f
-             setMargins(4, 0, 4, 0)
+            weight = 1f
+            setMargins(4, 0, 4, 0)
         }
         layout.setPadding(0, 0, 0, 0)
-        
-        val tvDay = TextView(this)
-        tvDay.text = day
-        tvDay.textSize = 10f
-        tvDay.setTextColor(if (isToday) 0xCCFFFFFF.toInt() else 0xFF666666.toInt())
-        tvDay.gravity = Gravity.CENTER
-        
-        val tvDate = TextView(this)
-        tvDate.text = date
-        tvDate.textSize = 16f
-        tvDate.gravity = Gravity.CENTER
-        tvDate.setTypeface(null, android.graphics.Typeface.BOLD)
-        tvDate.setTextColor(if (isToday) 0xFFFFFFFF.toInt() else 0xFF333333.toInt())
-        tvDate.setPadding(0, 0, 0, 4)
-        
-        val statusView = TextView(this)
-        statusView.textSize = 10f
-        statusView.gravity = Gravity.CENTER
-        
-        if (completed) {
-            statusView.text = "★" 
-            statusView.setTextColor(0xFFFFD700.toInt())
-        } else if (isToday) {
-             statusView.text = "•" 
-             statusView.setTextColor(0xFFFFFFFF.toInt())
-        } else {
-             statusView.text = "" 
+
+        // ── Background colour logic ──────────────────────────────────────────────
+        // Today (active)  → purple
+        // Past completed  → green
+        // Future / blank  → light grey
+        val shape = android.graphics.drawable.GradientDrawable().apply {
+            shape = android.graphics.drawable.GradientDrawable.OVAL
+            setColor(
+                when {
+                    isToday && completed -> 0xFF7B2CBF.toInt()  // purple — today + active
+                    isToday             -> 0xFF9C4DCC.toInt()  // lighter purple — today, not yet counted
+                    completed           -> 0xFF388E3C.toInt()  // green — past active day
+                    isFuture            -> 0xFFEEEEEE.toInt()  // very light — future
+                    else                -> 0xFFE0E0E0.toInt()  // grey — missed day
+                }
+            )
+        }
+        layout.background = shape
+
+        // ── Day label (MON, TUE …) ───────────────────────────────────────────────
+        val tvDay = TextView(this).apply {
+            text      = day
+            textSize  = 10f
+            gravity   = Gravity.CENTER
+            setTextColor(
+                when {
+                    isToday   -> 0xCCFFFFFF.toInt()
+                    completed -> 0xFFFFFFFF.toInt()
+                    else      -> 0xFF888888.toInt()
+                }
+            )
+        }
+
+        // ── Date number ─────────────────────────────────────────────────────────
+        val tvDate = TextView(this).apply {
+            text    = date
+            textSize = 16f
+            gravity  = Gravity.CENTER
+            setTypeface(null, android.graphics.Typeface.BOLD)
+            setPadding(0, 0, 0, 4)
+            setTextColor(
+                when {
+                    isToday || completed -> 0xFFFFFFFF.toInt()
+                    else                 -> 0xFF555555.toInt()
+                }
+            )
+        }
+
+        // ── Status icon ─────────────────────────────────────────────────────────
+        val statusView = TextView(this).apply {
+            textSize = 12f
+            gravity  = Gravity.CENTER
+            when {
+                completed && isToday -> { text = "🔥"; setTextColor(0xFFFFD700.toInt()) }
+                completed            -> { text = "★";  setTextColor(0xFFFFFFFF.toInt()) }
+                isToday              -> { text = "•";  setTextColor(0xFFFFFFFF.toInt()) }
+                else                 ->   text = ""
+            }
         }
 
         layout.addView(tvDay)
@@ -413,10 +472,187 @@ class GamificationActivity : AppCompatActivity() {
         builder.setTitle("⚔️ Step Duel")
         builder.setItems(options) { _, which ->
             when (which) {
-                0 -> startActivity(Intent(this, ChallengeSetupActivity::class.java))
-                1 -> startActivity(Intent(this, JoinChallengeActivity::class.java))
+                0 -> startActivityForResult(
+                    Intent(this, ChallengeSetupActivity::class.java),
+                    REQUEST_CREATE_CHALLENGE
+                )
+                1 -> startActivityForResult(
+                    android.content.Intent(this, JoinChallengeActivity::class.java),
+                    REQUEST_JOIN_CHALLENGE
+                )
             }
         }
         builder.show()
+    }
+
+    companion object {
+        private const val REQUEST_JOIN_CHALLENGE   = 1001
+        private const val REQUEST_CREATE_CHALLENGE = 1002
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: android.content.Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (resultCode == RESULT_OK && (
+                requestCode == REQUEST_JOIN_CHALLENGE ||
+                requestCode == REQUEST_CREATE_CHALLENGE)
+        ) {
+            loadJoinedChallenges()
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (userId.isNotEmpty()) {
+            claimPendingChallengeUpdate() // claim any challenge results written while we were away
+            loadJoinedChallenges()
+        }
+    }
+
+    /**
+     * Checks RTDB for a pending challenge status update left by ChallengeDetailActivity.endChallenge().
+     * The opponent of a challenge cannot write to our joined_challenges (RTDB rules), so they leave
+     * a flag at userStats/<uid>/pendingChallengeUpdate — we claim it here.
+     */
+    private fun claimPendingChallengeUpdate() {
+        val db = database ?: return
+        db.child("userStats").child(userId).child("pendingChallengeUpdate")
+            .addListenerForSingleValueEvent(object : com.google.firebase.database.ValueEventListener {
+                override fun onDataChange(snap: com.google.firebase.database.DataSnapshot) {
+                    if (!snap.exists()) return
+
+                    val code     = snap.child("challengeCode").getValue(String::class.java) ?: return
+                    val status   = snap.child("status").getValue(String::class.java) ?: "completed"
+                    val winnerId = snap.child("winnerId").getValue(String::class.java) ?: ""
+
+                    // Write to our OWN joined_challenges — we have permission for this
+                    val updates = mutableMapOf<String, Any>(
+                        "users/$userId/joined_challenges/$code/status" to status
+                    )
+                    if (winnerId.isNotEmpty()) {
+                        updates["users/$userId/joined_challenges/$code/winnerId"] = winnerId
+                    }
+
+                    db.updateChildren(updates).addOnSuccessListener {
+                        // Clear the flag now that we've claimed it
+                        db.child("userStats").child(userId).child("pendingChallengeUpdate").removeValue()
+                        android.util.Log.d("GamificationActivity", "Claimed pending challenge update for code=$code")
+                        loadJoinedChallenges() // refresh UI
+                    }
+                }
+                override fun onCancelled(error: com.google.firebase.database.DatabaseError) {}
+            })
+    }
+
+    /**
+     * Loads joined challenges from RTDB (users/<uid>/joined_challenges)
+     * and shows them in the cvJoinedChallenges card.
+     * Each row is tappable → opens ChallengeDetailActivity.
+     */
+    private fun loadJoinedChallenges() {
+        if (userId.isEmpty()) return
+        val db = database ?: return
+
+        db.child("users").child(userId).child("joined_challenges")
+            .addListenerForSingleValueEvent(object : com.google.firebase.database.ValueEventListener {
+                override fun onDataChange(snapshot: com.google.firebase.database.DataSnapshot) {
+                    challengeListContainer.removeAllViews()
+
+                    if (!snapshot.exists() || snapshot.childrenCount == 0L) {
+                        cvJoinedChallenges.visibility = android.view.View.GONE
+                        return
+                    }
+
+                    cvJoinedChallenges.visibility = android.view.View.VISIBLE
+
+                    for (child in snapshot.children) {
+                        val name     = child.child("challengeName").getValue(String::class.java) ?: "Challenge"
+                        val code     = child.child("challengeId").getValue(String::class.java) ?: child.key ?: ""
+                        val status   = child.child("status").getValue(String::class.java) ?: "active"
+                        val winnerId = child.child("winnerId").getValue(String::class.java)
+                        val isWinner = winnerId == userId
+
+                        // ── Row container ──────────────────────────────────────────
+                        val row = android.widget.LinearLayout(this@GamificationActivity).apply {
+                            orientation  = android.widget.LinearLayout.HORIZONTAL
+                            gravity      = android.view.Gravity.CENTER_VERTICAL
+                            setPadding(0, 12, 0, 12)
+                            isClickable  = true
+                            isFocusable  = true
+                            background   = android.util.TypedValue().also { tv ->
+                                theme.resolveAttribute(android.R.attr.selectableItemBackground, tv, true)
+                            }.resourceId.let { resId ->
+                                if (resId != 0) getDrawable(resId) else null
+                            }
+                        }
+
+                        // Icon
+                        val tvIcon = android.widget.TextView(this@GamificationActivity).apply {
+                            text     = when {
+                                status == "completed" && isWinner -> "🏆"
+                                status == "completed"             -> "🏁"
+                                else                             -> "⚔️"
+                            }
+                            textSize = 20f
+                            setPadding(0, 0, 12, 0)
+                        }
+
+                        // Name + code
+                        val tvInfo = android.widget.TextView(this@GamificationActivity).apply {
+                            text = "$name\nCode: $code"
+                            textSize = 13f
+                            setTextColor(0xFF333333.toInt())
+                            layoutParams = android.widget.LinearLayout.LayoutParams(
+                                0, android.view.ViewGroup.LayoutParams.WRAP_CONTENT, 1f
+                            )
+                        }
+
+                        // Status label
+                        val tvStatus = android.widget.TextView(this@GamificationActivity).apply {
+                            text = when {
+                                status == "completed" && isWinner -> "🏆 Won!"
+                                status == "completed"             -> "😔 Lost"
+                                else                             -> "🟢 Active\nTap to view"
+                            }
+                            textSize = 12f
+                            gravity  = android.view.Gravity.END
+                            setTextColor(
+                                when {
+                                    status == "completed" && isWinner -> 0xFFFF8F00.toInt()
+                                    status == "completed"             -> 0xFFD32F2F.toInt()
+                                    else                             -> 0xFF388E3C.toInt()
+                                }
+                            )
+                        }
+
+                        row.addView(tvIcon)
+                        row.addView(tvInfo)
+                        row.addView(tvStatus)
+
+                        // ── Click → open detail ────────────────────────────────────
+                        if (code.isNotEmpty()) {
+                            row.setOnClickListener {
+                                val intent = Intent(this@GamificationActivity, ChallengeDetailActivity::class.java)
+                                intent.putExtra("CHALLENGE_CODE", code)
+                                startActivity(intent)
+                            }
+                        }
+
+                        challengeListContainer.addView(row)
+
+                        // Divider
+                        val divider = android.view.View(this@GamificationActivity).apply {
+                            layoutParams = android.widget.LinearLayout.LayoutParams(
+                                android.view.ViewGroup.LayoutParams.MATCH_PARENT, 1
+                            ).also { it.setMargins(0, 4, 0, 4) }
+                            setBackgroundColor(0xFFEEEEEE.toInt())
+                        }
+                        challengeListContainer.addView(divider)
+                    }
+                }
+
+                override fun onCancelled(error: com.google.firebase.database.DatabaseError) {
+                    android.util.Log.e("GamificationActivity", "Failed to load challenges: ${error.message}")
+                }
+            })
     }
 }
