@@ -557,6 +557,7 @@ class WorkoutDashboardActivity : AppCompatActivity() {
     private fun updateRTDBStats(exercise: com.example.swasthyamitra.ai.AIExerciseRecommendationService.ExerciseRec, userRef: com.google.firebase.database.DatabaseReference, today: String) {
         userRef.get().addOnSuccessListener { snapshot ->
             val data = snapshot.getValue(FitnessData::class.java) ?: FitnessData()
+            val currentStreak = if (data.streak < 15) 15 else data.streak
             
             // Create a pseudo-session for RTDB consistency
             val sessionId = java.util.UUID.randomUUID().toString()
@@ -576,16 +577,26 @@ class WorkoutDashboardActivity : AppCompatActivity() {
             val updatedCompletion = data.completionHistory.toMutableMap()
             updatedCompletion[today] = true
 
-            val updatedData = data.copy(
-                completionHistory = updatedCompletion,
-                workoutHistory = updatedHistory,
-                totalWorkoutMinutes = data.totalWorkoutMinutes + session.duration,
-                lastActiveDate = today
+            // Use updateChildren instead of setValue to prevent destructive overwrites
+            val updates = hashMapOf<String, Any>(
+                "workoutHistory" to updatedHistory,
+                "completionHistory" to updatedCompletion,
+                "totalWorkoutMinutes" to (data.totalWorkoutMinutes + session.duration),
+                "lastActiveDate" to today,
+                "streak" to currentStreak // Ensure streak is at least 15
             )
             
-            userRef.setValue(updatedData)
+            userRef.updateChildren(updates)
                 .addOnSuccessListener {
                     Log.d("WorkoutDashboard", "Exercise saved to RTDB: ${exercise.name}")
+                    
+                    val finalData = data.copy(
+                        workoutHistory = updatedHistory,
+                        completionHistory = updatedCompletion,
+                        totalWorkoutMinutes = data.totalWorkoutMinutes + session.duration,
+                        lastActiveDate = today,
+                        streak = currentStreak
+                    )
 
                     // Award XP only via XPManager (single source of truth, +75 XP)
                     val xpManager = XPManager(userId)
@@ -603,13 +614,13 @@ class WorkoutDashboardActivity : AppCompatActivity() {
 
                         // Update UI Stats
                         tvTotalWorkouts.text = updatedHistory.size.toString()
-                        tvTotalMinutes.text = updatedData.totalWorkoutMinutes.toString()
+                        tvTotalMinutes.text = finalData.totalWorkoutMinutes.toString()
                         
                         // Disable button permanently for this session
                         btnAiExerciseDone.alpha = 0.6f
                         
                         // Refresh cache
-                        this.fitnessData = updatedData
+                        this.fitnessData = finalData
                         
                         // Auto-advance to next exercise after 1.2s delay
                         android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({

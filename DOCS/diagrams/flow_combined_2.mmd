@@ -1,0 +1,65 @@
+%% Combined Flowchart 2: Food Logging + AI Diet Plan + Step Tracking & Safety SOS
+%% Feature-level flows — food entry, AI diet generation, step validation, and SOS emergency.
+
+flowchart TD
+
+    subgraph FOOD["Food Logging"]
+        direction TB
+        FM([Food Logging]) --> FM1{Entry Method?}
+        FM1 --> FM2[Search Indian Food DB]
+        FM1 --> FM3[Manual Entry]
+        FM1 --> FM4[Barcode Scan]
+        FM2 --> FM5[Save to Firestore]
+        FM3 --> FM5
+        FM4 --> FM5
+        FM5 --> FM6[Update Nutrition Summary]
+    end
+
+    subgraph DIET["AI Diet Plan"]
+        direction TB
+        DP([AI Diet Plan]) --> DP1[Fetch Profile & History]
+        DP1 --> DP2[BMR → TDEE → Calories]
+        DP2 --> DP3[Detect Plateau / Festival / Season]
+        DP3 --> DP4[Build AI Prompt]
+        DP4 --> DP5{Gemini AI Available?}
+        DP5 -- Yes --> DP6[Generate Meal Plan]
+        DP5 -- No --> DP7[Fallback Plan]
+        DP6 --> DP8[Validate Dietary Compliance]
+        DP8 --> DP9[Display Meal Plan]
+        DP7 --> DP9
+    end
+
+    subgraph STEPS["Step Tracking"]
+        direction TB
+        ST([Step Tracking]) --> ST1[Start Session]
+        ST1 --> ST2[Sensor + GPS Data]
+        ST2 --> ST3[GPS Distance Validation]
+        ST3 --> ST4[Stride Calibration]
+        ST4 --> ST5[Cadence & Speed Check]
+        ST5 --> ST6[Activity Recognition]
+        ST6 --> ST7[Anomaly Detection]
+        ST7 --> ST8[Validated Steps]
+        ST8 --> ST9[Sync to Firebase]
+    end
+
+    subgraph SOS["Safety & SOS"]
+        direction TB
+        S1([Safety & SOS]) --> S2{Action?}
+        S2 --> S3[Manage Emergency Contacts]
+        S2 --> S4[Trigger SOS]
+        S4 --> S5[Get GPS Location]
+        S5 --> S6[Send SMS with Location]
+        S6 --> S7[Log Event to Firebase]
+    end
+
+    FM6 --> HOME([Return to Homepage])
+    DP9 --> HOME
+    ST9 --> HOME
+    S7 --> HOME
+    S3 --> HOME
+
+    classDef default fill:#FFFFFF,stroke:#1565C0,color:#000000,font-weight:bold
+    style FOOD fill:none,stroke:#1565C0,stroke-width:2px,color:#000000,font-weight:bold
+    style DIET fill:none,stroke:#F39C12,stroke-width:2px,color:#000000,font-weight:bold
+    style STEPS fill:none,stroke:#1565C0,stroke-width:2px,color:#000000,font-weight:bold
+    style SOS fill:none,stroke:#7D3C98,stroke-width:2px,color:#000000,font-weight:bold

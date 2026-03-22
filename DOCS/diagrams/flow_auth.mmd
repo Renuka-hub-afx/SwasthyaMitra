@@ -1,0 +1,24 @@
+%% Description: Flowchart for the Authentication & Onboarding process. Traces the path from
+%% app launch through session check, login/sign-up, personal data entry, goal setting,
+%% lifestyle preferences, and finally reaching the homepage.
+
+flowchart TD
+    A(["<b>App Launch</b>"]):::blue --> B{"<b>User Logged In?</b>"}:::lavender
+    B -- No --> C["<b>Show Login / Sign Up</b>"]:::blue
+    C --> D{"<b>New User?</b>"}:::lavender
+    D -- Yes --> E["<b>Sign Up with Email</b>"]:::blue
+    E --> F["<b>Enter Personal Data & BMI</b>"]:::yellow
+    F --> G["<b>Set Fitness Goal</b>"]:::yellow
+    G --> H["<b>Set Lifestyle Preferences</b>"]:::yellow
+    H --> I["<b>Homepage</b>"]:::blue
+    D -- No --> J["<b>Sign In</b>"]:::blue
+    J --> B2{"<b>Authentication OK?</b>"}:::lavender
+    B2 -- No --> C
+    B2 -- Yes --> K{"<b>Onboarding Complete?</b>"}:::lavender
+    B -- Yes --> K
+    K -- No --> F
+    K -- Yes --> I
+
+    classDef blue fill:#D6EAF8,stroke:#1565C0,color:#0D47A1,font-weight:bold
+    classDef yellow fill:#FEF9E7,stroke:#F39C12,color:#7D6608,font-weight:bold
+    classDef lavender fill:#E8DAEF,stroke:#7D3C98,color:#4A235A,font-weight:bold

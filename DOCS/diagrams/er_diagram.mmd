@@ -1,0 +1,194 @@
+%% Description: Entity-Relationship diagram for the SwasthyaMitra database. Maps all 14
+%% entities — USER, FOOD_LOG, EXERCISE_LOG, STEP_SESSION, MOOD_DATA, MEAL_PLAN, HYDRATION,
+%% SLEEP_LOG, WEIGHT_LOG, RECOMMENDATION, GAMIFICATION, DAILY_ACTIVITY, EMERGENCY_CONTACT,
+%% EMERGENCY_EVENT, and DIET_FEEDBACK — with their attributes and relationships to USER.
+
+---
+config:
+  theme: default
+  er:
+    layoutDirection: TB
+    minEntityWidth: 80
+    minEntityHeight: 30
+    entityPadding: 8
+    fontSize: 11
+---
+erDiagram
+    USER {
+        string uid PK
+        string email
+        string name
+        string phone
+        string dob
+        string gender
+        double height
+        double weight
+        double goalWeight
+        string goalType
+        string activityLevel
+        string dietaryPreference
+        string allergies
+        string avatarId
+        boolean periodMode
+    }
+
+    FOOD_LOG {
+        string logId PK
+        string userId FK
+        string foodName
+        string barcode
+        int calories
+        double protein
+        double carbs
+        double fat
+        string servingSize
+        string mealType
+        long timestamp
+        string date
+    }
+
+    EXERCISE_LOG {
+        string logId PK
+        string userId FK
+        string exerciseName
+        int caloriesBurned
+        int duration
+        string intensity
+        string source
+        string targetMuscle
+        string bodyPart
+        long timestamp
+        string date
+    }
+
+    STEP_SESSION {
+        string id PK
+        string userId FK
+        long startTime
+        long endTime
+        int validatedSteps
+        int rawSteps
+        double totalDistanceMeters
+        double averageStrideM
+        double confidenceScore
+        double caloriesBurned
+        long walkingSeconds
+        long runningSeconds
+        double averagePace
+    }
+
+    MOOD_DATA {
+        string date PK
+        string userId FK
+        string mood
+        float intensity
+        float energy
+        string suggestion
+        long timestamp
+    }
+
+    MEAL_PLAN {
+        string date PK
+        string userId FK
+        string breakfast
+        string lunch
+        string snack
+        string dinner
+        string postWorkout
+        long generatedAt
+    }
+
+    HYDRATION {
+        string date PK
+        string userId FK
+        int totalMl
+        int goalMl
+    }
+
+    SLEEP_LOG {
+        string date PK
+        string userId FK
+        long sleepStart
+        long sleepEnd
+        int durationMinutes
+        string quality
+    }
+
+    WEIGHT_LOG {
+        string date PK
+        string userId FK
+        double weight
+        long timestamp
+    }
+
+    RECOMMENDATION {
+        string documentId PK
+        string userId FK
+        string type
+        string mealTime
+        int remainingCalories
+        string message
+        string status
+        long createdAt
+    }
+
+    GAMIFICATION {
+        string userId PK
+        string lastActiveDate
+        int streak
+        int shields
+        int steps
+        int xp
+        int level
+        int totalWorkoutMinutes
+    }
+
+    DAILY_ACTIVITY {
+        string date PK
+        string userId FK
+        int steps
+        int calories
+        string workout
+    }
+
+    EMERGENCY_CONTACT {
+        string contactId PK
+        string userId FK
+        string name
+        string phoneNumber
+    }
+
+    EMERGENCY_EVENT {
+        string eventId PK
+        string userId FK
+        double latitude
+        double longitude
+        string reason
+        int batteryPercentage
+        long timestamp
+    }
+
+    DIET_FEEDBACK {
+        string feedbackId PK
+        string userId FK
+        string mealName
+        string mealType
+        string action
+        string reason
+        long timestamp
+    }
+
+    USER ||--o{ FOOD_LOG : "logs"
+    USER ||--o{ EXERCISE_LOG : "logs"
+    USER ||--o{ STEP_SESSION : "tracks"
+    USER ||--o{ MOOD_DATA : "records"
+    USER ||--o{ MEAL_PLAN : "receives"
+    USER ||--o{ HYDRATION : "tracks"
+    USER ||--o{ SLEEP_LOG : "logs"
+    USER ||--o{ WEIGHT_LOG : "tracks"
+    USER ||--o{ RECOMMENDATION : "gets"
+    USER ||--|| GAMIFICATION : "has"
+    USER ||--o{ DAILY_ACTIVITY : "has"
+    USER ||--o{ EMERGENCY_CONTACT : "manages"
+    USER ||--o{ EMERGENCY_EVENT : "triggers"
+    USER ||--o{ DIET_FEEDBACK : "gives"

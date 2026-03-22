@@ -1,0 +1,50 @@
+%% Description: Class diagram for the AI & ML Services module. Shows the structure of
+%% AI-powered services — diet plan generation (Gemini API), exercise recommendations,
+%% mood analysis, coaching messages, and smart pantry recipe generation — along with
+%% their data models (MealPlan, MealRec, ExerciseRec).
+
+classDiagram
+    direction TB
+    AIDietPlanService --> MealPlan
+    MealPlan --> MealRec
+    AIExerciseRecommendationService --> ExerciseRec
+    AIMoodRecommendationService ..> LocalMoodAnalyzer
+
+    class AIDietPlanService {
+        +generateSmartDietPlan() MealPlan
+        +buildPrompt() String
+        +callGeminiAPI() String
+        +detectPlateau()
+    }
+    class MealPlan {
+        +breakfast : MealRec
+        +lunch : MealRec
+        +dinner : MealRec
+    }
+    class MealRec {
+        +name : String
+        +calories : Int
+        +protein : Double
+    }
+    class AIExerciseRecommendationService {
+        +getExerciseRecommendation()
+        +loadSmartExerciseSample()
+    }
+    class ExerciseRec {
+        +name : String
+        +sets : Int
+        +calories : Int
+    }
+    class AICoachMessageService {
+        +getCoachMessage()
+        +calculateActivityScore()
+    }
+    class AIMoodRecommendationService {
+        +getMoodRecommendation()
+    }
+    class AIPantryService {
+        +generateRecipe(imageUri)
+    }
+    class LocalMoodAnalyzer {
+        +analyzeMood() Map
+    }

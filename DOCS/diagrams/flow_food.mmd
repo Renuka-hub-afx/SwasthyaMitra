@@ -1,0 +1,18 @@
+%% Description: Flowchart for the Food Logging process. Illustrates the three entry methods
+%% — searching the Indian food database, manual entry, or barcode scanning — followed by
+%% saving the log to Firestore and updating the daily nutrition summary on the homepage.
+
+flowchart TD
+    M["<b>Food Logging</b>"]:::blue --> M1{"<b>Entry Method?</b>"}:::lavender
+    M1 --> M2["<b>Search Indian Food DB</b>"]:::blue
+    M1 --> M3["<b>Manual Entry</b>"]:::blue
+    M1 --> M4["<b>Barcode Scan</b>"]:::blue
+    M2 --> M5["<b>Save to Firestore</b>"]:::lavender
+    M3 --> M5
+    M4 --> M5
+    M5 --> M6["<b>Update Nutrition Summary</b>"]:::yellow
+    M6 --> I["<b>Return to Homepage</b>"]:::blue
+
+    classDef blue fill:#D6EAF8,stroke:#1565C0,color:#0D47A1,font-weight:bold
+    classDef yellow fill:#FEF9E7,stroke:#F39C12,color:#7D6608,font-weight:bold
+    classDef lavender fill:#E8DAEF,stroke:#7D3C98,color:#4A235A,font-weight:bold

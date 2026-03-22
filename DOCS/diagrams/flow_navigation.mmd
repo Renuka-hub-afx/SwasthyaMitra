@@ -1,0 +1,24 @@
+%% Description: Flowchart for App Navigation. Shows the homepage as the central hub with
+%% branches to each module — Food Logging, Exercise & Workout, Step Tracking, AI Diet Plan,
+%% Hydration, Sleep Tracking, Mood Tracking, Reports & Insights, Smart Pantry, and Profile —
+%% with Safety & SOS accessible from the Step Tracking module.
+
+flowchart TD
+    I["<b>Homepage</b>"]:::blue --> L{"<b>User Selects Module</b>"}:::lavender
+
+    L --> M["<b>Food Logging</b>"]:::yellow
+    L --> N["<b>Exercise & Workout</b>"]:::yellow
+    L --> O["<b>Step Tracking</b>"]:::blue
+    L --> P["<b>AI Diet Plan</b>"]:::yellow
+    L --> Q["<b>Hydration</b>"]:::blue
+    L --> R["<b>Sleep Tracking</b>"]:::blue
+    L --> S["<b>Mood Tracking</b>"]:::lavender
+    L --> V["<b>Reports & Insights</b>"]:::blue
+    L --> W["<b>Smart Pantry</b>"]:::yellow
+    L --> X["<b>Profile</b>"]:::blue
+
+    O --> O1["<b>Safety & SOS</b>"]:::lavender
+
+    classDef blue fill:#D6EAF8,stroke:#1565C0,color:#0D47A1,font-weight:bold
+    classDef yellow fill:#FEF9E7,stroke:#F39C12,color:#7D6608,font-weight:bold
+    classDef lavender fill:#E8DAEF,stroke:#7D3C98,color:#4A235A,font-weight:bold

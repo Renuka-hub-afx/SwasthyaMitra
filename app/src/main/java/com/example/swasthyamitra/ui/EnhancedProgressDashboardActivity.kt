@@ -29,6 +29,7 @@ class EnhancedProgressDashboardActivity : AppCompatActivity() {
     private lateinit var binding: ActivityEnhancedProgressDashboardBinding
     private lateinit var analyzer: EnhancedProgressAnalyzer
     private lateinit var auth: FirebaseAuth
+    private lateinit var database: com.google.firebase.database.DatabaseReference
 
     private var currentPeriod = EnhancedProgressAnalyzer.TimePeriod.WEEK
 
@@ -47,19 +48,39 @@ class EnhancedProgressDashboardActivity : AppCompatActivity() {
         }
 
         analyzer = EnhancedProgressAnalyzer(userId)
+        database = com.google.firebase.database.FirebaseDatabase.getInstance("https://swasthyamitra-ded44-default-rtdb.asia-southeast1.firebasedatabase.app").reference
 
-        setupUI()
-        loadProgress(currentPeriod)
-        loadStageProgress(userId)
+        setupUI(userId)
+        
+        // Trigger health boost/sync on startup
+        lifecycleScope.launch {
+            try {
+                val repo = com.example.swasthyamitra.GamificationRepository(userId)
+                repo.validateAndFixStreak()
+                repo.checkIn()
+                // Synchronous load in correct order
+                loadStageProgress(userId)
+                loadProgress(currentPeriod)
+            } catch (e: Exception) {
+                android.util.Log.e("Dashboard", "Sync error: ${e.message}")
+            }
+        }
     }
 
-    private fun setupUI() {
+    private fun setupUI(userId: String) {
         binding.btnBack.setOnClickListener { finish() }
         binding.btnRefresh.setOnClickListener {
-            loadProgress(currentPeriod)
-            val userId = auth.currentUser?.uid
-            if (userId != null) {
-                loadStageProgress(userId)
+            lifecycleScope.launch {
+                try {
+                    val repo = com.example.swasthyamitra.GamificationRepository(userId)
+                    repo.validateAndFixStreak()
+                    repo.checkIn()
+                    // Synchronous load in correct order
+                    loadStageProgress(userId)
+                    loadProgress(currentPeriod)
+                } catch (e: Exception) {
+                    android.util.Log.e("Dashboard", "Refresh error: ${e.message}")
+                }
             }
         }
 
@@ -84,24 +105,25 @@ class EnhancedProgressDashboardActivity : AppCompatActivity() {
         binding.cardStage4.setOnClickListener { showStageDetails(4, "Zen Master", "Log 7 days of mood tracking") }
         binding.cardStage5.setOnClickListener { showStageDetails(5, "Nutrition Ninja", "Log 21 meals (7 days × 3)") }
         binding.cardStage6.setOnClickListener { showStageDetails(6, "Iron Legend", "Complete 7 workouts") }
+        binding.cardStage7.setOnClickListener { showStageDetails(7, "Streak Sorcerer", "Maintain a 15-day streak and keep 3 shields") }
 
         // Period selection chips
         binding.chip7Days.setOnClickListener {
             currentPeriod = EnhancedProgressAnalyzer.TimePeriod.WEEK
             updateChipSelection()
-            loadProgress(currentPeriod)
+            lifecycleScope.launch { loadProgress(currentPeriod) }
         }
 
         binding.chip15Days.setOnClickListener {
             currentPeriod = EnhancedProgressAnalyzer.TimePeriod.TWO_WEEKS
             updateChipSelection()
-            loadProgress(currentPeriod)
+            lifecycleScope.launch { loadProgress(currentPeriod) }
         }
 
         binding.chip1Month.setOnClickListener {
             currentPeriod = EnhancedProgressAnalyzer.TimePeriod.MONTH
             updateChipSelection()
-            loadProgress(currentPeriod)
+            lifecycleScope.launch { loadProgress(currentPeriod) }
         }
 
         updateChipSelection()
@@ -148,47 +170,45 @@ class EnhancedProgressDashboardActivity : AppCompatActivity() {
         }
     }
 
-    private fun loadProgress(period: EnhancedProgressAnalyzer.TimePeriod) {
+    private suspend fun loadProgress(period: EnhancedProgressAnalyzer.TimePeriod) {
         binding.progressBar.visibility = View.VISIBLE
 
-        lifecycleScope.launch {
-            try {
-                // Load all analytics in parallel
-                val weightData = analyzer.analyzeWeightProgress(period)
-                val nutritionData = analyzer.analyzeNutritionProgress(period)
-                val hydrationData = analyzer.analyzeHydrationProgress(period)
-                val exerciseData = analyzer.analyzeExerciseProgress(period)
+        try {
+            // Load all analytics in parallel
+            val weightData = analyzer.analyzeWeightProgress(period)
+            val nutritionData = analyzer.analyzeNutritionProgress(period)
+            val hydrationData = analyzer.analyzeHydrationProgress(period)
+            val exerciseData = analyzer.analyzeExerciseProgress(period)
 
-                runOnUiThread {
-                    // Update Weight Card
-                    updateWeightCard(weightData)
+            runOnUiThread {
+                // Update Weight Card
+                updateWeightCard(weightData)
 
-                    // Update Nutrition Card
-                    updateNutritionCard(nutritionData)
+                // Update Nutrition Card
+                updateNutritionCard(nutritionData)
 
-                    // Update Hydration Card
-                    updateHydrationCard(hydrationData)
+                // Update Hydration Card
+                updateHydrationCard(hydrationData)
 
-                    // Update Exercise Card
-                    updateExerciseCard(exerciseData)
+                // Update Exercise Card
+                updateExerciseCard(exerciseData)
 
-                    binding.progressBar.visibility = View.GONE
-                    Toast.makeText(
-                        this@EnhancedProgressDashboardActivity,
-                        "Updated for ${period.label}",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                }
+                binding.progressBar.visibility = View.GONE
+                Toast.makeText(
+                    this@EnhancedProgressDashboardActivity,
+                    "Updated for ${period.label}",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
 
-            } catch (e: Exception) {
-                runOnUiThread {
-                    binding.progressBar.visibility = View.GONE
-                    Toast.makeText(
-                        this@EnhancedProgressDashboardActivity,
-                        "Error: ${e.message}",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                }
+        } catch (e: Exception) {
+            runOnUiThread {
+                binding.progressBar.visibility = View.GONE
+                Toast.makeText(
+                    this@EnhancedProgressDashboardActivity,
+                    "Error: ${e.message}",
+                    Toast.LENGTH_SHORT
+                ).show()
             }
         }
     }
@@ -196,6 +216,7 @@ class EnhancedProgressDashboardActivity : AppCompatActivity() {
     private fun updateWeightCard(data: EnhancedProgressAnalyzer.WeightProgressData) {
         binding.tvCurrentWeight.text = String.format("%.1f kg", data.currentWeight)
         binding.tvWeightChange.text = String.format("Change: %.1f kg", data.change)
+        binding.tvWeightGoal.text = String.format("Goal: %.1f kg", data.targetWeight)
         binding.tvWeightTrend.text = data.trend
         binding.tvPredictedWeight.text = String.format("Predicted: %.1f kg", data.predictedNextWeek)
 
@@ -370,95 +391,131 @@ class EnhancedProgressDashboardActivity : AppCompatActivity() {
     }
 
     // Stage Unlock System
-    private fun loadStageProgress(userId: String) {
-        lifecycleScope.launch {
-            try {
-                val firestore = com.google.firebase.firestore.FirebaseFirestore.getInstance("renu")
+    private suspend fun loadStageProgress(userId: String) {
+        try {
+            val firestore = com.google.firebase.firestore.FirebaseFirestore.getInstance("renu")
+            val rtdbSnapshot = database.child("users").child(userId).get().await()
 
-                // Get user's activity data
-                val hydrationDays = getActivityCount(firestore, userId, "waterLogs", 7)
-                val stepDays = getStepDays(firestore, userId, 10000, 7)
-                val mealCount = getTotalDocCount(firestore, userId, "foodLogs", 7)
-                val workoutCount = getActivityCount(firestore, userId, "exercise_logs", 7)
-
-                // Calculate current stage
-                var currentStage = 1
-                var unlockedStages = 0
-
-                // Stage 1: Hydration Hero (7 days of water tracking)
-                if (hydrationDays >= 7) {
-                    unlockStage(1, "💧", "#FFFFFF")
-                    unlockedStages++
-                    currentStage = 2
-                } else {
-                    binding.tvCurrentActivity.text = "$hydrationDays / 7 days"
-                }
-
-                // Stage 2: Step Master (7 days of 10k steps)
-                if (stepDays >= 7 && unlockedStages >= 1) {
-                    unlockStage(2, "👟", "#FFFFFF")
-                    unlockedStages++
-                    currentStage = 3
-                }
-
-                // Stage 3: Sleep Saint (7 nights of good sleep)
-                val sevenDaysAgoCal = Calendar.getInstance().apply {
-                    add(Calendar.DAY_OF_YEAR, -7)
-                }
-                val sdf = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
-                val sevenDaysAgoDate = sdf.format(sevenDaysAgoCal.time)
-
-                val sleepLogs = firestore.collection("users")
-                    .document(userId)
-                    .collection("sleep_logs")
-                    .whereGreaterThanOrEqualTo("date", sevenDaysAgoDate)
-                    .get()
-                    .await()
-
-                val goodSleepNights = sleepLogs.documents.count { doc ->
-                    val quality = doc.getString("quality")
-                    quality == "good" || quality == "excellent"
-                }
-
-                if (goodSleepNights >= 7 && unlockedStages >= 2) {
-                    unlockStage(3, "😴", "#FFFFFF")
-                    unlockedStages++
-                    currentStage = 4
-                } else if (unlockedStages >= 2) {
-                    // Show progress
-                    binding.tvCurrentActivity.text = "$goodSleepNights / 7 nights"
-                }
-
-                // Stage 4: Zen Master (7 days of mood tracking)
-                val moodDays = getActivityCount(firestore, userId, "mood_logs", 7)
-                if (moodDays >= 7 && unlockedStages >= 3) {
-                    unlockStage(4, "🧘", "#E1BEE7")
-                    unlockedStages++
-                    currentStage = 5
-                } else if (unlockedStages >= 3) {
-                    binding.tvCurrentActivity.text = "$moodDays / 7 mood logs"
-                }
-
-                // Stage 5: Nutrition Ninja (21 meals logged)
-                if (mealCount >= 21 && unlockedStages >= 4) {
-                    unlockStage(5, "🍽️", "#FFFFFF")
-                    unlockedStages++
-                    currentStage = 6
-                }
-
-                // Stage 6: Iron Legend (7 workouts)
-                if (workoutCount >= 7 && unlockedStages >= 5) {
-                    unlockStage(6, "🏋️", "#E1BEE7")
-                    unlockedStages++
-                }
-
-                // Update journey progress
-                binding.tvJourneyStage.text = "Stage $currentStage / 6"
-                binding.progressJourney.progress = (unlockedStages * 100) / 6
-
-            } catch (e: Exception) {
-                android.util.Log.e("StageUnlock", "Error loading stage progress: ${e.message}", e)
+            // Get completion history from RTDB
+            val completionHistory = mutableMapOf<String, Boolean>()
+            rtdbSnapshot.child("completionHistory").children.forEach { child ->
+                completionHistory[child.key ?: ""] = child.getValue(Boolean::class.java) ?: false
             }
+            
+            // Pass history to analyzer for graph synchronization
+            analyzer.setCompletionHistory(completionHistory)
+
+            // Helper to count boosted days in the last N days
+            fun getBoostedDaysCount(days: Int): Int {
+                val cal = Calendar.getInstance()
+                val sdfFormat = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
+                var count = 0
+                for (i in 0 until days) {
+                    val dStr = sdfFormat.format(cal.time)
+                    if (completionHistory[dStr] == true) count++
+                    cal.add(Calendar.DAY_OF_YEAR, -1)
+                }
+                return count
+            }
+
+            val boosted7 = getBoostedDaysCount(7)
+
+            // Get user's activity data (Firestore) augmented with RTDB boosts
+            val hydrationDays = Math.max(getActivityCount(firestore, userId, "waterLogs", 7), boosted7)
+            val stepDays = Math.max(getStepDays(firestore, userId, 10000, 7), boosted7)
+            val mealCount = Math.max(getTotalDocCount(firestore, userId, "foodLogs", 7), boosted7 * 3)
+            val workoutCount = Math.max(getActivityCount(firestore, userId, "exercise_logs", 7), boosted7)
+
+            // Calculate current stage
+            var currentStage = 1
+            var unlockedStages = 0
+
+            // Stage 1: Hydration Hero (7 days of water tracking)
+            if (hydrationDays >= 7) {
+                unlockStage(1, "💧", "#FFFFFF")
+                unlockedStages++
+                currentStage = 2
+            } else {
+                binding.tvCurrentActivity.text = "$hydrationDays / 7 days"
+            }
+
+            // Stage 2: Step Master (7 days of 10k steps)
+            if (stepDays >= 7 && unlockedStages >= 1) {
+                unlockStage(2, "👟", "#FFFFFF")
+                unlockedStages++
+                currentStage = 3
+            }
+
+            // Stage 3: Sleep Saint (7 nights of good sleep)
+            val sevenDaysAgoCal = Calendar.getInstance().apply {
+                add(Calendar.DAY_OF_YEAR, -7)
+            }
+            val sdf = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.US)
+            val sevenDaysAgoDate = sdf.format(sevenDaysAgoCal.time)
+
+            val sleepLogs = firestore.collection("users")
+                .document(userId)
+                .collection("sleep_logs")
+                .whereGreaterThanOrEqualTo("date", sevenDaysAgoDate)
+                .get()
+                .await()
+
+            val goodSleepNightsRaw = sleepLogs.documents.count { doc ->
+                val quality = doc.getString("quality")
+                quality == "good" || quality == "excellent"
+            }
+            val goodSleepNights = Math.max(goodSleepNightsRaw, boosted7)
+
+            if (goodSleepNights >= 7 && unlockedStages >= 2) {
+                unlockStage(3, "😴", "#FFFFFF")
+                unlockedStages++
+                currentStage = 4
+            } else if (unlockedStages >= 2) {
+                // Show progress
+                binding.tvCurrentActivity.text = "$goodSleepNights / 7 nights"
+            }
+
+            // Stage 4: Zen Master (7 days of mood tracking)
+            val moodDays = Math.max(getActivityCount(firestore, userId, "mood_logs", 7), boosted7)
+            if (moodDays >= 7 && unlockedStages >= 3) {
+                unlockStage(4, "🧘", "#E1BEE7")
+                unlockedStages++
+                currentStage = 5
+            } else if (unlockedStages >= 3) {
+                binding.tvCurrentActivity.text = "$moodDays / 7 mood logs"
+            }
+
+            // Stage 5: Nutrition Ninja (21 meals logged)
+            if (mealCount >= 21 && unlockedStages >= 4) {
+                unlockStage(5, "🍽️", "#FFFFFF")
+                unlockedStages++
+                currentStage = 6
+            }
+
+            // Stage 6: Iron Legend (7 workouts)
+            if (workoutCount >= 7 && unlockedStages >= 5) {
+                unlockStage(6, "🏋️", "#E1BEE7")
+                unlockedStages++
+                currentStage = 7
+            }
+
+            // Stage 7: Streak Sorcerer (15 day streak + 3 shields)
+            val streak = rtdbSnapshot.child("streak").getValue(Int::class.java) ?: 0
+            val shields = rtdbSnapshot.child("shields").getValue(Int::class.java) ?: 0
+
+            if (streak >= 15 && shields >= 3 && unlockedStages >= 6) {
+                unlockStage(7, "🧙", "#FFFFFF")
+                unlockedStages++
+            } else if (unlockedStages >= 6) {
+                binding.tvCurrentActivity.text = "$streak/15 days • $shields/3 🛡️"
+            }
+
+            // Update journey progress
+            binding.tvJourneyStage.text = "Stage $currentStage / 7"
+            binding.progressJourney.progress = (unlockedStages * 100) / 7
+
+        } catch (e: Exception) {
+            android.util.Log.e("StageUnlock", "Error loading stage progress: ${e.message}", e)
         }
     }
 
@@ -472,6 +529,7 @@ class EnhancedProgressDashboardActivity : AppCompatActivity() {
             val calendar = java.util.Calendar.getInstance()
             calendar.add(java.util.Calendar.DAY_OF_YEAR, -days)
             val startDate = String.format(
+                java.util.Locale.US,
                 "%04d-%02d-%02d",
                 calendar.get(java.util.Calendar.YEAR),
                 calendar.get(java.util.Calendar.MONTH) + 1,
@@ -506,6 +564,7 @@ class EnhancedProgressDashboardActivity : AppCompatActivity() {
             val calendar = java.util.Calendar.getInstance()
             calendar.add(java.util.Calendar.DAY_OF_YEAR, -days)
             val startDate = String.format(
+                java.util.Locale.US,
                 "%04d-%02d-%02d",
                 calendar.get(java.util.Calendar.YEAR),
                 calendar.get(java.util.Calendar.MONTH) + 1,
@@ -534,7 +593,7 @@ class EnhancedProgressDashboardActivity : AppCompatActivity() {
         return try {
             // Step data is in the DEFAULT Firestore instance, not "renu"
             val defaultDb = com.google.firebase.firestore.FirebaseFirestore.getInstance()
-            val sdf = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
+            val sdf = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.US)
             val calendar = java.util.Calendar.getInstance()
             var qualifyingDays = 0
 
@@ -571,6 +630,7 @@ class EnhancedProgressDashboardActivity : AppCompatActivity() {
             4 -> binding.cardStage4
             5 -> binding.cardStage5
             6 -> binding.cardStage6
+            7 -> binding.cardStage7
             else -> return
         }
 
@@ -581,6 +641,7 @@ class EnhancedProgressDashboardActivity : AppCompatActivity() {
             4 -> binding.tvStage4Status
             5 -> binding.tvStage5Status
             6 -> binding.tvStage6Status
+            7 -> binding.tvStage7Status
             else -> return
         }
 

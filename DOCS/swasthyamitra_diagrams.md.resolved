@@ -1,0 +1,620 @@
+# SwasthyaMitra — UML Diagrams for Chapter 3
+
+All diagrams are based on the **latest master branch** codebase.
+
+**Color Legend (3 colors):**
+- 🔵 **Blue** — Core UI & Activities
+- 🟡 **Yellow** — AI / Computation / Logic
+- 🟣 **Lavender** — Data models & Storage
+
+---
+
+## 3.1 Use Case Diagram
+
+```mermaid
+flowchart LR
+    User(("<b>User</b>"))
+
+    subgraph A["<b>Authentication & Onboarding</b>"]
+        UC1["<b>Sign Up</b>"]
+        UC2["<b>Sign In</b>"]
+        UC3["<b>Forgot Password</b>"]
+        UC4["<b>Enter Personal Data</b>"]
+        UC5["<b>Set Fitness Goals</b>"]
+        UC6["<b>Set Lifestyle Preferences</b>"]
+    end
+
+    subgraph B["<b>Food & Nutrition</b>"]
+        UC7["<b>Log Food Manually</b>"]
+        UC8["<b>Search Indian Food DB</b>"]
+        UC9["<b>Scan Barcode</b>"]
+        UC10["<b>View Nutrition Summary</b>"]
+        UC11["<b>Generate AI Diet Plan</b>"]
+        UC12["<b>Regenerate / Skip Meal</b>"]
+    end
+
+    subgraph C["<b>Exercise & Fitness</b>"]
+        UC13["<b>AI Exercise Recommendation</b>"]
+        UC14["<b>Log Manual Exercise</b>"]
+        UC15["<b>View Exercise History</b>"]
+        UC16["<b>Workout Dashboard</b>"]
+    end
+
+    subgraph D["<b>Activity Tracking</b>"]
+        UC17["<b>Start Step Tracking</b>"]
+        UC18["<b>Step Session History</b>"]
+        UC19["<b>Track Sleep</b>"]
+        UC20["<b>Track Hydration</b>"]
+        UC21["<b>View Map & Route</b>"]
+    end
+
+    subgraph E["<b>Wellness & AI</b>"]
+        UC22["<b>Log Mood</b>"]
+        UC23["<b>Mood Recommendations</b>"]
+        UC24["<b>AI Coach Message</b>"]
+        UC25["<b>Enable Period Mode</b>"]
+    end
+
+    subgraph F["<b>Gamification</b>"]
+        UC26["<b>Streaks & Shields</b>"]
+        UC27["<b>Earn XP & Level Up</b>"]
+        UC28["<b>View Badges</b>"]
+        UC29["<b>Create / Join Challenge</b>"]
+    end
+
+    subgraph G["<b>Smart Pantry</b>"]
+        UC30["<b>Photograph Ingredients</b>"]
+        UC31["<b>Get AI Recipe</b>"]
+    end
+
+    subgraph H["<b>Safety & Emergency</b>"]
+        UC32["<b>Manage Emergency Contacts</b>"]
+        UC33["<b>Send SOS Alert</b>"]
+        UC34["<b>Enable Ghost Mode</b>"]
+    end
+
+    subgraph I["<b>Reports & Profile</b>"]
+        UC35["<b>Progress Dashboard</b>"]
+        UC36["<b>Detailed Report</b>"]
+        UC37["<b>View / Edit Profile</b>"]
+        UC38["<b>Customise Avatar</b>"]
+        UC39["<b>Weight Progress</b>"]
+        UC40["<b>Insights & Micro-Goals</b>"]
+    end
+
+    User --- A
+    User --- B
+    User --- C
+    User --- D
+    User --- E
+    User --- F
+    User --- G
+    User --- H
+    User --- I
+
+    UC9 -.->|extends| UC7
+    UC8 -.->|extends| UC7
+    UC11 -.->|includes| UC10
+    UC23 -.->|includes| UC22
+
+    style User fill:#1565C0,stroke:#0D47A1,color:#fff,font-weight:bold
+    style A fill:#D6EAF8,stroke:#1565C0,color:#0D47A1
+    style B fill:#FEF9E7,stroke:#F39C12,color:#7D6608
+    style C fill:#FEF9E7,stroke:#F39C12,color:#7D6608
+    style D fill:#D6EAF8,stroke:#1565C0,color:#0D47A1
+    style E fill:#E8DAEF,stroke:#7D3C98,color:#4A235A
+    style F fill:#D6EAF8,stroke:#1565C0,color:#0D47A1
+    style G fill:#FEF9E7,stroke:#F39C12,color:#7D6608
+    style H fill:#E8DAEF,stroke:#7D3C98,color:#4A235A
+    style I fill:#D6EAF8,stroke:#1565C0,color:#0D47A1
+```
+
+---
+
+## 3.2 Class Diagrams
+
+### 3.2.1 Core User & Authentication
+
+```mermaid
+%%{init: {'theme': 'dark'}}%%
+classDiagram
+    direction LR
+    MainActivity --> LoginActivity
+    LoginActivity --> SignupActivity
+    LoginActivity --> ForgotPasswordActivity
+    LoginActivity ..> FirebaseAuthHelper
+    SignupActivity --> UserInfoActivity
+    UserInfoActivity --> InsertGoalActivity
+    InsertGoalActivity --> LifestyleActivity
+
+    class MainActivity {
+        +checkUserSession()
+        +navigateToHomepage()
+    }
+    class LoginActivity {
+        +loginUser(email, password)
+        +validateInputs()
+    }
+    class SignupActivity {
+        +registerUser()
+        +saveUserData()
+    }
+    class ForgotPasswordActivity {
+        +sendPasswordResetEmail(email)
+    }
+    class FirebaseAuthHelper {
+        +getCurrentUserId() String
+        +isLoggedIn() Boolean
+    }
+    class UserInfoActivity {
+        +savePersonalData()
+        +calculateBMI()
+    }
+    class InsertGoalActivity {
+        +saveGoal(goalType)
+    }
+    class LifestyleActivity {
+        +savePreferences()
+        +saveActivityLevel()
+    }
+```
+
+### 3.2.2 Health Profile System
+
+```mermaid
+%%{init: {'theme': 'dark'}}%%
+classDiagram
+    direction TB
+    ProfileActivity --> AvatarCustomizationActivity
+    ProfileActivity ..> AvatarManager
+    ProfileActivity ..> CalorieCalculator
+    WeightProgressActivity ..> WeightProjectionHelper
+
+    class ProfileActivity {
+        +loadUserProfile()
+        +saveProfileChanges()
+        +handleLogout()
+    }
+    class AvatarCustomizationActivity {
+        +selectAvatar()
+        +saveAvatar()
+    }
+    class AvatarManager {
+        +getAvatarId() String
+        +saveAvatarId(id)
+    }
+    class CalorieCalculator {
+        +calculateBMR() Double
+        +calculateTDEE() Double
+        +getTargetCalories() Int
+    }
+    class WeightProgressActivity {
+        +loadWeightHistory()
+        +addWeightEntry()
+    }
+    class WeightProjectionHelper {
+        +projectWeight()
+        +plotWeightTrend()
+    }
+```
+
+### 3.2.3 Activity Tracking System
+
+```mermaid
+%%{init: {'theme': 'dark'}}%%
+classDiagram
+    direction TB
+    UnifiedStepTrackingService --> HybridStepValidator
+    UnifiedStepTrackingService --> StepGpsValidator
+    UnifiedStepTrackingService --> FirebaseStepSync
+    HybridStepValidator ..> StepSession
+    MapActivity --> TrackingService
+
+    class UnifiedStepTrackingService {
+        +startTracking()
+        +stopTracking()
+        +onSensorChanged()
+    }
+    class HybridStepValidator {
+        +validateSteps() Int
+        +anomalyDetection()
+    }
+    class StepGpsValidator {
+        +validateWithGPS()
+        +getConfidenceScore()
+    }
+    class FirebaseStepSync {
+        +syncStepsToFirebase()
+        +fetchTodaySteps()
+    }
+    class StepSession {
+        +validatedSteps : Int
+        +confidenceScore : Double
+        +caloriesBurned : Double
+    }
+    class MapActivity {
+        +displayRoute()
+        +startTracking()
+    }
+    class TrackingService {
+        +startLocationUpdates()
+        +calculateDistance()
+    }
+    class StepCounterService {
+        +onSensorChanged()
+        +broadcastSteps()
+    }
+    class SleepTrackerActivity {
+        +logSleep()
+        +displaySleepHistory()
+    }
+    class WaterGoalCalculator {
+        +calculateWaterGoal() Int
+    }
+```
+
+### 3.2.4 AI Diet & Exercise Plan System
+
+```mermaid
+%%{init: {'theme': 'dark'}}%%
+classDiagram
+    direction TB
+    AIDietPlanService --> MealPlan
+    MealPlan --> MealRec
+    AIExerciseRecommendationService --> ExerciseRec
+    AIMoodRecommendationService ..> LocalMoodAnalyzer
+
+    class AIDietPlanService {
+        +generateSmartDietPlan() MealPlan
+        +buildPrompt() String
+        +callGeminiAPI() String
+        +detectPlateau()
+    }
+    class MealPlan {
+        +breakfast : MealRec
+        +lunch : MealRec
+        +dinner : MealRec
+    }
+    class MealRec {
+        +name : String
+        +calories : Int
+        +protein : Double
+    }
+    class AIExerciseRecommendationService {
+        +getExerciseRecommendation()
+        +loadSmartExerciseSample()
+    }
+    class ExerciseRec {
+        +name : String
+        +sets : Int
+        +calories : Int
+    }
+    class AICoachMessageService {
+        +getCoachMessage()
+        +calculateActivityScore()
+    }
+    class AIMoodRecommendationService {
+        +getMoodRecommendation()
+    }
+    class AIPantryService {
+        +generateRecipe(imageUri)
+    }
+    class LocalMoodAnalyzer {
+        +analyzeMood() Map
+    }
+```
+
+### 3.2.5 Gamification, Reports & Emergency SOS
+
+```mermaid
+%%{init: {'theme': 'dark'}}%%
+classDiagram
+    direction TB
+    GamificationActivity --> GamificationRepository
+    GamificationActivity --> XPManager
+    GamificationRepository --> FitnessData
+    FitnessData --> ShieldInstance
+    SOSManager --> EmergencyContactManager
+
+    class GamificationActivity {
+        +syncWithFirebase()
+        +checkLevelUp()
+    }
+    class GamificationRepository {
+        +validateAndFixStreak() FitnessData
+        +checkIn()
+        +saveData()
+    }
+    class FitnessData {
+        +streak : Int
+        +xp : Int
+        +level : Int
+    }
+    class ShieldInstance {
+        +type : ShieldType
+        +expiresAt : Long
+    }
+    class XPManager {
+        +awardXP()
+        +calculateLevel() Int
+    }
+    class BadgesActivity {
+        +loadBadges()
+        +displayBadges()
+    }
+    class SOSManager {
+        +sendSOS()
+        +sendSMS()
+    }
+    class EmergencyContactManager {
+        +getContacts() List
+    }
+    class DetailedReportActivity {
+        +loadReportData()
+        +generateCharts()
+    }
+    class InsightsRepository {
+        +getWeeklyInsights()
+    }
+```
+
+---
+
+## 3.3 ER Diagram
+
+```mermaid
+erDiagram
+    USER {
+        string uid PK
+        string email
+        string name
+        string phone
+        string dob
+        string gender
+        double height
+        double weight
+        double goalWeight
+        string goalType
+        string activityLevel
+        string dietaryPreference
+        string allergies
+        string avatarId
+        boolean periodMode
+    }
+
+    FOOD_LOG {
+        string logId PK
+        string userId FK
+        string foodName
+        string barcode
+        int calories
+        double protein
+        double carbs
+        double fat
+        string servingSize
+        string mealType
+        long timestamp
+        string date
+    }
+
+    EXERCISE_LOG {
+        string logId PK
+        string userId FK
+        string exerciseName
+        int caloriesBurned
+        int duration
+        string intensity
+        string source
+        string targetMuscle
+        string bodyPart
+        long timestamp
+        string date
+    }
+
+    STEP_SESSION {
+        string id PK
+        string userId FK
+        long startTime
+        long endTime
+        int validatedSteps
+        int rawSteps
+        double totalDistanceMeters
+        double averageStrideM
+        double confidenceScore
+        double caloriesBurned
+        long walkingSeconds
+        long runningSeconds
+        double averagePace
+    }
+
+    MOOD_DATA {
+        string date PK
+        string userId FK
+        string mood
+        float intensity
+        float energy
+        string suggestion
+        long timestamp
+    }
+
+    MEAL_PLAN {
+        string date PK
+        string userId FK
+        string breakfast
+        string lunch
+        string snack
+        string dinner
+        string postWorkout
+        long generatedAt
+    }
+
+    HYDRATION {
+        string date PK
+        string userId FK
+        int totalMl
+        int goalMl
+    }
+
+    SLEEP_LOG {
+        string date PK
+        string userId FK
+        long sleepStart
+        long sleepEnd
+        int durationMinutes
+        string quality
+    }
+
+    WEIGHT_LOG {
+        string date PK
+        string userId FK
+        double weight
+        long timestamp
+    }
+
+    RECOMMENDATION {
+        string documentId PK
+        string userId FK
+        string type
+        string mealTime
+        int remainingCalories
+        string message
+        string status
+        long createdAt
+    }
+
+    GAMIFICATION {
+        string userId PK
+        string lastActiveDate
+        int streak
+        int shields
+        int steps
+        int xp
+        int level
+        int totalWorkoutMinutes
+    }
+
+    DAILY_ACTIVITY {
+        string date PK
+        string userId FK
+        int steps
+        int calories
+        string workout
+    }
+
+    EMERGENCY_CONTACT {
+        string contactId PK
+        string userId FK
+        string name
+        string phoneNumber
+    }
+
+    EMERGENCY_EVENT {
+        string eventId PK
+        string userId FK
+        double latitude
+        double longitude
+        string reason
+        int batteryPercentage
+        long timestamp
+    }
+
+    DIET_FEEDBACK {
+        string feedbackId PK
+        string userId FK
+        string mealName
+        string mealType
+        string action
+        string reason
+        long timestamp
+    }
+
+    USER ||--o{ FOOD_LOG : "logs meals"
+    USER ||--o{ EXERCISE_LOG : "logs exercises"
+    USER ||--o{ STEP_SESSION : "tracks steps"
+    USER ||--o{ MOOD_DATA : "records mood"
+    USER ||--o{ MEAL_PLAN : "receives diet plans"
+    USER ||--o{ HYDRATION : "tracks water"
+    USER ||--o{ SLEEP_LOG : "logs sleep"
+    USER ||--o{ WEIGHT_LOG : "tracks weight"
+    USER ||--o{ RECOMMENDATION : "gets recommendations"
+    USER ||--|| GAMIFICATION : "has gamification data"
+    USER ||--o{ DAILY_ACTIVITY : "has daily activity"
+    USER ||--o{ EMERGENCY_CONTACT : "manages contacts"
+    USER ||--o{ EMERGENCY_EVENT : "triggers SOS"
+    USER ||--o{ DIET_FEEDBACK : "gives feedback"
+```
+
+---
+
+## 3.4 Flowcharts
+
+### 3.4.1 App Launch, Auth & Navigation
+
+```mermaid
+flowchart TD
+    A([App Launch]):::blue --> B{Logged In?}:::lavender
+    B -- No --> C[Login / Sign Up]:::blue
+    C --> D{New User?}:::lavender
+    D -- Yes --> E[Sign Up]:::blue --> F[Personal Data & Goals]:::yellow --> HP
+    D -- No --> J[Sign In]:::blue --> B2{Auth OK?}:::lavender
+    B2 -- No --> C
+    B2 -- Yes --> K{Onboarded?}:::lavender
+    B -- Yes --> K
+    K -- No --> F
+    K -- Yes --> HP[Homepage]:::blue
+
+    HP --> M[Food Log]:::yellow
+    HP --> N[Exercise]:::yellow
+    HP --> O[Steps]:::blue
+    HP --> P[AI Diet]:::yellow
+    HP --> Q[Hydration]:::blue
+    HP --> R[Sleep]:::blue
+    HP --> S[Mood]:::lavender
+    HP --> T[Gamification]:::blue
+    HP --> U[Safety/SOS]:::lavender
+    HP --> V[Reports]:::blue
+    HP --> W[Pantry]:::yellow
+    HP --> X[Profile]:::blue
+
+    classDef blue fill:#D6EAF8,stroke:#1565C0,color:#0D47A1,font-weight:bold
+    classDef yellow fill:#FEF9E7,stroke:#F39C12,color:#7D6608,font-weight:bold
+    classDef lavender fill:#E8DAEF,stroke:#7D3C98,color:#4A235A,font-weight:bold
+```
+
+### 3.4.2 Food Logging & AI Diet Plan Flow
+
+```mermaid
+flowchart TD
+    M[Food Log]:::blue --> M1{Entry Method?}:::lavender
+    M1 --> M2[Search DB]:::blue
+    M1 --> M3[Manual]:::blue
+    M1 --> M4[Barcode]:::blue
+    M2 & M3 & M4 --> M5[Save to Firestore]:::lavender --> M6[Update Nutrition]:::yellow --> HP[Homepage]:::blue
+
+    P[AI Diet Plan]:::yellow --> P1[Fetch Profile & Calc TDEE]:::yellow
+    P1 --> P2[Context: Plateau / Season / Period]:::yellow --> P3[Build Prompt]:::yellow
+    P3 --> P4{Gemini OK?}:::lavender
+    P4 -- Yes --> P5[Generate & Validate Plan]:::yellow --> P6[Display Plan]:::blue --> HP
+    P4 -- No --> P7[Fallback Plan]:::blue --> HP
+
+    classDef blue fill:#D6EAF8,stroke:#1565C0,color:#0D47A1,font-weight:bold
+    classDef yellow fill:#FEF9E7,stroke:#F39C12,color:#7D6608,font-weight:bold
+    classDef lavender fill:#E8DAEF,stroke:#7D3C98,color:#4A235A,font-weight:bold
+```
+
+### 3.4.3 Step Tracking & SOS Flow
+
+```mermaid
+flowchart TD
+    O[Step Tracking]:::blue --> O1[Sensor + GPS Data]:::blue
+    O1 --> O2[5-Layer Validation]:::yellow
+    O2 --> O3[Validated Steps]:::blue --> O4[Sync Firebase]:::lavender --> HP[Homepage]:::blue
+
+    U[Safety & SOS]:::lavender --> U1{Action?}:::lavender
+    U1 --> U2[Manage Contacts]:::blue --> HP
+    U1 --> U3[Trigger SOS]:::yellow --> U4[GPS + SMS]:::yellow --> U5[Log to Firebase]:::lavender --> HP
+
+    classDef blue fill:#D6EAF8,stroke:#1565C0,color:#0D47A1,font-weight:bold
+    classDef yellow fill:#FEF9E7,stroke:#F39C12,color:#7D6608,font-weight:bold
+    classDef lavender fill:#E8DAEF,stroke:#7D3C98,color:#4A235A,font-weight:bold
+```

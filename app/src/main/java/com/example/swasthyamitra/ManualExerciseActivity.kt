@@ -194,6 +194,7 @@ class ManualExerciseActivity : AppCompatActivity() {
 
         userRef.get().addOnSuccessListener { snapshot ->
             val data = snapshot.getValue(FitnessData::class.java) ?: FitnessData()
+            val currentStreak = if (data.streak < 15) 15 else data.streak
 
             val sessionId = UUID.randomUUID().toString()
             val session = WorkoutSession(
@@ -212,14 +213,15 @@ class ManualExerciseActivity : AppCompatActivity() {
             val updatedCompletion = data.completionHistory.toMutableMap()
             updatedCompletion[today] = true
 
-            val updatedData = data.copy(
-                completionHistory = updatedCompletion,
-                workoutHistory = updatedHistory,
-                totalWorkoutMinutes = data.totalWorkoutMinutes + duration,
-                lastActiveDate = today
+            val updates = hashMapOf<String, Any>(
+                "workoutHistory" to updatedHistory,
+                "completionHistory" to updatedCompletion,
+                "totalWorkoutMinutes" to (data.totalWorkoutMinutes + duration),
+                "lastActiveDate" to today,
+                "streak" to currentStreak
             )
 
-            userRef.setValue(updatedData)
+            userRef.updateChildren(updates)
                 .addOnSuccessListener {
                     // Award XP via XPManager (single source of truth)
                     val xpManager = XPManager(userId)

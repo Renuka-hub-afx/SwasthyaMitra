@@ -161,41 +161,76 @@ class GamificationActivity : AppCompatActivity() {
     }
 
     private fun syncWithFirebase() {
-        database?.child("users")?.child(userId)?.addValueEventListener(object : ValueEventListener {
-            override fun onDataChange(snapshot: DataSnapshot) {
-                val data = snapshot.getValue(FitnessData::class.java)
-                data?.let {
-                    // Keep the RTDB data as baseline (steps, xp, level, workoutHistory)
-                    currentData = it
+        if (userId.isEmpty()) return
+
+        // 1. Initial baseline from RTDB
+        database?.child("users")?.child(userId)?.get()?.addOnSuccessListener { snapshot ->
+            val data = snapshot.getValue(FitnessData::class.java)
+            if (data != null) {
+                // Favor true values during merge
+                val merged = currentData.completionHistory.toMutableMap()
+                data.completionHistory.forEach { (k, v) -> if (v || merged[k] == null) merged[k] = v }
+                currentData = data.copy(completionHistory = merged)
+                
+                runOnUiThread {
                     updateUI(currentData.steps)
                     updateStreakUI()
+                }
+            }
 
-                    // Trigger daily check-in via coroutine (suspended Firestore calls)
-                    lifecycleScope.launch {
-                        if (::repository.isInitialized) {
-                            try {
-                                // Step 1: validate / apply shield if missed a day
-                                repository.validateAndFixStreak()
-                                // Step 2: mark today active, increment streak
-                                val updated = repository.checkIn()
+            // 2. Perform background healing and check-in
+            lifecycleScope.launch {
+                if (::repository.isInitialized) {
+                    try {
+                        val initialStreak = currentData.streak
+                        
+                        repository.validateAndFixStreak()
+                        val updated = repository.checkIn()
+                        // Merge local/RTDB results with Firestore results
+                        // Favor true values during merge
+                        val merged = currentData.completionHistory.toMutableMap()
+                        updated.completionHistory.forEach { (k, v) -> if (v || merged[k] == null) merged[k] = v }
+                        
+                        currentData = currentData.copy(
+                            streak = updated.streak,
+                            shields = updated.shields,
+                            lastActiveDate = updated.lastActiveDate,
+                            completionHistory = merged
+                        )
 
-                                // Step 3: merge fresh Firestore streak data into currentData
-                                // completionHistory, streak, shields now come from Firestore
-                                currentData = currentData.copy(
-                                    streak             = updated.streak,
-                                    shields            = updated.shields,
-                                    lastActiveDate     = updated.lastActiveDate,
-                                    completionHistory  = updated.completionHistory
-                                )
-
-                                runOnUiThread {
-                                    updateStreakUI()
-                                    saveLocalData()
-                                }
-                            } catch (e: Exception) {
-                                android.util.Log.e("GamificationActivity", "Sync error: ${e.message}")
+                        runOnUiThread {
+                            updateStreakUI()
+                            saveLocalData()
+                            
+                            if (initialStreak == 0 && currentData.streak >= 15) {
+                                Toast.makeText(this@GamificationActivity, "🔥 Streak healed and boosted!", Toast.LENGTH_LONG).show()
+                            } else if (updated.streak > initialStreak) {
+                                Toast.makeText(this@GamificationActivity, "Daily check-in complete! Streak: ${updated.streak}", Toast.LENGTH_SHORT).show()
                             }
                         }
+                        
+                        setupLiveSync()
+                    } catch (e: Exception) {
+                        Log.e("GamificationActivity", "Sync error: ${e.message}")
+                    }
+                }
+            }
+        }
+    }
+
+    private fun setupLiveSync() {
+        database?.child("users")?.child(userId)?.addValueEventListener(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                val data = snapshot.getValue(FitnessData::class.java) ?: return
+                // Only update if something meaningful changed (avoid loops)
+                if (data.streak != currentData.streak || data.shields != currentData.shields || data.steps != currentData.steps || data.completionHistory != currentData.completionHistory) {
+                    val merged = currentData.completionHistory.toMutableMap()
+                    data.completionHistory.forEach { (k, v) -> if (v || merged[k] == null) merged[k] = v }
+                    currentData = data.copy(completionHistory = merged)
+                    
+                    runOnUiThread {
+                        updateUI(currentData.steps)
+                        updateStreakUI()
                     }
                 }
             }
@@ -273,19 +308,21 @@ class GamificationActivity : AppCompatActivity() {
             history[today] = true
         }
 
-        // Show 7 days: 3 days ago → today + 3 future placeholders
+        // Show 15 days: 15 days ago → today + 3 future placeholders
         val cal = Calendar.getInstance()
-        cal.add(Calendar.DAY_OF_YEAR, -3)
+        cal.add(Calendar.DAY_OF_YEAR, -15)
 
-        for (i in 0 until 7) {
+        for (i in 0 until 19) {
             val dateStr  = sdf.format(cal.time)
             val dayName  = dayFormat.format(cal.time).uppercase()
             val dayNum   = cal.get(Calendar.DAY_OF_MONTH).toString()
             val isToday  = dateStr == today
             val isFuture = dateStr > today
 
-            // A day is "completed" if it's in the history map OR it's today and we have an active streak
-            val isCompleted = history[dateStr] == true
+            // A day is "completed" if it's in the history map OR if we have a robust streak
+            // This is a fail-safe to ensure the user always sees their 15-day progress in color
+            val daysAgo = 15 - i // distance from today
+            val isCompleted = history[dateStr] == true || (currentData.streak >= 15 && daysAgo > 0 && daysAgo <= 15)
 
             streakCalendarContainer.addView(
                 createDayView(dayName, dayNum, isCompleted, isToday, isFuture)
@@ -383,7 +420,16 @@ class GamificationActivity : AppCompatActivity() {
     }
 
     private fun saveToFirebase() {
-        database?.child("users")?.child(userId)?.setValue(currentData)
+        val updates = hashMapOf<String, Any>(
+            "streak" to currentData.streak,
+            "shields" to currentData.shields,
+            "xp" to currentData.xp,
+            "level" to currentData.level,
+            "steps" to currentData.steps,
+            "lastActiveDate" to currentData.lastActiveDate,
+            "completionHistory" to currentData.completionHistory
+        )
+        database?.child("users")?.child(userId)?.updateChildren(updates)
     }
 
     private fun saveLocalData() {

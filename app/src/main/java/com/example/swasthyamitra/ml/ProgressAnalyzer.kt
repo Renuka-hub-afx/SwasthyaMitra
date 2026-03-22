@@ -8,7 +8,7 @@ import java.util.*
 class ProgressAnalyzer(private val userId: String) {
 
     private val db = FirebaseFirestore.getInstance("renu")
-    private val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+    private val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.US)
 
     // Time period enum for analysis
     enum class TimePeriod(val days: Int, val label: String) {
@@ -234,6 +234,7 @@ class ProgressAnalyzer(private val userId: String) {
         val calendar = Calendar.getInstance()
         calendar.add(Calendar.DAY_OF_YEAR, -7)
         return String.format(
+            Locale.US,
             "%04d-%02d-%02d",
             calendar.get(Calendar.YEAR),
             calendar.get(Calendar.MONTH) + 1,

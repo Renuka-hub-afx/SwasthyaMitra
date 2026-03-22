@@ -1,0 +1,73 @@
+---
+config:
+  theme: default
+  themeVariables:
+    fontSize: 18px
+    classText: "#000000"
+---
+%% Combined Class Diagram – Page 1 of 2
+%% Auth & Onboarding → Profile & Weight → AI & ML Services
+
+classDiagram
+    direction LR
+
+    %% ══ AUTH & ONBOARDING ══
+    class MainActivity { +checkUserSession() }
+    class LoginActivity { +loginUser() }
+    class SignupActivity { +registerUser() }
+    class ForgotPasswordActivity { +sendResetEmail() }
+    class FirebaseAuthHelper { +getCurrentUserId()  +isLoggedIn() }
+    class UserInfoActivity { +savePersonalData() }
+    class InsertGoalActivity { +saveGoal() }
+    class LifestyleActivity { +savePreferences() }
+
+    MainActivity --> LoginActivity
+    LoginActivity --> SignupActivity
+    LoginActivity --> ForgotPasswordActivity
+    LoginActivity ..> FirebaseAuthHelper
+    SignupActivity --> UserInfoActivity
+    UserInfoActivity --> InsertGoalActivity
+    InsertGoalActivity --> LifestyleActivity
+
+    %% ══ HUB ══
+    class Homepage { +loadDashboard() }
+    LifestyleActivity --> Homepage : onboarding
+
+    Homepage --> ProfileActivity
+
+    %% ══ PROFILE & WEIGHT ══
+    class ProfileActivity { +loadUserProfile()  +handleLogout() }
+    class AvatarCustomizationActivity { +selectAvatar() }
+    class AvatarManager { +getAvatarId() }
+    class CalorieCalculator { +calculateBMR()  +calculateTDEE()  +getTargetCalories() }
+    class WeightProgressActivity { +loadWeightHistory() }
+    class WeightProjectionHelper { +projectWeight() }
+    class WaterGoalCalculator { +calculateWaterGoal() }
+
+    ProfileActivity --> AvatarCustomizationActivity
+    ProfileActivity ..> AvatarManager
+    ProfileActivity ..> CalorieCalculator
+    ProfileActivity --> WeightProgressActivity
+    WeightProgressActivity ..> WeightProjectionHelper
+    CalorieCalculator ..> WaterGoalCalculator
+
+    %% ══ AI & ML SERVICES ══
+    class AIDietPlanService { +generateSmartDietPlan()  +callGeminiAPI() }
+    class MealPlan { +breakfast  +lunch  +dinner }
+    class MealRec { +name  +calories  +protein }
+    class AIExerciseRecommendationService { +getExerciseRecommendation() }
+    class ExerciseRec { +name  +sets  +calories }
+    class AICoachMessageService { +getCoachMessage() }
+    class AIMoodRecommendationService { +getMoodRecommendation() }
+    class AIPantryService { +generateRecipe() }
+    class LocalMoodAnalyzer { +analyzeMood() }
+
+    ProfileActivity ..> AIDietPlanService : diet
+    AIDietPlanService ..> CalorieCalculator : TDEE
+    AIDietPlanService --> MealPlan
+    MealPlan --> MealRec
+    ProfileActivity ..> AIExerciseRecommendationService : exercise
+    AIExerciseRecommendationService --> ExerciseRec
+    ProfileActivity ..> AIMoodRecommendationService : mood
+    AIMoodRecommendationService ..> LocalMoodAnalyzer
+    ProfileActivity ..> AIPantryService : pantry

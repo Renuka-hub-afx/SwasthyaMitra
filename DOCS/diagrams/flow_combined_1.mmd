@@ -1,0 +1,54 @@
+%% Combined Flowchart 1: Authentication & Onboarding + App Navigation
+%% User journey from app launch through auth, onboarding, and homepage module selection.
+
+flowchart TD
+
+    subgraph AUTH["Authentication & Onboarding"]
+        direction TB
+        A([App Launch]) --> B{Logged In?}
+        B -- No --> C[Login / Sign Up]
+        C --> D{New User?}
+        D -- Yes --> E[Sign Up with Email]
+        D -- No --> J[Sign In]
+        J --> B2{Auth OK?}
+        B2 -- No --> C
+        B2 -- Yes --> K
+        E --> F[Personal Data & BMI]
+        B -- Yes --> K{Onboarding Done?}
+        K -- No --> F
+        F --> G[Set Fitness Goal]
+        G --> H[Lifestyle Preferences]
+        H --> I([Homepage])
+        K -- Yes --> I
+    end
+
+    subgraph NAV["App Navigation"]
+        direction TB
+        M[Food Logging]
+        N[Exercise & Workout]
+        O[Step Tracking]
+        P[AI Diet Plan]
+        Q[Hydration]
+        R[Sleep Tracking]
+        S[Mood Tracking]
+        V[Reports & Insights]
+        W[Smart Pantry]
+        X[Profile]
+        O --> O1[Safety & SOS]
+    end
+
+    I --> L{Select Module}
+    L --> M
+    L --> N
+    L --> O
+    L --> P
+    L --> Q
+    L --> R
+    L --> S
+    L --> V
+    L --> W
+    L --> X
+
+    classDef default fill:#FFFFFF,stroke:#1565C0,color:#000000,font-weight:bold
+    style AUTH fill:none,stroke:#1565C0,stroke-width:2px,color:#000000,font-weight:bold
+    style NAV fill:none,stroke:#F39C12,stroke-width:2px,color:#000000,font-weight:bold

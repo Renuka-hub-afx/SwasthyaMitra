@@ -1,0 +1,61 @@
+---
+config:
+  theme: default
+  themeVariables:
+    fontSize: 18px
+    classText: "#000000"
+---
+%% Combined Class Diagram – Page 2 of 2
+%% Activity Tracking → Gamification, Safety & Reporting
+
+classDiagram
+    direction LR
+
+    %% ══ ACTIVITY TRACKING ══
+    class UnifiedStepTrackingService { +startTracking()  +stopTracking() }
+    class HybridStepValidator { +validateSteps() }
+    class StepGpsValidator { +validateWithGPS() }
+    class FirebaseStepSync { +syncStepsToFirebase() }
+    class StepSession { +validatedSteps  +confidenceScore  +caloriesBurned }
+    class MapActivity { +displayRoute() }
+    class TrackingService { +startLocationUpdates() }
+    class StepCounterService { +onSensorChanged() }
+    class SleepTrackerActivity { +logSleep() }
+
+    UnifiedStepTrackingService --> HybridStepValidator
+    UnifiedStepTrackingService --> StepGpsValidator
+    UnifiedStepTrackingService --> FirebaseStepSync
+    UnifiedStepTrackingService ..> StepCounterService : sensor
+    UnifiedStepTrackingService ..> MapActivity
+    UnifiedStepTrackingService ..> SleepTrackerActivity
+    MapActivity --> TrackingService
+    HybridStepValidator ..> StepSession
+
+    %% ══ GAMIFICATION, SAFETY & REPORTING ══
+    class GamificationActivity { +syncWithFirebase() }
+    class GamificationRepository { +validateAndFixStreak()  +checkIn() }
+    class FitnessData { +streak  +shields  +steps  +totalWorkoutMinutes }
+    class ShieldInstance { +type  +expiresAt }
+    class BadgesActivity { +loadRealStageData() }
+    class SOSManager { +sendSOS()  +sendSMS() }
+    class EmergencyContactManager { +getContacts() }
+    class AICoachMessageService { +getCoachMessage() }
+    class DetailedReportActivity { +loadReportData() }
+    class InsightsRepository { +getWeeklyInsights() }
+
+    GamificationActivity --> GamificationRepository
+    GamificationActivity --> BadgesActivity
+    GamificationActivity ..> AICoachMessageService : coach
+    GamificationActivity ..> DetailedReportActivity : reports
+    GamificationRepository --> FitnessData
+    FitnessData --> ShieldInstance
+    SOSManager --> EmergencyContactManager
+    SOSManager ..> TrackingService : GPS
+
+    %% ══ CROSS-MODULE ══
+    FirebaseStepSync ..> GamificationRepository : steps
+    StepSession ..> FitnessData : daily
+    AICoachMessageService ..> FitnessData : score
+    DetailedReportActivity ..> FitnessData : report
+    DetailedReportActivity ..> InsightsRepository
+    UnifiedStepTrackingService ..> SOSManager : safety
