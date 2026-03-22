@@ -183,15 +183,20 @@
                         android:textStyle="bold"
                         android:layout_marginBottom="12dp"/>
 
-                    <LinearLayout
-                        android:id="@+id/streakCalendarContainer"
+                    <HorizontalScrollView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:gravity="center"
-                        android:weightSum="7">
-                        <!-- Day views will be added dynamically -->
-                    </LinearLayout>
+                        android:scrollbars="none">
+                        
+                        <LinearLayout
+                            android:id="@+id/streakCalendarContainer"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:gravity="center">
+                            <!-- Day views will be added dynamically -->
+                        </LinearLayout>
+                    </HorizontalScrollView>
                     
                      <TextView
                         android:id="@+id/tvStreakMessage"

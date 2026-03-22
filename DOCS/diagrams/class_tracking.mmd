@@ -1,0 +1,54 @@
+%% Description: Class diagram for the Activity Tracking module. Depicts the unified step
+%% tracking service with hybrid sensor + GPS validation, stride calibration, anomaly
+%% detection, Firebase sync, live map/route display, sleep logging, and water-goal
+%% calculation classes.
+
+classDiagram
+    direction TB
+    UnifiedStepTrackingService --> HybridStepValidator
+    UnifiedStepTrackingService --> StepGpsValidator
+    UnifiedStepTrackingService --> FirebaseStepSync
+    HybridStepValidator ..> StepSession
+    MapActivity --> TrackingService
+
+    class UnifiedStepTrackingService {
+        +startTracking()
+        +stopTracking()
+        +onSensorChanged()
+    }
+    class HybridStepValidator {
+        +validateSteps() Int
+        +anomalyDetection()
+    }
+    class StepGpsValidator {
+        +validateWithGPS()
+        +getConfidenceScore()
+    }
+    class FirebaseStepSync {
+        +syncStepsToFirebase()
+        +fetchTodaySteps()
+    }
+    class StepSession {
+        +validatedSteps : Int
+        +confidenceScore : Double
+        +caloriesBurned : Double
+    }
+    class MapActivity {
+        +displayRoute()
+        +startTracking()
+    }
+    class TrackingService {
+        +startLocationUpdates()
+        +calculateDistance()
+    }
+    class StepCounterService {
+        +onSensorChanged()
+        +broadcastSteps()
+    }
+    class SleepTrackerActivity {
+        +logSleep()
+        +displaySleepHistory()
+    }
+    class WaterGoalCalculator {
+        +calculateWaterGoal() Int
+    }

@@ -1,0 +1,21 @@
+%% Description: Flowchart for AI Diet Plan generation. Shows the pipeline from fetching the
+%% user's profile and history, calculating BMR/TDEE/target calories, detecting plateaus or
+%% special conditions (festival, season, period), building the Gemini AI prompt, generating
+%% or falling back to a default meal plan, validating dietary compliance, and displaying it.
+
+flowchart TD
+    P["<b>AI Diet Plan</b>"]:::yellow --> P1["<b>Fetch User Profile & History</b>"]:::blue
+    P1 --> P2["<b>Calculate BMR → TDEE → Target Calories</b>"]:::yellow
+    P2 --> P3["<b>Detect Plateau / Festival / Season / Period</b>"]:::yellow
+    P3 --> P4["<b>Build AI Prompt</b>"]:::yellow
+    P4 --> P5{"<b>Gemini AI Available?</b>"}:::lavender
+    P5 -- Yes --> P6["<b>Generate Personalised Meal Plan</b>"]:::yellow
+    P5 -- No --> P7["<b>Return Fallback Plan</b>"]:::blue
+    P6 --> P8["<b>Validate Dietary Compliance</b>"]:::yellow
+    P8 --> P9["<b>Display Meal Plan</b>"]:::blue
+    P7 --> P9
+    P9 --> I["<b>Return to Homepage</b>"]:::blue
+
+    classDef blue fill:#D6EAF8,stroke:#1565C0,color:#0D47A1,font-weight:bold
+    classDef yellow fill:#FEF9E7,stroke:#F39C12,color:#7D6608,font-weight:bold
+    classDef lavender fill:#E8DAEF,stroke:#7D3C98,color:#4A235A,font-weight:bold

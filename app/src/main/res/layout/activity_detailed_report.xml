@@ -49,14 +49,14 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:paddingHorizontal="12dp">
+            android:paddingHorizontal="8dp">
 
             <!-- Weight Card -->
             <androidx.cardview.widget.CardView
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:layout_margin="4dp"
+                android:layout_margin="2dp"
                 app:cardCornerRadius="12dp"
                 app:cardElevation="2dp">
 
@@ -64,21 +64,21 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:padding="16dp"
+                    android:padding="12dp"
                     android:gravity="center">
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Weight"
-                        android:textSize="12sp"
+                        android:textSize="10sp"
                         android:textColor="#757575"/>
                     <TextView
                         android:id="@+id/tvCurrentWeight"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="-- kg"
-                        android:textSize="18sp"
+                        android:textSize="14sp"
                         android:textStyle="bold"
                         android:textColor="#212121"
                         android:layout_marginTop="4dp"/>
@@ -90,7 +90,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:layout_margin="4dp"
+                android:layout_margin="2dp"
                 app:cardCornerRadius="12dp"
                 app:cardElevation="2dp">
 
@@ -98,21 +98,21 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:padding="16dp"
+                    android:padding="12dp"
                     android:gravity="center">
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Consistency"
-                        android:textSize="12sp"
+                        android:text="Consistent"
+                        android:textSize="10sp"
                         android:textColor="#757575"/>
                     <TextView
                         android:id="@+id/tvConsistencyScore"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="--%"
-                        android:textSize="18sp"
+                        android:textSize="14sp"
                         android:textStyle="bold"
                         android:textColor="#4CAF50"
                         android:layout_marginTop="4dp"/>
@@ -124,7 +124,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:layout_margin="4dp"
+                android:layout_margin="2dp"
                 app:cardCornerRadius="12dp"
                 app:cardElevation="2dp">
 
@@ -132,23 +132,57 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:padding="16dp"
+                    android:padding="12dp"
                     android:gravity="center">
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Streak"
-                        android:textSize="12sp"
+                        android:textSize="10sp"
                         android:textColor="#757575"/>
                     <TextView
                         android:id="@+id/tvStreak"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="-- 🔥"
-                        android:textSize="18sp"
+                        android:textSize="14sp"
                         android:textStyle="bold"
                         android:textColor="#FF9800"
+                        android:layout_marginTop="4dp"/>
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <!-- Shields Card -->
+            <androidx.cardview.widget.CardView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_margin="2dp"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="2dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="12dp"
+                    android:gravity="center">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Shields"
+                        android:textSize="10sp"
+                        android:textColor="#757575"/>
+                    <TextView
+                        android:id="@+id/tvShields"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="-- 🛡️"
+                        android:textSize="14sp"
+                        android:textStyle="bold"
+                        android:textColor="#2196F3"
                         android:layout_marginTop="4dp"/>
                 </LinearLayout>
             </androidx.cardview.widget.CardView>

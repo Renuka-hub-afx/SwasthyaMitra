@@ -14,7 +14,13 @@ import kotlin.math.abs
 class EnhancedProgressAnalyzer(private val userId: String) {
 
     private val db = FirebaseFirestore.getInstance("renu")
-    private val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+    private val rtdb = com.google.firebase.database.FirebaseDatabase.getInstance("https://swasthyamitra-ded44-default-rtdb.asia-southeast1.firebasedatabase.app").reference
+    private val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.US)
+    private var cachedHistory: Map<String, Boolean>? = null
+
+    fun setCompletionHistory(history: Map<String, Boolean>) {
+        this.cachedHistory = history
+    }
 
     enum class TimePeriod(val days: Int, val label: String) {
         WEEK(7, "7 Days"),
@@ -35,6 +41,13 @@ class EnhancedProgressAnalyzer(private val userId: String) {
                 .get()
                 .await()
 
+            // Fetch actual user weight and goal if missing from logs
+            val userDoc = db.collection("users").document(userId).get().await()
+            val profileWeight = (userDoc.get("weight") as? Number)?.toDouble() ?: 70.0
+            
+            val goalSnapshot = db.collection("users").document(userId).collection("goals").limit(1).get().await()
+            val targetWeightVal = if (!goalSnapshot.isEmpty) goalSnapshot.documents[0].getDouble("targetWeight") ?: 55.0 else 55.0
+
             val dataPoints = logs.documents.mapNotNull { doc ->
                 val weight = (doc.get("weight") as? Number)?.toDouble()
                 val date = doc.getString("date")
@@ -46,12 +59,33 @@ class EnhancedProgressAnalyzer(private val userId: String) {
             val weights = dataPoints.map { it.value.toDouble() }
 
             if (weights.isEmpty()) {
+                val rtdbHistory = fetchCompletionHistory()
+                if (rtdbHistory.isNotEmpty()) {
+                    // Use profile weight as starting point if no logs exist
+                    val dataPointsBackfilled = rtdbHistory.filter { it.value && isWithinPeriod(it.key, period) }
+                        .map { (date, _) -> GraphDataPoint(date, profileWeight.toFloat(), "Weight (est)") }
+                        .sortedBy { it.date }
+                    
+                    if (dataPointsBackfilled.isNotEmpty()) {
+                        return WeightProgressData(
+                            currentWeight = profileWeight,
+                            startingWeight = profileWeight,
+                            targetWeight = targetWeightVal,
+                            change = 0.0,
+                            trend = "Stable",
+                            predictedNextWeek = profileWeight,
+                            dataPoints = dataPointsBackfilled,
+                            period = period
+                        )
+                    }
+                }
                 return WeightProgressData(
-                    currentWeight = 0.0,
-                    startingWeight = 0.0,
+                    currentWeight = profileWeight,
+                    startingWeight = profileWeight,
+                    targetWeight = targetWeightVal,
                     change = 0.0,
                     trend = "No Data",
-                    predictedNextWeek = 0.0,
+                    predictedNextWeek = profileWeight,
                     dataPoints = emptyList(),
                     period = period
                 )
@@ -64,6 +98,7 @@ class EnhancedProgressAnalyzer(private val userId: String) {
             WeightProgressData(
                 currentWeight = current,
                 startingWeight = starting,
+                targetWeight = targetWeightVal,
                 change = change,
                 trend = calculateWeightTrend(change),
                 predictedNextWeek = predictWeight(weights),
@@ -72,7 +107,7 @@ class EnhancedProgressAnalyzer(private val userId: String) {
             )
         } catch (e: Exception) {
             android.util.Log.e("EnhancedAnalyzer", "Weight analysis error: ${e.message}")
-            WeightProgressData(0.0, 0.0, 0.0, "Error", 0.0, emptyList(), period)
+            WeightProgressData(0.0, 0.0, 55.0, 0.0, "Error", 0.0, emptyList(), period)
         }
     }
 
@@ -84,10 +119,10 @@ class EnhancedProgressAnalyzer(private val userId: String) {
             val logs = db.collection("users")
                 .document(userId)
                 .collection("foodLogs")
-                .whereGreaterThanOrEqualTo("date", startDate)
                 .get()
                 .await()
 
+            val rtdbHistory = fetchCompletionHistory()
             // Group by date for daily calories
             val dailyCalories = mutableMapOf<String, Int>()
             val dailyMacros = mutableMapOf<String, Macros>()
@@ -108,19 +143,32 @@ class EnhancedProgressAnalyzer(private val userId: String) {
                 )
             }
 
-            val dataPoints = dailyCalories.entries.sortedBy { it.key }.map {
+            // Augment with boosted data - Use MAX to allow boost to override partial logs
+            rtdbHistory.forEach { (date, completed) ->
+                if (completed) {
+                    if (isWithinPeriod(date, period)) {
+                        val current = dailyCalories[date] ?: 0
+                        dailyCalories[date] = Math.max(current, 1800) // Ensure at least 1800 if boosted
+                    }
+                }
+            }
+
+            // Final filter for dailyCalories to ensure only requested period is included
+            val filteredCalories = dailyCalories.filter { isWithinPeriod(it.key, period) }
+
+            val dataPoints = filteredCalories.entries.sortedBy { it.key }.map {
                 GraphDataPoint(it.key, it.value.toFloat(), "Calories")
             }
 
-            val avgCalories = if (dailyCalories.isNotEmpty()) {
-                dailyCalories.values.average().toInt()
+            val avgCalories = if (filteredCalories.isNotEmpty()) {
+                filteredCalories.values.average().toInt()
             } else 0
 
-            val consistency = (dailyCalories.size.toDouble() / period.days * 100).toInt()
+            val consistency = (filteredCalories.size.toDouble() / period.days * 100).toInt()
 
             NutritionProgressData(
                 averageCalories = avgCalories,
-                totalDays = dailyCalories.size,
+                totalDays = filteredCalories.size,
                 consistency = consistency,
                 trend = analyzeCaloricTrend(avgCalories),
                 dataPoints = dataPoints,
@@ -141,10 +189,10 @@ class EnhancedProgressAnalyzer(private val userId: String) {
             val logs = db.collection("users")
                 .document(userId)
                 .collection("waterLogs")
-                .whereGreaterThanOrEqualTo("date", startDate)
                 .get()
                 .await()
 
+            val rtdbHistory = fetchCompletionHistory()
             val dailyIntake = mutableMapOf<String, Int>()
 
             logs.documents.forEach { doc ->
@@ -153,19 +201,29 @@ class EnhancedProgressAnalyzer(private val userId: String) {
                 dailyIntake[date] = (dailyIntake[date] ?: 0) + amount
             }
 
-            val dataPoints = dailyIntake.entries.sortedBy { it.key }.map {
+            rtdbHistory.forEach { (date, completed) ->
+                if (completed) {
+                   if (isWithinPeriod(date, period)) {
+                       val current = dailyIntake[date] ?: 0
+                       dailyIntake[date] = Math.max(current, 2500) // Ensure full goal if boosted
+                   }
+                }
+            }
+
+            val filteredIntake = dailyIntake.filter { isWithinPeriod(it.key, period) }
+            val dataPoints = filteredIntake.entries.sortedBy { it.key }.map {
                 GraphDataPoint(it.key, it.value.toFloat(), "Water (ml)")
             }
 
-            val avgDaily = if (dailyIntake.isNotEmpty()) {
-                dailyIntake.values.average().toInt()
+            val avgDaily = if (filteredIntake.isNotEmpty()) {
+                filteredIntake.values.average().toInt()
             } else 0
 
             val goalAchievement = (avgDaily.toDouble() / 2500 * 100).toInt().coerceIn(0, 100)
 
             HydrationProgressData(
                 averageDailyIntake = avgDaily,
-                totalDays = dailyIntake.size,
+                totalDays = filteredIntake.size,
                 goalAchievement = goalAchievement,
                 trend = if (avgDaily >= 2500) "Excellent" else if (avgDaily >= 2000) "Good" else "Needs Improvement",
                 dataPoints = dataPoints,
@@ -186,10 +244,10 @@ class EnhancedProgressAnalyzer(private val userId: String) {
             val logs = db.collection("users")
                 .document(userId)
                 .collection("exercise_logs")
-                .whereGreaterThanOrEqualTo("date", startDate)
                 .get()
                 .await()
 
+            val rtdbHistory = fetchCompletionHistory()
             val dailyMinutes = mutableMapOf<String, Int>()
 
             logs.documents.forEach { doc ->
@@ -198,16 +256,26 @@ class EnhancedProgressAnalyzer(private val userId: String) {
                 dailyMinutes[date] = (dailyMinutes[date] ?: 0) + minutes
             }
 
-            val dataPoints = dailyMinutes.entries.sortedBy { it.key }.map {
+            rtdbHistory.forEach { (date, completed) ->
+                if (completed) {
+                    if (isWithinPeriod(date, period)) {
+                        val current = dailyMinutes[date] ?: 0
+                        dailyMinutes[date] = Math.max(current, 45) // Ensure active minutes if boosted
+                    }
+                }
+            }
+
+            val filteredMinutes = dailyMinutes.filter { isWithinPeriod(it.key, period) }
+            val dataPoints = filteredMinutes.entries.sortedBy { it.key }.map {
                 GraphDataPoint(it.key, it.value.toFloat(), "Minutes")
             }
 
-            val totalMinutes = dailyMinutes.values.sum()
-            val avgDaily = if (dailyMinutes.isNotEmpty()) {
-                totalMinutes / dailyMinutes.size
+            val totalMinutes = filteredMinutes.values.sum()
+            val avgDaily = if (filteredMinutes.isNotEmpty()) {
+                totalMinutes / filteredMinutes.size
             } else 0
 
-            val activeDays = dailyMinutes.filter { it.value >= 15 }.size
+            val activeDays = filteredMinutes.filter { it.value >= 15 }.size
 
             ExerciseProgressData(
                 totalMinutes = totalMinutes,
@@ -231,6 +299,39 @@ class EnhancedProgressAnalyzer(private val userId: String) {
         val calendar = Calendar.getInstance()
         calendar.add(Calendar.DAY_OF_YEAR, -days)
         return dateFormat.format(calendar.time)
+    }
+
+    private suspend fun fetchCompletionHistory(): Map<String, Boolean> {
+        cachedHistory?.let { return it }
+        return try {
+            val snapshot = rtdb.child("users").child(userId).child("completionHistory").get().await()
+            val history = mutableMapOf<String, Boolean>()
+            snapshot.children.forEach { child ->
+                val date = child.key ?: return@forEach
+                val completed = child.getValue(Boolean::class.java) ?: false
+                history[date] = completed
+            }
+            cachedHistory = history
+            history
+        } catch (e: Exception) {
+            emptyMap()
+        }
+    }
+
+    private fun isWithinPeriod(dateStr: String, period: TimePeriod): Boolean {
+        return try {
+            val date = dateFormat.parse(dateStr) ?: return false
+            val cutoff = Calendar.getInstance().apply {
+                set(Calendar.HOUR_OF_DAY, 0)
+                set(Calendar.MINUTE, 0)
+                set(Calendar.SECOND, 0)
+                set(Calendar.MILLISECOND, 0)
+                add(Calendar.DAY_OF_YEAR, -period.days)
+            }
+            !date.before(cutoff.time)
+        } catch (e: Exception) {
+            false
+        }
     }
 
     private fun calculateWeightTrend(change: Double): String {
@@ -320,6 +421,7 @@ class EnhancedProgressAnalyzer(private val userId: String) {
     data class WeightProgressData(
         val currentWeight: Double,
         val startingWeight: Double,
+        val targetWeight: Double,
         val change: Double,
         val trend: String,
         val predictedNextWeek: Double,

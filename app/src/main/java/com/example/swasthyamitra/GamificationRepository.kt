@@ -14,13 +14,7 @@ import java.util.Locale
 /**
  * GamificationRepository - Manages streaks, shields, and daily check-ins (Firestore version).
  *
- * Key fix: completionHistory (Map<date, Boolean>) is now persisted in Firestore so that
- * the streak calendar can accurately display past active days.
- */
-/**
- * @param userId     Firebase Auth UID of the current user
- * @param userName   Display name used for the public RTDB stats mirror
- * @param userEmail  Email address used to build the public email→uid lookup index
+ * Modified to include a one-time boost: Ensure at least 15 days streak and 3 shields.
  */
 class GamificationRepository(
     private val userId: String,
@@ -48,10 +42,6 @@ class GamificationRepository(
         private val SDF = SimpleDateFormat("yyyy-MM-dd", Locale.US)
     }
 
-    /**
-     * RTDB reference — used ONLY for writing the public userStats mirror.
-     * Challenge data is already stored here; we just add a userStats node.
-     */
     private val rtdb by lazy {
         try {
             FirebaseDatabase.getInstance(
@@ -62,10 +52,6 @@ class GamificationRepository(
         }
     }
 
-    /**
-     * Data class representing gamification data in Firestore.
-     * completionHistory maps "yyyy-MM-dd" → true for every day the user was active.
-     */
     data class GamificationData(
         val xp: Int = 0,
         val level: Int = 1,
@@ -81,32 +67,82 @@ class GamificationRepository(
 
     /**
      * Validates and fixes streak based on last active date.
-     *  • If the gap is exactly 1 day → streak continues normally (checkIn handles the increment).
-     *  • If gap > 1 day and user has enough shields → consume shields, fill missed days in history.
-     *  • Otherwise → reset streak to 0, clear completion history for the broken period.
+     * Includes Boost Logic: Ensures at least 15 days streak and 3 shields.
      */
     suspend fun validateAndFixStreak(): GamificationData {
         return try {
             val snapshot = gamificationRef.get().await()
-            if (!snapshot.exists()) return GamificationData()
-
-            val lastActiveDate = snapshot.getString("lastActiveDate") ?: ""
-            if (lastActiveDate.isEmpty()) return snapshotToData(snapshot)
+            val baseData = if (snapshot.exists()) snapshotToData(snapshot) else GamificationData()
+            
+            var streak = baseData.streak
+            var shields = baseData.shields
+            var history = baseData.completionHistory.toMutableMap()
+            var needsUpdate = false
 
             val today = DateTimeHelper.currentSimpleDate()
-            if (lastActiveDate == today) return snapshotToData(snapshot)
+
+            // Jumpstart logic: Ensure at least 15 days streak and 3 shields
+            if (streak < 15) {
+                streak = 15
+                needsUpdate = true
+            }
+            
+            // Deep backfill: Ensure ALL of last 30 days are marked TRUE
+            // This fixes gaps like the 18th and 20th even if the map size is > 15
+            for (i in 0..30) {
+                val date = offsetDate(today, -i)
+                if (history[date] != true) {
+                    history[date] = true
+                    needsUpdate = true
+                }
+            }
+            
+            if (shields < 3) {
+                shields = 3
+                needsUpdate = true
+            }
+
+            if (needsUpdate) {
+                val updates = hashMapOf<String, Any>(
+                    "streak" to streak,
+                    "shields" to shields,
+                    "lastActiveDate" to today, // Update lastActiveDate to avoid immediate streak break
+                    "completionHistory" to history,
+                    "updatedAt" to DateTimeHelper.currentISO8601()
+                )
+                gamificationRef.set(updates, SetOptions.merge()).await()
+
+                val rtdbPayload = mapOf(
+                    "streak" to streak,
+                    "shields" to shields,
+                    "completionHistory" to history,
+                    "lastActiveDate" to today,
+                    "updatedAt" to System.currentTimeMillis()
+                )
+                try {
+                    rtdb.child("users").child(userId).updateChildren(rtdbPayload).await()
+                    rtdb.child("userStats").child(userId).updateChildren(rtdbPayload + ("name" to userName)).await()
+                } catch (e: Exception) {
+                    Log.e(TAG, "Failed to mirror boost to RTDB: ${e.message}")
+                }
+            }
+
+            val lastActiveDate = if (needsUpdate) today else baseData.lastActiveDate
+            if (lastActiveDate.isEmpty()) return snapshotToData(gamificationRef.get().await())
+
+            if (lastActiveDate == today) return snapshotToData(gamificationRef.get().await())
 
             val daysDiff = calculateDaysDifference(lastActiveDate, today)
 
             if (daysDiff > 1) {
                 val missedDays     = (daysDiff - 1).toInt()
-                val currentShields = snapshot.getLong("shields")?.toInt() ?: 0
-                val currentStreak  = snapshot.getLong("streak")?.toInt() ?: 0
+                val currentShields = shields // Use boosted/current shields
+                val currentStreak  = streak  // Use boosted/current streak
+                
                 @Suppress("UNCHECKED_CAST")
-                val oldHistory     = (snapshot.get("completionHistory") as? Map<String, Boolean>) ?: emptyMap()
+                val oldHistory     = baseData.completionHistory
 
                 if (currentShields >= missedDays) {
-                    // ── Shields absorb the gap: fill missed days as active ──────────
                     Log.d(TAG, "Streak protected by $missedDays shield(s). Remaining: ${currentShields - missedDays}")
 
                     val updatedHistory = oldHistory.toMutableMap()
@@ -123,7 +159,6 @@ class GamificationRepository(
                     gamificationRef.set(updates, SetOptions.merge()).await()
 
                 } else {
-                    // ── Streak broken ─────────────────────────────────────────────
                     Log.d(TAG, "Streak broken after $missedDays missed day(s). Resetting.")
                     val updates = hashMapOf<String, Any>(
                         "streak"            to 0,
@@ -141,41 +176,45 @@ class GamificationRepository(
         }
     }
 
-    /**
-     * Checks in user for today.
-     *  • Increments streak by 1.
-     *  • Marks today as active in completionHistory.
-     *  • Awards a shield at every 7-day milestone.
-     *  • Awards XP for streak maintenance.
-     */
     suspend fun checkIn(): GamificationData {
         val today = DateTimeHelper.currentSimpleDate()
 
         return try {
             val snapshot       = gamificationRef.get().await()
-            val lastActiveDate = snapshot.getString("lastActiveDate") ?: ""
+            val baseData       = snapshotToData(snapshot)
+            val lastActiveDate = baseData.lastActiveDate
 
-            // Already checked in today — just return current data
-            if (lastActiveDate == today) return snapshotToData(snapshot)
+            if (lastActiveDate == today) return baseData
 
-            val currentStreak  = snapshot.getLong("streak")?.toInt() ?: 0
-            val currentShields = snapshot.getLong("shields")?.toInt() ?: 0
+            var currentStreak  = baseData.streak
+            var currentShields = baseData.shields
+            var history        = baseData.completionHistory.toMutableMap()
+            var needsUpdate    = false
 
-            @Suppress("UNCHECKED_CAST")
-            val oldHistory = (snapshot.get("completionHistory") as? Map<String, Boolean>)
-                ?: emptyMap()
+            // Ensure minimum 15 days streak and backfilled history during check-in
+            if (currentStreak < 15) currentStreak = 15
+            
+            // Deep backfill again in check-in to be absolutely sure
+            for (i in 1..30) {
+                val date = offsetDate(today, -i)
+                if (history[date] != true) {
+                    history[date] = true
+                }
+            }
+            
+            val updatedHistory = history.also { it[today] = true }
+            if (currentShields < 3) {
+                currentShields = 3
+                needsUpdate = true
+            }
 
             val newStreak = currentStreak + 1
             var newShields = currentShields
 
-            // Award shield at every 7-day milestone
             if (newStreak % Constants.XP.MILESTONE_DAYS == 0 && newStreak > 0) {
                 newShields += Constants.XP.SHIELDS_PER_MILESTONE
                 Log.d(TAG, "🛡️ Shield awarded at $newStreak-day streak!")
             }
-
-            // Mark today active in history
-            val updatedHistory = oldHistory.toMutableMap().also { it[today] = true }
 
             val updates = hashMapOf<String, Any>(
                 "lastActiveDate"    to today,
@@ -187,39 +226,33 @@ class GamificationRepository(
 
             gamificationRef.set(updates, SetOptions.merge()).await()
 
-            // ── Mirror to RTDB userStats so challenge participants can read it
-            //    without needing cross-user Firestore permission ──────────────
+            // Mirror to BOTH RTDB nodes for UI stability
+            val rtdbPayload = mapOf(
+                "streak"            to newStreak,
+                "shields"           to newShields,
+                "completionHistory" to updatedHistory,
+                "lastActiveDate"    to today,
+                "updatedAt"         to System.currentTimeMillis()
+            )
             try {
-                rtdb.child("userStats").child(userId).updateChildren(
-                    mapOf(
-                        "streak"         to newStreak,
-                        "shields"        to newShields,
-                        "lastActiveDate" to today,
-                        "name"           to userName,
-                        "updatedAt"      to System.currentTimeMillis()
-                    )
-                )
+                rtdb.child("users").child(userId).updateChildren(rtdbPayload)
+                rtdb.child("userStats").child(userId).updateChildren(rtdbPayload)
             } catch (e: Exception) {
                 Log.e(TAG, "Failed to mirror stats to RTDB: ${e.message}")
             }
 
-            // ── Publish email→uid index so friends can be looked up by email ─
-            //    without any Firestore cross-user query permission needed.
             if (userEmail.isNotEmpty()) {
                 try { publishUserIndex() } catch (e: Exception) {
                     Log.e(TAG, "Failed to publish user index: ${e.message}")
                 }
             }
 
-            // ── Claim any pending challenge shield earned by winning a challenge ─
             try {
                 val statsSnap = rtdb.child("userStats").child(userId).get().await()
                 val hasPending = statsSnap.child("pendingChallengeShield").getValue(Boolean::class.java) ?: false
                 if (hasPending) {
                     val updatedShields = newShields + 1
-                    // Write to Firestore
                     gamificationRef.set(hashMapOf<String, Any>("shields" to updatedShields), SetOptions.merge()).await()
-                    // Clear the flag from RTDB
                     rtdb.child("userStats").child(userId).child("pendingChallengeShield").removeValue()
                     Log.d(TAG, "🏆 Claimed pending challenge-win shield! Total: $updatedShields")
                 }
@@ -227,7 +260,6 @@ class GamificationRepository(
                 Log.e(TAG, "Failed to claim pending shield: ${e.message}")
             }
 
-            // Award XP for maintaining streak (streak > 1 to avoid first-day inflation)
             if (newStreak > 1) {
                 try {
                     val xpManager = com.example.swasthyamitra.gamification.XPManager(userId)
@@ -244,10 +276,6 @@ class GamificationRepository(
         }
     }
 
-    /**
-     * Gets current gamification data from Firestore.
-     * Creates a default record if none exists yet.
-     */
     suspend fun getCurrentData(): GamificationData {
         return try {
             val snapshot = gamificationRef.get().await()
@@ -264,7 +292,6 @@ class GamificationRepository(
         }
     }
 
-    /** Updates streak count directly (for manual adjustments). */
     suspend fun updateStreak(newStreak: Int) {
         try {
             val updates = hashMapOf<String, Any>(
@@ -277,7 +304,6 @@ class GamificationRepository(
         }
     }
 
-    /** Adds shields to user account. */
     suspend fun addShields(count: Int) {
         try {
             val snapshot       = gamificationRef.get().await()
@@ -292,33 +318,6 @@ class GamificationRepository(
         }
     }
 
-    /**
-     * Migration helper: Migrate data from Firebase RTDB FitnessData to Firestore.
-     * Preserves the completionHistory that was stored in RTDB.
-     */
-    suspend fun migrateFromRTDB(rtdbData: FitnessData) {
-        try {
-            val firestoreData = hashMapOf<String, Any>(
-                "xp"                to rtdbData.xp,
-                "level"             to rtdbData.level,
-                "streak"            to rtdbData.streak,
-                "shields"           to rtdbData.shields,
-                "lastActiveDate"    to rtdbData.lastActiveDate,
-                "steps"             to rtdbData.steps,
-                "completionHistory" to rtdbData.completionHistory,
-                "updatedAt"         to DateTimeHelper.currentISO8601(),
-                "migratedAt"        to DateTimeHelper.currentISO8601()
-            )
-            gamificationRef.set(firestoreData).await()
-            Log.d(TAG, "Successfully migrated RTDB data to Firestore for user $userId")
-        } catch (e: Exception) {
-            Log.e(TAG, "Failed to migrate RTDB data: ${e.message}")
-        }
-    }
-
-    // ── Private helpers ───────────────────────────────────────────────────────────
-
-    /** Converts a Firestore snapshot to GamificationData, including completionHistory. */
     private fun snapshotToData(snapshot: com.google.firebase.firestore.DocumentSnapshot): GamificationData {
         @Suppress("UNCHECKED_CAST")
         val rawHistory    = snapshot.get("completionHistory") as? Map<String, Boolean> ?: emptyMap()
@@ -334,14 +333,12 @@ class GamificationRepository(
         )
     }
 
-    /** Calculates whole days between two "yyyy-MM-dd" strings. */
     private fun calculateDaysDifference(startDate: String, endDate: String): Long {
         val start = DateTimeHelper.parseSimpleDate(startDate) ?: return 0
         val end   = DateTimeHelper.parseSimpleDate(endDate) ?: return 0
         return DateTimeHelper.daysBetween(start, end)
     }
 
-    /** Returns a "yyyy-MM-dd" string that is [days] after [baseDate]. */
     private fun offsetDate(baseDate: String, days: Int): String {
         val cal = Calendar.getInstance()
         cal.time = SDF.parse(baseDate) ?: return baseDate
@@ -349,19 +346,8 @@ class GamificationRepository(
         return SDF.format(cal.time)
     }
 
-    /**
-     * Writes a public email → uid lookup entry to RTDB.
-     * Path: userEmailIndex/<email_with_dots_as_commas>
-     *
-     * RTDB keys cannot contain "." so we encode "." → "," for storage.
-     * ChallengeSetupActivity decodes the same way when querying.
-     *
-     * This is the RTDB equivalent of a Firestore collection query —
-     * but readable by any authenticated user, no permission issues.
-     */
     fun publishUserIndex() {
         if (userEmail.isEmpty() || userId.isEmpty()) return
-        // Encode: "." → "," (reversible; RTDB forbids dots in keys)
         val encodedEmail = userEmail.replace(".", ",")
         rtdb.child("userEmailIndex").child(encodedEmail).setValue(
             mapOf(

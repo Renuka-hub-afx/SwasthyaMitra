@@ -1,0 +1,45 @@
+%% Description: Class diagram for the Authentication & Onboarding module. Illustrates the
+%% login, sign-up, and password-reset activities, the Firebase authentication helper, and
+%% the onboarding pipeline (personal data entry, BMI calculation, goal setting, lifestyle
+%% preferences) that new users complete before reaching the homepage.
+
+classDiagram
+    direction LR
+    MainActivity --> LoginActivity
+    LoginActivity --> SignupActivity
+    LoginActivity --> ForgotPasswordActivity
+    LoginActivity ..> FirebaseAuthHelper
+    SignupActivity --> UserInfoActivity
+    UserInfoActivity --> InsertGoalActivity
+    InsertGoalActivity --> LifestyleActivity
+
+    class MainActivity {
+        +checkUserSession()
+        +navigateToHomepage()
+    }
+    class LoginActivity {
+        +loginUser(email, password)
+        +validateInputs()
+    }
+    class SignupActivity {
+        +registerUser()
+        +saveUserData()
+    }
+    class ForgotPasswordActivity {
+        +sendPasswordResetEmail(email)
+    }
+    class FirebaseAuthHelper {
+        +getCurrentUserId() String
+        +isLoggedIn() Boolean
+    }
+    class UserInfoActivity {
+        +savePersonalData()
+        +calculateBMI()
+    }
+    class InsertGoalActivity {
+        +saveGoal(goalType)
+    }
+    class LifestyleActivity {
+        +savePreferences()
+        +saveActivityLevel()
+    }

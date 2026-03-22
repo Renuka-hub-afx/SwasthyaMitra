@@ -412,11 +412,12 @@ class ChallengeDetailActivity : AppCompatActivity() {
 
                                 // Write a pending status update flag that the opponent claims on next open
                                 rtdb.child("userStats").child(uid)
-                                    .child("pendingChallengeUpdate")
-                                    .setValue(mapOf(
-                                        "challengeCode" to challengeCode,
-                                        "status"        to "completed",
-                                        "winnerId"      to (winnerId ?: "")
+                                    .updateChildren(mapOf(
+                                        "pendingChallengeUpdate" to mapOf(
+                                            "challengeCode" to challengeCode,
+                                            "status"        to "completed",
+                                            "winnerId"      to (winnerId ?: "")
+                                        )
                                     ))
                             }
                         }
@@ -428,8 +429,7 @@ class ChallengeDetailActivity : AppCompatActivity() {
                     awardShieldToWinner(myUserId)
                 } else if (winnerId != null && winnerId != myUserId) {
                     // Opponent won — set pendingChallengeShield flag (claimed on their next check-in)
-                    rtdb.child("userStats").child(winnerId).child("pendingChallengeShield")
-                        .setValue(true)
+                    rtdb.child("userStats").child(winnerId).updateChildren(mapOf("pendingChallengeShield" to true))
                 }
 
                 runOnUiThread { loadChallenge() } // Refresh UI
@@ -457,8 +457,7 @@ class ChallengeDetailActivity : AppCompatActivity() {
                 val current = doc.getLong("shields")?.toInt() ?: 0
                 gamRef.update("shields", current + 1).addOnSuccessListener {
                     // Also update RTDB mirror
-                    rtdb.child("userStats").child(uid).child("shields")
-                        .setValue(current + 1)
+                    rtdb.child("userStats").child(uid).updateChildren(mapOf("shields" to (current + 1)))
                     runOnUiThread {
                         Toast.makeText(
                             this,
@@ -471,8 +470,7 @@ class ChallengeDetailActivity : AppCompatActivity() {
         } else {
             // Opponent is the winner — write a pending shield claim to RTDB
             // GamificationRepository.checkIn() will claim this on next app open
-            rtdb.child("userStats").child(uid).child("pendingChallengeShield")
-                .setValue(true)
+            rtdb.child("userStats").child(uid).updateChildren(mapOf("pendingChallengeShield" to true))
         }
     }
 

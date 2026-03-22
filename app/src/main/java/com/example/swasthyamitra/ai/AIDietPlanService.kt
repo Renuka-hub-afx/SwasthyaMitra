@@ -490,7 +490,6 @@ class AIDietPlanService private constructor(private val context: Context) {
         isOnPeriod: Boolean = false
     ): String {
         val dietaryRules = getDietaryRules(dietaryPreference)
-        
         // Use all distinct meals from the past 7 days (already limited in caller)
         val recentMealsText = pastMealsList
         

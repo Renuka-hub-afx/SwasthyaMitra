@@ -144,12 +144,12 @@
                     android:progressTint="@color/purple_500"
                     android:progressBackgroundTint="@color/gray_200" />
 
-                <!-- Stage Grid 2x3 -->
+                <!-- Stage Grid 2x4 -->
                 <GridLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:columnCount="2"
-                    android:rowCount="3"
+                    android:rowCount="4"
                     android:layout_marginTop="16dp">
 
                     <!-- Stage 1: Hydration Hero (Active) -->
@@ -478,6 +478,60 @@
                                 android:layout_marginTop="4dp" />
                         </LinearLayout>
                     </com.google.android.material.card.MaterialCardView>
+                    
+                    <!-- Stage 7: Streak Sorcerer -->
+                    <com.google.android.material.card.MaterialCardView
+                        android:id="@+id/cardStage7"
+                        android:layout_width="0dp"
+                        android:layout_height="120dp"
+                        android:layout_column="0"
+                        android:layout_row="3"
+                        android:layout_columnWeight="1"
+                        android:layout_margin="4dp"
+                        app:cardCornerRadius="12dp"
+                        app:cardElevation="1dp"
+                        app:cardBackgroundColor="@color/gray_200">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:orientation="vertical"
+                            android:gravity="center"
+                            android:padding="8dp">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="🔒"
+                                android:textSize="32sp" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="STAGE 7"
+                                android:textSize="10sp"
+                                android:textColor="@color/text_hint"
+                                android:layout_marginTop="4dp" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Streak Sorcerer"
+                                android:textSize="12sp"
+                                android:textStyle="bold"
+                                android:textColor="@color/text_secondary"
+                                android:textAlignment="center" />
+
+                            <TextView
+                                android:id="@+id/tvStage7Status"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="LOCKED"
+                                android:textSize="10sp"
+                                android:textColor="@color/text_hint"
+                                android:layout_marginTop="4dp" />
+                        </LinearLayout>
+                    </com.google.android.material.card.MaterialCardView>
 
                 </GridLayout>
 
@@ -598,6 +652,16 @@
                             android:text="Change: 0.0 kg"
                             android:textSize="12sp"
                             android:textColor="@color/text_secondary" />
+
+                        <TextView
+                            android:id="@+id/tvWeightGoal"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Goal: 55 kg"
+                            android:textSize="12sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/purple_500"
+                            android:layout_marginTop="2dp" />
                     </LinearLayout>
 
                     <LinearLayout

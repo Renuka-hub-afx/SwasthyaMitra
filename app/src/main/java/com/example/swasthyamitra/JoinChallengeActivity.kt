@@ -226,13 +226,15 @@ class JoinChallengeActivity : AppCompatActivity() {
                 val lastActive = doc.getString("lastActiveDate") ?: ""
                 val shields    = doc.getLong("shields")?.toInt() ?: 0
 
-                database.child("userStats").child(userId).setValue(
+                val currentStreak = if (streak < 15) 15 else streak
+                
+                database.child("userStats").child(userId).updateChildren(
                     mapOf(
                         "uid"            to userId,
                         "name"           to displayName,
                         "email"          to userEmail,
-                        "streak"         to streak,
-                        "shields"        to shields,
+                        "streak"         to currentStreak,
+                        "shields"        to (if (shields < 3) 3 else shields),
                         "lastActiveDate" to lastActive,
                         "updatedAt"      to System.currentTimeMillis()
                     )

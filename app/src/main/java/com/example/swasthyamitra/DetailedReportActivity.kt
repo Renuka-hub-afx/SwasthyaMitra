@@ -42,6 +42,7 @@ class DetailedReportActivity : AppCompatActivity() {
     private lateinit var tvCurrentWeight: TextView
     private lateinit var tvConsistencyScore: TextView
     private lateinit var tvStreak: TextView
+    private lateinit var tvShields: TextView
     private lateinit var chart: LineChart
     private lateinit var tvInsight: TextView
     private lateinit var recyclerView: RecyclerView
@@ -69,6 +70,7 @@ class DetailedReportActivity : AppCompatActivity() {
         tvCurrentWeight = findViewById(R.id.tvCurrentWeight)
         tvConsistencyScore = findViewById(R.id.tvConsistencyScore)
         tvStreak = findViewById(R.id.tvStreak)
+        tvShields = findViewById(R.id.tvShields)
         chart = findViewById(R.id.reportWeightChart)
         tvInsight = findViewById(R.id.tvInsight)
         recyclerView = findViewById(R.id.reportHistoryRecyclerView)
@@ -128,12 +130,13 @@ class DetailedReportActivity : AppCompatActivity() {
     private fun calculateStats() {
         val data = fitnessData ?: return
         
-        // Streak
-        tvStreak.text = "${data.streak} \uD83D\uDD25"
+        // Streak & Shields
+        tvStreak.text = "${data.streak} 🔥"
+        tvShields.text = "${data.shields} 🛡️"
         
         // Consistency Calculation
-        // Count active days in the last N days
-        val activeDays = countActiveDays(data.workoutHistory, daysToLoad)
+        // Merges workoutHistory and completionHistory for a true view of activity
+        val activeDays = countActiveDays(data, daysToLoad)
         val consistency = (activeDays.toFloat() / daysToLoad.toFloat()) * 100
         tvConsistencyScore.text = "${consistency.toInt()}%"
         
@@ -247,18 +250,31 @@ class DetailedReportActivity : AppCompatActivity() {
         recyclerView.adapter = ReportAdapter(sorted)
     }
 
-    private fun countActiveDays(history: Map<String, WorkoutSession>, days: Int): Int {
+    private fun countActiveDays(data: FitnessData, days: Int): Int {
         val cutoff = System.currentTimeMillis() - (days * 24 * 60 * 60 * 1000L)
         val uniqueDays = mutableSetOf<String>()
         val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.US)
         
-        history.values.forEach { session ->
+        // 1. Check Workout History
+        data.workoutHistory.values.forEach { session ->
              val time = if (session.timestamp > 0) session.timestamp 
                         else sdf.parse(session.date)?.time ?: 0L
-                        
+                         
              if (time > cutoff) {
                  uniqueDays.add(session.date)
              }
+        }
+
+        // 2. Check Completion History (Boosted Data)
+        data.completionHistory.forEach { (date, completed) ->
+            if (completed) {
+                try {
+                    val time = sdf.parse(date)?.time ?: 0L
+                    if (time > cutoff) {
+                        uniqueDays.add(date)
+                    }
+                } catch (e: Exception) {}
+            }
         }
         return uniqueDays.size
     }

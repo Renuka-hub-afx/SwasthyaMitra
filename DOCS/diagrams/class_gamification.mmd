@@ -1,0 +1,54 @@
+%% Description: Class diagram for the Gamification, Safety & Reporting module. Covers streak
+%% tracking, XP/level management, shield items, badge stages, SOS emergency alerts with
+%% contact management, and the detailed reports & insights generation classes.
+
+classDiagram
+    direction TB
+    GamificationActivity --> GamificationRepository
+    GamificationActivity --> XPManager
+    GamificationRepository --> FitnessData
+    FitnessData --> ShieldInstance
+    SOSManager --> EmergencyContactManager
+
+    class GamificationActivity {
+        +syncWithFirebase()
+        +checkLevelUp()
+    }
+    class GamificationRepository {
+        +validateAndFixStreak() FitnessData
+        +checkIn()
+        +saveData()
+    }
+    class FitnessData {
+        +streak : Int
+        +xp : Int
+        +level : Int
+    }
+    class ShieldInstance {
+        +type : ShieldType
+        +expiresAt : Long
+    }
+    class XPManager {
+        +awardXP()
+        +calculateLevel() Int
+    }
+    class BadgesActivity {
+        +initViews()
+        +setupRecyclerView()
+        +loadRealStageData()
+        +updateStagesList()
+    }
+    class SOSManager {
+        +sendSOS()
+        +sendSMS()
+    }
+    class EmergencyContactManager {
+        +getContacts() List
+    }
+    class DetailedReportActivity {
+        +loadReportData()
+        +generateCharts()
+    }
+    class InsightsRepository {
+        +getWeeklyInsights()
+    }

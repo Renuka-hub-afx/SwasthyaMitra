@@ -1,0 +1,30 @@
+%% Description: Flowchart for Step Tracking & Safety SOS. Upper section traces the step
+%% validation pipeline — sensor + GPS data → distance validation → stride calibration →
+%% cadence/speed check → activity recognition → anomaly detection → validated steps → Firebase
+%% sync. Lower section covers the SOS flow — managing emergency contacts, triggering SOS,
+%% fetching GPS location, sending SMS with live location, and logging the event to Firebase.
+
+flowchart TD
+    O["<b>Step Tracking</b>"]:::blue --> O1["<b>Start Step Session</b>"]:::blue
+    O1 --> O2["<b>Sensor + GPS Data</b>"]:::blue
+    O2 --> O3["<b>GPS Distance Validation</b>"]:::yellow
+    O3 --> O4["<b>Stride Calibration</b>"]:::yellow
+    O4 --> O5["<b>Cadence & Speed Check</b>"]:::yellow
+    O5 --> O6["<b>Activity Recognition</b>"]:::yellow
+    O6 --> O7["<b>Anomaly Detection</b>"]:::yellow
+    O7 --> O8["<b>Output Validated Steps</b>"]:::blue
+    O8 --> O9["<b>Sync to Firebase</b>"]:::lavender
+    O9 --> I["<b>Return to Homepage</b>"]:::blue
+
+    U["<b>Safety & SOS</b>"]:::lavender --> U1{"<b>Action?</b>"}:::lavender
+    U1 --> U2["<b>Manage Emergency Contacts</b>"]:::blue
+    U1 --> U3["<b>Trigger SOS</b>"]:::yellow
+    U3 --> U4["<b>Get GPS Location</b>"]:::blue
+    U4 --> U5["<b>Send SMS with Location</b>"]:::yellow
+    U5 --> U6["<b>Log Event to Firebase</b>"]:::lavender
+    U6 --> I
+    U2 --> I
+
+    classDef blue fill:#D6EAF8,stroke:#1565C0,color:#0D47A1,font-weight:bold
+    classDef yellow fill:#FEF9E7,stroke:#F39C12,color:#7D6608,font-weight:bold
+    classDef lavender fill:#E8DAEF,stroke:#7D3C98,color:#4A235A,font-weight:bold

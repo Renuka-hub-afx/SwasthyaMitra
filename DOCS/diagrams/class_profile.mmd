@@ -1,0 +1,37 @@
+%% Description: Class diagram for the User Profile & Weight Management module. Shows the
+%% profile editing activity, avatar customisation, BMR/TDEE calorie calculation logic,
+%% and weight progress tracking with projection/trend plotting helpers.
+
+classDiagram
+    direction TB
+    ProfileActivity --> AvatarCustomizationActivity
+    ProfileActivity ..> AvatarManager
+    ProfileActivity ..> CalorieCalculator
+    WeightProgressActivity ..> WeightProjectionHelper
+
+    class ProfileActivity {
+        +loadUserProfile()
+        +saveProfileChanges()
+        +handleLogout()
+    }
+    class AvatarCustomizationActivity {
+        +selectAvatar()
+        +saveAvatar()
+    }
+    class AvatarManager {
+        +getAvatarId() String
+        +saveAvatarId(id)
+    }
+    class CalorieCalculator {
+        +calculateBMR() Double
+        +calculateTDEE() Double
+        +getTargetCalories() Int
+    }
+    class WeightProgressActivity {
+        +loadWeightHistory()
+        +addWeightEntry()
+    }
+    class WeightProjectionHelper {
+        +projectWeight()
+        +plotWeightTrend()
+    }

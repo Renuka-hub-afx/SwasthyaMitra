@@ -1,0 +1,137 @@
+%% Description: Use-Case diagram for SwasthyaMitra. Lists all user-facing use cases
+%% grouped into 9 modules — Authentication & Onboarding, Food & Nutrition, Exercise & Fitness,
+%% Activity Tracking, Wellness & AI, Gamification, Smart Pantry, Safety & Emergency, and
+%% Reports & Profile — with extend/include relationships and external actors.
+
+%%{init: {'theme': 'base', 'themeVariables': {'fontSize': '20px', 'fontFamily': 'Arial Black, sans-serif', 'primaryColor': '#D6EAF8', 'primaryTextColor': '#000000', 'lineColor': '#333333', 'edgeLabelBackground': '#ffffff'}, 'flowchart': {'nodeSpacing': 30, 'rankSpacing': 60, 'padding': 20, 'htmlLabels': true}} }%%
+
+flowchart LR
+    User(("<b>Registered User</b>"))
+    Guest(("<b>Guest / New User</b>"))
+
+    subgraph A["<b>Authentication & Onboarding</b>"]
+        UC1["<b>Sign Up</b>"]
+        UC2["<b>Sign In</b>"]
+        UC3["<b>Forgot Password</b>"]
+        UC4["<b>Enter Personal Data</b>"]
+        UC5["<b>Set Fitness Goals</b>"]
+        UC6["<b>Set Lifestyle Preferences</b>"]
+    end
+
+    subgraph B["<b>Food & Nutrition</b>"]
+        UC7["<b>Log Food Manually</b>"]
+        UC8["<b>Search Indian Food DB</b>"]
+        UC9["<b>Scan Barcode</b>"]
+        UC10["<b>View Nutrition Summary</b>"]
+        UC11["<b>Generate AI Diet Plan</b>"]
+        UC12["<b>Regenerate / Skip Meal</b>"]
+    end
+
+    subgraph C["<b>Exercise & Fitness</b>"]
+        UC13["<b>AI Exercise Recommendation</b>"]
+        UC14["<b>Log Manual Exercise</b>"]
+        UC15["<b>View Exercise History</b>"]
+        UC16["<b>Workout Dashboard</b>"]
+    end
+
+    subgraph D["<b>Activity Tracking</b>"]
+        UC17["<b>Start Step Tracking</b>"]
+        UC18["<b>Step Session History</b>"]
+        UC19["<b>Track Sleep</b>"]
+        UC20["<b>Track Hydration</b>"]
+        UC21["<b>View Map & Route</b>"]
+        UC41["<b>Sync Google Fit Data</b>"]
+    end
+
+    subgraph E["<b>Wellness & AI</b>"]
+        UC22["<b>Log Mood</b>"]
+        UC23["<b>Mood Recommendations</b>"]
+        UC24["<b>AI Coach Message</b>"]
+        UC25["<b>Enable Period Mode</b>"]
+    end
+
+    subgraph F["<b>Gamification</b>"]
+        UC26["<b>Streaks & Shields</b>"]
+        UC27["<b>Earn XP & Level Up</b>"]
+        UC28["<b>View Badges</b>"]
+        UC29["<b>Create / Join Challenge</b>"]
+    end
+
+    subgraph G["<b>Smart Pantry</b>"]
+        UC30["<b>Photograph Ingredients</b>"]
+        UC31["<b>Get AI Recipe</b>"]
+        UC42["<b>Identify Food via Camera</b>"]
+    end
+
+    subgraph H["<b>Safety & Emergency</b>"]
+        UC32["<b>Manage Emergency Contacts</b>"]
+        UC33["<b>Send SOS Alert</b>"]
+        UC34["<b>Enable Ghost Mode</b>"]
+    end
+
+    subgraph I["<b>Reports & Profile</b>"]
+        UC35["<b>Progress Dashboard</b>"]
+        UC36["<b>Detailed Report</b>"]
+        UC37["<b>View / Edit Profile</b>"]
+        UC38["<b>Customise Avatar</b>"]
+        UC39["<b>Weight Progress</b>"]
+        UC40["<b>Insights & Micro-Goals</b>"]
+        UC43["<b>Export Health Reports</b>"]
+    end
+
+    %% --- External Actors ---
+    GoogleFit(("<b>Google Fit</b>"))
+    EmergencyContact(("<b>Emergency Contact</b>"))
+    GeminiAI(("<b>Gemini AI</b>"))
+    Firebase(("<b>Firebase</b>"))
+
+    %% --- Registered User connections ---
+    User --- A
+    User --- B
+    User --- C
+    User --- D
+    User --- E
+    User --- F
+    User --- G
+    User --- H
+    User --- I
+
+    %% --- Guest / New User connections ---
+    Guest --- UC1
+    Guest --- UC2
+    Guest --- UC37
+
+    %% --- External Actor connections ---
+    GoogleFit --- UC41
+    EmergencyContact --- UC33
+    GeminiAI --- UC23
+    GeminiAI --- UC24
+    GeminiAI --- UC42
+    GeminiAI --- UC13
+    GeminiAI --- UC11
+    Firebase --- UC35
+    Firebase --- UC1
+    Firebase --- UC2
+
+    %% --- Extend / Include relationships ---
+    UC9 -.->|extends| UC7
+    UC8 -.->|extends| UC7
+    UC11 -.->|includes| UC10
+    UC23 -.->|includes| UC22
+
+    %% --- Styles ---
+    style User fill:#1565C0,stroke:#0D47A1,color:#fff,font-weight:bold
+    style Guest fill:#7B1FA2,stroke:#4A148C,color:#fff,font-weight:bold
+    style GoogleFit fill:#AB47BC,stroke:#7B1FA2,color:#fff,font-weight:bold
+    style EmergencyContact fill:#AB47BC,stroke:#7B1FA2,color:#fff,font-weight:bold
+    style GeminiAI fill:#AB47BC,stroke:#7B1FA2,color:#fff,font-weight:bold
+    style Firebase fill:#AB47BC,stroke:#7B1FA2,color:#fff,font-weight:bold
+    style A fill:#D6EAF8,stroke:#1565C0,color:#0D47A1
+    style B fill:#FEF9E7,stroke:#F39C12,color:#7D6608
+    style C fill:#FEF9E7,stroke:#F39C12,color:#7D6608
+    style D fill:#D6EAF8,stroke:#1565C0,color:#0D47A1
+    style E fill:#E8DAEF,stroke:#7D3C98,color:#4A235A
+    style F fill:#D6EAF8,stroke:#1565C0,color:#0D47A1
+    style G fill:#FEF9E7,stroke:#F39C12,color:#7D6608
+    style H fill:#E8DAEF,stroke:#7D3C98,color:#4A235A
+    style I fill:#D6EAF8,stroke:#1565C0,color:#0D47A1
