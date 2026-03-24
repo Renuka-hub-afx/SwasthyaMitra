@@ -102,17 +102,6 @@
             </LinearLayout>
         </androidx.cardview.widget.CardView>
 
-        <!-- AI Recommendations Header -->
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="AI Recommendations"
-            android:textSize="18sp"
-            android:textStyle="bold"
-            android:textColor="#333333"
-            android:layout_marginTop="24dp"
-            android:layout_marginBottom="12dp"/>
-
         <!-- Loading View -->
         <LinearLayout
             android:id="@+id/layout_loading"
@@ -120,31 +109,133 @@
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:gravity="center"
-            android:padding="32dp"
-            android:visibility="visible">
-            
+            android:padding="16dp"
+            android:visibility="gone">
+
             <ProgressBar
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"/>
-            
+                android:layout_height="wrap_content"
+                android:indeterminate="true" />
+
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="AI is analyzing your mood..."
-                android:layout_marginTop="16dp"
-                android:textColor="#666666"/>
+                android:layout_marginTop="8dp"
+                android:text="Loading mood data..."
+                android:textColor="#888888"
+                android:textSize="14sp" />
+
         </LinearLayout>
 
-        <!-- Content Layout -->
+        <!-- AI Mindfulness Tip Loading State -->
+        <LinearLayout
+            android:id="@+id/layout_tip_loading"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="4dp"
+            android:visibility="gone">
+
+            <ProgressBar
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:indeterminate="true" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="10dp"
+                android:text="Getting your mindfulness tip…"
+                android:textColor="#9C27B0"
+                android:textSize="13sp"
+                android:textStyle="italic" />
+        </LinearLayout>
+
+        <!-- AI Mindfulness Tip Card -->
+        <androidx.cardview.widget.CardView
+            android:id="@+id/card_mindfulness_tip"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="4dp"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="4dp"
+            android:visibility="gone">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="20dp"
+                android:background="#F3E5F5">
+
+                <!-- Header row -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginBottom="10dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="🧘"
+                        android:textSize="22sp" />
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginStart="10dp"
+                        android:text="Mindfulness Tip"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:textColor="#6A1B9A" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="AI"
+                        android:textSize="10sp"
+                        android:textColor="#FFFFFF"
+                        android:background="#9C27B0"
+                        android:paddingStart="6dp"
+                        android:paddingEnd="6dp"
+                        android:paddingTop="2dp"
+                        android:paddingBottom="2dp" />
+
+                </LinearLayout>
+
+                <!-- Divider -->
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="#CE93D8"
+                    android:layout_marginBottom="12dp" />
+
+                <!-- The AI-generated tip text -->
+                <TextView
+                    android:id="@+id/tv_tip_rec"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text=""
+                    android:textColor="#4A148C"
+                    android:textSize="14sp"
+                    android:lineSpacingExtra="4dp" />
+
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+        <!-- Content Layout (kept for backward compat, now hidden permanently) -->
         <LinearLayout
             android:id="@+id/layout_recommendations"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:visibility="gone">
-
-
-
 
 
             <!-- Tip Recommendation -->

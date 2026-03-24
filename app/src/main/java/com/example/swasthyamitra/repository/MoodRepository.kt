@@ -55,7 +55,7 @@ class MoodRepository {
         }
     }
 
-    suspend fun getRecentMoods(userId: String, limit: Int = 7): Result<List<MoodData>> {
+    suspend fun getRecentMoods(userId: String, limit: Int = 50): Result<List<MoodData>> {
         return try {
             val snapshot = firestore.collection("users").document(userId)
                 .collection("mood_logs")

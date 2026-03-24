@@ -2,28 +2,37 @@ package com.example.swasthyamitra.utils
 
 /**
  * Application-wide constants for SwasthyaMitra.
- * Centralizes XP values, collection names, and configuration.
+ * Centralises XP values, collection names, and application-level configuration.
+ *
+ * NOTE: All Firebase collection names and DB instances are managed in
+ * [FirebaseCollections]. The [Collections] object below is kept for
+ * backward-compatibility — it simply delegates to FirebaseCollections.
  */
 object Constants {
     
-    // ========== Firestore Collection Names ==========
+    // ========== Firestore Collection Names (delegated to FirebaseCollections) ==========
+    //
+    // All string values are sourced from FirebaseCollections.Firestore / Sub
+    // so there is a single point of truth for every Firestore path.
+    // Existing callers using Constants.Collections.* continue to compile unchanged.
     object Collections {
-        const val USERS = "users"
-        const val FOOD_LOGS = "foodLogs"
-        const val EXERCISE_LOGS = "exercise_logs"
-        const val SLEEP_LOGS = "sleep_logs"
-        const val MOOD_LOGS = "mood_logs"
-        const val WEIGHT_LOGS = "weightLogs"
-        const val WATER_LOGS = "waterLogs"
-        const val STEP_SESSIONS = "step_sessions"
-        const val DAILY_STEPS = "daily_steps"
-        const val DAILY_SUMMARY = "dailySummary"
-        const val GAMIFICATION_DATA = "gamificationData"
-        const val GOALS = "goals"
-        const val BADGES = "badges"
-        const val EMERGENCY_EVENTS = "emergency_events"
-        const val RECOMMENDATIONS = "recommendations"
-        const val MEAL_FEEDBACK = "meal_feedback"
+        val USERS              get() = FirebaseCollections.Firestore.USERS
+        val FOOD_LOGS          get() = FirebaseCollections.Firestore.Sub.FOOD_LOGS
+        val EXERCISE_LOGS      get() = FirebaseCollections.Firestore.Sub.EXERCISE_LOGS
+        val SLEEP_LOGS         get() = FirebaseCollections.Firestore.Sub.SLEEP_LOGS
+        val MOOD_LOGS          get() = FirebaseCollections.Firestore.Sub.MOOD_LOGS
+        val WEIGHT_LOGS        get() = FirebaseCollections.Firestore.Sub.WEIGHT_LOGS
+        val WATER_LOGS         get() = FirebaseCollections.Firestore.Sub.WATER_LOGS
+        val STEP_SESSIONS      get() = FirebaseCollections.Firestore.Sub.STEP_SESSIONS
+        val DAILY_STEPS        get() = FirebaseCollections.Firestore.Sub.DAILY_STEPS
+        val DAILY_SUMMARY      get() = FirebaseCollections.Firestore.Sub.DAILY_SUMMARY
+        val GAMIFICATION_DATA  get() = FirebaseCollections.Firestore.Sub.GAMIFICATION_DATA
+        val GOALS              get() = FirebaseCollections.Firestore.Sub.GOALS
+        val EMERGENCY_EVENTS   get() = FirebaseCollections.Firestore.EMERGENCY_EVENTS
+        val RECOMMENDATIONS    get() = FirebaseCollections.Firestore.RECOMMENDATIONS
+        // Legacy entries (not yet moved to FirebaseCollections)
+        const val BADGES           = "badges"
+        const val MEAL_FEEDBACK    = "meal_feedback"
         const val AI_GENERATED_PLANS = "ai_generated_plans"
     }
     
@@ -103,8 +112,17 @@ object Constants {
     }
     
     // ========== Database Instance Names ==========
+    //
+    // Firestore and Realtime DB instances are instantiated inside
+    // FirebaseCollections — these constants are kept for any code that
+    // still references Constants.Database.* directly.
     object Database {
+        /** Named Firestore instance used by the app (≠ default). */
         const val FIRESTORE_INSTANCE_NAME = "renu"
+
+        /** Realtime Database URL for this project. */
+        const val REALTIME_DB_URL =
+            "https://swasthyamitra-ded44-default-rtdb.asia-southeast1.firebasedatabase.app"
     }
     
     // ========== Shared Preferences Keys ==========
