@@ -15,54 +15,39 @@ class AIMoodRecommendationService(private val context: Context) {
     private val TAG = "AIMoodRecService"
 
     data class RecommendationResult(
-        val whatToEat: String,
-        val howToMove: String,
         val mindfulnessTip: String
     )
 
     suspend fun getMoodBasedRecommendations(
-        moodData: MoodData, 
+        moodData: MoodData,
         userProfile: Map<String, Any>
     ): Result<RecommendationResult> = withContext(Dispatchers.IO) {
         try {
-            val mood = moodData.mood
+            val mood      = moodData.mood
             val intensity = moodData.intensity
-            val userName = userProfile["name"] as? String ?: "User"
-            val goal = userProfile["goalType"] as? String ?: "Health"
+            val userName  = userProfile["name"] as? String ?: "User"
 
             val promptText = """
-                You are an empathetic wellness assistant for SwasthyaMitra.
-                
+                You are a compassionate mindfulness coach for SwasthyaMitra.
+
                 **USER CONTEXT:**
                 - Name: $userName
-                - Goal: $goal
                 - Current Mood: **$mood** (Intensity: $intensity/1.0)
                 - Time: ${java.text.SimpleDateFormat("HH:mm").format(java.util.Date())}
-                
+
                 **TASK:**
-                Provide 3 specific recommendations to help the user feel better or maintain their positive state.
-                
-                1. **What to eat**: deeply comforting but healthy food specific to their mood.
-                   - If Sad: suggest warm, comforting foods (e.g., soup, dark chocolate).
-                   - If Tired: suggest energy-boosting foods (not caffeine).
-                   - If Stressed: suggest anxiety-reducing foods.
-                   - If Happy: suggest celebratory but healthy meals.
-                
-                2. **How to move**: immediate physical activity to match their energy.
-                   - If Stressed/Anxious: Yoga or heavy lifting (release tension).
-                   - If Tired: Light stretching or a short walk.
-                   - If Sad: Gentle movement to release endorphins.
-                   - If Happy: Challenge workout.
-                
-                3. **Mindfulness tip**: A quick, actionable tip (breathing, journaling, gratitude).
-                
-                **OUTPUT FORMAT:**
-                Strictly return the result in this format with these separators:
-                [EAT] ...what to eat...
-                [MOVE] ...how to move...
-                [MINDFUL] ...mindfulness tip...
-                
-                Keep each recommendation concise (1-2 sentences). Be supportive and kind.
+                Give ONE short, actionable mindfulness tip (1-2 sentences) tailored to the user's mood.
+
+                **MOOD GUIDANCE:**
+                - Stressed / Anxious  → Box breathing or a body-scan technique
+                - Sad / Down          → Gratitude journaling or self-compassion mantra
+                - Tired / Exhausted   → Mindful rest; slow-breath reset (4-7-8 breathing)
+                - Happy / Excited     → Savouring moment — notice 3 things you're grateful for right now
+                - Calm / Relaxed      → Anchor to the present with a 1-minute observation exercise
+
+                **OUTPUT:**
+                Just the tip — plain text, no headers, no labels, no extra explanation.
+                Address the user by name ($userName). Keep it warm and supportive.
             """.trimIndent()
 
             val config = generationConfig {
@@ -72,14 +57,9 @@ class AIMoodRecommendationService(private val context: Context) {
                 .generativeModel("gemini-2.0-flash", generationConfig = config)
 
             val response = generativeModel.generateContent(promptText)
-            val text = response.text ?: throw Exception("Empty AI response")
+            val tip = response.text?.trim() ?: throw Exception("Empty AI response")
 
-            // Parse the response
-            val eat = text.substringAfter("[EAT]").substringBefore("[MOVE]").trim()
-            val move = text.substringAfter("[MOVE]").substringBefore("[MINDFUL]").trim()
-            val mindful = text.substringAfter("[MINDFUL]").trim()
-
-            Result.success(RecommendationResult(eat, move, mindful))
+            Result.success(RecommendationResult(mindfulnessTip = tip))
 
         } catch (e: Exception) {
             Log.e(TAG, "AI Generation Error", e)

@@ -97,14 +97,27 @@ class WorkoutDashboardActivity : AppCompatActivity() {
     private lateinit var etSosEmergencyContact: com.google.android.material.textfield.TextInputEditText
     private lateinit var fusedLocationClient: FusedLocationProviderClient
 
+    // Runtime SMS permission launcher (needed on Android 6+)
+    private val smsPermissionLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+            if (granted) {
+                performSOSWithLocation()
+            } else {
+                Toast.makeText(
+                    this,
+                    "❌ SMS permission denied — cannot send SOS automatically.",
+                    Toast.LENGTH_LONG
+                ).show()
+            }
+        }
+
     private val locationPermissionForSOS =
         registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
             if (permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true ||
                 permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true) {
                 performSOSWithLocation()
             } else {
-                // Send without location
-                sendSOSViaMessenger(null, null)
+                sendSOSDirectly(null, null)
             }
         }
 
@@ -756,7 +769,7 @@ class WorkoutDashboardActivity : AppCompatActivity() {
         }
     }
 
-    // -------- SOS Emergency via Messenger --------
+    // ── SOS Emergency — sends SMS directly via SmsManager ───────────────────────
 
     private fun triggerSOS() {
         val contactNumber = etSosEmergencyContact.text.toString().trim()
@@ -766,20 +779,33 @@ class WorkoutDashboardActivity : AppCompatActivity() {
             return
         }
 
-        // Confirm before sending
         AlertDialog.Builder(this)
-            .setTitle("\uD83D\uDEA8 Send SOS Alert?")
-            .setMessage("This will open Messenger to send your live location and an emergency help message to $contactNumber.\n\nProceed?")
-            .setPositiveButton("SEND SOS") { _, _ ->
+            .setTitle("🚨 Send SOS Alert?")
+            .setMessage(
+                "An emergency SMS will be sent DIRECTLY to $contactNumber " +
+                "with your current location.\n\nNo extra taps needed — the message sends automatically.\n\nProceed?"
+            )
+            .setPositiveButton("SEND SOS NOW") { _, _ ->
                 saveSosEmergencyContact()
+                // Check SEND_SMS permission first
+                if (ContextCompat.checkSelfPermission(this, Manifest.permission.SEND_SMS)
+                    != PackageManager.PERMISSION_GRANTED
+                ) {
+                    smsPermissionLauncher.launch(Manifest.permission.SEND_SMS)
+                    return@setPositiveButton
+                }
                 // Check location permission
-                if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+                if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+                    == PackageManager.PERMISSION_GRANTED
+                ) {
                     performSOSWithLocation()
                 } else {
-                    locationPermissionForSOS.launch(arrayOf(
-                        Manifest.permission.ACCESS_FINE_LOCATION,
-                        Manifest.permission.ACCESS_COARSE_LOCATION
-                    ))
+                    locationPermissionForSOS.launch(
+                        arrayOf(
+                            Manifest.permission.ACCESS_FINE_LOCATION,
+                            Manifest.permission.ACCESS_COARSE_LOCATION
+                        )
+                    )
                 }
             }
             .setNegativeButton("Cancel", null)
@@ -787,100 +813,99 @@ class WorkoutDashboardActivity : AppCompatActivity() {
     }
 
     private fun performSOSWithLocation() {
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
-            ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            sendSOSViaMessenger(null, null)
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+            != PackageManager.PERMISSION_GRANTED &&
+            ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION)
+            != PackageManager.PERMISSION_GRANTED
+        ) {
+            sendSOSDirectly(null, null)
             return
         }
 
-        fusedLocationClient.lastLocation.addOnSuccessListener { location ->
-            if (location != null) {
-                sendSOSViaMessenger(location.latitude, location.longitude)
-            } else {
-                sendSOSViaMessenger(null, null)
+        fusedLocationClient.lastLocation
+            .addOnSuccessListener { location ->
+                sendSOSDirectly(location?.latitude, location?.longitude)
             }
-        }.addOnFailureListener {
-            sendSOSViaMessenger(null, null)
-        }
+            .addOnFailureListener {
+                sendSOSDirectly(null, null)
+            }
     }
 
-    private fun sendSOSViaMessenger(latitude: Double?, longitude: Double?) {
+    /**
+     * Sends the SOS SMS directly via SmsManager — silently, no app opens, no user tap needed.
+     * Falls back to opening the SMS app only if SmsManager is unavailable (e.g. no SIM).
+     */
+    private fun sendSOSDirectly(latitude: Double?, longitude: Double?) {
         val contactNumber = etSosEmergencyContact.text.toString().trim()
         if (contactNumber.isEmpty()) return
 
-        val timestamp = java.text.SimpleDateFormat("hh:mm a, MMM dd yyyy", java.util.Locale.getDefault()).format(java.util.Date())
+        val timestamp = java.text.SimpleDateFormat(
+            "hh:mm a, MMM dd yyyy", java.util.Locale.getDefault()
+        ).format(java.util.Date())
 
         val locationPart = if (latitude != null && longitude != null) {
-            "\uD83D\uDCCD My Live Location:\nhttps://maps.google.com/maps?q=$latitude,$longitude"
+            "📍 My Location: https://maps.google.com/maps?q=$latitude,$longitude"
         } else {
-            "\uD83D\uDCCD Location unavailable"
+            "📍 Location unavailable"
         }
 
-        val message = "\uD83D\uDEA8 EMERGENCY SOS ALERT \uD83D\uDEA8\n\n" +
-                "I need help! This is an emergency.\n\n" +
-                "$locationPart\n\n" +
-                "\uD83D\uDD52 Time: $timestamp\n" +
-                "Sent from SwasthyaMitra Step Tracker"
+        val message =
+            "🚨 EMERGENCY SOS ALERT 🚨\n\n" +
+            "I need immediate help!\n\n" +
+            "$locationPart\n\n" +
+            "🕒 Time: $timestamp\n" +
+            "Sent via SwasthyaMitra"
 
-        // Try opening Facebook Messenger with the message
-        val messengerSent = openMessengerWithMessage(message)
-        if (!messengerSent) {
-            // Fallback: try SMS intent
-            openSmsWithMessage(contactNumber, message)
+        try {
+            val smsManager: android.telephony.SmsManager =
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                    getSystemService(android.telephony.SmsManager::class.java)
+                } else {
+                    @Suppress("DEPRECATION")
+                    android.telephony.SmsManager.getDefault()
+                }
+
+            val parts = smsManager.divideMessage(message)
+
+            val sentPI = android.app.PendingIntent.getBroadcast(
+                this, 0, Intent("SOS_SMS_SENT"),
+                android.app.PendingIntent.FLAG_IMMUTABLE or android.app.PendingIntent.FLAG_UPDATE_CURRENT
+            )
+            val deliveredPI = android.app.PendingIntent.getBroadcast(
+                this, 0, Intent("SOS_SMS_DELIVERED"),
+                android.app.PendingIntent.FLAG_IMMUTABLE or android.app.PendingIntent.FLAG_UPDATE_CURRENT
+            )
+
+            if (parts.size == 1) {
+                smsManager.sendTextMessage(contactNumber, null, message, sentPI, deliveredPI)
+            } else {
+                val sentList     = ArrayList(parts.map { sentPI })
+                val deliveredList = ArrayList(parts.map { deliveredPI })
+                smsManager.sendMultipartTextMessage(contactNumber, null, parts, sentList, deliveredList)
+            }
+
+            Log.d("WorkoutDashboard", "✅ SOS SMS sent directly to $contactNumber")
+            Toast.makeText(this, "🚨 SOS sent to $contactNumber!", Toast.LENGTH_LONG).show()
+
+        } catch (e: Exception) {
+            Log.e("WorkoutDashboard", "SmsManager failed: ${e.message}", e)
+            // Fallback: open SMS app so user can tap Send manually
+            try {
+                val smsUri = Uri.parse("smsto:${Uri.encode(contactNumber)}")
+                startActivity(Intent(Intent.ACTION_SENDTO, smsUri).apply {
+                    putExtra("sms_body", message)
+                })
+                Toast.makeText(
+                    this,
+                    "⚠️ Auto-send failed. SMS app opened — please tap Send.",
+                    Toast.LENGTH_LONG
+                ).show()
+            } catch (ex: Exception) {
+                Toast.makeText(this, "❌ Could not send SOS: ${ex.message}", Toast.LENGTH_LONG).show()
+            }
         }
     }
 
-    private fun openMessengerWithMessage(message: String): Boolean {
-        try {
-            // Facebook Messenger share intent
-            val messengerIntent = Intent(Intent.ACTION_SEND).apply {
-                setPackage("com.facebook.orca")
-                type = "text/plain"
-                putExtra(Intent.EXTRA_TEXT, message)
-            }
-
-            if (messengerIntent.resolveActivity(packageManager) != null) {
-                startActivity(messengerIntent)
-                Toast.makeText(this, "\uD83D\uDEA8 Opening Messenger \u2014 send the SOS message to your contact!", Toast.LENGTH_LONG).show()
-                return true
-            }
-        } catch (e: Exception) {
-            Log.e("WorkoutDashboard", "Messenger not available: ${e.message}")
-        }
-
-        // Try Messenger Lite as fallback
-        try {
-            val liteMsgIntent = Intent(Intent.ACTION_SEND).apply {
-                setPackage("com.facebook.mlite")
-                type = "text/plain"
-                putExtra(Intent.EXTRA_TEXT, message)
-            }
-
-            if (liteMsgIntent.resolveActivity(packageManager) != null) {
-                startActivity(liteMsgIntent)
-                Toast.makeText(this, "\uD83D\uDEA8 Opening Messenger Lite \u2014 send the SOS message!", Toast.LENGTH_LONG).show()
-                return true
-            }
-        } catch (e: Exception) {
-            Log.e("WorkoutDashboard", "Messenger Lite not available: ${e.message}")
-        }
-
-        return false
-    }
-
-    private fun openSmsWithMessage(phoneNumber: String, message: String) {
-        try {
-            val smsUri = Uri.parse("smsto:${Uri.encode(phoneNumber)}")
-            val smsIntent = Intent(Intent.ACTION_SENDTO, smsUri).apply {
-                putExtra("sms_body", message)
-            }
-            startActivity(smsIntent)
-            Toast.makeText(this, "\uD83D\uDEA8 Messenger not found \u2014 opening SMS app instead", Toast.LENGTH_LONG).show()
-        } catch (e: Exception) {
-            Log.e("WorkoutDashboard", "Failed to open SMS: ${e.message}")
-            Toast.makeText(this, "Unable to send SOS. No messaging app found.", Toast.LENGTH_LONG).show()
-        }
-    }
 
     private fun saveSosEmergencyContact() {
         val contact = etSosEmergencyContact.text.toString().trim()
