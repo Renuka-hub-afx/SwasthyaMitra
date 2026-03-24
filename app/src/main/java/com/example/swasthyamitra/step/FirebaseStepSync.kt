@@ -9,8 +9,9 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 /**
- * Firebase Step Sync Manager
- * Handles secure storage and anomaly detection for validated steps
+ * FirebaseStepSync handles the secure transmission of validated step data to the cloud.
+ * It includes a specialized "Anomaly Detection" subsystem that identifies and filters 
+ * unrealistic step counts (e.g., from cheating or device malfunctions).
  */
 class FirebaseStepSync(private val context: Context) {
 
@@ -20,12 +21,17 @@ class FirebaseStepSync(private val context: Context) {
     companion object {
         private const val TAG = "FirebaseStepSync"
         private const val COLLECTION_STEPS = "daily_steps"
-        private const val MAX_DAILY_STEPS = 100000 // Anomaly threshold
-        private const val MAX_STEPS_PER_HOUR = 15000 // Hourly anomaly threshold
+        
+        // Anti-cheating thresholds:
+        private const val MAX_DAILY_STEPS = 100000    // Unlikely for any human to exceed 100k
+        private const val MAX_STEPS_PER_HOUR = 15000  // Maximum physically possible running cadence
     }
 
     /**
-     * Sync validated steps to Firebase with anomaly detection
+     * Synchronizes steps with Firestore while performing 3 layers of validation.
+     * @param userId The current authenticated user ID.
+     * @param validatedSteps Steps that have passed the local GPS/Sensor validation.
+     * @param confidence The local validation's confidence score (0-100).
      */
     suspend fun syncValidatedSteps(
         userId: String,
@@ -37,41 +43,38 @@ class FirebaseStepSync(private val context: Context) {
             val today = dateFormat.format(Date())
             val currentHour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
 
-            // Fetch current data
-            val docRef = firestore.collection("users")
-                .document(userId)
-                .collection(COLLECTION_STEPS)
-                .document(today)
+            val docRef = firestore.collection("users").document(userId)
+                .collection(COLLECTION_STEPS).document(today)
 
             val snapshot = docRef.get().await()
             val currentSteps = snapshot.getLong("totalSteps")?.toInt() ?: 0
             val hourlySteps = snapshot.get("hourlySteps") as? Map<String, Int> ?: emptyMap()
 
-            // Anomaly Detection Layer 1: Daily limit check
+            // ---- ANOMALY DETECTION LAYER 1: DAILY CAPACITY ----
+            // Prevents massive bulk uploads.
             if (validatedSteps > MAX_DAILY_STEPS) {
-                Log.w(TAG, "Anomaly detected: Daily steps exceed threshold ($validatedSteps)")
-                return Result.failure(Exception("Step count exceeds daily maximum"))
+                return Result.failure(Exception("Daily limit exceeded"))
             }
 
-            // Anomaly Detection Layer 2: Hourly rate check
+            // ---- ANOMALY DETECTION LAYER 2: HOURLY CADENCE ----
+            // Checks if the new steps since last sync are physically possible within an hour.
             val stepsThisHour = hourlySteps[currentHour.toString()] ?: 0
-            if (stepsThisHour + (validatedSteps - currentSteps) > MAX_STEPS_PER_HOUR) {
-                Log.w(TAG, "Anomaly detected: Hourly steps exceed threshold")
-                return Result.failure(Exception("Step rate exceeds hourly maximum"))
+            val stepIncrement = validatedSteps - currentSteps
+            if (stepsThisHour + stepIncrement > MAX_STEPS_PER_HOUR) {
+                return Result.failure(Exception("Step rate too high"))
             }
 
-            // Anomaly Detection Layer 3: Sudden spike check
-            if (validatedSteps - currentSteps > 5000) {
-                Log.w(TAG, "Anomaly detected: Sudden step spike (+${validatedSteps - currentSteps})")
-                return Result.failure(Exception("Sudden step increase detected"))
+            // ---- ANOMALY DETECTION LAYER 3: VELOCITY SPIKE ----
+            // Prevents single large injections of data.
+            if (stepIncrement > 5000) {
+                return Result.failure(Exception("Sudden spike detected"))
             }
 
-            // Update hourly breakdown
+            // Update the hourly breakdown map
             val updatedHourlySteps = hourlySteps.toMutableMap()
-            updatedHourlySteps[currentHour.toString()] =
-                (updatedHourlySteps[currentHour.toString()] ?: 0) + (validatedSteps - currentSteps)
+            updatedHourlySteps[currentHour.toString()] = (updatedHourlySteps[currentHour.toString()] ?: 0) + stepIncrement
 
-            // Prepare data
+            // Bundle metadata for debugging and trust-score calculation
             val stepData = hashMapOf(
                 "userId" to userId,
                 "date" to today,
@@ -90,91 +93,70 @@ class FirebaseStepSync(private val context: Context) {
                 )
             )
 
-            // Store with merge to preserve other fields
+            // Merge ensures we don't overwrite other daily fields (like food/water logs)
             docRef.set(stepData, SetOptions.merge()).await()
-
-            Log.i(TAG, "Steps synced: $validatedSteps (confidence: $confidence%)")
             Result.success(Unit)
 
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to sync steps: ${e.message}")
+            Log.e(TAG, "Sync error: ${e.message}")
             Result.failure(e)
         }
     }
 
     /**
-     * Get today's validated steps from Firebase
+     * Retrieves today's final validated count for local UI consistency.
      */
     suspend fun getTodaySteps(userId: String): Result<Int> {
         return try {
             val today = dateFormat.format(Date())
+            val snapshot = firestore.collection("users").document(userId)
+                .collection(COLLECTION_STEPS).document(today).get().await()
 
-            val snapshot = firestore.collection("users")
-                .document(userId)
-                .collection(COLLECTION_STEPS)
-                .document(today)
-                .get()
-                .await()
-
-            val steps = snapshot.getLong("totalSteps")?.toInt() ?: 0
-            Result.success(steps)
-
+            Result.success(snapshot.getLong("totalSteps")?.toInt() ?: 0)
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to fetch today's steps: ${e.message}")
             Result.failure(e)
         }
     }
 
     /**
-     * Get step history for analytics
+     * Fetches historical data (e.g., last 7 days) for progress charts.
      */
-    suspend fun getStepHistory(
-        userId: String,
-        days: Int = 7
-    ): Result<List<DailyStepData>> {
+    suspend fun getStepHistory(userId: String, days: Int = 7): Result<List<DailyStepData>> {
         return try {
             val calendar = Calendar.getInstance()
             val endDate = dateFormat.format(calendar.time)
             calendar.add(Calendar.DAY_OF_YEAR, -days)
             val startDate = dateFormat.format(calendar.time)
 
-            val querySnapshot = firestore.collection("users")
-                .document(userId)
+            val querySnapshot = firestore.collection("users").document(userId)
                 .collection(COLLECTION_STEPS)
                 .whereGreaterThanOrEqualTo("date", startDate)
                 .whereLessThanOrEqualTo("date", endDate)
-                .orderBy("date")
-                .get()
-                .await()
+                .orderBy("date").get().await()
 
             val history = querySnapshot.documents.mapNotNull { doc ->
-                try {
-                    DailyStepData(
-                        date = doc.getString("date") ?: "",
-                        steps = doc.getLong("totalSteps")?.toInt() ?: 0,
-                        confidence = doc.getDouble("confidence") ?: 0.0,
-                        activityType = doc.getString("activityType") ?: "UNKNOWN"
-                    )
-                } catch (e: Exception) {
-                    null
-                }
+                DailyStepData(
+                    date = doc.getString("date") ?: "",
+                    steps = doc.getLong("totalSteps")?.toInt() ?: 0,
+                    confidence = doc.getDouble("confidence") ?: 0.0,
+                    activityType = doc.getString("activityType") ?: "UNKNOWN"
+                )
             }
-
             Result.success(history)
-
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to fetch step history: ${e.message}")
             Result.failure(e)
         }
     }
 
+    /**
+     * Captures a unique device ID to prevent multiple devices from syncing to one account 
+     * simultaneously (which could double steps).
+     */
     private fun getDeviceId(): String {
-        return android.provider.Settings.Secure.getString(
-            context.contentResolver,
-            android.provider.Settings.Secure.ANDROID_ID
-        )
+        return android.provider.Settings.Secure.getString(context.contentResolver, android.provider.Settings.Secure.ANDROID_ID)
     }
 }
+
 
 data class DailyStepData(
     val date: String,

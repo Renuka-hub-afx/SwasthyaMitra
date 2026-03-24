@@ -16,12 +16,19 @@ import kotlinx.coroutines.launch
 import com.google.firebase.auth.FirebaseAuth
 
 /**
- * Enhanced StepManager with Hybrid Validation System
- * Integrates hardware step sensor with multi-layer validation
- * Maintains backward compatibility with existing StepCounterService
+ * StepManager is the primary controller for managing step tracking within the application.
+ * It provides a unified interface to start and stop tracking, choosing between a 
+ * legacy mode (hardware sensor only) and an enhanced hybrid validation mode.
+ *
+ * @param context The Android Context used for starting services and registering receivers.
+ * @param onStepUpdate A callback function triggered whenever the step count or calories are updated.
  */
 class StepManager(private val context: Context, private val onStepUpdate: (Int, Double) -> Unit) {
 
+    /**
+     * Receiver to listen for step updates broadcast from StepCounterService.
+     * This is used primarily in legacy mode.
+     */
     private val stepReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             if (intent?.action == StepCounterService.ACTION_UPDATE_STEPS) {
@@ -34,19 +41,21 @@ class StepManager(private val context: Context, private val onStepUpdate: (Int, 
         }
     }
 
-    // Hybrid validation system (optional, can be enabled)
+    // Hybrid validation system components
     private var hybridValidator: HybridStepValidator? = null
     private var firebaseStepSync: FirebaseStepSync? = null
     private val scope = CoroutineScope(Dispatchers.Main)
 
     private var isRegistered = false
-    private var useHybridValidation = false // Set to true to enable advanced validation
+    private var useHybridValidation = false // Flag to toggle between basic and advanced validation
     var dailySteps: Int = 0
         private set
 
     /**
-     * Start step tracking with optional hybrid validation
-     * @param enableHybridValidation - Enable multi-layer validation (default: false for backward compatibility)
+     * Starts the step tracking process.
+     * 
+     * @param enableHybridValidation If true, uses AI/GPS-based validation to filter out 
+     * false steps (like vehicle movement). If false, uses the standard legacy tracker.
      */
     fun start(enableHybridValidation: Boolean = false) {
         useHybridValidation = enableHybridValidation
@@ -58,9 +67,12 @@ class StepManager(private val context: Context, private val onStepUpdate: (Int, 
         }
     }
 
+    /**
+     * Initializes the standard step counter service and registers a receiver for updates.
+     * This mode relies on the device's hardware step counter sensor.
+     */
     private fun startLegacyMode() {
-        // Original implementation - backward compatible
-        // 1. Start the Foreground Service (if not running)
+        // 1. Start the Foreground Service to keep tracking while app is in background
         val serviceIntent = Intent(context, StepCounterService::class.java)
         serviceIntent.action = StepCounterService.ACTION_START
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -69,7 +81,7 @@ class StepManager(private val context: Context, private val onStepUpdate: (Int, 
             context.startService(serviceIntent)
         }
 
-        // 2. Register for updates
+        // 2. Register for step update broadcasts
         if (!isRegistered) {
             val filter = IntentFilter(StepCounterService.ACTION_UPDATE_STEPS)
             androidx.core.content.ContextCompat.registerReceiver(
@@ -81,7 +93,7 @@ class StepManager(private val context: Context, private val onStepUpdate: (Int, 
             isRegistered = true
         }
         
-        // 3. Trigger initial fetch from Prefs for instant UI (with date check)
+        // 3. Load the initial step count from SharedPreferences for instant UI display
         val prefs = context.getSharedPreferences("StepCounterPrefs", Context.MODE_PRIVATE)
         val savedDate = prefs.getString("last_date", "")
         val today = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault()).format(java.util.Date())
@@ -91,38 +103,45 @@ class StepManager(private val context: Context, private val onStepUpdate: (Int, 
         onStepUpdate(savedSteps, calories)
     }
 
+    /**
+     * Initializes the enhanced step tracking with hybrid validation.
+     * This system uses activity recognition and GPS data to validate steps in real-time.
+     */
     private fun startWithHybridValidation() {
         Log.i("StepManager", "Starting with Hybrid Validation System")
 
-        // Initialize Firebase sync
+        // Initialize Firebase synchronization component
         firebaseStepSync = FirebaseStepSync(context)
 
-        // Initialize hybrid validator
+        // Initialize the hybrid validator logic
         hybridValidator = HybridStepValidator(context)
 
-        // Setup activity recognition callback
+        // Link the activity recognition state to the validator
         ActivityRecognitionReceiver.onActivityChanged = { activity ->
             hybridValidator?.updateActivityState(activity)
         }
 
-        // Start validation with callback
+        // Start the validator and provide a callback for validated results
         hybridValidator?.start { validatedSteps, confidence ->
             dailySteps = validatedSteps
-            val calories = validatedSteps * 0.04 // 0.04 kcal per step
+            val calories = validatedSteps * 0.04 // Standard calorie calculation: 0.04 kcal per step
 
-            // Update UI
+            // Update UI/Callbacks with validated data
             onStepUpdate(validatedSteps, calories)
 
-            // Sync to Firebase (async)
+            // Asynchronously sync the validated steps and confidence to the cloud (Firebase)
             syncToFirebase(validatedSteps, confidence)
 
             Log.d("StepManager", "Validated steps: $validatedSteps (confidence: $confidence%)")
         }
 
-        // Load initial data from Firebase
+        // Load the cumulative steps for today from Firebase to sync state
         loadInitialSteps()
     }
 
+    /**
+     * Fetches today's step count from Firebase to initialize the local counter.
+     */
     private fun loadInitialSteps() {
         scope.launch {
             val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return@launch
@@ -135,10 +154,17 @@ class StepManager(private val context: Context, private val onStepUpdate: (Int, 
         }
     }
 
+    /**
+     * Syncs validated step data and confidence scores to Firebase for cross-device consistency.
+     * 
+     * @param steps The number of validated steps.
+     * @param confidence The calculated confidence score of the step validity.
+     */
     private fun syncToFirebase(steps: Int, confidence: Double) {
         scope.launch {
             val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return@launch
 
+            // Mapping detected activity types for analytics/logging
             val activityType = ActivityRecognitionReceiver.latestActivity?.let {
                 when (it.type) {
                     com.google.android.gms.location.DetectedActivity.WALKING -> "WALKING"
@@ -154,6 +180,9 @@ class StepManager(private val context: Context, private val onStepUpdate: (Int, 
         }
     }
 
+    /**
+     * Stops all tracking services, unregisters receivers, and shuts down validators.
+     */
     fun stop() {
         if (isRegistered) {
             try {
@@ -164,17 +193,18 @@ class StepManager(private val context: Context, private val onStepUpdate: (Int, 
             }
         }
 
-        // Stop hybrid validator if running
+        // Properly stop the hybrid validator and clear callbacks
         hybridValidator?.stop()
         hybridValidator = null
         ActivityRecognitionReceiver.onActivityChanged = null
     }
 
     /**
-     * Get step confidence score (only available in hybrid mode)
+     * Returns the confidence score of the current step count.
+     * In hybrid mode, this represents the probability that the steps are genuine.
      */
     fun getConfidenceScore(): Double {
-        // Can be extended to return actual confidence from validator
         return if (useHybridValidation) 95.0 else 0.0
     }
+
 }

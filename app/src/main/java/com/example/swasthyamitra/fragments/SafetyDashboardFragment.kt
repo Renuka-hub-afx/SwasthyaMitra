@@ -16,6 +16,7 @@ import com.example.swasthyamitra.R
 import com.example.swasthyamitra.databinding.FragmentSafetyDashboardBinding
 import com.example.swasthyamitra.safety.EmergencyContactManager
 import com.example.swasthyamitra.services.TrackingService
+import com.example.swasthyamitra.services.TrackingService.Companion.ACTION_INITIATE_SOS
 import com.example.swasthyamitra.services.TrackingService.Companion.ACTION_TRIGGER_SOS
 
 class SafetyDashboardFragment : Fragment() {
@@ -121,7 +122,7 @@ class SafetyDashboardFragment : Fragment() {
 
     private fun triggerSOS() {
         val intent = Intent(requireContext(), TrackingService::class.java).apply {
-            action = ACTION_TRIGGER_SOS
+            action = ACTION_INITIATE_SOS
             putExtra("reason", "Manual SOS - High Priority")
         }
         requireContext().startService(intent)

@@ -1,6 +1,7 @@
 package com.example.swasthyamitra.fragments
 
 import android.Manifest
+import android.location.Location
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Color
@@ -19,6 +20,8 @@ import com.example.swasthyamitra.services.TrackingService.Companion.pathPointsLi
 import com.example.swasthyamitra.services.TrackingService.Companion.distanceLive
 import com.example.swasthyamitra.services.TrackingService.Companion.paceLive
 import com.example.swasthyamitra.services.TrackingService.Companion.stepsLive
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
@@ -31,6 +34,7 @@ class LiveMapFragment : Fragment(), OnMapReadyCallback {
     private var _binding: FragmentLiveMapBinding? = null
     private val binding get() = _binding!!
     private var googleMap: GoogleMap? = null
+    private lateinit var fusedLocationClient: FusedLocationProviderClient
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -43,6 +47,7 @@ class LiveMapFragment : Fragment(), OnMapReadyCallback {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireContext())
         val mapFragment = childFragmentManager.findFragmentById(R.id.mapFragment) as SupportMapFragment?
         mapFragment?.getMapAsync(this)
 
@@ -111,6 +116,14 @@ class LiveMapFragment : Fragment(), OnMapReadyCallback {
     private fun enableUserLocation() {
         if (ActivityCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
             googleMap?.isMyLocationEnabled = true
+            
+            // Center map on last known location initially
+            fusedLocationClient.lastLocation.addOnSuccessListener { location: Location? ->
+                if (location != null) {
+                    val latLng = LatLng(location.latitude, location.longitude)
+                    googleMap?.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 16f))
+                }
+            }
         }
     }
 

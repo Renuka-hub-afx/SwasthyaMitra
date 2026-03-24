@@ -23,14 +23,20 @@ import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.concurrent.fixedRateTimer
 
+/**
+ * StepCounterService is a Foreground Service that tracks steps in the background.
+ * It uses the hardware accelerometer (via StepTracker) to detect motion and 
+ * calculates steps and calories burned. Results are synchronized to Firestore 
+ * periodically and displayed in a persistent notification.
+ */
 class StepCounterService : Service() {
 
     private var stepTracker: StepTracker? = null
     private var currentSteps = 0
     private var currentCalories = 0
     private var sessionStartTime = 0L
-    private var sessionStartDate = ""  // Track the date when session started
-    private var saveTimer: Timer? = null
+    private var sessionStartDate = ""  // Used to handle date transitions (midnight)
+    private var saveTimer: Timer? = null // Periodic timer for cloud synchronization
     
     private val db = FirebaseFirestore.getInstance()
     private val auth = FirebaseAuth.getInstance()
@@ -40,11 +46,12 @@ class StepCounterService : Service() {
         private const val NOTIFICATION_ID = 1001
         private const val CHANNEL_ID = "step_counter_channel"
         
-        // LiveData for broadcasting to UI
+        // LiveData used by UI components to observe real-time tracking progress
         val stepsLive = MutableLiveData<Int>()
         val caloriesLive = MutableLiveData<Int>()
         val isRunningLive = MutableLiveData<Boolean>()
         
+        // Actions for controlling the service via Intents
         const val ACTION_START = "ACTION_START"
         const val ACTION_STOP = "ACTION_STOP"
         const val ACTION_UPDATE_STEPS = "com.example.swasthyamitra.step.UPDATE_STEPS"
@@ -52,74 +59,82 @@ class StepCounterService : Service() {
 
     override fun onCreate() {
         super.onCreate()
+        // Ensure the notification channel exists for the background service
         createNotificationChannel()
         isRunningLive.postValue(false)
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        // Route intent actions to their respective control functions
         when (intent?.action) {
             ACTION_START -> startTracking()
             ACTION_STOP -> stopTracking()
         }
+        // START_STICKY ensures the service restarts if it's killed by the OS
         return START_STICKY
     }
 
+    /**
+     * Resumes or starts the step tracking process.
+     * It first fetches today's data from Firestore to ensure continuity.
+     */
     private fun startTracking() {
         if (stepTracker != null) {
             Log.d("StepCounterService", "Already tracking")
             return
         }
         
-        // IMMEDIATE REQUIREMENT: Call startForeground within 5 seconds of service start
+        // Promote service to Foreground within the required 5-second window
         startForeground(NOTIFICATION_ID, createNotification())
         
         sessionStartTime = System.currentTimeMillis()
         sessionStartDate = dateFormat.format(Date())
         
-        // Fetch existing step data from Firestore for today
+        // Fetch existing step data from Firestore for today to resume from the last point
         fetchTodayStepsFromFirestore { existingSteps, existingCalories ->
-            // Set initial values from Firestore (or 0 if no data)
+            // Initialize local counters with cloud data
             currentSteps = existingSteps
             currentCalories = existingCalories
             
-            // Broadcast initial values to UI
+            // Update UI observers immediately
             stepsLive.postValue(currentSteps)
             caloriesLive.postValue(currentCalories)
             
             Log.d("StepCounterService", "Resuming from Firestore: $currentSteps steps, $currentCalories kcal")
             
-            // Update notification with actual data
+            // Sync notification text with the loaded step count
             updateNotification()
             
-            // Initialize step tracker with offset
+            // Initialize the step tracker with the current base count
             val baseSteps = currentSteps
             stepTracker = StepTracker(this) { newSteps ->
-                // Add new steps to existing count
+                // Calculate total steps by adding newly detected steps to the starting base
                 currentSteps = baseSteps + newSteps
                 currentCalories = com.example.swasthyamitra.utils.CalorieCalculator.calculateFromStepsInt(currentSteps)
                 
-                // Broadcast to UI (LiveData)
+                // 1. Update UI observers via LiveData
                 stepsLive.postValue(currentSteps)
                 caloriesLive.postValue(currentCalories)
                 
-                // Save to SharedPreferences for offline access
+                // 2. Persist to SharedPreferences for offline speed
                 saveToSharedPreferences()
                 
-                // Broadcast via Intent (for StepManager)
+                // 3. Broadcast update for other app components (like StepManager)
                 val broadcastIntent = Intent(ACTION_UPDATE_STEPS)
                 broadcastIntent.putExtra("steps", currentSteps)
                 broadcastIntent.putExtra("calories", currentCalories.toDouble())
                 sendBroadcast(broadcastIntent)
                 
-                // Update notification
+                // 4. Update the live notification
                 updateNotification()
             }
             
+            // Start listening to the accelerometer sensor
             if (stepTracker?.isSensorAvailable() == true) {
                 stepTracker?.start()
                 isRunningLive.postValue(true)
                 
-                // Start periodic save timer (every 5 minutes)
+                // Launch a background timer to sync data with the cloud every 5 minutes
                 startPeriodicSave()
                 
                 Log.d("StepCounterService", "Step tracking started")
@@ -130,7 +145,10 @@ class StepCounterService : Service() {
         }
     }
     
-    // Fetch today's step data from Firestore
+    /**
+     * Fetches today's step count and calories from Firestore.
+     * Returns results via callback to initialize the service state.
+     */
     private fun fetchTodayStepsFromFirestore(callback: (Int, Int) -> Unit) {
         val userId = auth.currentUser?.uid
         if (userId == null) {
@@ -161,47 +179,56 @@ class StepCounterService : Service() {
             }
     }
 
+    /**
+     * Gracefully stops the service after performing a final sync and cleanup.
+     */
     private fun stopTracking() {
-        // Save final data to Firestore
+        // Perform a final synchronization to the cloud
         saveToFirestore()
         
-        // Stop timer
+        // Stop the background sync timer
         saveTimer?.cancel()
         saveTimer = null
         
-        // Stop step tracker
+        // Unregister the step tracker to save battery
         stepTracker?.stop()
         stepTracker = null
         
         isRunningLive.postValue(false)
         
-        // Stop foreground service
+        // Shut down the service
         stopForeground(true)
         stopSelf()
         
         Log.d("StepCounterService", "Step tracking stopped")
     }
 
+    /**
+     * Starts a timer that triggers a cloud sync every 5 minutes.
+     */
     private fun startPeriodicSave() {
-        // Save to Firestore every 5 minutes
         saveTimer = fixedRateTimer("FirestoreSave", false, 5 * 60 * 1000L, 5 * 60 * 1000L) {
             saveToFirestore()
         }
     }
 
+    /**
+     * High-level logic to save current steps to Firestore.
+     * Includes logic to handle the transition from one day to the next (midnight).
+     */
     private fun saveToFirestore() {
         val userId = auth.currentUser?.uid ?: return
         val today = dateFormat.format(Date())
         
-        if (currentSteps == 0) return // Nothing to save
+        if (currentSteps == 0) return 
         
-        // Handle cross-midnight: if the date has changed since session started,
-        // we must NOT carry old-day steps into the new day's document.
+        // Midnight detection: if the date changed during a session, 
+        // finalize the old day's data and reset the counter for the new day.
         if (sessionStartDate.isNotEmpty() && today != sessionStartDate) {
             Log.d("StepCounterService", "Date changed from $sessionStartDate to $today — resetting for new day")
-            // Save final count for old day first (using the old date)
             saveForDate(userId, sessionStartDate, currentSteps, currentCalories)
-            // Reset for new day
+            
+            // Reset for the new date
             currentSteps = 0
             currentCalories = 0
             sessionStartDate = today
@@ -212,23 +239,28 @@ class StepCounterService : Service() {
             return
         }
         
+        // Normal save for today
         saveForDate(userId, today, currentSteps, currentCalories)
         saveToSharedPreferences()
     }
     
+    /**
+     * Performs the actual Firestore write for a specific date.
+     * Saves daily totals and adds session details as a history item.
+     */
     private fun saveForDate(userId: String, date: String, steps: Int, calories: Int) {
         val docRef = db.collection("users").document(userId)
             .collection("daily_steps").document(date)
         
-        // Save absolute values (not increment) since we resume from existing data
+        // Store absolute totals for the day
         val data = hashMapOf(
             "date" to date,
-            "steps" to steps,  // Absolute value
-            "calories" to calories,  // Absolute value
+            "steps" to steps,
+            "calories" to calories,
             "lastUpdated" to FieldValue.serverTimestamp()
         )
         
-        // Add session info
+        // Record session metadata (for detailed activity history)
         val session = hashMapOf(
             "startTime" to sessionStartTime,
             "endTime" to System.currentTimeMillis(),
@@ -238,7 +270,7 @@ class StepCounterService : Service() {
         
         docRef.set(data, SetOptions.merge())
             .addOnSuccessListener {
-                // Add session to array
+                // Append this specific session to the history array for that day
                 docRef.update("sessions", FieldValue.arrayUnion(session))
                 Log.d("StepCounterService", "Saved to Firestore ($date): $steps steps, $calories kcal")
             }
@@ -248,8 +280,7 @@ class StepCounterService : Service() {
     }
     
     /**
-     * Save current step data to SharedPreferences with date tracking.
-     * Used by StepManager, InsightsRepository, and GamificationActivity for instant offline access.
+     * Persists recent data to SharedPreferences for quick retrieval without network.
      */
     private fun saveToSharedPreferences() {
         val today = dateFormat.format(Date())
@@ -263,6 +294,9 @@ class StepCounterService : Service() {
         }
     }
 
+    /**
+     * Configures the Notification Channel required for Android 8.0+ background services.
+     */
     private fun createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
@@ -279,6 +313,9 @@ class StepCounterService : Service() {
         }
     }
 
+    /**
+     * Creates the persistent notification object shown to the user while tracking is active.
+     */
     private fun createNotification(): Notification {
         val intent = Intent(this, homepage::class.java)
         val pendingIntent = PendingIntent.getActivity(
@@ -295,6 +332,9 @@ class StepCounterService : Service() {
             .build()
     }
 
+    /**
+     * Updates an existing notification in real-time with latest step data.
+     */
     private fun updateNotification() {
         val notification = createNotification()
         val manager = getSystemService(NotificationManager::class.java)
@@ -308,3 +348,4 @@ class StepCounterService : Service() {
         stopTracking()
     }
 }
+

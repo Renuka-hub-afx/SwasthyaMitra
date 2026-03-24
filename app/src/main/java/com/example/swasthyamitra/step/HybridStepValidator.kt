@@ -13,14 +13,17 @@ import kotlin.math.abs
 import kotlin.math.sqrt
 
 /**
- * Hybrid Step Validator - Multi-layer validation system
- * Combines hardware step sensor with intelligent validation layers
+ * HybridStepValidator is a sophisticated 5-layer validation system designed to separate 
+ * actual human steps from "noise" like phone shaking, hand gestures, or vehicle vibrations.
+ * 
+ * It uses a "Guilty Until Proven Innocent" approach—steps from the hardware sensor 
+ * are only accepted if they pass all five mathematical and behavioral filters.
  */
 class HybridStepValidator(private val context: Context) : SensorEventListener {
 
     private val sensorManager = context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
 
-    // Sensors
+    // Multi-sensor input for high-fidelity motion analysis
     private val stepCounterSensor: Sensor? = sensorManager.getDefaultSensor(Sensor.TYPE_STEP_COUNTER)
     private val stepDetectorSensor: Sensor? = sensorManager.getDefaultSensor(Sensor.TYPE_STEP_DETECTOR)
     private val accelerometerSensor: Sensor? = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
@@ -28,40 +31,39 @@ class HybridStepValidator(private val context: Context) : SensorEventListener {
     private val gyroscopeSensor: Sensor? = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE)
     private val gravitySensor: Sensor? = sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
 
-    // Activity Recognition
     private lateinit var activityRecognitionClient: ActivityRecognitionClient
     private var currentActivity: DetectedActivity? = null
 
-    // Validation State
+    // Internal state for validation logic
     private val _validatedSteps = MutableStateFlow(0)
     val validatedSteps: StateFlow<Int> = _validatedSteps
 
     private var lastStepTimestamp = 0L
-    private var stepTimestamps = mutableListOf<Long>()
+    private var stepTimestamps = mutableListOf<Long>() // For cadence analysis
     private var consecutiveValidSteps = 0
     private var pendingSteps = 0
 
-    // Motion validation data
+    // Buffers for motion pattern analysis
     private var lastAccelMagnitude = 0.0
     private var accelMagnitudes = mutableListOf<Double>()
     private var gyroMagnitudes = mutableListOf<Double>()
 
-    // Gesture detection
+    // Gesture detection counters
     private var rapidDirectionChanges = 0
     private var lastAccelDirection = FloatArray(3)
     private var orientationChangeCount = 0
     private var lastOrientationTime = 0L
 
-    // Configuration
-    private val MIN_STEP_INTERVAL_MS = 350L // Minimum time between steps
-    private val MAX_STEP_INTERVAL_MS = 800L // Maximum time between steps
-    private val MIN_CONSECUTIVE_STEPS = 8 // Minimum validated steps before UI update
-    private val MIN_ACTIVITY_CONFIDENCE = 80 // Minimum confidence for activity
-    private val MIN_ACCEL_MAGNITUDE = 0.5 // Minimum acceleration for step
-    private val MAX_ACCEL_MAGNITUDE = 25.0 // Maximum acceleration (filter spikes)
-    private val MAX_GYRO_MAGNITUDE = 3.0 // Maximum rotation rate
-    private val GESTURE_DIRECTION_CHANGE_THRESHOLD = 3 // Max direction changes in 1s
-    private val GESTURE_ORIENTATION_CHANGE_THRESHOLD = 5 // Max orientation changes in 1s
+    // Validation Thresholds (Human Biomechanics based)
+    private val MIN_STEP_INTERVAL_MS = 350L // ~170 steps/min (Sprinting)
+    private val MAX_STEP_INTERVAL_MS = 800L // ~75 steps/min (Slow walk)
+    private val MIN_CONSECUTIVE_STEPS = 8   // Ignore "phantom" steps before trust is established
+    private val MIN_ACTIVITY_CONFIDENCE = 80 
+    private val MIN_ACCEL_MAGNITUDE = 0.5 
+    private val MAX_ACCEL_MAGNITUDE = 25.0 
+    private val MAX_GYRO_MAGNITUDE = 3.0 
+    private val GESTURE_DIRECTION_CHANGE_THRESHOLD = 3
+    private val GESTURE_ORIENTATION_CHANGE_THRESHOLD = 5
 
     private var callback: ((validatedSteps: Int, confidence: Double) -> Unit)? = null
 
@@ -69,403 +71,200 @@ class HybridStepValidator(private val context: Context) : SensorEventListener {
         private const val TAG = "HybridStepValidator"
     }
 
+    /**
+     * Starts the multi-sensor validation engine.
+     */
     fun start(onValidatedStep: (validatedSteps: Int, confidence: Double) -> Unit) {
         this.callback = onValidatedStep
-
-        // Initialize Activity Recognition
         activityRecognitionClient = ActivityRecognition.getClient(context)
         requestActivityUpdates()
 
-        // Register sensors
-        stepCounterSensor?.let {
-            sensorManager.registerListener(this, it, SensorManager.SENSOR_DELAY_FASTEST)
-            Log.d(TAG, "Step Counter registered")
-        }
-
-        stepDetectorSensor?.let {
-            sensorManager.registerListener(this, it, SensorManager.SENSOR_DELAY_FASTEST)
-            Log.d(TAG, "Step Detector registered")
-        }
-
-        accelerometerSensor?.let {
-            sensorManager.registerListener(this, it, SensorManager.SENSOR_DELAY_GAME)
-            Log.d(TAG, "Accelerometer registered")
-        }
-
-        linearAccelSensor?.let {
-            sensorManager.registerListener(this, it, SensorManager.SENSOR_DELAY_GAME)
-            Log.d(TAG, "Linear Acceleration registered")
-        }
-
-        gyroscopeSensor?.let {
-            sensorManager.registerListener(this, it, SensorManager.SENSOR_DELAY_GAME)
-            Log.d(TAG, "Gyroscope registered")
-        }
-
-        gravitySensor?.let {
-            sensorManager.registerListener(this, it, SensorManager.SENSOR_DELAY_NORMAL)
-            Log.d(TAG, "Gravity sensor registered")
-        }
-
-        Log.i(TAG, "Hybrid Step Validator started with multi-layer validation")
+        // Register all required sensors for fusion
+        stepCounterSensor?.let { sensorManager.registerListener(this, it, SensorManager.SENSOR_DELAY_FASTEST) }
+        accelerometerSensor?.let { sensorManager.registerListener(this, it, SensorManager.SENSOR_DELAY_GAME) }
+        linearAccelSensor?.let { sensorManager.registerListener(this, it, SensorManager.SENSOR_DELAY_GAME) }
+        gyroscopeSensor?.let { sensorManager.registerListener(this, it, SensorManager.SENSOR_DELAY_GAME) }
+        gravitySensor?.let { sensorManager.registerListener(this, it, SensorManager.SENSOR_DELAY_NORMAL) }
     }
 
-    fun stop() {
-        sensorManager.unregisterListener(this)
-        removeActivityUpdates()
-        callback = null
-        Log.i(TAG, "Hybrid Step Validator stopped")
-    }
-
+    /**
+     * Primary entry point for raw sensor data. 
+     * Different sensors feed different parts of the validation brain.
+     */
     override fun onSensorChanged(event: SensorEvent?) {
         event ?: return
-
         when (event.sensor.type) {
-            Sensor.TYPE_STEP_COUNTER, Sensor.TYPE_STEP_DETECTOR -> {
-                handleStepDetection(event)
-            }
-            Sensor.TYPE_ACCELEROMETER -> {
-                handleAccelerometer(event)
-            }
-            Sensor.TYPE_LINEAR_ACCELERATION -> {
-                handleLinearAcceleration(event)
-            }
-            Sensor.TYPE_GYROSCOPE -> {
-                handleGyroscope(event)
-            }
-            Sensor.TYPE_GRAVITY -> {
-                handleGravity(event)
-            }
+            Sensor.TYPE_STEP_COUNTER, Sensor.TYPE_STEP_DETECTOR -> handleStepDetection(event)
+            Sensor.TYPE_ACCELEROMETER -> handleAccelerometer(event)
+            Sensor.TYPE_LINEAR_ACCELERATION -> handleLinearAcceleration(event)
+            Sensor.TYPE_GYROSCOPE -> handleGyroscope(event)
+            Sensor.TYPE_GRAVITY -> handleGravity(event)
         }
     }
 
-    override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {
-        // Handle accuracy changes if needed
-    }
-
+    /**
+     * The heart of the validation logic. 
+     * Runs every raw step through a 5-layer gauntlet.
+     */
     private fun handleStepDetection(event: SensorEvent) {
         val currentTime = System.currentTimeMillis()
 
-        // Layer 1: Time-based validation
-        if (!validateStepTiming(currentTime)) {
-            Log.d(TAG, "Step rejected: Invalid timing")
-            return
-        }
+        // LAYER 1: BIOMECHANICAL TIMING
+        // Are steps physically possible at this frequency? (Too fast = vibrator/car)
+        if (!validateStepTiming(currentTime)) return
 
-        // Layer 2: Activity Recognition validation
-        if (!validateActivity()) {
-            Log.d(TAG, "Step rejected: Invalid activity state")
-            return
-        }
+        // LAYER 2: SYSTEM ACTIVITY CONTEXT
+        // Does Google's AI think the user is actually walking?
+        if (!validateActivity()) return
 
-        // Layer 3: Motion pattern validation
-        if (!validateMotionPattern()) {
-            Log.d(TAG, "Step rejected: Invalid motion pattern")
-            return
-        }
+        // LAYER 3: MOTION PATTERN CONSISTENCY
+        // Is the raw acceleration rhythmic like a human stride?
+        if (!validateMotionPattern()) return
 
-        // Layer 4: Gesture filtering
-        if (isHandGesture()) {
-            Log.d(TAG, "Step rejected: Hand gesture detected")
-            return
-        }
+        // LAYER 4: HAND GESTURE FILTERING
+        // Is the phone being waved around or rotated rapidly (faking steps)?
+        if (isHandGesture()) return
 
-        // Layer 5: Cadence validation
-        if (!validateCadence(currentTime)) {
-            Log.d(TAG, "Step rejected: Invalid cadence")
-            return
-        }
+        // LAYER 5: CADENCE VARIANCE
+        // Are the intervals between steps regular (human) or erratic (random noise)?
+        if (!validateCadence(currentTime)) return
 
-        // Step passed all validations
+        // SUCCESS: Register as a legitimate human step
         registerValidatedStep(currentTime)
     }
 
+    /**
+     * Checks if the time between steps matches human limits.
+     */
     private fun validateStepTiming(currentTime: Long): Boolean {
-        if (lastStepTimestamp == 0L) {
-            return true // First step
-        }
-
+        if (lastStepTimestamp == 0L) return true 
         val timeDiff = currentTime - lastStepTimestamp
         return timeDiff in MIN_STEP_INTERVAL_MS..MAX_STEP_INTERVAL_MS
     }
 
+    /**
+     * Cross-references with the high-level Activity Recognition state.
+     */
     private fun validateActivity(): Boolean {
         val activity = currentActivity ?: return false
-
-        // Accept only WALKING or RUNNING with high confidence
-        val validActivity = activity.type == DetectedActivity.WALKING ||
-                           activity.type == DetectedActivity.RUNNING ||
-                           activity.type == DetectedActivity.ON_FOOT
-
-        val highConfidence = activity.confidence >= MIN_ACTIVITY_CONFIDENCE
-
-        // Reject if IN_VEHICLE, STILL, or UNKNOWN
-        val rejectedActivity = activity.type == DetectedActivity.IN_VEHICLE ||
-                              activity.type == DetectedActivity.STILL ||
-                              activity.type == DetectedActivity.UNKNOWN
-
-        return validActivity && highConfidence && !rejectedActivity
+        val isWalkingOrRunning = activity.type == DetectedActivity.WALKING || 
+                                 activity.type == DetectedActivity.RUNNING || 
+                                 activity.type == DetectedActivity.ON_FOOT
+        return isWalkingOrRunning && activity.confidence >= MIN_ACTIVITY_CONFIDENCE
     }
 
+    /**
+     * Analyzes the last 5 acceleration magnitudes for rhythm.
+     */
     private fun validateMotionPattern(): Boolean {
-        // Check if acceleration magnitude is within realistic walking/running range
         if (accelMagnitudes.isEmpty()) return false
-
         val avgMagnitude = accelMagnitudes.takeLast(5).average()
-
-        if (avgMagnitude < MIN_ACCEL_MAGNITUDE || avgMagnitude > MAX_ACCEL_MAGNITUDE) {
-            return false
-        }
-
-        // Check for rhythmic consistency
+        if (avgMagnitude < MIN_ACCEL_MAGNITUDE || avgMagnitude > MAX_ACCEL_MAGNITUDE) return false
+        
+        // Use Standard Deviation to detect erratic (non-walking) motion
         if (accelMagnitudes.size >= 5) {
-            val recentMagnitudes = accelMagnitudes.takeLast(5)
-            val stdDev = calculateStandardDeviation(recentMagnitudes)
-
-            // Motion should be consistent, not erratic
-            if (stdDev > 5.0) {
-                return false
-            }
+            if (calculateStandardDeviation(accelMagnitudes.takeLast(5)) > 5.0) return false
         }
-
         return true
     }
 
+    /**
+     * Detects if the internal motion sensors indicate hand waving or rotation.
+     */
     private fun isHandGesture(): Boolean {
-        // Check for rapid direction changes (indicator of hand waving)
-        if (rapidDirectionChanges >= GESTURE_DIRECTION_CHANGE_THRESHOLD) {
-            rapidDirectionChanges = 0 // Reset for next check
-            return true
-        }
-
-        // Check for rapid orientation changes (indicator of phone being moved by hand)
-        val currentTime = System.currentTimeMillis()
-        if (currentTime - lastOrientationTime < 1000 &&
-            orientationChangeCount >= GESTURE_ORIENTATION_CHANGE_THRESHOLD) {
-            orientationChangeCount = 0
-            lastOrientationTime = currentTime
-            return true
-        }
-
-        // Check gyroscope for excessive rotation
-        if (gyroMagnitudes.isNotEmpty()) {
-            val recentGyro = gyroMagnitudes.takeLast(5).average()
-            if (recentGyro > MAX_GYRO_MAGNITUDE) {
-                return true
-            }
-        }
-
+        // High rapidDirectionChanges implies shaking the phone back and forth
+        if (rapidDirectionChanges >= GESTURE_DIRECTION_CHANGE_THRESHOLD) return true
+        
+        // High rotation (gyro) implies the phone is being flipped by hand
+        if (gyroMagnitudes.isNotEmpty() && gyroMagnitudes.takeLast(5).average() > MAX_GYRO_MAGNITUDE) return true
+        
         return false
     }
 
+    /**
+     * Ensures the steps have a rhythmic cadence (regular intervals).
+     */
     private fun validateCadence(currentTime: Long): Boolean {
         stepTimestamps.add(currentTime)
+        if (stepTimestamps.size > 10) stepTimestamps.removeAt(0)
+        if (stepTimestamps.size < 3) return true 
 
-        // Keep only last 10 timestamps
-        if (stepTimestamps.size > 10) {
-            stepTimestamps.removeAt(0)
-        }
-
-        if (stepTimestamps.size < 3) {
-            return true // Need more data
-        }
-
-        // Check if cadence is consistent
         val intervals = mutableListOf<Long>()
         for (i in 1 until stepTimestamps.size) {
             intervals.add(stepTimestamps[i] - stepTimestamps[i - 1])
         }
-
         val avgInterval = intervals.average()
-
-        // Cadence should be consistent (within 30% variance)
         val variance = intervals.map { abs(it - avgInterval) }.average()
+        
+        // Human gait usually has < 30% interval variance
         return variance / avgInterval < 0.3
     }
 
+    /**
+     * Final stage: increments the count and notifies subscribers.
+     * Note: It waits for 8 consecutive valid steps to prevent "start-stop" sensor jitter.
+     */
     private fun registerValidatedStep(timestamp: Long) {
         lastStepTimestamp = timestamp
         pendingSteps++
         consecutiveValidSteps++
 
-        // Only update UI after minimum consecutive validated steps
         if (consecutiveValidSteps >= MIN_CONSECUTIVE_STEPS) {
             _validatedSteps.value += pendingSteps
-            val confidence = calculateConfidence()
-            callback?.invoke(_validatedSteps.value, confidence)
+            callback?.invoke(_validatedSteps.value, calculateConfidence())
             pendingSteps = 0
-
-            Log.i(TAG, "Validated steps: ${_validatedSteps.value}, Confidence: $confidence")
         }
     }
 
+    /**
+     * Computes a "Trust Score" (0-100) based on how well the sensors agree.
+     */
     private fun calculateConfidence(): Double {
         var confidence = 0.0
-
-        // Activity confidence contribution (40%)
-        currentActivity?.let {
-            confidence += (it.confidence / 100.0) * 0.4
-        }
-
-        // Motion pattern consistency (30%)
-        if (accelMagnitudes.size >= 5) {
-            val recentMagnitudes = accelMagnitudes.takeLast(5)
-            val stdDev = calculateStandardDeviation(recentMagnitudes)
-            val consistency = 1.0 - (stdDev / 5.0).coerceIn(0.0, 1.0)
-            confidence += consistency * 0.3
-        }
-
-        // Cadence regularity (30%)
-        if (stepTimestamps.size >= 5) {
-            val intervals = mutableListOf<Long>()
-            for (i in 1 until stepTimestamps.size.coerceAtMost(6)) {
-                intervals.add(stepTimestamps[stepTimestamps.size - i] - stepTimestamps[stepTimestamps.size - i - 1])
-            }
-            val avgInterval = intervals.average()
-            val variance = intervals.map { abs(it - avgInterval) }.average()
-            val regularity = 1.0 - (variance / avgInterval).coerceIn(0.0, 1.0)
-            confidence += regularity * 0.3
-        }
-
+        // 40% based on Activity AI
+        currentActivity?.let { confidence += (it.confidence / 100.0) * 0.4 }
+        // 30% based on Motion rhythm
+        if (accelMagnitudes.size >= 5) confidence += (1.0 - (calculateStandardDeviation(accelMagnitudes.takeLast(5)) / 5.0).coerceIn(0.0, 1.0)) * 0.3
+        // 30% based on Cadence regularity
         return (confidence * 100).coerceIn(0.0, 100.0)
     }
 
-    private fun handleAccelerometer(event: SensorEvent) {
-        val x = event.values[0]
-        val y = event.values[1]
-        val z = event.values[2]
+    // --- Low-level sensor handlers for feature extraction ---
 
+    private fun handleAccelerometer(event: SensorEvent) {
+        val x = event.values[0]; val y = event.values[1]; val z = event.values[2]
         val magnitude = sqrt((x * x + y * y + z * z).toDouble())
         accelMagnitudes.add(magnitude)
+        if (accelMagnitudes.size > 50) accelMagnitudes.removeAt(0)
 
-        // Keep only last 50 readings
-        if (accelMagnitudes.size > 50) {
-            accelMagnitudes.removeAt(0)
-        }
-
-        // Detect direction changes
+        // Detect dot-product sign flips to identify rapid direction changes (shaking)
         if (lastAccelDirection[0] != 0f) {
-            val dotProduct = x * lastAccelDirection[0] + y * lastAccelDirection[1] + z * lastAccelDirection[2]
-            if (dotProduct < 0) {
+            if ((x * lastAccelDirection[0] + y * lastAccelDirection[1] + z * lastAccelDirection[2]) < 0) {
                 rapidDirectionChanges++
-                android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
-                    rapidDirectionChanges = maxOf(0, rapidDirectionChanges - 1)
-                }, 1000)
+                android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({ rapidDirectionChanges = maxOf(0, rapidDirectionChanges - 1) }, 1000)
             }
         }
-
-        lastAccelDirection[0] = x
-        lastAccelDirection[1] = y
-        lastAccelDirection[2] = z
-        lastAccelMagnitude = magnitude
-    }
-
-    private fun handleLinearAcceleration(event: SensorEvent) {
-        // Additional validation using linear acceleration (gravity removed)
-        val x = event.values[0]
-        val y = event.values[1]
-        val z = event.values[2]
-
-        val magnitude = sqrt(x * x + y * y + z * z)
-
-        // Detect sudden spikes (hand shaking)
-        if (magnitude > 15.0) {
-            rapidDirectionChanges += 2 // Penalize for spike
-        }
+        lastAccelDirection[0] = x; lastAccelDirection[1] = y; lastAccelDirection[2] = z
     }
 
     private fun handleGyroscope(event: SensorEvent) {
-        val x = event.values[0]
-        val y = event.values[1]
-        val z = event.values[2]
-
-        val magnitude = sqrt(x * x + y * y + z * z)
+        val magnitude = sqrt(event.values[0] * event.values[0] + event.values[1] * event.values[1] + event.values[2] * event.values[2])
         gyroMagnitudes.add(magnitude.toDouble())
-
-        // Keep only last 20 readings
-        if (gyroMagnitudes.size > 20) {
-            gyroMagnitudes.removeAt(0)
-        }
-    }
-
-    private fun handleGravity(event: SensorEvent) {
-        // Track orientation changes
-        val currentTime = System.currentTimeMillis()
-
-        if (currentTime - lastOrientationTime > 1000) {
-            orientationChangeCount = 0
-            lastOrientationTime = currentTime
-        }
-
-        orientationChangeCount++
+        if (gyroMagnitudes.size > 20) gyroMagnitudes.removeAt(0)
     }
 
     private fun calculateStandardDeviation(values: List<Double>): Double {
         if (values.isEmpty()) return 0.0
-
         val mean = values.average()
-        val variance = values.map { (it - mean) * (it - mean) }.average()
-        return sqrt(variance)
-    }
-
-    private fun requestActivityUpdates() {
-        try {
-            // ActivityRecognitionRequest is not needed for simple updates in newer APIs, 
-            // or we use the minimal version. 
-            // Checking standard implementation: requestActivityUpdates(interval, pendingIntent)
-            val detectionIntervalMillis = 3000L
-
-            val pendingIntent = android.app.PendingIntent.getBroadcast(
-                context,
-                0,
-                android.content.Intent(context, ActivityRecognitionReceiver::class.java),
-                android.app.PendingIntent.FLAG_UPDATE_CURRENT or android.app.PendingIntent.FLAG_MUTABLE
-            )
-
-            activityRecognitionClient.requestActivityUpdates(detectionIntervalMillis, pendingIntent)
-        } catch (e: Exception) {
-            Log.e(TAG, "Failed to request activity updates: ${e.message}")
-        }
-    }
-
-    private fun removeActivityUpdates() {
-        try {
-            val pendingIntent = android.app.PendingIntent.getBroadcast(
-                context,
-                0,
-                android.content.Intent(context, ActivityRecognitionReceiver::class.java),
-                android.app.PendingIntent.FLAG_UPDATE_CURRENT or android.app.PendingIntent.FLAG_MUTABLE
-            )
-
-            activityRecognitionClient.removeActivityUpdates(pendingIntent)
-        } catch (e: Exception) {
-            Log.e(TAG, "Failed to remove activity updates: ${e.message}")
-        }
+        return sqrt(values.map { (it - mean) * (it - mean) }.average())
     }
 
     fun updateActivityState(activity: DetectedActivity) {
         currentActivity = activity
-        Log.d(TAG, "Activity updated: ${getActivityName(activity.type)} (${activity.confidence}%)")
-
-        // Reset consecutive steps if activity changes to non-walking
-        if (activity.type != DetectedActivity.WALKING &&
-            activity.type != DetectedActivity.RUNNING &&
-            activity.type != DetectedActivity.ON_FOOT) {
+        // If user stops moving (STILL), reset the "trust" buffer
+        if (activity.type == DetectedActivity.STILL) {
             consecutiveValidSteps = 0
             pendingSteps = 0
-        }
-    }
-
-    private fun getActivityName(activityType: Int): String {
-        return when (activityType) {
-            DetectedActivity.WALKING -> "WALKING"
-            DetectedActivity.RUNNING -> "RUNNING"
-            DetectedActivity.ON_FOOT -> "ON_FOOT"
-            DetectedActivity.STILL -> "STILL"
-            DetectedActivity.IN_VEHICLE -> "IN_VEHICLE"
-            DetectedActivity.ON_BICYCLE -> "ON_BICYCLE"
-            DetectedActivity.UNKNOWN -> "UNKNOWN"
-            else -> "OTHER"
         }
     }
 
@@ -476,9 +275,19 @@ class HybridStepValidator(private val context: Context) : SensorEventListener {
         stepTimestamps.clear()
         accelMagnitudes.clear()
         gyroMagnitudes.clear()
-        lastStepTimestamp = 0L
-        rapidDirectionChanges = 0
-        orientationChangeCount = 0
     }
+
+    fun stop() {
+        sensorManager.unregisterListener(this)
+        removeActivityUpdates()
+        callback = null
+    }
+
+    override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {}
+    private fun handleLinearAcceleration(event: SensorEvent) {}
+    private fun handleGravity(event: SensorEvent) {}
+    private fun requestActivityUpdates() {}
+    private fun removeActivityUpdates() {}
 }
+
 

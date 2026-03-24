@@ -24,11 +24,20 @@ import com.example.swasthyamitra.services.TrackingService
 import com.example.swasthyamitra.services.TrackingService.Companion.ACTION_CANCEL_SOS
 import com.example.swasthyamitra.services.TrackingService.Companion.ACTION_START_COUNTDOWN
 
+/**
+ * SafetyCoreActivity is the central hub for the app's security features.
+ * It hosts the Safety Dashboard and Live Map, manages emergency contacts, 
+ * and controls the "Panic Button" countdown overlay.
+ */
 class SafetyCoreActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivitySafetyCoreBinding
     private lateinit var contactManager: EmergencyContactManager
 
+    /**
+     * Launcher for the system contact picker. 
+     * Ensures an emergency contact is selected and saved locally.
+     */
     private val contactPickerLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) { result ->
@@ -36,7 +45,7 @@ class SafetyCoreActivity : AppCompatActivity() {
             val contactUri: Uri? = result.data?.data
             contactUri?.let { handleContactResult(it) }
         } else {
-            // Check if we already have a contact, if not, we must force selection
+            // Enforcement: The safety features require a contact to function.
             if (contactManager.getLocalContact() == null) {
                 Toast.makeText(this, "Emergency contact is MANDATORY to proceed.", Toast.LENGTH_LONG).show()
                 finish()
@@ -44,6 +53,10 @@ class SafetyCoreActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     * Receiver for SOS state changes broadcast by the TrackingService.
+     * Toggles the critical "Countdown" overlay visibility.
+     */
     private val safetyReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             when (intent?.action) {
@@ -67,7 +80,9 @@ class SafetyCoreActivity : AppCompatActivity() {
         setupViewPager()
         checkEmergencyContact()
         
-        // Setup countdown overlay
+        // ---- SOS COUNTDOWN SYNC ----
+        // Observes the LiveData from TrackingService to show real-time seconds remaining 
+        // before the SOS message is automatically dispatched.
         TrackingService.countdownLive.observe(this) { count ->
             if (count >= 0) {
                 binding.tvCountdownTimer.text = count.toString()
@@ -77,6 +92,7 @@ class SafetyCoreActivity : AppCompatActivity() {
             }
         }
 
+        // Cancel button allows the user to stop a false alarm during the countdown.
         binding.btnCancelSOS.setOnClickListener {
             val intent = Intent(this, TrackingService::class.java).apply {
                 action = ACTION_CANCEL_SOS
@@ -104,17 +120,26 @@ class SafetyCoreActivity : AppCompatActivity() {
         unregisterReceiver(safetyReceiver)
     }
 
+    /**
+     * Checks if a contact exists; if not, triggers the picker.
+     */
     private fun checkEmergencyContact() {
         if (contactManager.getLocalContact() == null) {
             launchContactPicker()
         }
     }
 
+    /**
+     * Opens the standard Android contact selector.
+     */
     private fun launchContactPicker() {
         val intent = Intent(Intent.ACTION_PICK, ContactsContract.CommonDataKinds.Phone.CONTENT_URI)
         contactPickerLauncher.launch(intent)
     }
 
+    /**
+     * Extracts name, phone, and photo from the URI returned by the contact picker.
+     */
     private fun handleContactResult(contactUri: Uri) {
         val projection = arrayOf(
             ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME,
@@ -132,12 +157,17 @@ class SafetyCoreActivity : AppCompatActivity() {
                 contactManager.saveContactLocally(contact)
                 Toast.makeText(this, "Emergency Contact Set: $name", Toast.LENGTH_SHORT).show()
                 
-                // Switch to dashboard if was on map and just set contact
+                // Return to dashboard after setting contact
                 binding.viewPager.currentItem = 0
             }
         }
     }
 
+    /**
+     * Configures the ViewPager2 to switch between:
+     * 1. Safety Dashboard (Controls/Trigger)
+     * 2. Live Map (Location Tracking)
+     */
     private fun setupViewPager() {
         val adapter = object : FragmentStateAdapter(this) {
             override fun getItemCount(): Int = 2
@@ -154,6 +184,9 @@ class SafetyCoreActivity : AppCompatActivity() {
         })
     }
 
+    /**
+     * Updates the custom dot indicators at the bottom to reflect the current page.
+     */
     private fun updateIndicators(position: Int) {
         binding.dot1.setBackgroundResource(
             if (position == 0) R.drawable.indicator_dot_active else R.drawable.indicator_dot_inactive
@@ -163,3 +196,4 @@ class SafetyCoreActivity : AppCompatActivity() {
         )
     }
 }
+

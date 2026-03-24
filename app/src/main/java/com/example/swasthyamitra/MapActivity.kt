@@ -1,6 +1,7 @@
 package com.example.swasthyamitra
 
 import android.Manifest
+import android.location.Location
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
@@ -26,6 +27,10 @@ import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.PolylineOptions
+import com.google.android.gms.location.LocationRequest
+import com.google.android.gms.location.LocationSettingsRequest
+import com.google.android.gms.location.Priority as LocationPriority
+import com.google.android.gms.common.api.ResolvableApiException
 
 /**
  * Unified Map + Step Tracker Activity.
@@ -44,6 +49,7 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
 
     private lateinit var binding: ActivityMapBinding
     private var googleMap: GoogleMap? = null
+    private lateinit var fusedLocationClient: FusedLocationProviderClient
     private var isTracking = false
 
     // SOS support
@@ -76,7 +82,8 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
         setContentView(binding.root)
 
         sosManager = SOSManager(this)
-        fusedLocationClientForSOS = LocationServices.getFusedLocationProviderClient(this)
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
+        fusedLocationClientForSOS = fusedLocationClient // Reuse client for SOS
 
         val mapFragment = supportFragmentManager.findFragmentById(R.id.mapFragment) as SupportMapFragment
         mapFragment.getMapAsync(this)
@@ -133,9 +140,31 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
         }
 
         if (missing.isEmpty()) {
-            startUnifiedService()
+            checkLocationSettingsAndStart()
         } else {
             requestPermissionLauncher.launch(missing.toTypedArray())
+        }
+    }
+
+    private fun checkLocationSettingsAndStart() {
+        val locationRequest = com.google.android.gms.location.LocationRequest.Builder(LocationPriority.PRIORITY_HIGH_ACCURACY, 5000L).build()
+        val builder = LocationSettingsRequest.Builder().addLocationRequest(locationRequest)
+        val client = LocationServices.getSettingsClient(this)
+        val task = client.checkLocationSettings(builder.build())
+
+        task.addOnSuccessListener {
+            startUnifiedService()
+        }
+
+        task.addOnFailureListener { exception ->
+            if (exception is ResolvableApiException) {
+                try {
+                    // This shows the UI to the user to fix the location settings (turn on GPS)
+                    exception.startResolutionForResult(this, 1001)
+                } catch (sendEx: Exception) {
+                    // Ignore or log error
+                }
+            }
         }
     }
 
@@ -306,6 +335,14 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
     private fun enableUserLocation() {
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
             googleMap?.isMyLocationEnabled = true
+            
+            // Center map on last known location initially
+            fusedLocationClient.lastLocation.addOnSuccessListener { location: Location? ->
+                if (location != null && !isTracking) {
+                    val latLng = LatLng(location.latitude, location.longitude)
+                    googleMap?.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 16f))
+                }
+            }
         }
     }
 

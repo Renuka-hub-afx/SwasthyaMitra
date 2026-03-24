@@ -19,10 +19,11 @@ import android.os.Vibrator
 import com.example.swasthyamitra.models.WalkingSession
 import com.example.swasthyamitra.safety.EmergencyContactManager
 import com.example.swasthyamitra.safety.SafetyMonitorManager
+import android.annotation.SuppressLint
 import com.example.swasthyamitra.safety.SOSManager
-import com.example.swasthyamitra.safety.EmergencyContact
-import java.util.*
+import java.util.Locale
 
+@SuppressLint("MissingPermission")
 class TrackingService : Service() {
 
     private lateinit var fusedLocationClient: FusedLocationProviderClient
@@ -40,7 +41,7 @@ class TrackingService : Service() {
     private var isPaused = false
     private var isStill = false
     private var stillStartTime: Long = 0L
-    private val INACTIVITY_THRESHOLD_MS = 45000L // 45 seconds
+    private val inactivityThresholdMs = 45000L // 45 seconds
 
     private var startSteps = -1
     private var currentSessionSteps = 0
@@ -54,22 +55,23 @@ class TrackingService : Service() {
         const val CHANNEL_ID = "TrackingChannel"
         const val NOTIFICATION_ID = 999
         
-        val isTrackingLive = MutableLiveData<Boolean>(false)
+        val isTrackingLive = MutableLiveData(false)
         val pathPointsLive = MutableLiveData<List<LatLng>>(emptyList())
-        val distanceLive = MutableLiveData<Double>(0.0)
-        val stepsLive = MutableLiveData<Int>(0)
-        val paceLive = MutableLiveData<String>("0'00")
-        val isSOSActiveLive = MutableLiveData<Boolean>(false)
-        val countdownLive = MutableLiveData<Int>(-1)
+        val distanceLive = MutableLiveData(0.0)
+        val stepsLive = MutableLiveData(0)
+        val paceLive = MutableLiveData("0'00")
+        val isSOSActiveLive = MutableLiveData(false)
+        val countdownLive = MutableLiveData(-1)
         
         const val ACTION_SAFETY_ALERT = "com.example.swasthyamitra.SAFETY_ALERT"
         const val ACTION_START_COUNTDOWN = "com.example.swasthyamitra.START_COUNTDOWN"
         const val ACTION_CANCEL_SOS = "com.example.swasthyamitra.CANCEL_SOS"
         const val ACTION_TRIGGER_SOS = "com.example.swasthyamitra.TRIGGER_SOS"
+        const val ACTION_INITIATE_SOS = "com.example.swasthyamitra.INITIATE_SOS"
     }
 
     inner class LocalBinder : Binder() {
-        fun getService(): TrackingService = this@TrackingService
+        // Binder instance for the service
     }
 
     override fun onBind(intent: Intent?): IBinder = binder
@@ -83,7 +85,7 @@ class TrackingService : Service() {
         
         emergencyContactManager = EmergencyContactManager(this)
         sosManager = SOSManager(this)
-        safetyMonitorManager = SafetyMonitorManager(INACTIVITY_THRESHOLD_MS)
+        safetyMonitorManager = SafetyMonitorManager(inactivityThresholdMs)
 
         // Listen for step updates
         val stepFilter = IntentFilter(StepCounterService.ACTION_UPDATE_STEPS)
@@ -112,6 +114,7 @@ class TrackingService : Service() {
         when (intent?.action) {
             "ACTION_START" -> startTracking()
             "ACTION_STOP" -> stopTracking()
+            ACTION_INITIATE_SOS -> startSafetyCountdown()
             ACTION_CANCEL_SOS -> cancelSOS()
             ACTION_TRIGGER_SOS -> triggerManualSOS(intent.getStringExtra("reason") ?: "Manual SOS")
             "ACTION_ACTIVITY_TRANSITION" -> {
@@ -147,7 +150,7 @@ class TrackingService : Service() {
         removeLocationUpdates()
         removeActivityUpdates()
         saveSessionToFirestore()
-        stopForeground(true)
+        stopForeground(STOP_FOREGROUND_REMOVE)
         stopSelf()
     }
 
@@ -196,10 +199,10 @@ class TrackingService : Service() {
                 val paceMinPerKm = timeMinutes / distKm
                 val mins = paceMinPerKm.toInt()
                 val secs = ((paceMinPerKm - mins) * 60).toInt()
-                paceLive.postValue(String.format("%d'%02d", mins, secs))
+                paceLive.postValue(String.format(Locale.getDefault(), "%d'%02d", mins, secs))
             }
             
-            updateNotification("Distance: ${String.format("%.2f", totalDistance / 1000)} km")
+            updateNotification("Distance: ${String.format(Locale.getDefault(), "%.2f", totalDistance / 1000)} km")
         }
     }
 
@@ -253,9 +256,11 @@ class TrackingService : Service() {
     private fun startSafetyCountdown() {
         Log.d("TrackingService", "Starting safety countdown")
         countdownLive.postValue(10)
-        sendBroadcast(Intent(ACTION_START_COUNTDOWN))
+        sendBroadcast(Intent(ACTION_START_COUNTDOWN).apply {
+            setPackage(packageName)
+        })
         
-        val vibrator = getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
+        val vibrator = getSystemService(Vibrator::class.java)
         val alarmUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
         val ringtone = RingtoneManager.getRingtone(applicationContext, alarmUri)
 
@@ -264,7 +269,7 @@ class TrackingService : Service() {
             override fun run() {
                 if (secondsLeft > 0) {
                     // Vibrate and sound periodically
-                    vibrator.vibrate(200)
+                    vibrator.vibrate(android.os.VibrationEffect.createOneShot(200, android.os.VibrationEffect.DEFAULT_AMPLITUDE))
                     if (!ringtone.isPlaying) ringtone.play()
 
                     secondsLeft--
@@ -345,16 +350,14 @@ class TrackingService : Service() {
     }
 
     private fun updateNotification(content: String) {
-        val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        val notificationManager = getSystemService(NotificationManager::class.java)
         notificationManager.notify(NOTIFICATION_ID, createNotification(content))
     }
 
     private fun createNotificationChannel() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(CHANNEL_ID, "Walking Tracking", NotificationManager.IMPORTANCE_LOW)
-            val manager = getSystemService(NotificationManager::class.java)
-            manager.createNotificationChannel(channel)
-        }
+        val channel = NotificationChannel(CHANNEL_ID, "Walking Tracking", NotificationManager.IMPORTANCE_LOW)
+        val manager = getSystemService(NotificationManager::class.java)
+        manager.createNotificationChannel(channel)
     }
 
     private fun saveSessionToFirestore() {

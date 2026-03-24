@@ -85,8 +85,8 @@ class ChallengeDetailActivity : AppCompatActivity() {
         tvRules.text = "📋 Rules:\n" +
                 "• Maintain your daily streak every day\n" +
                 "• Missing a day without a shield = you lose\n" +
-                "• If both participants break, highest streak wins\n" +
-                "• 🏆 Winner earns a FREE Shield!"
+                "• If both participants break, highest streak wins\n"
+        // Removed: "• 🏆 Winner earns a FREE Shield!"
 
         btnLeave.setOnClickListener { confirmLeave() }
 
@@ -101,6 +101,9 @@ class ChallengeDetailActivity : AppCompatActivity() {
 
     // ── Step 1: Load challenge metadata from RTDB ────────────────────────────────
 
+    /**
+     * Entry point: Orchestrates the loading of the challenge and participant data.
+     */
     private fun loadChallenge() {
         progressBar.visibility = View.VISIBLE
 
@@ -115,6 +118,7 @@ class ChallengeDetailActivity : AppCompatActivity() {
                         return
                     }
 
+                    // --- CHALLENGE METADATA ---
                     val name         = snap.child("name").getValue(String::class.java) ?: "Challenge"
                     val status       = snap.child("status").getValue(String::class.java) ?: "active"
                     val createdAt    = snap.child("createdAt").getValue(Long::class.java) ?: 0L
@@ -124,6 +128,7 @@ class ChallengeDetailActivity : AppCompatActivity() {
                     tvChallengeName.text = name
                     tvChallengeCode.text = "Code: $challengeCode"
 
+                    // --- TIMER LOGIC ---
                     // Compute time remaining
                     // SAFETY: if createdAt is 0 (field missing in old challenges), treat as
                     // "just created now" so we never get a false daysLeft=-20000 result.
@@ -131,6 +136,7 @@ class ChallengeDetailActivity : AppCompatActivity() {
                     val endMs    = safeCreatedAt + TimeUnit.DAYS.toMillis(durationDays.toLong())
                     val daysLeft = TimeUnit.MILLISECONDS.toDays(endMs - System.currentTimeMillis())
 
+                    // --- UI STATE MANAGEMENT ---
                     when {
                         status == "completed" -> {
                             val iWon = winnerId == myUserId
@@ -151,7 +157,7 @@ class ChallengeDetailActivity : AppCompatActivity() {
                         }
                     }
 
-                    // Participant UIDs from challenge
+                    // Fetch the list of participant UIDs to load their live stats next
                     val participantIds = snap.child("participants")
                         .children
                         .mapNotNull { it.key }
@@ -170,6 +176,11 @@ class ChallengeDetailActivity : AppCompatActivity() {
 
     // ── Step 2: Read userStats from RTDB (permission-safe) ───────────────────────
 
+    /**
+     * Data Mirroring Engine:
+     * Reads public 'userStats' for all participants.
+     * This data is a lightning-fast RTDB mirror of their Firestore gamification state.
+     */
     private fun loadParticipantStatsFromRTDB(
         participantIds: List<String>,
         winnerId: String?,
@@ -225,6 +236,9 @@ class ChallengeDetailActivity : AppCompatActivity() {
                             //   • Users can manually leave at any time (= forfeit).
                             // ──────────────────────────────────────────────────────────────
 
+                            // --- CHALLENGE END LOGIC ---
+                            // If the time is up, the person with the higher current streak
+                            // in the RTDB mirror wins.
                             if (daysLeft <= 0) {
                                 // Duration expired — resolve by highest current streak
                                 // Prefer participants with real RTDB data over fallback zeros
@@ -379,10 +393,16 @@ class ChallengeDetailActivity : AppCompatActivity() {
     //  3. Leave a pendingStatusUpdate flag under the opponent's userStats in RTDB
     //     → They claim it on next GamificationActivity.onResume → loadJoinedChallenges()
 
+    /**
+     * Atomic Challenge Resolution:
+     * 1. Updates the SHARED challenge node with the winner and 'completed' status.
+     * 2. Updates the CURRENT user's personal challenge record.
+     * 3. Leaves a "Pending Flag" for the opponent to update their record (Permission safety).
+     */
     private fun endChallenge(winnerId: String?) {
         val iAmWinner = winnerId == myUserId
 
-        // Step 1 — update shared challenge node (all authenticated users can write here)
+        // Phase 1: Shared Node Update
         val challengeUpdates = mutableMapOf<String, Any>(
             "challenges/$challengeCode/status"  to "completed",
             "challenges/$challengeCode/endedAt" to System.currentTimeMillis()
@@ -393,7 +413,7 @@ class ChallengeDetailActivity : AppCompatActivity() {
 
         rtdb.updateChildren(challengeUpdates)
             .addOnSuccessListener {
-                // Step 2 — update our own joined_challenges entry (we own this path)
+                // Phase 2: Own Profile Update
                 val myUpdate = mutableMapOf<String, Any>(
                     "users/$myUserId/joined_challenges/$challengeCode/status" to "completed"
                 )
@@ -402,7 +422,10 @@ class ChallengeDetailActivity : AppCompatActivity() {
                 }
                 rtdb.updateChildren(myUpdate)
 
-                // Step 3 — leave a flag so the opponent updates their entry next time they open the app
+                // Phase 3: Opponent "Delayed Update" Flag
+                // Since we cannot write to the opponent's private profile, we leave the
+                // result in their public 'userStats' area. Their app will "claim" this
+                // result the next time they open the challenge screen.
                 rtdb.child("challenges").child(challengeCode).child("participants")
                     .addListenerForSingleValueEvent(object : ValueEventListener {
                         override fun onDataChange(snap: DataSnapshot) {
@@ -424,6 +447,7 @@ class ChallengeDetailActivity : AppCompatActivity() {
                         override fun onCancelled(error: DatabaseError) {}
                     })
 
+                // --- REWARD DISPATCH ---
                 // Award shield to winner
                 if (iAmWinner) {
                     awardShieldToWinner(myUserId)
@@ -443,10 +467,9 @@ class ChallengeDetailActivity : AppCompatActivity() {
     }
 
     /**
-     * Awards a shield to the winner.
-     * We can only write to Firestore for the current user (our own UID).
-     * For the opponent's shield, we write a pending_shield flag to RTDB —
-     * they'll claim it the next time they open GamificationActivity.
+     * Winner's Shield Reward:
+     * If I won, I write the shield directly to my secure Firestore.
+     * If the opponent won, I mark a flag in RTDB so their instance awards it to them.
      */
     private fun awardShieldToWinner(uid: String) {
         if (uid == myUserId) {
@@ -468,6 +491,7 @@ class ChallengeDetailActivity : AppCompatActivity() {
                 }
             }
         } else {
+            // "Digital Handshake" - Signaling the opponent they won a trophy
             // Opponent is the winner — write a pending shield claim to RTDB
             // GamificationRepository.checkIn() will claim this on next app open
             rtdb.child("userStats").child(uid).updateChildren(mapOf("pendingChallengeShield" to true))
@@ -476,6 +500,11 @@ class ChallengeDetailActivity : AppCompatActivity() {
 
     // ── Leave challenge ──────────────────────────────────────────────────────────
 
+    /**
+     * Forfeiture Logic:
+     * When a user leaves an active challenge, they automatically forfeit.
+     * The remaining participant is declared the winner immediately.
+     */
     private fun confirmLeave() {
         AlertDialog.Builder(this)
             .setTitle("Leave Challenge?")

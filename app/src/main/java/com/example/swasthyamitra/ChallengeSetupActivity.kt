@@ -81,6 +81,10 @@ class ChallengeSetupActivity : AppCompatActivity() {
 
     // ── Create challenge — no cross-user reads or writes ─────────────────────────
 
+    /**
+     * Entry point for challenge creation. Validates input and initiates the 
+     * multi-database sync process.
+     */
     private fun createChallenge() {
         val name        = etChallengeName.text.toString().trim()
         val friendEmail = etFriendEmail.text.toString().trim()
@@ -100,8 +104,13 @@ class ChallengeSetupActivity : AppCompatActivity() {
         doCreateChallenge(name, userId, friendEmail.ifEmpty { null })
     }
 
-    // ── Write challenge to RTDB — only creator's own paths ───────────────────────
-
+    /**
+     * Executes the challenge creation logic.
+     * 1. Generates a unique 6-character alphanumeric code.
+     * 2. Performs an atomic update to two RTDB paths:
+     *    - 'challenges/$code': Metadata for the challenge itself.
+     *    - 'users/$uid/joined_challenges/$code': Creator's membership record.
+     */
     private fun doCreateChallenge(name: String, userId: String, friendEmail: String?) {
         val challengeCode = java.util.UUID.randomUUID().toString()
             .filter { it.isLetterOrDigit() }
@@ -115,17 +124,13 @@ class ChallengeSetupActivity : AppCompatActivity() {
             "name"         to name,
             "creatorId"    to userId,
             "createdAt"    to now,
-            "participants" to mapOf(userId to true),   // only creator for now
+            "participants" to mapOf(userId to true), 
             "status"       to "active",
             "durationDays" to 7
         )
 
-        // ── Only write paths the creator OWNS ─────────────────────────────────────
         val updates = mapOf<String, Any>(
-            // The shared challenge node — readable/writable by all authenticated users
             "challenges/$challengeCode" to challengeData,
-
-            // Creator's own joined_challenges entry — they own this path
             "users/$userId/joined_challenges/$challengeCode" to mapOf(
                 "challengeId"   to challengeCode,
                 "challengeName" to name,
@@ -134,15 +139,11 @@ class ChallengeSetupActivity : AppCompatActivity() {
                 "role"          to "creator"
             )
         )
-        // NOTE: We intentionally do NOT write to users/<friendUid>/joined_challenges.
-        // That would require knowing the friend's UID AND writing to their path — both
-        // are blocked by RTDB security rules. The friend joins via JoinChallengeActivity.
 
         rtdb.updateChildren(updates)
             .addOnSuccessListener {
                 setLoading(false)
-                // Immediately seed creator's userStats in RTDB so ChallengeDetailActivity
-                // has real streak data from day 1. We read our OWN Firestore doc (always allowed).
+                // Mirrors data from Firestore to RTDB to enable real-time competition
                 seedCreatorStatsToRTDB(userId)
                 showSuccessDialog(name, challengeCode, friendEmail)
             }
@@ -153,9 +154,13 @@ class ChallengeSetupActivity : AppCompatActivity() {
     }
 
     /**
-     * Reads the creator's OWN Firestore gamificationData (permitted) and mirrors it
-     * to RTDB userStats/<uid> so ChallengeDetailActivity can read it without permission issues.
-     * Falls back to a minimal entry (name only) if Firestore read fails.
+     * Performance Optimization Service:
+     * Reads the creator's current streak/shields from Firestore (Source of Truth) 
+     * and seeds them into RTDB ('userStats/$uid').
+     * 
+     * This allows ChallengeDetailActivity to listen to a single RTDB path for 
+     * LIVE updates of all participants, avoiding expensive and slow Firestore 
+     * cross-document polling.
      */
     private fun seedCreatorStatsToRTDB(userId: String) {
         val displayName = authHelper.getCurrentUser()?.displayName
@@ -163,7 +168,6 @@ class ChallengeSetupActivity : AppCompatActivity() {
             ?: "User"
         val userEmail   = authHelper.getCurrentUser()?.email ?: ""
 
-        // Try to read our own Firestore gamificationData
         val db = try {
             com.google.firebase.firestore.FirebaseFirestore.getInstance("renu")
         } catch (e: Exception) {
@@ -189,7 +193,7 @@ class ChallengeSetupActivity : AppCompatActivity() {
                         "updatedAt"      to System.currentTimeMillis()
                     )
                 )
-                // Also publish email index
+                // Creates an index for friends to find this user by email
                 if (userEmail.isNotEmpty()) {
                     val encodedEmail = userEmail.replace(".", ",")
                     rtdb.child("userEmailIndex").child(encodedEmail).setValue(
@@ -198,20 +202,20 @@ class ChallengeSetupActivity : AppCompatActivity() {
                 }
             }
             .addOnFailureListener {
-                // Fallback — write minimal entry so name at least shows up
                 rtdb.child("userStats").child(userId).updateChildren(
                     mapOf(
                         "uid"  to userId,
                         "name" to displayName,
                         "email" to userEmail
-                        // lastActiveDate intentionally omitted = empty = treated as "active (no data yet)"
                     )
                 )
             }
     }
 
-    // ── Success dialog + share ────────────────────────────────────────────────────
-
+    /**
+     * UI Helper: Shows the confirmation dialog with the challenge code 
+     * and explains the "Survivor" game rules.
+     */
     private fun showSuccessDialog(name: String, code: String, friendEmail: String?) {
         val message = buildString {
             append("Your challenge code is:\n\n")
@@ -252,6 +256,10 @@ class ChallengeSetupActivity : AppCompatActivity() {
         builder.show()
     }
 
+    /**
+     * Triggers the system Share Sheet with a pre-written invite message 
+     * containing the challenge code.
+     */
     private fun shareCode(name: String, code: String, friendEmail: String?) {
         val message = buildString {
             append("Hey! Join my fitness challenge \"$name\" on SwasthyaMitra! 💪\n\n")
@@ -269,6 +277,7 @@ class ChallengeSetupActivity : AppCompatActivity() {
         }
         startActivity(Intent.createChooser(shareIntent, "Share Challenge Code"))
     }
+
 
     // ── Helpers ──────────────────────────────────────────────────────────────────
 

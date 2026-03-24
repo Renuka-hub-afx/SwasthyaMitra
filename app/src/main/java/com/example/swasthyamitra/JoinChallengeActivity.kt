@@ -55,6 +55,11 @@ class JoinChallengeActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     * Core joining logic. 
+     * Validates the code, ensures the user isn't the creator, and performs 
+     * a 2-step write process to formalize the competition.
+     */
     private fun joinChallenge(code: String) {
         val userId = authHelper.getCurrentUser()?.uid
         if (userId == null) {
@@ -62,67 +67,43 @@ class JoinChallengeActivity : AppCompatActivity() {
             return
         }
 
-        // Disable button while loading
         btnJoinChallenge.isEnabled = false
         btnJoinChallenge.text = "Joining..."
 
-        // Look up the challenge code in RTDB
+        // Step 1: Verify the challenge exists in the Realtime Database
         database.child("challenges").child(code)
             .addListenerForSingleValueEvent(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
                     if (!snapshot.exists()) {
-                        runOnUiThread {
-                            btnJoinChallenge.isEnabled = true
-                            btnJoinChallenge.text = "Join Challenge"
-                            Toast.makeText(
-                                this@JoinChallengeActivity,
-                                "❌ Challenge not found. Check the code and try again.",
-                                Toast.LENGTH_LONG
-                            ).show()
-                        }
+                        resetButton("❌ Challenge not found.")
                         return
                     }
 
                     val challengeName = snapshot.child("name").getValue(String::class.java) ?: "Unnamed Challenge"
                     val creatorId = snapshot.child("creatorId").getValue(String::class.java) ?: ""
 
-                    // Prevent joining your own challenge
+                    // ── SAFETY CHECK: Prevent self-joining ─────────────────────────────────
                     if (creatorId == userId) {
-                        runOnUiThread {
-                            btnJoinChallenge.isEnabled = true
-                            btnJoinChallenge.text = "Join Challenge"
-                            Toast.makeText(
-                                this@JoinChallengeActivity,
-                                "You created this challenge! Share the code with a friend.",
-                                Toast.LENGTH_LONG
-                            ).show()
-                        }
+                        resetButton("You created this! Share the code with a friend.")
                         return
                     }
 
-                    // Check if already joined
+                    // ── SAFETY CHECK: Prevent duplicate joining ────────────────────────────
                     val alreadyJoined = snapshot.child("participants").child(userId).exists()
                     if (alreadyJoined) {
-                        runOnUiThread {
-                            btnJoinChallenge.isEnabled = true
-                            btnJoinChallenge.text = "Join Challenge"
-                            showSuccessDialog(challengeName, code, alreadyMember = true)
-                        }
+                        resetButton(null)
+                        showSuccessDialog(challengeName, code, alreadyMember = true)
                         return
                     }
 
-                    // ── Write only paths the joiner owns ─────────────────────────────────
-                    // DO NOT write to users/<creatorId>/... — RTDB rules block cross-user writes.
-                    // The creator's joined_challenges entry was already created when they made
-                    // the challenge in ChallengeSetupActivity (atomic multi-path write).
                     val now = System.currentTimeMillis()
 
-                    // Step A: mark joiner as a participant on the central challenge node
-                    // (challenges/<code>/participants/<userId> = true)
+                    // Step 2: Register as a participant on the SHARED challenge node
                     database.child("challenges").child(code)
                         .child("participants").child(userId).setValue(true)
                         .addOnSuccessListener {
-                            // Step B: write joiner's own joined_challenges entry — they OWN this path
+                            
+                            // Step 3: Register the challenge in the user's PRIVATE dashboard
                             database.child("users").child(userId)
                                 .child("joined_challenges").child(code)
                                 .setValue(mapOf(
@@ -133,54 +114,40 @@ class JoinChallengeActivity : AppCompatActivity() {
                                     "role"          to "participant"
                                 ))
                                 .addOnSuccessListener {
-                                    // Seed joiner's stats to RTDB userStats so creator can
-                                    // see their real streak in ChallengeDetailActivity
+                                    // Step 4: Mirror Firestore stats to RTDB userStats
+                                    // This makes the joiner's current streak visible to the creator
                                     seedJoinerStatsToRTDB(userId)
-                                    runOnUiThread {
-                                        btnJoinChallenge.isEnabled = true
-                                        btnJoinChallenge.text = "Join Challenge"
-                                        showSuccessDialog(challengeName, code, alreadyMember = false)
-                                    }
+                                    resetButton(null)
+                                    showSuccessDialog(challengeName, code, alreadyMember = false)
                                 }
                                 .addOnFailureListener { e ->
-                                    runOnUiThread {
-                                        btnJoinChallenge.isEnabled = true
-                                        btnJoinChallenge.text = "Join Challenge"
-                                        Toast.makeText(
-                                            this@JoinChallengeActivity,
-                                            "Failed to save challenge: ${e.message}",
-                                            Toast.LENGTH_LONG
-                                        ).show()
-                                    }
+                                    resetButton("Failed to save challenge: ${e.message}")
                                 }
                         }
                         .addOnFailureListener { e ->
-                            runOnUiThread {
-                                btnJoinChallenge.isEnabled = true
-                                btnJoinChallenge.text = "Join Challenge"
-                                Toast.makeText(
-                                    this@JoinChallengeActivity,
-                                    "Failed to join: ${e.message}",
-                                    Toast.LENGTH_LONG
-                                ).show()
-                            }
+                            resetButton("Failed to join: ${e.message}")
                         }
                 }
 
                 override fun onCancelled(error: DatabaseError) {
-                    runOnUiThread {
-                        btnJoinChallenge.isEnabled = true
-                        btnJoinChallenge.text = "Join Challenge"
-                        Toast.makeText(
-                            this@JoinChallengeActivity,
-                            "Error: ${error.message}",
-                            Toast.LENGTH_SHORT
-                        ).show()
-                    }
+                    resetButton("Error: ${error.message}")
                 }
             })
     }
 
+    private fun resetButton(error: String?) {
+        runOnUiThread {
+            btnJoinChallenge.isEnabled = true
+            btnJoinChallenge.text = "Join Challenge"
+            if (error != null) {
+                Toast.makeText(this@JoinChallengeActivity, error, Toast.LENGTH_LONG).show()
+            }
+        }
+    }
+
+    /**
+     * UI Helper: Shows a victory dialog upon successful joining.
+     */
     private fun showSuccessDialog(name: String, code: String, alreadyMember: Boolean) {
         val title = if (alreadyMember) "Already Joined! ⚔️" else "Challenge Joined! ⚔️🎉"
         val message = if (alreadyMember) {
@@ -201,15 +168,14 @@ class JoinChallengeActivity : AppCompatActivity() {
     }
 
     /**
-     * Seeds the joiner's own Firestore gamificationData into RTDB userStats.
-     * Reads from OWN Firestore doc (always permitted) so the creator can immediately
-     * see real streak data in ChallengeDetailActivity without waiting for a GamificationActivity visit.
+     * Cross-User Sync:
+     * Reads the joiner's Firestore streak data and uploads it to 'userStats/$uid' in RTDB.
+     * This is necessary because the ChallengeDetailActivity can only read from RTDB 
+     * to avoid triggering Firebase security permission errors.
      */
     private fun seedJoinerStatsToRTDB(userId: String) {
         val currentUser = authHelper.getCurrentUser() ?: return
-        val displayName = currentUser.displayName
-            ?: currentUser.email?.substringBefore("@")
-            ?: "User"
+        val displayName = currentUser.displayName ?: currentUser.email?.substringBefore("@") ?: "User"
         val userEmail = currentUser.email ?: ""
 
         val firestore = try {
@@ -226,21 +192,19 @@ class JoinChallengeActivity : AppCompatActivity() {
                 val lastActive = doc.getString("lastActiveDate") ?: ""
                 val shields    = doc.getLong("shields")?.toInt() ?: 0
 
-                val currentStreak = if (streak < 15) 15 else streak
-                
                 database.child("userStats").child(userId).updateChildren(
                     mapOf(
                         "uid"            to userId,
                         "name"           to displayName,
                         "email"          to userEmail,
-                        "streak"         to currentStreak,
-                        "shields"        to (if (shields < 3) 3 else shields),
+                        "streak"         to streak,
+                        "shields"        to shields,
                         "lastActiveDate" to lastActive,
                         "updatedAt"      to System.currentTimeMillis()
                     )
                 )
 
-                // Also publish email→uid index
+                // Indexing for friend retrieval
                 if (userEmail.isNotEmpty()) {
                     val encodedEmail = userEmail.replace(".", ",")
                     database.child("userEmailIndex").child(encodedEmail).setValue(
@@ -249,14 +213,8 @@ class JoinChallengeActivity : AppCompatActivity() {
                 }
             }
             .addOnFailureListener {
-                // Fallback — write name so at least the display works
-                // Omit lastActiveDate → treated as active (benefit of doubt)
                 database.child("userStats").child(userId).updateChildren(
-                    mapOf(
-                        "uid"   to userId,
-                        "name"  to displayName,
-                        "email" to userEmail
-                    )
+                    mapOf("uid" to userId, "name" to displayName, "email" to userEmail)
                 )
             }
     }

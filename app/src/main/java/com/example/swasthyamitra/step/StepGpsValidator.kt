@@ -6,87 +6,68 @@ import com.google.android.gms.location.DetectedActivity
 import kotlin.math.abs
 
 /**
- * GPS-enhanced step validation engine.
- *
- * Five cross-validation layers that compare sensor-detected steps
- * against GPS location data in real-time to improve accuracy:
- *
- * 1. GPS Distance Validation   – discard steps when GPS shows no movement
- * 2. Dynamic Stride Calibration – compute stride length from GPS ÷ steps
- * 3. Speed-Based Cadence Check  – expected cadence from GPS speed
- * 4. Activity-Aware Filtering   – suppress steps when in vehicle / still
- * 5. Anomaly Detection          – spike / impossible speed filtering
+ * StepGpsValidator acts as a "Senior Auditor" for the step tracking system.
+ * While sensors detect motion, this class uses GPS and Activity AI to verify 
+ * if that motion matches the physical reality of a person traveling on foot.
+ * 
+ * It employs 5 Audit Layers:
+ * 1. GPS Distance: Does the GPS show the user actually moved the distance of these steps?
+ * 2. Stride Calibration: Dynamically computes how long the user's step is based on GPS.
+ * 3. Speed-Cadence: Is the step frequency (SPM) physically possible at this GPS speed?
+ * 4. Activity Filtering: Suppresses steps if the user is in a vehicle or stationary.
+ * 5. Anomaly Detection: Filters out impossible "spikes" (e.g., 300 steps in 30 seconds).
  */
 class StepGpsValidator {
 
     companion object {
         private const val TAG = "StepGpsValidator"
 
-        // Layer 1 – GPS Distance Validation
-        private const val GPS_DISTANCE_RATIO_THRESHOLD = 0.40  // GPS dist must be >= 40% of step-estimated dist
-        private const val MIN_STEPS_FOR_GPS_CHECK = 20         // need enough steps before comparing
+        // LAYER 1: Distance Ratio. GPS distance must be at least 40% of sensor-calculated distance.
+        private const val GPS_DISTANCE_RATIO_THRESHOLD = 0.40  
+        private const val MIN_STEPS_FOR_GPS_CHECK = 20         
 
-        // Layer 2 – Stride Calibration
-        private const val DEFAULT_STRIDE_LENGTH_M = 0.72       // average stride (will be overridden by user height)
+        // LAYER 2: Stride logic
+        private const val DEFAULT_STRIDE_LENGTH_M = 0.72       
         private const val MIN_STRIDE_M = 0.3
         private const val MAX_STRIDE_M = 1.8
-        private const val STRIDE_EMA_ALPHA = 0.15              // exponential moving average weight
+        private const val STRIDE_EMA_ALPHA = 0.15 // Weight for learning new stride lengths
 
-        // Layer 3 – Speed-Based Step Rate
-        private const val WALK_MIN_SPEED_MS = 0.8              // m/s
-        private const val WALK_MAX_SPEED_MS = 2.0
+        // LAYER 3/4: Speed & Activity ranges
+        private const val WALK_MIN_SPEED_MS = 0.8
         private const val RUN_MAX_SPEED_MS = 5.0
-        private const val WALK_MIN_CADENCE = 70                // steps/min
-        private const val WALK_MAX_CADENCE = 140
-        private const val RUN_MIN_CADENCE = 120
-        private const val RUN_MAX_CADENCE = 210
-        private const val CADENCE_DEVIATION_TOLERANCE = 0.45   // 45% tolerance
-
-        // Layer 4 – Activity filtering
         private const val ACTIVITY_CONFIDENCE_THRESHOLD = 70
 
-        // Layer 5 – Anomaly detection
+        // LAYER 5: Anomaly limits
         private const val MAX_STEPS_PER_30S = 300
-        private const val MAX_PEDESTRIAN_SPEED_MS = 12.0       // world-class sprint ~12 m/s
-        private const val WINDOW_DURATION_MS = 30_000L
+        private const val MAX_PEDESTRIAN_SPEED_MS = 12.0 // Human sprint limit
+        private const val WINDOW_DURATION_MS = 30_000L   // 30-second audit window
     }
 
-    // ------- State -------
+    // --- State: Counters and Rolling Audit Windows ---
 
-    // Stride & distance
     private var currentStrideLengthM = DEFAULT_STRIDE_LENGTH_M
-    private var userHeightCm: Double = 0.0  // set via setUserHeight()
+    private var userHeightCm: Double = 0.0
 
-    // Rolling window tracking
+    // Rolling audit window state (resets every 30s)
     private var windowStartTime = 0L
     private var windowStartSteps = 0
-    private var windowStartLocation: Location? = null
     private var windowGpsDistance = 0.0
 
-    // Overall session
     private var lastLocation: Location? = null
     private var totalGpsDistanceM = 0.0
     private var totalValidatedSteps = 0
     private var totalRawSteps = 0
 
-    // Activity recognition
     private var currentActivityType = DetectedActivity.UNKNOWN
     private var currentActivityConfidence = 0
-
-    // Speed
     private var currentSpeedMs = 0.0
 
-    // Anomaly window
     private val recentStepTimestamps = mutableListOf<Long>()
-
-    // Confidence
-    private var lastConfidence = 0.0
-
-    // Listener
     private var onValidationResult: ((ValidatedResult) -> Unit)? = null
 
-    // ------- Data classes -------
-
+    /**
+     * Final report structure containing all audit metrics for a batch of steps.
+     */
     data class ValidatedResult(
         val validatedSteps: Int,
         val rawSteps: Int,
@@ -95,72 +76,57 @@ class StepGpsValidator {
         val speedMs: Double,
         val confidence: Double,
         val activityType: Int,
-        val rejectionReason: String?       // null if accepted
+        val rejectionReason: String?
     )
 
-    // ------- Public API -------
-
-    fun setListener(listener: (ValidatedResult) -> Unit) {
-        onValidationResult = listener
-    }
-
+    /**
+     * Initializes the stride length based on the user's height.
+     * Formula: Stride length ≈ 41.5% of height.
+     */
     fun setUserHeight(heightCm: Double) {
         userHeightCm = heightCm
-        // Rule of thumb: stride ≈ 0.415 × height (cm) converted to meters
         if (heightCm > 0) {
-            currentStrideLengthM = (heightCm * 0.415 / 100.0)
-                .coerceIn(MIN_STRIDE_M, MAX_STRIDE_M)
-            Log.d(TAG, "Initial stride from height ($heightCm cm): $currentStrideLengthM m")
+            currentStrideLengthM = (heightCm * 0.415 / 100.0).coerceIn(MIN_STRIDE_M, MAX_STRIDE_M)
         }
     }
 
-    /** Called on each step detection event from HybridStepValidator / sensor */
+    /**
+     * Audit point for new step signals. 
+     * Immediately checks for anomalies (spikes) and activity context (vehicle check).
+     */
     fun onStepsDetected(newRawSteps: Int, timestamp: Long): ValidatedResult {
         totalRawSteps = newRawSteps
 
-        // --- Layer 5: Anomaly Detection (spike check) ---
+        // AUDIT LAYER 5: SPIKE DETECTION
         recentStepTimestamps.add(timestamp)
         recentStepTimestamps.removeAll { timestamp - it > WINDOW_DURATION_MS }
         if (recentStepTimestamps.size > MAX_STEPS_PER_30S) {
-            val reason = "Anomaly: ${recentStepTimestamps.size} steps in 30s window"
-            Log.w(TAG, reason)
-            return buildResult(reason)
+            return buildResult("Anomaly: Extreme step spike detected")
         }
 
-        // --- Layer 4: Activity-Aware Filtering ---
+        // AUDIT LAYER 4: VEHICLE/STATIONARY FILTER
         val activityRejection = checkActivityFilter()
-        if (activityRejection != null) {
-            return buildResult(activityRejection)
-        }
+        if (activityRejection != null) return buildResult(activityRejection)
 
-        // --- Layer 3: Speed-Based Cadence Check ---
+        // AUDIT LAYER 3: SPEED-CADENCE CROSS-CHECK
         val cadenceRejection = checkSpeedCadence(timestamp)
-        if (cadenceRejection != null) {
-            return buildResult(cadenceRejection)
-        }
+        if (cadenceRejection != null) return buildResult(cadenceRejection)
 
-        // --- Layer 1&2 are checked in the rolling window (onLocationUpdate) ---
-        // If we get here, step is accepted
+        // If checks pass, steps are credited to the validated total
         totalValidatedSteps = newRawSteps
-        lastConfidence = calculateConfidence()
-
         return buildResult(null)
     }
 
-    /** Called from location callback in the service */
+    /**
+     * Core audit routine that processes GPS location updates.
+     * Every 30 seconds, it performs a "Reality Check" comparing GPS travel vs sensor steps.
+     */
     fun onLocationUpdate(location: Location, timestamp: Long) {
         currentSpeedMs = if (location.hasSpeed()) location.speed.toDouble() else 0.0
 
-        // --- Layer 5: Impossible speed ---
-        if (currentSpeedMs > MAX_PEDESTRIAN_SPEED_MS) {
-            Log.w(TAG, "Impossible pedestrian speed: $currentSpeedMs m/s")
-            // Don't discard all steps, but flag the window
-        }
-
-        // Accumulate GPS distance
+        // Accumulate segment distance (filtering out GPS jitter noise < 1m)
         lastLocation?.let { prev ->
             val segmentDist = prev.distanceTo(location).toDouble()
-            // Filter GPS jitter — ignore tiny movements
             if (segmentDist > 1.0) {
                 totalGpsDistanceM += segmentDist
                 windowGpsDistance += segmentDist
@@ -168,187 +134,97 @@ class StepGpsValidator {
         }
         lastLocation = location
 
-        // --- Rolling window stride calibration ---
+        // --- THE 30-SECOND REALITY CHECK ---
         if (windowStartTime == 0L) {
-            windowStartTime = timestamp
-            windowStartSteps = totalRawSteps
-            windowStartLocation = location
-            windowGpsDistance = 0.0
-            return
+            windowStartTime = timestamp; windowStartSteps = totalRawSteps; return
         }
 
-        val windowElapsed = timestamp - windowStartTime
-        if (windowElapsed >= WINDOW_DURATION_MS) {
+        if (timestamp - windowStartTime >= WINDOW_DURATION_MS) {
             val windowSteps = totalRawSteps - windowStartSteps
 
-            // --- Layer 1: GPS Distance Validation ---
+            // AUDIT LAYER 1: VALIDATE DISTANCE RATIO
             if (windowSteps >= MIN_STEPS_FOR_GPS_CHECK && windowGpsDistance > 2.0) {
                 val estimatedDist = windowSteps * currentStrideLengthM
                 val ratio = windowGpsDistance / estimatedDist
 
+                // If GPS shows much less movement than steps, discount the steps
                 if (ratio < GPS_DISTANCE_RATIO_THRESHOLD) {
-                    Log.w(TAG, "GPS validation fail: GPS=${windowGpsDistance}m vs estimated=${estimatedDist}m (ratio=$ratio)")
-                    // Adjust validated steps downward based on GPS reality
                     val adjustedSteps = (windowGpsDistance / currentStrideLengthM).toInt()
-                    val correction = windowSteps - adjustedSteps
-                    if (correction > 0) {
-                        totalValidatedSteps = (totalValidatedSteps - correction).coerceAtLeast(0)
-                        Log.d(TAG, "Corrected $correction false steps in window")
-                    }
+                    totalValidatedSteps = (totalValidatedSteps - (windowSteps - adjustedSteps)).coerceAtLeast(0)
                 }
 
-                // --- Layer 2: Dynamic Stride Calibration ---
+                // AUDIT LAYER 2: DYNAMIC STRIDE CALIBRATION
+                // "Learn" the user's specific stride length by comparing clean GPS data to step counts.
                 if (windowSteps > 10 && windowGpsDistance > 5.0) {
                     val measuredStride = windowGpsDistance / windowSteps
                     if (measuredStride in MIN_STRIDE_M..MAX_STRIDE_M) {
-                        // Exponential moving average
-                        currentStrideLengthM = (STRIDE_EMA_ALPHA * measuredStride +
-                                (1 - STRIDE_EMA_ALPHA) * currentStrideLengthM)
-                            .coerceIn(MIN_STRIDE_M, MAX_STRIDE_M)
-                        Log.d(TAG, "Stride calibrated: $currentStrideLengthM m (measured: $measuredStride)")
+                        currentStrideLengthM = (STRIDE_EMA_ALPHA * measuredStride + (1 - STRIDE_EMA_ALPHA) * currentStrideLengthM).coerceIn(MIN_STRIDE_M, MAX_STRIDE_M)
                     }
                 }
             }
 
-            // Reset window
-            windowStartTime = timestamp
-            windowStartSteps = totalRawSteps
-            windowStartLocation = location
-            windowGpsDistance = 0.0
+            // Reset audit window for the next 30 seconds
+            windowStartTime = timestamp; windowStartSteps = totalRawSteps; windowGpsDistance = 0.0
         }
-
-        lastConfidence = calculateConfidence()
     }
 
-    /** Called from Activity Recognition receiver */
-    fun onActivityDetected(activityType: Int, confidence: Int) {
-        currentActivityType = activityType
-        currentActivityConfidence = confidence
-        Log.d(TAG, "Activity: ${getActivityName(activityType)} ($confidence%)")
-    }
-
-    fun reset() {
-        totalGpsDistanceM = 0.0
-        totalValidatedSteps = 0
-        totalRawSteps = 0
-        windowStartTime = 0L
-        windowStartSteps = 0
-        windowStartLocation = null
-        windowGpsDistance = 0.0
-        lastLocation = null
-        currentSpeedMs = 0.0
-        recentStepTimestamps.clear()
-        lastConfidence = 0.0
-    }
-
-    // ------- Getters -------
-
-    fun getValidatedSteps(): Int = totalValidatedSteps
-    fun getRawSteps(): Int = totalRawSteps
-    fun getStrideLengthM(): Double = currentStrideLengthM
-    fun getGpsDistanceM(): Double = totalGpsDistanceM
-    fun getCurrentSpeedMs(): Double = currentSpeedMs
-    fun getCurrentSpeedKmh(): Double = currentSpeedMs * 3.6
-    fun getConfidence(): Double = lastConfidence
-    fun getActivityType(): Int = currentActivityType
-
-    // ------- Private helpers -------
-
+    /**
+     * Internal filter that blocks steps if AI detects the device is in a vehicle.
+     */
     private fun checkActivityFilter(): String? {
-        if (currentActivityConfidence < ACTIVITY_CONFIDENCE_THRESHOLD) {
-            return null // Not confident enough to filter — allow steps
-        }
+        if (currentActivityConfidence < ACTIVITY_CONFIDENCE_THRESHOLD) return null 
         return when (currentActivityType) {
-            DetectedActivity.IN_VEHICLE -> "Activity: In vehicle (${currentActivityConfidence}%)"
-            DetectedActivity.ON_BICYCLE -> "Activity: On bicycle (${currentActivityConfidence}%)"
-            DetectedActivity.STILL -> "Activity: Still (${currentActivityConfidence}%)"
+            DetectedActivity.IN_VEHICLE -> "Suspended: Vehicle motion detected"
+            DetectedActivity.STILL -> "Suspended: Stationary state"
             else -> null
         }
     }
 
+    /**
+     * Mathematically verifies if the current step rate (Cadence) 
+     * is physically compatible with the current GPS speed.
+     */
     private fun checkSpeedCadence(timestamp: Long): String? {
-        if (currentSpeedMs < 0.1) return null // No speed data — skip this check
+        if (currentSpeedMs < 0.1) return null 
+        val recentSteps = recentStepTimestamps.count { timestamp - it <= 15_000L }
+        val cadenceSPM = (recentSteps / 0.25) // convert 15s window to 60s (1 minute)
 
-        // Compute current cadence from recent step timestamps
-        val recentWindow = 15_000L // 15-second cadence window
-        val recentSteps = recentStepTimestamps.count { timestamp - it <= recentWindow }
-        val cadencePerMin = (recentSteps / (recentWindow / 60_000.0))
+        if (cadenceSPM < 10) return null 
 
-        if (cadencePerMin < 10) return null // Not enough data
-
-        // Determine expected cadence from speed
         val (expectedMin, expectedMax) = when {
-            currentSpeedMs < WALK_MIN_SPEED_MS -> return null  // Too slow, skip check
-            currentSpeedMs <= WALK_MAX_SPEED_MS -> Pair(WALK_MIN_CADENCE, WALK_MAX_CADENCE)
-            currentSpeedMs <= RUN_MAX_SPEED_MS -> Pair(RUN_MIN_CADENCE, RUN_MAX_CADENCE)
-            else -> return "Speed too high for pedestrian: ${currentSpeedMs} m/s"
+            currentSpeedMs <= 2.0 -> Pair(70, 140) // Walking ranges
+            currentSpeedMs <= 5.0 -> Pair(120, 210) // Running ranges
+            else -> return "Speed anomaly: Too fast for pedestrian"
         }
 
         val expectedMid = (expectedMin + expectedMax) / 2.0
-        val deviation = abs(cadencePerMin - expectedMid) / expectedMid
-
-        if (deviation > CADENCE_DEVIATION_TOLERANCE) {
-            return "Cadence mismatch: ${cadencePerMin.toInt()} spm vs expected ${expectedMin}-${expectedMax} at ${String.format("%.1f", currentSpeedMs)} m/s"
+        if ((abs(cadenceSPM - expectedMid) / expectedMid) > 0.45) {
+            return "Cadence Warning: Sensor frequency mismatch with speed"
         }
-
         return null
     }
 
     private fun calculateConfidence(): Double {
-        var confidence = 50.0  // base
-
-        // GPS availability boost
-        if (lastLocation != null && totalGpsDistanceM > 5) {
-            confidence += 15.0
-        }
-
-        // Activity recognition boost
-        if (currentActivityConfidence > ACTIVITY_CONFIDENCE_THRESHOLD &&
-            (currentActivityType == DetectedActivity.WALKING ||
-             currentActivityType == DetectedActivity.RUNNING ||
-             currentActivityType == DetectedActivity.ON_FOOT)) {
-            confidence += 15.0
-        }
-
-        // Stride calibration quality
-        if (totalRawSteps > 100 && totalGpsDistanceM > 50) {
-            confidence += 10.0  // Good calibration data
-        }
-
-        // Step vs GPS distance consistency
-        if (totalRawSteps > 0 && totalGpsDistanceM > 10) {
-            val estimatedDist = totalRawSteps * currentStrideLengthM
-            val ratio = totalGpsDistanceM / estimatedDist
-            if (ratio in 0.7..1.3) {
-                confidence += 10.0  // Good consistency
-            }
-        }
-
+        var confidence = 50.0  // Starting neutral
+        if (lastLocation != null && totalGpsDistanceM > 5) confidence += 15.0
+        if (currentActivityConfidence > 80) confidence += 15.0
+        if (totalRawSteps > 100 && totalGpsDistanceM > 50) confidence += 10.0 // Calibration bonus
         return confidence.coerceIn(0.0, 100.0)
     }
 
-    private fun buildResult(rejectionReason: String?): ValidatedResult {
-        return ValidatedResult(
-            validatedSteps = totalValidatedSteps,
-            rawSteps = totalRawSteps,
-            strideLengthM = currentStrideLengthM,
-            gpsDistanceM = totalGpsDistanceM,
-            speedMs = currentSpeedMs,
-            confidence = lastConfidence,
-            activityType = currentActivityType,
-            rejectionReason = rejectionReason
-        )
+    fun reset() {
+        totalGpsDistanceM = 0.0; totalValidatedSteps = 0; totalRawSteps = 0
+        windowStartTime = 0L; windowGpsDistance = 0.0; lastLocation = null
+        recentStepTimestamps.clear()
     }
 
-    private fun getActivityName(type: Int): String = when (type) {
-        DetectedActivity.WALKING -> "WALKING"
-        DetectedActivity.RUNNING -> "RUNNING"
-        DetectedActivity.ON_FOOT -> "ON_FOOT"
-        DetectedActivity.STILL -> "STILL"
-        DetectedActivity.IN_VEHICLE -> "IN_VEHICLE"
-        DetectedActivity.ON_BICYCLE -> "ON_BICYCLE"
-        DetectedActivity.TILTING -> "TILTING"
-        DetectedActivity.UNKNOWN -> "UNKNOWN"
-        else -> "OTHER($type)"
-    }
+    fun getValidatedSteps(): Int = totalValidatedSteps
+    fun getCurrentSpeedKmh(): Double = currentSpeedMs * 3.6
+    fun getStrideLengthM(): Double = currentStrideLengthM
+    fun getConfidence(): Double = calculateConfidence()
+
+    private fun buildResult(reason: String?) = ValidatedResult(totalValidatedSteps, totalRawSteps, currentStrideLengthM, totalGpsDistanceM, currentSpeedMs, calculateConfidence(), currentActivityType, reason)
+    fun onActivityDetected(type: Int, conf: Int) { currentActivityType = type; currentActivityConfidence = conf }
+    fun setListener(listener: (ValidatedResult) -> Unit) { onValidationResult = listener }
 }
+
