@@ -3,69 +3,116 @@ rules_version = '2';
 // ═══════════════════════════════════════════════════════════════════════
 // SwasthyaMitra — Firestore Security Rules (Database: "renu")
 // Generated from codebase scan — covers ALL active collection paths
+//
+// COLLECTION HIERARCHY:
+// ├── TOP-LEVEL COLLECTIONS (4 total)
+// │   ├── /users/{userId}                    [Main user profiles]
+// │   ├── /emergency_events/{eventId}        [Emergency SOS records]
+// │   ├── /user_preferences/{userId}         [Global AI diet preferences]
+// │   └── /ai_generated_plans/{planId}       [Global AI meal plans]
+// │
+// └── SUBCOLLECTIONS under /users/{userId}/ (16 total)
+//     ├── goals/{goalId}                     [User health goals]
+//     ├── foodLogs/{logId}                   [Nutrition tracking]
+//     ├── exercise_logs/{logId}              [Workout logging]
+//     ├── sleep_logs/{logId}                 [Sleep quality tracking]
+//     ├── mood_logs/{moodId}                 [Emotional health tracking]
+//     ├── weightLogs/{logId}                 [Weight progress tracking]
+//     ├── waterLogs/{logId}                  [Hydration tracking]
+//     ├── walking_sessions/{sessionId}       [GPS workout sessions]
+//     ├── step_sessions/{sessionId}          [Step count sessions]
+//     ├── daily_steps/{date}                 [Daily step aggregates]
+//     ├── dailySummary/{date}                [Health dashboard data]
+//     ├── gamificationData/{doc}             [XP, levels, streaks]
+//     ├── preferences/{doc}                  [User food preferences]
+//     ├── ai_meal_plans/{planId}             [User-specific AI meal plans]
+//     ├── recommendations/{recId}            [User meal recommendations]
+//     └── meal_feedback/{feedbackId}         [User meal feedback]
 // ═══════════════════════════════════════════════════════════════════════
 
 service cloud.firestore {
   match /databases/{database}/documents {
 
     // ────────────────── HELPER FUNCTIONS ──────────────────
+    // These functions provide reusable security logic and data validation
+    // ensuring consistent access control and data integrity across all collections
 
-    // Check if the request comes from an authenticated user
+    // AUTHENTICATION CHECK: Verifies user has valid Firebase Auth token
+    // Used as foundation for all other security checks in the app
     function isAuthenticated() {
       return request.auth != null;
     }
 
-    // Check if the authenticated user matches the userId path param
+    // OWNERSHIP VERIFICATION: Ensures user can only access their own data
+    // Prevents users from reading/modifying other users' health records
+    // Critical for HIPAA-like privacy protection in health applications
     function isOwner(userId) {
       return isAuthenticated() && request.auth.uid == userId;
     }
 
-    // Check if the incoming document's userId field matches the caller
+    // RESOURCE OWNERSHIP CHECK: Validates document being created has correct userId
+    // Prevents users from creating documents claiming to belong to other users
+    // Essential for preventing data injection and cross-user contamination
     function willOwnResource() {
       return isAuthenticated()
           && request.resource != null
           && request.resource.data.userId == request.auth.uid;
     }
 
-    // Validation: step count between 0 and 200,000
+    // STEP COUNT VALIDATION: Prevents impossible step values (max 200K steps/day)
+    // Guards against sensor malfunctions, data injection, and unrealistic values
+    // Maintains data quality for step-based gamification and health tracking
     function isValidStepCount(steps) {
       return steps is int && steps >= 0 && steps <= 200000;
     }
 
-    // Validation: calorie value between 0 and 50,000
+    // CALORIE VALIDATION: Ensures calorie values are within human physiological limits
+    // Prevents negative calories and impossibly high values (50K kcal max)
+    // Protects nutrition tracking integrity and daily calorie calculations
     function isValidCalories(cal) {
       return cal is number && cal >= 0 && cal <= 50000;
     }
 
-    // Validation: weight between 1 kg and 500 kg
+    // WEIGHT VALIDATION: Ensures weight values are realistic for human health tracking
+    // Range 1-500 kg covers all realistic body weights while preventing bad data
+    // Critical for BMI calculations and health progress tracking accuracy
     function isValidWeight(w) {
       return w is number && w > 0 && w < 500;
     }
 
-    // Validation: ISO date string yyyy-MM-dd
+    // DATE FORMAT VALIDATION: Enforces ISO date format for consistent data handling
+    // Ensures all date-based queries and aggregations work correctly
+    // Prevents malformed dates from breaking dashboard charts and reports
     function isValidDateString(d) {
       return d is string && d.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$');
     }
 
     // ══════════════════════════════════════════════════════
-    //  1. USERS COLLECTION  —  /users/{userId}
-    //     Profile data: height, weight, gender, age, avatar,
-    //     emergencyContacts, eatingPreference, etc.
+    //  🔝 TOP-LEVEL COLLECTION #1:  /users/{userId}
+    //     MAIN USER PROFILE: Core user data including physical stats, preferences,
+    //     emergency contacts, and personal health information. Document ID matches
+    //     Firebase Auth UID for direct user-to-data mapping and security enforcement.
+    //     CONTAINS: 16 subcollections nested underneath for organized user data
     // ══════════════════════════════════════════════════════
     match /users/{userId} {
 
-      // Only the owner can read/write their own profile
+      // PERSONAL DATA PROTECTION: Only authenticated user can access their own profile
+      // This is the foundation of privacy in SwasthyaMitra - prevents data leakage
+      // between users and ensures HIPAA-like protection for health information
       allow read, write: if isOwner(userId);
 
-      // ──────── 1a. Goals ────────
-      // Fields: dailyCalories, targetWeight, activityLevel, dietPreference
+      // ──────── 📁 SUBCOLLECTION 1.1: goals/{goalId} ────────
+      // USER HEALTH GOALS: Weight targets, calorie goals, activity levels, diet preferences
+      // Used by AI services for personalized recommendations and progress tracking
+      // Enables dynamic goal adjustment based on user progress and health changes
       match /goals/{goalId} {
         allow read, write: if isOwner(userId);
       }
 
-      // ──────── 1b. Food / Nutrition Logs ────────
-      // Fields: foodName, calories, protein, carbs, fat, mealType,
-      //         timestamp, userId, servingSize, date
+      // ──────── 📁 SUBCOLLECTION 1.2: foodLogs/{logId} ────────
+      // NUTRITION TRACKING: Individual food entries with macro/micronutrient data
+      // Powers daily calorie calculations, meal planning AI, and nutrition dashboard
+      // Validates calorie values to prevent data corruption from barcode scanning errors
       match /foodLogs/{logId} {
         allow read: if isOwner(userId);
         allow create: if isOwner(userId)
@@ -74,9 +121,10 @@ service cloud.firestore {
         allow update, delete: if isOwner(userId);
       }
 
-      // ──────── 1c. Exercise Logs ────────
-      // Fields: exerciseName, caloriesBurned, durationMinutes,
-      //         timestamp, userId, source, category
+      // ──────── 📁 SUBCOLLECTION 1.3: exercise_logs/{logId} ────────
+      // WORKOUT TRACKING: Manual exercise logging with calorie burn calculations
+      // Used for gamification XP awards, daily summary aggregation, and fitness progress
+      // Prevents negative calorie burn values that could break dashboard calculations
       match /exercise_logs/{logId} {
         allow read: if isOwner(userId);
         allow create: if isOwner(userId)
@@ -85,25 +133,30 @@ service cloud.firestore {
         allow update, delete: if isOwner(userId);
       }
 
-      // ──────── 1d. Sleep Logs ────────
-      // Fields: bedtime, wakeTime, durationHours, quality,
-      //         timestamp, date
+      // ──────── 📁 SUBCOLLECTION 1.4: sleep_logs/{logId} ────────
+      // SLEEP QUALITY TRACKING: Bedtime, wake time, duration, and subjective quality
+      // Feeds into holistic health dashboard and AI wellness recommendations
+      // Simple ownership model since sleep data is inherently personal and low-risk
       match /sleep_logs/{logId} {
         allow read: if isOwner(userId);
         allow create: if isOwner(userId);
         allow update, delete: if isOwner(userId);
       }
 
-      // ──────── 1e. Mood Logs ────────
-      // Fields: mood, note, timestamp, moodScore
+      // ──────── 📁 SUBCOLLECTION 1.5: mood_logs/{moodId} ────────
+      // EMOTIONAL HEALTH TRACKING: Daily mood entries with notes and intensity scores
+      // Powers AI mood recommendation service for personalized mindfulness tips
+      // Sensitive mental health data requires strict user-only access control
       match /mood_logs/{moodId} {
         allow read: if isOwner(userId);
         allow create: if isOwner(userId);
         allow update, delete: if isOwner(userId);
       }
 
-      // ──────── 1f. Weight Logs ────────
-      // Fields: weightKg, timestamp, date
+      // ──────── 📁 SUBCOLLECTION 1.6: weightLogs/{logId} ────────
+      // WEIGHT PROGRESS TRACKING: Daily/weekly weight measurements for goal monitoring
+      // Critical for BMI calculations, weight loss/gain tracking, and health trends
+      // Weight validation prevents physiologically impossible values and data corruption
       match /weightLogs/{logId} {
         allow read: if isOwner(userId);
         allow create: if isOwner(userId)
@@ -111,37 +164,41 @@ service cloud.firestore {
         allow update, delete: if isOwner(userId);
       }
 
-      // ──────── 1g. Water / Hydration Logs ────────
-      // Fields: amountMl, timestamp, date
+      // ──────── 📁 SUBCOLLECTION 1.7: waterLogs/{logId} ────────
+      // HYDRATION TRACKING: Individual water intake entries throughout the day
+      // Supports daily hydration goals, gamification XP rewards, and health summaries
+      // Simple validation since water amounts are self-reported and non-critical
       match /waterLogs/{logId} {
         allow read: if isOwner(userId);
         allow create: if isOwner(userId);
         allow update, delete: if isOwner(userId);
       }
 
-      // ──────── 1h. Walking Sessions (GPS Tracking) ────────
-      // Fields: distance, duration, calories, routePoints,
-      //         startTime, endTime, userId
+      // ──────── 📁 SUBCOLLECTION 1.8: walking_sessions/{sessionId} ────────
+      // GPS WORKOUT SESSIONS: Real-time tracked walking/running sessions with route data
+      // Stores GPS coordinates, distance calculations, and calorie burn estimates
+      // Requires resource ownership validation to prevent GPS data injection attacks
       match /walking_sessions/{sessionId} {
         allow read: if isOwner(userId);
         allow create: if isOwner(userId) && willOwnResource();
         allow update, delete: if isOwner(userId);
       }
 
-      // ──────── 1i. Step Sessions ────────
-      // Fields: steps, startTime, endTime, durationMinutes,
-      //         caloriesBurned, distanceKm, timestamp
+      // ──────── 📁 SUBCOLLECTION 1.9: step_sessions/{sessionId} ────────
+      // STEP COUNT SESSIONS: Aggregated step count data from device sensors
+      // Powers step-based challenges, daily goals, and activity trend analysis
+      // No validation needed as step sessions are computed from validated daily steps
       match /step_sessions/{sessionId} {
         allow read: if isOwner(userId);
         allow create: if isOwner(userId);
         allow update, delete: if isOwner(userId);
       }
 
-      // ──────── 1j. Daily Steps ────────
-      // NOTE: This subcollection is used on BOTH the "renu" and
-      //       default Firestore instances. Rules here cover "renu".
-      //       See separate default-instance rules if deployed.
-      // Fields: steps, date, lastUpdated, userId, source
+      // ──────── 📁 SUBCOLLECTION 1.10: daily_steps/{date} ────────
+      // DAILY STEP AGGREGATES: One document per day containing total step count
+      // Used by both "renu" Firestore and default database for redundancy
+      // Step count validation prevents sensor malfunctions from corrupting data
+      // Date-based document IDs enable efficient daily/weekly/monthly queries
       match /daily_steps/{date} {
         allow read: if isOwner(userId);
         allow create: if isOwner(userId)
@@ -150,19 +207,21 @@ service cloud.firestore {
                       && isValidStepCount(request.resource.data.steps);
         allow delete: if isOwner(userId);
       }
-      
-      // ──────── 1k. Daily Summary (Auto-Aggregated Health Data) ────────
-      // Fields: totalCaloriesConsumed, totalCaloriesBurned, totalProtein,
-      //         totalCarbs, totalFat, waterIntakeML, waterGoalML, waterProgress,
-      //         steps, stepGoal, stepProgress, exerciseMinutes, exerciseCalories,
-      //         sleepMinutes, moodLogged, weightLogged, updatedAt
+
+      // ──────── 📁 SUBCOLLECTION 1.11: dailySummary/{date} ────────
+      // COMPREHENSIVE DAILY HEALTH DASHBOARD: Aggregated data across all health metrics
+      // Created by HydrationRepository and other services for dashboard performance
+      // Date validation ensures consistent aggregation and prevents malformed queries
+      // Contains: calories in/out, macros, hydration, steps, exercise, sleep, mood status
       match /dailySummary/{date} {
         allow read, write: if isOwner(userId) && isValidDateString(date);
       }
-      
-      // ──────── 1l. Gamification Data (Migrated from RTDB) ────────
-      // Fields: xp, level, streak, shields, lastActiveDate, lastXPAward,
-      //         lastXPSource, updatedAt
+
+      // ──────── 📁 SUBCOLLECTION 1.12: gamificationData/{doc} ────────
+      // GAME MECHANICS: XP points, levels, streaks, shields for user engagement
+      // Migrated from Real-time Database for better offline support and security
+      // Validation prevents cheating by ensuring numeric types for game values
+      // Deletion blocked to preserve achievement history and prevent accidental loss
       match /gamificationData/{doc} {
         allow read: if isOwner(userId);
         allow create, update: if isOwner(userId)
@@ -170,19 +229,23 @@ service cloud.firestore {
           && request.resource.data.level is int
           && request.resource.data.streak is int
           && request.resource.data.shields is int;
-        allow delete: if false; // Prevent accidental deletion
+        allow delete: if false; // Prevent accidental deletion of achievement progress
       }
-      
-      // ──────── 1m. User Preferences (Food Likes/Dislikes/Allergies) ────────
-      // Fields: dislikedFoods, favoriteFoods, allergies, cuisinePreferences,
-      //         spiceLevel, mealComplexity, lastUpdated
+
+      // ──────── 📁 SUBCOLLECTION 1.13: preferences/{doc} ────────
+      // AI PERSONALIZATION DATA: Food preferences, allergies, cuisine choices for meal AI
+      // Powers AIDietPlanService and AIPantryService for personalized recommendations
+      // Updated through AISmartDietActivity feedback and direct user preference settings
+      // No validation needed as preferences are subjective and user-controlled
       match /preferences/{doc} {
         allow read, write: if isOwner(userId);
       }
-      
-      // ──────── 1n. AI Generated Meal Plans (User-Centric Recommendations) ────────
-      // Fields: date, breakfast, lunch, dinner, snack, postWorkout, dailyTip,
-      //         totalCalories, status, appliedPreferences, diversityScore, userRating
+
+      // ──────── 📁 SUBCOLLECTION 1.14: ai_meal_plans/{planId} ────────
+      // AI MEAL PLANNING: Complete daily meal plans generated by AIDietPlanService
+      // Contains breakfast, lunch, dinner, snacks with nutritional data and AI reasoning
+      // Update restrictions prevent plan tampering while allowing status/rating changes
+      // Deletion blocked to preserve ML training data and user meal history
       match /ai_meal_plans/{planId} {
         allow read: if isOwner(userId);
         allow create: if isOwner(userId)
@@ -191,99 +254,107 @@ service cloud.firestore {
           && request.resource.data.totalCalories >= 0;
         allow update: if isOwner(userId)
           && request.resource.data.keys().hasOnly(['status', 'userRating']);
-        allow delete: if false; // Preserve history for ML learning
+        allow delete: if false; // Preserve meal plan history for AI learning and analytics
       }
-      
-      // ──────── 1o. Recommendations (Individual Meal Suggestions) ────────
-      // Fields: status, suggestedFoods, mealType, reason, matchScore,
-      //         excludedFoods, nutritionalFit, createdAt
+
+      // ──────── 📁 SUBCOLLECTION 1.15: recommendations/{recId} ────────
+      // INDIVIDUAL FOOD SUGGESTIONS: Single meal recommendations from AI services
+      // Used for quick meal suggestions and real-time food recommendation features
+      // Full access allowed as these are temporary suggestions, not permanent plans
       match /recommendations/{recId} {
         allow read, write: if isOwner(userId);
       }
-      
-      // ──────── 1p. Meal Feedback (User Ratings & Learning Data) ────────
-      // Fields: mealName, mealType, action, reason, rating, willEatAgain,
-      //         aiGenerated, timestamp, date
+
+      // ──────── 📁 SUBCOLLECTION 1.16: meal_feedback/{feedbackId} ────────
+      // AI LEARNING DATA: User feedback on AI-generated meals for continuous improvement
+      // Append-only structure preserves training data for ML model enhancement
+      // Powers preference learning and recommendation quality improvements
+      // Update/delete blocked to maintain data integrity for machine learning
       match /meal_feedback/{feedbackId} {
         allow read, create: if isOwner(userId);
-        allow update, delete: if false; // Append-only for ML training
+        allow update, delete: if false; // Append-only for ML training data integrity
       }
     }
 
     // ══════════════════════════════════════════════════════
-    //  2. EMERGENCY EVENTS  —  /emergency_events/{eventId}
-    //     Created by SOSManager when user triggers SOS.
-    //     Fields: userId, latitude, longitude, reason,
-    //             batteryPercentage, timestamp
+    //  🔝 TOP-LEVEL COLLECTION #2:  /emergency_events/{eventId}
+    //     EMERGENCY SOS SYSTEM: Life-threatening situation records created by SOSManager
+    //     when user activates emergency button (3-second hold) in SafetyDashboardFragment.
+    //     Contains GPS coordinates, battery level, timestamp for emergency response.
+    //     IMMUTABLE RECORDS: No updates/deletes to preserve emergency audit trail.
     // ══════════════════════════════════════════════════════
     match /emergency_events/{eventId} {
-      // Any authenticated user can create an emergency event
+      // EMERGENCY ACCESS: Any authenticated user can create emergency events
+      // Time-critical situations require immediate write access without additional checks
+      // Resource ownership prevents users from creating false emergencies for others
       allow create: if isAuthenticated() && willOwnResource();
-      // Only the creator can read their own events
+
+      // PRIVACY PROTECTION: Only the emergency creator can read their own events
+      // Prevents other users from accessing sensitive location and emergency data
+      // Essential for maintaining user privacy during vulnerable situations
       allow read: if isAuthenticated()
                   && resource.data.userId == request.auth.uid;
-      // No updates or deletes — emergency records are immutable
+
+      // IMMUTABLE EMERGENCY RECORDS: Prevent tampering with emergency audit trail
+      // Emergency events must remain unmodified for legal and safety compliance
+      // Preserves accurate emergency response data for analysis and improvement
       allow update, delete: if false;
     }
 
     // ══════════════════════════════════════════════════════
-    //  3. RECOMMENDATIONS  —  /recommendations/{recId}
-    //     AI-generated meal recommendations.
-    //     Fields: userId, status, suggestedFoods[], createdAt,
-    //             mealType, reason
-    // ══════════════════════════════════════════════════════
-    match /recommendations/{recId} {
-      // Users can only read their own recommendations
-      allow read: if isAuthenticated()
-                  && resource.data.userId == request.auth.uid;
-      // Created by Cloud Functions / admin — clients cannot write
-      allow write: if false;
-    }
-
-    // ══════════════════════════════════════════════════════
-    //  4. MEAL FEEDBACK  —  /meal_feedback/{feedbackId}
-    //     User feedback on AI-generated meals (Ate/Skipped/New).
-    //     Fields: userId, mealName, mealType, action,
-    //             reason, timestamp, date
-    // ══════════════════════════════════════════════════════
-    match /meal_feedback/{feedbackId} {
-      allow create: if isAuthenticated() && willOwnResource();
-      allow read: if isAuthenticated()
-                  && resource.data.userId == request.auth.uid;
-      // Feedback is append-only
-      allow update, delete: if false;
-    }
-
-    // ══════════════════════════════════════════════════════
-    //  5. USER PREFERENCES  —  /user_preferences/{userId}
-    //     AI diet preferences (document ID = userId).
-    //     Fields: dislikedFoods[], favoriteFoods[], lastUpdated
+    //  🔝 TOP-LEVEL COLLECTION #3:  /user_preferences/{userId}
+    //     GLOBAL AI DIET PREFERENCES: Top-level user preference storage where
+    //     document ID directly matches userId for efficient lookup by AI services.
+    //     Alternative to subcollection-based preferences for cross-service access.
+    //     Contains food likes/dislikes, allergies, and dietary restrictions.
     // ══════════════════════════════════════════════════════
     match /user_preferences/{userId} {
+      // STANDARD OWNERSHIP MODEL: Users can only access their own preferences
+      // Document ID matches userId for direct, efficient preference lookups
+      // Used by AI services for personalized meal generation and filtering
       allow read, write: if isOwner(userId);
     }
 
     // ══════════════════════════════════════════════════════
-    //  6. AI GENERATED PLANS  —  /ai_generated_plans/{planId}
-    //     Full AI-generated meal plans saved per user.
-    //     Fields: userId, generatedAt, date, breakfast{},
-    //             lunch{}, snack{}, dinner{}, postWorkout{},
-    //             dailyTip, totalCalories, status
+    //  🔝 TOP-LEVEL COLLECTION #4:  /ai_generated_plans/{planId}
+    //     GLOBAL AI MEAL PLANS: Complete daily meal plans generated by AI services
+    //     and stored at top level for cross-user analytics and plan sharing features.
+    //     Distinguished from user-specific plans in subcollections by scope and purpose.
+    //     IMMUTABLE after creation to preserve AI generation history and analytics.
     // ══════════════════════════════════════════════════════
     match /ai_generated_plans/{planId} {
+      // PLAN CREATION: Users can create meal plans through AI generation services
+      // Resource ownership ensures users can only create plans associated with their account
+      // Enables personal meal plan generation while preventing cross-user contamination
       allow create: if isAuthenticated() && willOwnResource();
+
+      // PERSONAL ACCESS: Users can only read meal plans generated for them
+      // Maintains privacy of personalized meal recommendations and dietary data
+      // Prevents unauthorized access to other users' nutrition and meal planning data
       allow read: if isAuthenticated()
                   && resource.data.userId == request.auth.uid;
-      // Plans are immutable once generated
+
+      // IMMUTABLE PLANS: Generated meal plans cannot be modified or deleted
+      // Preserves AI generation history for analytics and model improvement
+      // Maintains record of AI recommendations for quality analysis and debugging
       allow update, delete: if false;
     }
 
     // ══════════════════════════════════════════════════════
-    //  DENY ALL OTHER PATHS
-    //  Any collection not explicitly listed above is blocked.
+    //  🔒 SECURITY LOCKDOWN: DENY ALL OTHER PATHS
+    //
+    //  CRITICAL SECURITY RULE: This catch-all rule blocks access to any collection
+    //  or document path not explicitly defined above. Essential for preventing
+    //  unauthorized access to unknown collections or accidentally exposed data.
+    //
+    //  WITHOUT this rule, any missing collection would default to ALLOW ALL,
+    //  creating massive security vulnerabilities. This rule implements the
+    //  security principle of "deny by default, allow by exception."
+    //
+    //  ALL new collections MUST be explicitly added above with proper security rules.
     // ══════════════════════════════════════════════════════
     match /{document=**} {
-      allow read, write: if false;
+      allow read, write: if false; // Block ALL access to undefined paths
     }
   }
 }

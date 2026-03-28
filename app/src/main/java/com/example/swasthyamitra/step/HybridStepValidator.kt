@@ -16,6 +16,8 @@ import kotlin.math.sqrt
  * Hybrid Step Validator - Multi-layer validation system
  * Combines hardware step sensor with intelligent validation layers
  */
+// 5-layer step validator using step counter, accelerometer, linear accel, gyroscope, and gravity sensors
+// Rejects false steps from hand gestures, vehicle travel, and cadence anomalies before counting them
 class HybridStepValidator(private val context: Context) : SensorEventListener {
 
     private val sensorManager = context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
@@ -52,16 +54,16 @@ class HybridStepValidator(private val context: Context) : SensorEventListener {
     private var orientationChangeCount = 0
     private var lastOrientationTime = 0L
 
-    // Configuration
-    private val MIN_STEP_INTERVAL_MS = 350L // Minimum time between steps
-    private val MAX_STEP_INTERVAL_MS = 800L // Maximum time between steps
-    private val MIN_CONSECUTIVE_STEPS = 8 // Minimum validated steps before UI update
-    private val MIN_ACTIVITY_CONFIDENCE = 80 // Minimum confidence for activity
-    private val MIN_ACCEL_MAGNITUDE = 0.5 // Minimum acceleration for step
-    private val MAX_ACCEL_MAGNITUDE = 25.0 // Maximum acceleration (filter spikes)
-    private val MAX_GYRO_MAGNITUDE = 3.0 // Maximum rotation rate
-    private val GESTURE_DIRECTION_CHANGE_THRESHOLD = 3 // Max direction changes in 1s
-    private val GESTURE_ORIENTATION_CHANGE_THRESHOLD = 5 // Max orientation changes in 1s
+    // Step validation thresholds
+    private val MIN_STEP_INTERVAL_MS = 350L   // fastest realistic step (170 spm sprint)
+    private val MAX_STEP_INTERVAL_MS = 800L   // slowest realistic step (75 spm casual walk)
+    private val MIN_CONSECUTIVE_STEPS = 8     // buffer steps before updating UI (filters walk-start noise)
+    private val MIN_ACTIVITY_CONFIDENCE = 80  // Activity Recognition must be ≥80% confident
+    private val MIN_ACCEL_MAGNITUDE = 0.5     // below this = too still to be walking
+    private val MAX_ACCEL_MAGNITUDE = 25.0    // above this = physically unrealistic impact
+    private val MAX_GYRO_MAGNITUDE = 3.0      // high rotation = phone being waved, not walked
+    private val GESTURE_DIRECTION_CHANGE_THRESHOLD = 3  // >3 direction reversals in 1s = hand gesture
+    private val GESTURE_ORIENTATION_CHANGE_THRESHOLD = 5 // >5 orientation flips in 1s = phone movement
 
     private var callback: ((validatedSteps: Int, confidence: Double) -> Unit)? = null
 
@@ -143,6 +145,7 @@ class HybridStepValidator(private val context: Context) : SensorEventListener {
         // Handle accuracy changes if needed
     }
 
+    // Runs each sensor step event through all 5 validation layers; only registers it if all pass
     private fun handleStepDetection(event: SensorEvent) {
         val currentTime = System.currentTimeMillis()
 
@@ -180,6 +183,7 @@ class HybridStepValidator(private val context: Context) : SensorEventListener {
         registerValidatedStep(currentTime)
     }
 
+    // Layer 1: Step must arrive within 350-800ms of the previous step (realistic cadence window)
     private fun validateStepTiming(currentTime: Long): Boolean {
         if (lastStepTimestamp == 0L) {
             return true // First step
@@ -189,6 +193,7 @@ class HybridStepValidator(private val context: Context) : SensorEventListener {
         return timeDiff in MIN_STEP_INTERVAL_MS..MAX_STEP_INTERVAL_MS
     }
 
+    // Layer 2: Activity Recognition must classify the user as walking, running or on-foot with ≥80% confidence
     private fun validateActivity(): Boolean {
         val activity = currentActivity ?: return false
 
@@ -207,6 +212,7 @@ class HybridStepValidator(private val context: Context) : SensorEventListener {
         return validActivity && highConfidence && !rejectedActivity
     }
 
+    // Layer 3: Checks last 5 accelerometer readings are rhythmically consistent (low std dev = genuine walk)
     private fun validateMotionPattern(): Boolean {
         // Check if acceleration magnitude is within realistic walking/running range
         if (accelMagnitudes.isEmpty()) return false
@@ -231,6 +237,7 @@ class HybridStepValidator(private val context: Context) : SensorEventListener {
         return true
     }
 
+    // Layer 4: Returns true if sensor pattern looks like a hand gesture (waving, pocketing, excessive rotation)
     private fun isHandGesture(): Boolean {
         // Check for rapid direction changes (indicator of hand waving)
         if (rapidDirectionChanges >= GESTURE_DIRECTION_CHANGE_THRESHOLD) {
@@ -258,6 +265,7 @@ class HybridStepValidator(private val context: Context) : SensorEventListener {
         return false
     }
 
+    // Layer 5: Checks that recent step intervals are consistent (< 30% variance = steady cadence)
     private fun validateCadence(currentTime: Long): Boolean {
         stepTimestamps.add(currentTime)
 
@@ -283,6 +291,7 @@ class HybridStepValidator(private val context: Context) : SensorEventListener {
         return variance / avgInterval < 0.3
     }
 
+    // Commits a passing step; waits for MIN_CONSECUTIVE_STEPS before emitting to UI (avoids false start bursts)
     private fun registerValidatedStep(timestamp: Long) {
         lastStepTimestamp = timestamp
         pendingSteps++
@@ -299,6 +308,7 @@ class HybridStepValidator(private val context: Context) : SensorEventListener {
         }
     }
 
+    // Scores confidence 0-100% based on activity (40%), motion consistency (30%), and cadence regularity (30%)
     private fun calculateConfidence(): Double {
         var confidence = 0.0
 
@@ -330,6 +340,7 @@ class HybridStepValidator(private val context: Context) : SensorEventListener {
         return (confidence * 100).coerceIn(0.0, 100.0)
     }
 
+    // Feeds accelerometer readings into the magnitude buffer and detects rapid direction reversals
     private fun handleAccelerometer(event: SensorEvent) {
         val x = event.values[0]
         val y = event.values[1]
@@ -360,6 +371,7 @@ class HybridStepValidator(private val context: Context) : SensorEventListener {
         lastAccelMagnitude = magnitude
     }
 
+    // Uses linear acceleration (gravity removed) to penalise sudden hand-shaking spikes
     private fun handleLinearAcceleration(event: SensorEvent) {
         // Additional validation using linear acceleration (gravity removed)
         val x = event.values[0]
@@ -374,6 +386,7 @@ class HybridStepValidator(private val context: Context) : SensorEventListener {
         }
     }
 
+    // Tracks rotation magnitude to detect excessive phone spinning (indicator of hand gesture, not walking)
     private fun handleGyroscope(event: SensorEvent) {
         val x = event.values[0]
         val y = event.values[1]
@@ -388,6 +401,7 @@ class HybridStepValidator(private val context: Context) : SensorEventListener {
         }
     }
 
+    // Counts orientation changes per second; too many rapid flips signals phone manipulation, not walking
     private fun handleGravity(event: SensorEvent) {
         // Track orientation changes
         val currentTime = System.currentTimeMillis()

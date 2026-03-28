@@ -8,9 +8,10 @@ import com.example.swasthyamitra.databinding.ItemWaterLogBinding
 import java.text.SimpleDateFormat
 import java.util.*
 
+// RecyclerView adapter displaying each WaterLog entry with its ml amount, timestamp, and a delete button
 class WaterLogAdapter(
     private var logs: List<WaterLog>,
-    private val onDelete: (WaterLog) -> Unit
+    private val onDelete: (WaterLog) -> Unit   // callback fires when user taps delete on a log row
 ) : RecyclerView.Adapter<WaterLogAdapter.ViewHolder>() {
 
     class ViewHolder(val binding: ItemWaterLogBinding) : RecyclerView.ViewHolder(binding.root)
@@ -20,6 +21,7 @@ class WaterLogAdapter(
         return ViewHolder(binding)
     }
 
+    // Binds a WaterLog to the row: shows ml amount and formatted time (e.g. "08:30 AM"), wires delete button
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val log = logs[position]
         holder.binding.tvLogAmount.text = "${log.amountML} ml"
@@ -34,6 +36,7 @@ class WaterLogAdapter(
 
     override fun getItemCount() = logs.size
 
+    // Swaps the dataset and refreshes the whole list (called after add/delete operations)
     fun updateLogs(newLogs: List<WaterLog>) {
         logs = newLogs
         notifyDataSetChanged()

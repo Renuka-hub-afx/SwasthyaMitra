@@ -204,6 +204,15 @@ class FoodLogActivity : AppCompatActivity() {
             .setView(dialogView)
             .create()
 
+        // Ensure chip selection happens after the dialog is shown
+        dialog.setOnShowListener {
+            chipGroup.post {
+                val chipIdToSelect = chipIds[suggestedMealType] ?: R.id.chip_snack
+                chipGroup.check(chipIdToSelect)
+                android.util.Log.d("FoodLog", "Manual entry - After post selection, checked chip ID: ${chipGroup.checkedChipId}")
+            }
+        }
+
         dialogView.findViewById<Button>(R.id.btn_save_manual).setOnClickListener {
             val foodName = etFoodName.text.toString().trim()
             val calories = etCalories.text.toString().toDoubleOrNull() ?: 0.0
@@ -218,14 +227,23 @@ class FoodLogActivity : AppCompatActivity() {
                 R.id.chip_lunch -> "Lunch"
                 R.id.chip_dinner -> "Dinner"
                 R.id.chip_snack -> "Snack"
-                else -> suggestedMealType
+                else -> {
+                    // Debug: Log what the selected chip ID is
+                    android.util.Log.d("FoodLog", "Manual entry - Selected chip ID: $selectedChipId, using suggested: $suggestedMealType")
+                    suggestedMealType
+                }
             }
-            
+
+            // Additional debug logging
+            android.util.Log.d("FoodLog", "Manual entry - Final meal type: $mealType")
+
             if (foodName.isEmpty() || calories == 0.0) {
                 Toast.makeText(this, "Please enter food name and calories", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
-            
+
+            // Show a toast to confirm meal type selection (temporary debug)
+            Toast.makeText(this, "Saving as: $mealType", Toast.LENGTH_SHORT).show()
             saveManualFoodLog(foodName, calories, protein, carbs, fat, servingSize, mealType)
             dialog.dismiss()
         }
@@ -475,7 +493,7 @@ class FoodLogActivity : AppCompatActivity() {
         etCarbs.setText(String.format("%.1f", carbs))
         etFat.setText(String.format("%.1f", fat))
         etServingSize.setText(product.serving_size ?: "100g")
-        
+
         // Auto-select meal type based on current time
         val suggestedMealType = suggestMealType()
         val chipIds = mapOf(
@@ -484,12 +502,23 @@ class FoodLogActivity : AppCompatActivity() {
             "Dinner" to R.id.chip_dinner,
             "Snack" to R.id.chip_snack
         )
-        chipGroup.check(chipIds[suggestedMealType] ?: R.id.chip_snack)
-        
+        val chipIdToSelect = chipIds[suggestedMealType] ?: R.id.chip_snack
+
+        // Debug logging for Product
+        android.util.Log.d("FoodLog", "Product - Suggested meal: $suggestedMealType, selecting chip ID: $chipIdToSelect")
+
         val dialog = AlertDialog.Builder(this)
             .setTitle("Confirm Food Details")
             .setView(dialogView)
             .create()
+
+        // Ensure chip selection happens after the dialog is shown
+        dialog.setOnShowListener {
+            chipGroup.post {
+                chipGroup.check(chipIdToSelect)
+                android.util.Log.d("FoodLog", "Product - After post selection, checked chip ID: ${chipGroup.checkedChipId}")
+            }
+        }
 
         dialogView.findViewById<Button>(R.id.btn_save_manual).setOnClickListener {
             val foodName = etFoodName.text.toString().trim()
@@ -498,17 +527,26 @@ class FoodLogActivity : AppCompatActivity() {
             val finalCarbs = etCarbs.text.toString().toDoubleOrNull() ?: 0.0
             val finalFat = etFat.text.toString().toDoubleOrNull() ?: 0.0
             val servingSize = etServingSize.text.toString().trim()
-            
+
             val selectedChipId = chipGroup.checkedChipId
             val mealType = when (selectedChipId) {
                 R.id.chip_breakfast -> "Breakfast"
                 R.id.chip_lunch -> "Lunch"
                 R.id.chip_dinner -> "Dinner"
                 R.id.chip_snack -> "Snack"
-                else -> "Snack"
+                else -> {
+                    // Debug: Log what the selected chip ID is
+                    android.util.Log.d("FoodLog", "Product - Selected chip ID: $selectedChipId, using suggested: $suggestedMealType")
+                    suggestedMealType
+                }
             }
-            
+
+            // Additional debug logging
+            android.util.Log.d("FoodLog", "Product - Final meal type: $mealType")
+
             if (foodName.isNotEmpty() && finalCalories > 0) {
+                // Show a toast to confirm meal type selection (temporary debug)
+                Toast.makeText(this, "Saving as: $mealType", Toast.LENGTH_SHORT).show()
                 saveManualFoodLog(foodName, finalCalories, finalProtein, finalCarbs, finalFat, servingSize, mealType)
                 dialog.dismiss()
             } else {
@@ -540,7 +578,7 @@ class FoodLogActivity : AppCompatActivity() {
         etCarbs.setText(food.carbs.toString())
         etFat.setText(food.fat.toString())
         etServingSize.setText(food.servingSize)
-        
+
         // Auto-select meal type based on current time
         val suggestedMealType = suggestMealType()
         val chipIds = mapOf(
@@ -549,12 +587,28 @@ class FoodLogActivity : AppCompatActivity() {
             "Dinner" to R.id.chip_dinner,
             "Snack" to R.id.chip_snack
         )
-        chipGroup.check(chipIds[suggestedMealType] ?: R.id.chip_snack)
-        
+        val chipIdToSelect = chipIds[suggestedMealType] ?: R.id.chip_snack
+
+        // Debug logging for Indian food
+        android.util.Log.d("FoodLog", "Indian food - Suggested meal: $suggestedMealType, selecting chip ID: $chipIdToSelect")
+
+        chipGroup.check(chipIdToSelect)
+
+        // Verify the selection
+        android.util.Log.d("FoodLog", "Indian food - After selection, checked chip ID: ${chipGroup.checkedChipId}")
+
         val dialog = AlertDialog.Builder(this)
             .setTitle("Confirm Food Details")
             .setView(dialogView)
             .create()
+
+        // Ensure chip selection happens after the dialog is shown
+        dialog.setOnShowListener {
+            chipGroup.post {
+                chipGroup.check(chipIdToSelect)
+                android.util.Log.d("FoodLog", "Indian food - After post selection, checked chip ID: ${chipGroup.checkedChipId}")
+            }
+        }
 
         dialogView.findViewById<Button>(R.id.btn_save_manual).setOnClickListener {
             val foodName = etFoodName.text.toString().trim()
@@ -563,17 +617,26 @@ class FoodLogActivity : AppCompatActivity() {
             val carbs = etCarbs.text.toString().toDoubleOrNull() ?: 0.0
             val fat = etFat.text.toString().toDoubleOrNull() ?: 0.0
             val servingSize = etServingSize.text.toString().trim()
-            
+
             val selectedChipId = chipGroup.checkedChipId
             val mealType = when (selectedChipId) {
                 R.id.chip_breakfast -> "Breakfast"
                 R.id.chip_lunch -> "Lunch"
                 R.id.chip_dinner -> "Dinner"
                 R.id.chip_snack -> "Snack"
-                else -> "Snack"
+                else -> {
+                    // Debug: Log what the selected chip ID is
+                    android.util.Log.d("FoodLog", "Indian food - Selected chip ID: $selectedChipId, using suggested: $suggestedMealType")
+                    suggestedMealType
+                }
             }
-            
+
+            // Additional debug logging
+            android.util.Log.d("FoodLog", "Indian food - Final meal type: $mealType")
+
             if (foodName.isNotEmpty() && calories > 0) {
+                // Show a toast to confirm meal type selection (temporary debug)
+                Toast.makeText(this, "Saving as: $mealType", Toast.LENGTH_SHORT).show()
                 saveManualFoodLog(foodName, calories, protein, carbs, fat, servingSize, mealType)
                 dialog.dismiss()
             } else {

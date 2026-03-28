@@ -7,6 +7,7 @@ import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.util.StringTokenizer
 
+// Loads Indian food nutritional data from assets (food_data.json, fallback: food_data.csv) into memory cache
 class IndianFoodRepository(private val context: Context) {
 
     private var foodCache: List<IndianFood> = emptyList()
@@ -108,11 +109,13 @@ class IndianFoodRepository(private val context: Context) {
         }
     }
 
+    // Returns all foods loaded into cache (loads from asset files on first call)
     fun getAllFoods(): List<IndianFood> {
         if (foodCache.isEmpty() && !isLoading) loadFoodDatabase()
         return foodCache
     }
 
+    // Filters the cache by food name (case-insensitive); used by the food search dialog
     fun searchFood(query: String): List<IndianFood> {
         if (foodCache.isEmpty() && !isLoading) loadFoodDatabase()
         

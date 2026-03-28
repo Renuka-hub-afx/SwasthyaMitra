@@ -9,6 +9,7 @@ import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.math.roundToInt
 
+// Holds one point on the weight trend chart — isProjected=true means it was calculated, not measured
 data class WeightPoint(
     val timestamp: Long,
     val weight: Float,
@@ -20,6 +21,7 @@ data class WeightPoint(
     val moodIntensity: Float = 0f
 )
 
+// Combines weight logs, food logs, exercise logs, and mood logs to project a day-by-day weight trajectory
 class WeightProjectionHelper(private val authHelper: FirebaseAuthHelper) {
     
     private val firestore = FirebaseFirestore.getInstance("renu")
@@ -40,7 +42,7 @@ class WeightProjectionHelper(private val authHelper: FirebaseAuthHelper) {
             1600.0
         }
         
-        // Base Sedentary Burn (Life functions + light movement)
+        // Sedentary base energy expenditure (BMR × 1.2 activity factor) used as the daily calorie burn floor
         val sedentaryTDEE = bmr * 1.2
 
         // Fetch Logs (Weight, Food, Exercise)
@@ -147,7 +149,7 @@ class WeightProjectionHelper(private val authHelper: FirebaseAuthHelper) {
             val actualWeightForDay = weightMap[dateStr]
             
             if (actualWeightForDay != null && actualWeightForDay > 0) {
-                // Real data available - Sync projection
+                // Real weigh-in data exists: snap the projection curve to the actual measurement
                 currentWeight = actualWeightForDay
                 resultPoints.add(WeightPoint(
                     dayTimestamp, 
@@ -171,6 +173,7 @@ class WeightProjectionHelper(private val authHelper: FirebaseAuthHelper) {
                     -(caloriesOut_Exercise.toDouble())
                 }
 
+                // 7700 kcal deficit/surplus = 1 kg weight change (standard physiological estimate)
                 val weightChange = dailyCalorieBalance / 7700.0
                 currentWeight += weightChange.toFloat()
                 

@@ -31,6 +31,7 @@ import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
 
+// Displays all exercise logs, lets users search a 800+ exercise DB, log sets with GIF previews, and delete entries
 class ExerciseLogActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityExerciseLogBinding
@@ -42,6 +43,7 @@ class ExerciseLogActivity : AppCompatActivity() {
     private val timeFormat = SimpleDateFormat("hh:mm a", Locale.getDefault())
     private var selectedDate = Date()
 
+    // Initialises auth, loads the exercise JSON database, sets up UI, and fetches existing logs
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityExerciseLogBinding.inflate(layoutInflater)
@@ -69,6 +71,7 @@ class ExerciseLogActivity : AppCompatActivity() {
         loadAllExerciseLogs()
     }
 
+    // Wires back button, RecyclerView, FAB, and observes StepCounterService LiveData for live step count display
     private fun setupUI() {
         // Back button
         binding.btnBack.setOnClickListener {
@@ -98,6 +101,7 @@ class ExerciseLogActivity : AppCompatActivity() {
         }
     }
     
+    // Shows a 3-option menu: Search Exercises / Workout Dashboard / Manual Entry
     private fun showAddExerciseOptions() {
         val options = arrayOf("🔍 Search Exercises", "🏋️ Workout Dashboard (AI & Videos)", "📝 Manual Entry")
         AlertDialog.Builder(this)
@@ -120,6 +124,7 @@ class ExerciseLogActivity : AppCompatActivity() {
 
     // ==================== EXERCISE SEARCH DIALOG ====================
     
+    // Shows the exercise search dialog with a debounced TextWatcher (400ms delay) hitting ExerciseRepository
     private fun showExerciseSearchDialog() {
         val dialogView = layoutInflater.inflate(R.layout.dialog_exercise_search, null)
         val etSearch = dialogView.findViewById<TextInputEditText>(R.id.et_search_exercise)
@@ -219,6 +224,7 @@ class ExerciseLogActivity : AppCompatActivity() {
 
     // ==================== EXERCISE CONFIRMATION DIALOG ====================
     
+    // Shows a pre-filled confirmation form with the exercise GIF preview, duration, intensity chip, and auto-calorie recalculation
     private fun showExerciseConfirmationDialog(exercise: ExerciseRepository.ExerciseItem) {
         val dialogView = layoutInflater.inflate(R.layout.dialog_exercise_confirm, null)
         val etName = dialogView.findViewById<TextInputEditText>(R.id.et_exercise_name)
@@ -308,6 +314,7 @@ class ExerciseLogActivity : AppCompatActivity() {
 
     // ==================== SAVE SEARCHED EXERCISE ====================
 
+    // Creates an ExerciseLog, saves to Firestore via FirebaseAuthHelper, then also updates RTDB for gamification stats
     private fun saveSearchedExercise(
         exercise: ExerciseRepository.ExerciseItem,
         duration: Int,
@@ -366,6 +373,7 @@ class ExerciseLogActivity : AppCompatActivity() {
         }
     }
 
+    // Writes a new WorkoutSession to RTDB and awards XP via XPManager (same pattern as AI/manual entry)
     private fun updateRTDBStats(userId: String, exerciseName: String, duration: Int, calories: Int, today: String) {
         val db = FirebaseDatabase.getInstance("https://swasthyamitra-ded44-default-rtdb.asia-southeast1.firebasedatabase.app").reference
         val userRef = db.child("users").child(userId)
@@ -417,6 +425,7 @@ class ExerciseLogActivity : AppCompatActivity() {
 
     // ==================== LOAD & DISPLAY ====================
 
+    // Fetches all exercise logs from Firestore, updates the RecyclerView, and refreshes today's calorie/minute summary
     private fun loadAllExerciseLogs() {
         binding.progressBar.visibility = View.VISIBLE
         binding.tvEmptyState.visibility = View.GONE
@@ -459,6 +468,7 @@ class ExerciseLogActivity : AppCompatActivity() {
         }
     }
 
+    // Sums today's calories burned and active minutes from the in-memory log list for the summary card
     private fun updateSummary() {
         var totalCalories = 0
         var totalDuration = 0
@@ -474,6 +484,7 @@ class ExerciseLogActivity : AppCompatActivity() {
         binding.tvActiveMinutes.text = "${totalDuration}m"
     }
 
+    // Shows an AlertDialog with log details (time, duration, calories, intensity, muscle) and a Delete option
     private fun showExerciseDetailsDialog(log: ExerciseLog) {
         val time = if (log.timestamp > 0L) timeFormat.format(Date(log.timestamp)) else "N/A"
         val sourceInfo = if (log.source.isNotEmpty()) "\n📋 Source: ${log.source}" else ""
@@ -496,6 +507,7 @@ class ExerciseLogActivity : AppCompatActivity() {
             .show()
     }
 
+    // Confirms deletion via AlertDialog, then calls FirebaseAuthHelper.deleteExerciseLog and refreshes the list
     private fun deleteExerciseLog(log: ExerciseLog) {
         AlertDialog.Builder(this)
             .setTitle("Delete Entry")
@@ -536,9 +548,10 @@ class ExerciseLogActivity : AppCompatActivity() {
 
 // ==================== EXERCISE LOG ADAPTER (list display) ====================
 
-class ExerciseLogAdapter(
+    // RecyclerView adapter displaying each logged exercise with name, duration, calories, and time
+    class ExerciseLogAdapter(
     private val logs: List<ExerciseLog>,
-    private val onItemClick: (ExerciseLog) -> Unit
+    private val onItemClick: (ExerciseLog) -> Unit   // tapping a row opens showExerciseDetailsDialog
 ) : RecyclerView.Adapter<ExerciseLogAdapter.ViewHolder>() {
 
     private val timeFormat = SimpleDateFormat("hh:mm a", Locale.getDefault())
@@ -591,9 +604,10 @@ class ExerciseLogAdapter(
 
 // ==================== EXERCISE SEARCH ADAPTER ====================
 
-class ExerciseSearchAdapter(
+    // Search result adapter: shows GIF thumbnail, name, muscle group, equipment, calorie estimate, and source tag
+    class ExerciseSearchAdapter(
     private val exercises: List<ExerciseRepository.ExerciseItem>,
-    private val onItemClick: (ExerciseRepository.ExerciseItem) -> Unit
+    private val onItemClick: (ExerciseRepository.ExerciseItem) -> Unit  // leads to confirmation dialog
 ) : RecyclerView.Adapter<ExerciseSearchAdapter.ViewHolder>() {
 
     class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {

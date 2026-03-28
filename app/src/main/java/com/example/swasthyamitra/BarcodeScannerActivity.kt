@@ -24,19 +24,21 @@ import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.Calendar
 
+// Uses CameraX + ML Kit to scan product barcodes, looks up nutrition data via OpenFoodFacts API, and logs the food
 class BarcodeScannerActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityBarcodeScannerBinding
     private lateinit var cameraExecutor: ExecutorService
     private var camera: Camera? = null
     @Volatile
-    private var isProcessingBarcode = false  // Debounce flag
+    private var isProcessingBarcode = false  // debounce: prevents the same barcode firing multiple API calls
     
     companion object {
         private const val CAMERA_PERMISSION_CODE = 100
         private const val TAG = "BarcodeScanner"
     }
 
+    // Checks/requests camera permission, then starts CameraX preview; single executor thread for analysis
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityBarcodeScannerBinding.inflate(layoutInflater)
@@ -56,6 +58,7 @@ class BarcodeScannerActivity : AppCompatActivity() {
         }
     }
 
+    // Returns true if CAMERA permission has already been granted
     private fun checkCameraPermission(): Boolean {
         return ContextCompat.checkSelfPermission(
             this,
@@ -63,6 +66,7 @@ class BarcodeScannerActivity : AppCompatActivity() {
         ) == PackageManager.PERMISSION_GRANTED
     }
 
+    // Prompts the user for CAMERA permission (Android runtime permission)
     private fun requestCameraPermission() {
         ActivityCompat.requestPermissions(
             this,
@@ -87,6 +91,7 @@ class BarcodeScannerActivity : AppCompatActivity() {
         }
     }
 
+    // Binds Preview + ImageAnalysis use cases to the back camera; drops all frames except the latest (STRATEGY_KEEP_ONLY_LATEST)
     private fun startCamera() {
         val cameraProviderFuture = ProcessCameraProvider.getInstance(this)
 
@@ -133,6 +138,7 @@ class BarcodeScannerActivity : AppCompatActivity() {
     }
 
 
+    // Receives ML Kit barcode results; takes only the first barcode and kicks off the API lookup
     private fun processBarcode(barcodes: List<Barcode>) {
         if (barcodes.isNotEmpty() && !isProcessingBarcode) {
             isProcessingBarcode = true  // Lock: prevent duplicate scans
@@ -152,6 +158,7 @@ class BarcodeScannerActivity : AppCompatActivity() {
         }
     }
 
+    // Calls OpenFoodFacts REST API with the barcode value; parses product name, brand, and per-100g macros
     private fun fetchFoodDataFromBarcode(barcode: String) {
         lifecycleScope.launch {
             try {
@@ -201,6 +208,7 @@ class BarcodeScannerActivity : AppCompatActivity() {
         }
     }
 
+    // Packages the product nutrition into a FoodLog and saves it to Firestore via FirebaseAuthHelper
     private fun saveFoodLog(barcode: String, product: Product) {
         val authHelper = (application as UserApplication).authHelper
         val userId = authHelper.getCurrentUser()?.uid
@@ -251,6 +259,7 @@ class BarcodeScannerActivity : AppCompatActivity() {
         }
     }
 
+    // Returns the meal type label (Breakfast/Lunch/Snack/Dinner) based on the current hour of day
     private fun suggestMealType(): String {
         val hour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
         return when (hour) {
@@ -267,7 +276,7 @@ class BarcodeScannerActivity : AppCompatActivity() {
         cameraExecutor.shutdown()
     }
 
-    // Barcode Analyzer Class
+    // ML Kit ImageAnalysis.Analyzer: converts each CameraX frame to InputImage and scans for barcodes
     private class BarcodeAnalyzer(
         private val barcodeListener: (List<Barcode>) -> Unit
     ) : ImageAnalysis.Analyzer {

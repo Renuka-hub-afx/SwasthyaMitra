@@ -12,6 +12,7 @@ import java.util.*
  * Firebase Step Sync Manager
  * Handles secure storage and anomaly detection for validated steps
  */
+// Syncs GPS-validated steps to Firestore with 3-layer anomaly detection (daily cap, hourly rate, sudden spike)
 class FirebaseStepSync(private val context: Context) {
 
     private val firestore = FirebaseFirestore.getInstance()
@@ -20,8 +21,8 @@ class FirebaseStepSync(private val context: Context) {
     companion object {
         private const val TAG = "FirebaseStepSync"
         private const val COLLECTION_STEPS = "daily_steps"
-        private const val MAX_DAILY_STEPS = 100000 // Anomaly threshold
-        private const val MAX_STEPS_PER_HOUR = 15000 // Hourly anomaly threshold
+        private const val MAX_DAILY_STEPS = 100000      // Anomaly threshold: >100k steps/day is impossible
+        private const val MAX_STEPS_PER_HOUR = 15000    // Anomaly threshold: >15k steps/hour is impossible
     }
 
     /**
@@ -47,20 +48,20 @@ class FirebaseStepSync(private val context: Context) {
             val currentSteps = snapshot.getLong("totalSteps")?.toInt() ?: 0
             val hourlySteps = snapshot.get("hourlySteps") as? Map<String, Int> ?: emptyMap()
 
-            // Anomaly Detection Layer 1: Daily limit check
+            // Layer 1: Reject if total steps exceed physiologically impossible daily limit
             if (validatedSteps > MAX_DAILY_STEPS) {
                 Log.w(TAG, "Anomaly detected: Daily steps exceed threshold ($validatedSteps)")
                 return Result.failure(Exception("Step count exceeds daily maximum"))
             }
 
-            // Anomaly Detection Layer 2: Hourly rate check
+            // Layer 2: Reject if steps added this hour exceed realistic cadence for 1 hour
             val stepsThisHour = hourlySteps[currentHour.toString()] ?: 0
             if (stepsThisHour + (validatedSteps - currentSteps) > MAX_STEPS_PER_HOUR) {
                 Log.w(TAG, "Anomaly detected: Hourly steps exceed threshold")
                 return Result.failure(Exception("Step rate exceeds hourly maximum"))
             }
 
-            // Anomaly Detection Layer 3: Sudden spike check
+            // Layer 3: Reject if step count jumped by more than 5000 in one sync call (app reopened with stale data)
             if (validatedSteps - currentSteps > 5000) {
                 Log.w(TAG, "Anomaly detected: Sudden step spike (+${validatedSteps - currentSteps})")
                 return Result.failure(Exception("Sudden step increase detected"))
@@ -105,6 +106,7 @@ class FirebaseStepSync(private val context: Context) {
     /**
      * Get today's validated steps from Firebase
      */
+    // Fetches today's validated step total from Firestore (used at app start to restore step count)
     suspend fun getTodaySteps(userId: String): Result<Int> {
         return try {
             val today = dateFormat.format(Date())
@@ -128,6 +130,7 @@ class FirebaseStepSync(private val context: Context) {
     /**
      * Get step history for analytics
      */
+    // Returns the last N days of step history (used by weekly/monthly progress charts)
     suspend fun getStepHistory(
         userId: String,
         days: Int = 7
@@ -168,6 +171,7 @@ class FirebaseStepSync(private val context: Context) {
         }
     }
 
+    // Returns the device's unique Android ID for attaching device info to Firestore step documents
     private fun getDeviceId(): String {
         return android.provider.Settings.Secure.getString(
             context.contentResolver,
@@ -176,6 +180,7 @@ class FirebaseStepSync(private val context: Context) {
     }
 }
 
+// Lightweight summary of one day's step data (used in weekly history queries)
 data class DailyStepData(
     val date: String,
     val steps: Int,

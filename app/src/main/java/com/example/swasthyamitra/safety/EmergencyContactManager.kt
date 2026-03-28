@@ -12,11 +12,13 @@ data class EmergencyContact(
     val photoUri: String? = null
 )
 
+// Stores and retrieves the user's single emergency contact in SharedPreferences and Firestore
 class EmergencyContactManager(private val context: Context) {
-    private val prefs = context.getSharedPreferences("SafetyPrefs", Context.MODE_PRIVATE)
+    private val prefs = context.getSharedPreferences("SafetyPrefs", Context.MODE_PRIVATE) // local fast storage
     private val firestore = FirebaseFirestore.getInstance()
     private val auth = FirebaseAuth.getInstance()
 
+    // Saves contact name, phone, and photo URI to SharedPreferences for instant offline access
     fun saveContactLocally(contact: EmergencyContact) {
         prefs.edit().apply {
             putString("contact_name", contact.name)
@@ -26,6 +28,7 @@ class EmergencyContactManager(private val context: Context) {
         }
     }
 
+    // Reads contact from SharedPreferences — returns null if no contact has been set yet
     fun getLocalContact(): EmergencyContact? {
         val name = prefs.getString("contact_name", null)
         val number = prefs.getString("contact_number", null)
@@ -36,6 +39,7 @@ class EmergencyContactManager(private val context: Context) {
         } else null
     }
 
+    // Mirrors the local contact to Firestore so it's accessible on other devices / for Cloud Functions
     suspend fun syncContactWithFirebase(contact: EmergencyContact) {
         val userId = auth.currentUser?.uid ?: return
         try {
@@ -52,6 +56,7 @@ class EmergencyContactManager(private val context: Context) {
         }
     }
 
+    // Fetches the contact stored in Firestore (authoritative copy, may differ from local if edited elsewhere)
     suspend fun getFirebaseContact(): EmergencyContact? {
         val userId = auth.currentUser?.uid ?: return null
         return try {

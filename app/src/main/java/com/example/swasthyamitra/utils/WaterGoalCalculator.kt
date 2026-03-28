@@ -6,6 +6,7 @@ import kotlin.math.roundToInt
  * Utility class for calculating personalized daily water intake goals
  * based on user's weight, height, and activity level.
  */
+// Calculates personalised daily water goals (weight × 33 ml) with optional activity-level bonus
 object WaterGoalCalculator {
     
     // Constants for water calculation
@@ -28,6 +29,7 @@ object WaterGoalCalculator {
      * @param weightKg User's weight in kilograms
      * @return Daily water goal in milliliters
      */
+    // Base formula: weight (kg) × 33 ml, clamped between 1500-4000 ml
     fun calculateDailyGoal(weightKg: Double): Int {
         if (weightKg <= 0) return MINIMUM_DAILY_GOAL
         
@@ -42,6 +44,7 @@ object WaterGoalCalculator {
      * @param activityLevel Activity level: "sedentary", "moderate", "active"
      * @return Daily water goal in milliliters
      */
+    // Adds 0/500/1000 ml activity bonus on top of the base goal for sedentary/moderate/active users
     fun calculateDailyGoalWithActivity(weightKg: Double, activityLevel: String = "moderate"): Int {
         val baseGoal = calculateDailyGoal(weightKg)
         
@@ -79,6 +82,7 @@ object WaterGoalCalculator {
      * @param goal Daily goal in ml
      * @return Percentage (0-100+)
      */
+    // Returns how many ml out of the goal have been consumed (0-100+%)
     fun calculateProgress(currentIntake: Int, goal: Int): Int {
         if (goal <= 0) return 0
         return ((currentIntake.toFloat() / goal) * 100).roundToInt()
@@ -91,6 +95,7 @@ object WaterGoalCalculator {
      * @param goal Daily goal in ml
      * @return Remaining ml needed (0 if goal achieved)
      */
+    // Returns ml still needed to hit the goal (returns 0 if goal already reached)
     fun getRemainingIntake(currentIntake: Int, goal: Int): Int {
         return (goal - currentIntake).coerceAtLeast(0)
     }
@@ -140,6 +145,7 @@ object WaterGoalCalculator {
      * @param sleepHour Sleep hour (0-23)
      * @return Recommended number of reminders
      */
+    // Calculates how many reminders to schedule between wake and sleep (one every 2 hours, 4-12 per day)
     fun calculateOptimalReminderCount(wakeHour: Int, sleepHour: Int): Int {
         val activeHours = if (sleepHour > wakeHour) {
             sleepHour - wakeHour
@@ -158,6 +164,7 @@ object WaterGoalCalculator {
      * @param sleepHour Sleep hour (0-23)
      * @return Interval in minutes
      */
+    // Returns the interval in minutes between reminders (active hours ÷ reminder count)
     fun calculateReminderInterval(wakeHour: Int, sleepHour: Int): Long {
         val reminderCount = calculateOptimalReminderCount(wakeHour, sleepHour)
         val activeHours = if (sleepHour > wakeHour) {

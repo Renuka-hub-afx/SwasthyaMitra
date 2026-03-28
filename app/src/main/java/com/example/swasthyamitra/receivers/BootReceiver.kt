@@ -13,12 +13,14 @@ import com.example.swasthyamitra.notifications.WaterNotificationWorker
 import com.example.swasthyamitra.services.StepCounterService
 import java.util.concurrent.TimeUnit
 
+// BroadcastReceiver: fires on device boot to restart StepCounterService and re-enqueue WorkManager workers
 class BootReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         if (intent.action == Intent.ACTION_BOOT_COMPLETED || intent.action == "android.intent.action.QUICKBOOT_POWERON") {
             Log.d("BootReceiver", "Boot completed, restarting services and workers")
             
             // Restart step counter service
+            // Restart step counter as a foreground service (required on Android 8+ to avoid ANR)
             val serviceIntent = Intent(context, StepCounterService::class.java)
             serviceIntent.action = StepCounterService.ACTION_START
             

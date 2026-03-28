@@ -11,6 +11,7 @@ import java.util.Calendar
 /**
  * Manages water reminder alarms with smart scheduling based on user's wake/sleep times
  */
+// Schedules exact AlarmManager alarms between wake and sleep time at a configurable interval (default 2h)
 class WaterReminderManager(private val context: Context) {
     
     private val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
@@ -79,6 +80,7 @@ class WaterReminderManager(private val context: Context) {
     /**
      * Schedule a single alarm
      */
+    // Schedules one exact alarm using setExactAndAllowWhileIdle so it fires even in Doze mode
     private fun scheduleAlarm(triggerAtMillis: Long, requestCode: Int, intervalMillis: Long) {
         val intent = Intent(context, WaterReminderReceiver::class.java).apply {
             putExtra("REMINDER_ID", requestCode)
@@ -145,6 +147,7 @@ class WaterReminderManager(private val context: Context) {
     /**
      * Parse time string "HH:mm" to hour and minute
      */
+    // Splits "HH:mm" string into (hour, minute) integers
     private fun parseTime(time: String): Pair<Int, Int> {
         return try {
             val parts = time.split(":")
@@ -158,6 +161,7 @@ class WaterReminderManager(private val context: Context) {
     /**
      * Calculate active hours between wake and sleep time
      */
+    // Calculates hours between wake and sleep, handling overnight spans (e.g. wake 7 AM, sleep 1 AM next day)
     private fun calculateActiveHours(wakeHour: Int, sleepHour: Int): Int {
         return if (sleepHour > wakeHour) {
             sleepHour - wakeHour

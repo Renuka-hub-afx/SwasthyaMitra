@@ -6,6 +6,7 @@ import android.content.Intent
 import com.google.android.gms.location.ActivityTransitionResult
 import com.google.android.gms.location.DetectedActivity
 
+// BroadcastReceiver: receives activity-transition events (WALKING→RUNNING etc.) and forwards them to TrackingService
 class ActivityTransitionReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context?, intent: Intent?) {
         if (ActivityTransitionResult.hasResult(intent)) {
@@ -15,6 +16,7 @@ class ActivityTransitionReceiver : BroadcastReceiver() {
                 val type = event.activityType
                 
                 // Communicate to service
+                // Forward each transition event to TrackingService so it can update pace/activity mode
                 val serviceIntent = Intent(context, TrackingService::class.java).apply {
                     action = "ACTION_ACTIVITY_TRANSITION"
                     putExtra("activity_type", type)

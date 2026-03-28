@@ -17,6 +17,7 @@ import com.example.swasthyamitra.ui.hydration.HydrationActivity
 /**
  * Broadcast receiver for water reminder notifications
  */
+// BroadcastReceiver: fired by AlarmManager alarms; shows water reminder with quick-log 250ml/500ml actions
 class WaterReminderReceiver : BroadcastReceiver() {
     
     companion object {
@@ -68,6 +69,7 @@ class WaterReminderReceiver : BroadcastReceiver() {
     /**
      * Show water reminder notification
      */
+    // Shows a water reminder notification with two inline action buttons (Log 250ml, Log 500ml)
     private fun showWaterReminderNotification(context: Context, intent: Intent?) {
         createNotificationChannel(context)
         
@@ -145,6 +147,7 @@ class WaterReminderReceiver : BroadcastReceiver() {
      * Re-schedule the same alarm for the next day (24 hours later)
      * so alarm-based water reminders repeat daily.
      */
+    // Re-schedules this exact alarm for 24 hours later so reminders repeat daily without WorkManager
     private fun rescheduleForNextDay(context: Context, reminderId: Int) {
         try {
             val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
@@ -172,6 +175,7 @@ class WaterReminderReceiver : BroadcastReceiver() {
     /**
      * Handle quick log water action from notification
      */
+    // Handles the inline "250ml"/"500ml" button tap: dismisses notification and opens HydrationActivity with amount pre-filled
     private fun handleLogWater(context: Context, intent: Intent) {
         val amountMl = intent.getIntExtra(EXTRA_AMOUNT_ML, 250)
         val notificationId = intent.getIntExtra("NOTIFICATION_ID", NOTIFICATION_ID_BASE)
@@ -192,6 +196,7 @@ class WaterReminderReceiver : BroadcastReceiver() {
     /**
      * Handle dismiss action
      */
+    // Dismisses the notification without logging water
     private fun handleDismiss(context: Context, intent: Intent) {
         val notificationId = intent.getIntExtra("NOTIFICATION_ID", NOTIFICATION_ID_BASE)
         NotificationManagerCompat.from(context).cancel(notificationId)
@@ -200,6 +205,7 @@ class WaterReminderReceiver : BroadcastReceiver() {
     /**
      * Create notification channel for water reminders
      */
+    // Creates the notification channel for water reminders (required on Android 8+)
     private fun createNotificationChannel(context: Context) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(

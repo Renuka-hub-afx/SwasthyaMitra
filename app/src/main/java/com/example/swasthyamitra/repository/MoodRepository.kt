@@ -9,11 +9,13 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import kotlinx.coroutines.tasks.await
 
+// Firestore repository for mood logs: saves entries, updates the daily summary, and awards XP
 class MoodRepository {
 
     private val firestore = FirebaseFirestore.getInstance("renu")
     private val TAG = "MoodRepository"
 
+    // Saves a new mood entry, marks it in the daily summary, awards XP, and updates the user's lastMood field
     suspend fun saveMood(userId: String, moodData: MoodData): Result<Boolean> {
         return try {
             firestore.collection("users").document(userId)
@@ -55,6 +57,7 @@ class MoodRepository {
         }
     }
 
+    // Fetches the last N mood logs ordered by newest first (used by AI coach and progress chart)
     suspend fun getRecentMoods(userId: String, limit: Int = 50): Result<List<MoodData>> {
         return try {
             val snapshot = firestore.collection("users").document(userId)

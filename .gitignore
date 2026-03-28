@@ -25,14 +25,26 @@ local.properties
 **/*.keystore
 **/*.jks
 
-# Environment and API Keys
+# Environment and API Keys (CRITICAL SECURITY)
 .env
 .env.local
 .env.*.local
+.env.development
+.env.production
+.env.staging
 *.pem
 *.key
 **/secrets.properties
 **/api_keys.properties
+**/config.properties
+**/sensitive.properties
+**/.env.*
+config/secrets.json
+config/api-keys.json
+api-keys.txt
+secrets.txt
+credentials.json
+serviceAccountKey.json
 
 # IDE and Editor Files
 .vscode/settings.json

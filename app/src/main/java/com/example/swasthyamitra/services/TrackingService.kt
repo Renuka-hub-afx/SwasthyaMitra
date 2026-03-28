@@ -23,6 +23,7 @@ import com.example.swasthyamitra.safety.SOSManager
 import com.example.swasthyamitra.safety.EmergencyContact
 import java.util.*
 
+// Foreground service: tracks GPS route + steps for workouts, monitors inactivity for SOS, and saves WalkingSession to Firestore
 class TrackingService : Service() {
 
     private lateinit var fusedLocationClient: FusedLocationProviderClient
@@ -53,19 +54,20 @@ class TrackingService : Service() {
     companion object {
         const val CHANNEL_ID = "TrackingChannel"
         const val NOTIFICATION_ID = 999
-        
+
+        // LiveData observed by LiveMapFragment and SafetyDashboardFragment for real-time workout UI
         val isTrackingLive = MutableLiveData<Boolean>(false)
-        val pathPointsLive = MutableLiveData<List<LatLng>>(emptyList())
-        val distanceLive = MutableLiveData<Double>(0.0)
-        val stepsLive = MutableLiveData<Int>(0)
-        val paceLive = MutableLiveData<String>("0'00")
-        val isSOSActiveLive = MutableLiveData<Boolean>(false)
-        val countdownLive = MutableLiveData<Int>(-1)
-        
-        const val ACTION_SAFETY_ALERT = "com.example.swasthyamitra.SAFETY_ALERT"
-        const val ACTION_START_COUNTDOWN = "com.example.swasthyamitra.START_COUNTDOWN"
-        const val ACTION_CANCEL_SOS = "com.example.swasthyamitra.CANCEL_SOS"
-        const val ACTION_TRIGGER_SOS = "com.example.swasthyamitra.TRIGGER_SOS"
+        val pathPointsLive = MutableLiveData<List<LatLng>>(emptyList())  // route points for map polyline
+        val distanceLive = MutableLiveData<Double>(0.0)                   // total GPS distance in metres
+        val stepsLive = MutableLiveData<Int>(0)                           // session steps (derived from StepCounterService)
+        val paceLive = MutableLiveData<String>("0'00")                    // min/km pace string
+        val isSOSActiveLive = MutableLiveData<Boolean>(false)             // true while SOS countdown or alert is active
+        val countdownLive = MutableLiveData<Int>(-1)                      // -1 = no countdown; 0-10 = seconds left
+
+        const val ACTION_SAFETY_ALERT = "com.example.swasthyamitra.SAFETY_ALERT"    // broadcast when inactivity detected
+        const val ACTION_START_COUNTDOWN = "com.example.swasthyamitra.START_COUNTDOWN" // tells UI to show 10s timer
+        const val ACTION_CANCEL_SOS = "com.example.swasthyamitra.CANCEL_SOS"        // user pressed cancel
+        const val ACTION_TRIGGER_SOS = "com.example.swasthyamitra.TRIGGER_SOS"      // directly trigger SOS
     }
 
     inner class LocalBinder : Binder() {
@@ -95,13 +97,12 @@ class TrackingService : Service() {
         )
     }
 
+    // Listens for step updates broadcast by StepCounterService; computes session steps by subtracting baseline
     private val stepReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             val totalToday = intent?.getIntExtra("steps", 0) ?: 0
             if (isTracking && !isPaused) {
-                if (startSteps == -1) {
-                    startSteps = totalToday
-                }
+                if (startSteps == -1) startSteps = totalToday // capture baseline at session start
                 currentSessionSteps = totalToday - startSteps
                 stepsLive.postValue(currentSessionSteps)
             }
@@ -122,6 +123,7 @@ class TrackingService : Service() {
         return START_STICKY
     }
 
+    // Resets all session counters, calls startForeground, and begins GPS + activity recognition
     private fun startTracking() {
         if (isTracking) return
         isTracking = true
@@ -141,6 +143,7 @@ class TrackingService : Service() {
         requestActivityUpdates()
     }
 
+    // Stops GPS/activity updates, saves WalkingSession to Firestore, and removes the foreground notification
     private fun stopTracking() {
         isTracking = false
         isTrackingLive.postValue(false)
@@ -250,6 +253,7 @@ class TrackingService : Service() {
         }
     }
 
+    // Starts a 10-second audio/vibration countdown; if not cancelled, fires triggerManualSOS automatically
     private fun startSafetyCountdown() {
         Log.d("TrackingService", "Starting safety countdown")
         countdownLive.postValue(10)
@@ -281,6 +285,7 @@ class TrackingService : Service() {
         countdownHandler.post(countdownRunnable!!)
     }
 
+    // User pressed cancel — stops countdown, resets SafetyMonitorManager, clears SOS flags
     private fun cancelSOS() {
         Log.d("TrackingService", "SOS Canceled by user")
         countdownRunnable?.let { countdownHandler.removeCallbacks(it) }
@@ -292,6 +297,7 @@ class TrackingService : Service() {
         // (Actually, boost happens in trigger, so maybe not needed here)
     }
 
+    // Sends an emergency SMS + logs to Firebase; boosts GPS accuracy to HIGH for continuous location sharing
     private fun triggerManualSOS(reason: String) {
         if (isSOSActiveLive.value == true) return
         
@@ -318,6 +324,7 @@ class TrackingService : Service() {
         }
     }
 
+    // Upgrades GPS from BALANCED to HIGH_ACCURACY after SOS fires for precise location updates
     private fun boostGpsAccuracy() {
         // Switch to High Accuracy if SOS is active
         removeLocationUpdates()
@@ -357,6 +364,7 @@ class TrackingService : Service() {
         }
     }
 
+    // Packages the completed session (steps, distance, pace, route) into WalkingSession and saves to Firestore
     private fun saveSessionToFirestore() {
         val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return
         val db = FirebaseFirestore.getInstance("renu")

@@ -63,6 +63,7 @@ class ChallengeDetailActivity : AppCompatActivity() {
 
     // ── Lifecycle ────────────────────────────────────────────────────────────────
 
+    // Reads challengeCode from intent, resolves current UID, binds views, and starts the RTDB data load
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_challenge_detail)
@@ -101,6 +102,7 @@ class ChallengeDetailActivity : AppCompatActivity() {
 
     // ── Step 1: Load challenge metadata from RTDB ────────────────────────────────
 
+    // Step 1: Reads challenge metadata (name, status, duration, createdAt, participants) from RTDB
     private fun loadChallenge() {
         progressBar.visibility = View.VISIBLE
 
@@ -170,6 +172,7 @@ class ChallengeDetailActivity : AppCompatActivity() {
 
     // ── Step 2: Read userStats from RTDB (permission-safe) ───────────────────────
 
+    // Step 2: Reads each participant's streak/lastActiveDate from RTDB userStats (permission-safe — no Firestore cross-read)
     private fun loadParticipantStatsFromRTDB(
         participantIds: List<String>,
         winnerId: String?,
@@ -245,6 +248,7 @@ class ChallengeDetailActivity : AppCompatActivity() {
 
     // ── Step 3: Render participant rows ──────────────────────────────────────────
 
+    // Step 3: Converts statsMap into scrollable participant rows with streak indicators and winner crown
     private fun renderParticipants(
         statsMap: Map<String, ParticipantInfo>,
         winnerId: String?
@@ -350,6 +354,7 @@ class ChallengeDetailActivity : AppCompatActivity() {
     //   • lastActiveDate == yesterday → checked in yesterday (still within window)
     // Returns FALSE only if lastActiveDate is non-empty AND older than yesterday.
 
+    // Returns true if the participant's lastActiveDate is today or yesterday (still within streak window)
     private fun isStreakAlive(lastActiveDate: String): Boolean {
         if (lastActiveDate.isEmpty()) return true  // No RTDB mirror data yet — assume active
         val today     = sdf.format(Date())
@@ -357,6 +362,7 @@ class ChallengeDetailActivity : AppCompatActivity() {
         return lastActiveDate == today || lastActiveDate == yesterday
     }
 
+    // Adds/subtracts 'days' from the given yyyy-MM-dd date string safely (handles end-of-month rollover)
     private fun offsetDate(base: String, days: Int): String {
         return try {
             val cal = Calendar.getInstance()
@@ -379,6 +385,8 @@ class ChallengeDetailActivity : AppCompatActivity() {
     //  3. Leave a pendingStatusUpdate flag under the opponent's userStats in RTDB
     //     → They claim it on next GamificationActivity.onResume → loadJoinedChallenges()
 
+    // Writes status=completed + winnerId to RTDB challenges node (shared), updates our own joined_challenges,
+    // and leaves a pendingChallengeUpdate flag for the opponent to claim on their next app open
     private fun endChallenge(winnerId: String?) {
         val iAmWinner = winnerId == myUserId
 
@@ -448,6 +456,7 @@ class ChallengeDetailActivity : AppCompatActivity() {
      * For the opponent's shield, we write a pending_shield flag to RTDB —
      * they'll claim it the next time they open GamificationActivity.
      */
+    // If current user won: increments shields in OUR Firestore directly; if opponent won: sets pendingChallengeShield in RTDB
     private fun awardShieldToWinner(uid: String) {
         if (uid == myUserId) {
             // Current user is the winner — write directly to OUR Firestore
@@ -478,6 +487,7 @@ class ChallengeDetailActivity : AppCompatActivity() {
 
     // ── Leave challenge ──────────────────────────────────────────────────────────
 
+    // Shows a confirmation dialog; on confirm, finds the opponent, calls endChallenge, and removes own joined_challenges entry
     private fun confirmLeave() {
         AlertDialog.Builder(this)
             .setTitle("Leave Challenge?")
@@ -504,6 +514,7 @@ class ChallengeDetailActivity : AppCompatActivity() {
 
     // ── Data class ───────────────────────────────────────────────────────────────
 
+    // Lightweight data class holding a participant's RTDB userStats snapshot for display and resolution logic
     private data class ParticipantInfo(
         val uid: String,
         val name: String,

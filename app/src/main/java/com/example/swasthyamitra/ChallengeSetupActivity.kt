@@ -43,6 +43,7 @@ class ChallengeSetupActivity : AppCompatActivity() {
         ).reference
     }
 
+    // Inflates UI, wires back button, sets up email hint label, and attaches create button listener
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_challenge_setup)
@@ -81,6 +82,7 @@ class ChallengeSetupActivity : AppCompatActivity() {
 
     // ── Create challenge — no cross-user reads or writes ─────────────────────────
 
+    // Validates inputs (name required, user logged in) then triggers RTDB write
     private fun createChallenge() {
         val name        = etChallengeName.text.toString().trim()
         val friendEmail = etFriendEmail.text.toString().trim()
@@ -102,6 +104,7 @@ class ChallengeSetupActivity : AppCompatActivity() {
 
     // ── Write challenge to RTDB — only creator's own paths ───────────────────────
 
+    // Writes the challenge and the creator's joined_challenges entry to RTDB; intentionally skips the friend's path
     private fun doCreateChallenge(name: String, userId: String, friendEmail: String?) {
         val challengeCode = java.util.UUID.randomUUID().toString()
             .filter { it.isLetterOrDigit() }
@@ -157,6 +160,8 @@ class ChallengeSetupActivity : AppCompatActivity() {
      * to RTDB userStats/<uid> so ChallengeDetailActivity can read it without permission issues.
      * Falls back to a minimal entry (name only) if Firestore read fails.
      */
+    // Reads creator's own Firestore gamificationData and mirrors streak/shields to RTDB userStats
+    // so ChallengeDetailActivity can read it without cross-user permission errors
     private fun seedCreatorStatsToRTDB(userId: String) {
         val displayName = authHelper.getCurrentUser()?.displayName
             ?: authHelper.getCurrentUser()?.email?.substringBefore("@")
@@ -212,6 +217,7 @@ class ChallengeSetupActivity : AppCompatActivity() {
 
     // ── Success dialog + share ────────────────────────────────────────────────────
 
+    // Shows the generated 6-char challenge code, lets user copy it to clipboard or share via any app
     private fun showSuccessDialog(name: String, code: String, friendEmail: String?) {
         val message = buildString {
             append("Your challenge code is:\n\n")
@@ -252,6 +258,7 @@ class ChallengeSetupActivity : AppCompatActivity() {
         builder.show()
     }
 
+    // Launches the OS share sheet with a pre-filled challenge invite message (optionally addressed to friend)
     private fun shareCode(name: String, code: String, friendEmail: String?) {
         val message = buildString {
             append("Hey! Join my fitness challenge \"$name\" on SwasthyaMitra! 💪\n\n")
@@ -272,6 +279,7 @@ class ChallengeSetupActivity : AppCompatActivity() {
 
     // ── Helpers ──────────────────────────────────────────────────────────────────
 
+    // Toggles spinner visibility and Create button text/enabled state during RTDB write
     private fun setLoading(loading: Boolean) {
         btnCreateChallenge.isEnabled = !loading
         btnCreateChallenge.text      = if (loading) "Creating…" else "Create Challenge"

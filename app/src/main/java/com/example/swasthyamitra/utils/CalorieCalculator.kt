@@ -9,6 +9,7 @@ package com.example.swasthyamitra.utils
  *  - MET-based: uses GPS speed to determine MET value for more accurate
  *    calorie burn estimation. Formula: kcal = MET × weight(kg) × hours
  */
+// Singleton utility for calorie estimation: supports flat rate (0.04 kcal/step) and MET-based GPS speed mode
 object CalorieCalculator {
     
     // Standard calorie burn rate per step
@@ -32,6 +33,7 @@ object CalorieCalculator {
      * @param steps Number of steps taken
      * @return Calories burned (in kcal)
      */
+    // Simple flat-rate calculation — used by StepCounterService and basic step widgets
     fun calculateFromSteps(steps: Int): Double {
         return steps * CALORIES_PER_STEP
     }
@@ -41,6 +43,7 @@ object CalorieCalculator {
      * @param steps Number of steps taken
      * @return Calories burned (in kcal) as Int
      */
+    // Same as calculateFromSteps but returns an Int (used where a whole number is needed for display)
     fun calculateFromStepsInt(steps: Int): Int {
         return (steps * CALORIES_PER_STEP).toInt()
     }
@@ -66,8 +69,7 @@ object CalorieCalculator {
         val hours = durationMs / 3_600_000.0
         val metCalories = (met * weightKg * hours).toInt()
         
-        // Use whichever is higher: MET-based or simple step-based
-        // This prevents showing 0 calories when GPS speed is 0 but steps exist
+        // Returns the higher of MET-based or flat-rate (avoids showing 0 kcal when GPS speed is 0 but steps exist)
         val simpleCalories = calculateFromStepsInt(steps)
         return maxOf(metCalories, simpleCalories)
     }
@@ -78,6 +80,7 @@ object CalorieCalculator {
      * @param speedMs Speed in meters per second
      * @return MET value
      */
+    // Maps GPS speed (m/s) to the standard MET value from the Compendium of Physical Activities
     fun getMETForSpeed(speedMs: Double): Double {
         val speedKmh = speedMs * 3.6
         return when {

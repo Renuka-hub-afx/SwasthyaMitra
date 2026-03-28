@@ -8,6 +8,7 @@ import kotlinx.coroutines.tasks.await
  * Handles automatic aggregation of daily health data into DailySummary collection.
  * Updates progress percentages and maintains daily totals for all health metrics.
  */
+// Writes incremental health metrics (food, exercise, water, steps, sleep, mood, weight) to the daily_summary sub-collection
 class DailySummaryAggregator(private val userId: String) {
     
     private val db: FirebaseFirestore by lazy {
@@ -28,6 +29,7 @@ class DailySummaryAggregator(private val userId: String) {
      * Updates the lastActive timestamp in the user's profile.
      * Called automatically by all aggregation methods.
      */
+    // Updates the user's lastActive ISO timestamp so the app knows they were active today
     private suspend fun updateLastActive() {
         try {
             db.collection(Constants.Collections.USERS)
@@ -42,6 +44,7 @@ class DailySummaryAggregator(private val userId: String) {
     /**
      * Updates food-related metrics in daily summary.
      */
+    // Adds logged meal's calories and macros to the running daily totals
     suspend fun updateFoodMetrics(
         date: String,
         calories: Int,
@@ -75,6 +78,7 @@ class DailySummaryAggregator(private val userId: String) {
     /**
      * Updates exercise-related metrics in daily summary.
      */
+    // Adds workout calories and duration to daily exercise totals
     suspend fun updateExerciseMetrics(
         date: String,
         caloriesBurned: Int,
@@ -103,6 +107,7 @@ class DailySummaryAggregator(private val userId: String) {
     /**
      * Updates water intake metrics and calculates progress percentage.
      */
+    // Accumulates water intake and recalculates waterProgress % (capped at 100)
     suspend fun updateWaterMetrics(
         date: String,
         amountML: Int,
@@ -133,6 +138,7 @@ class DailySummaryAggregator(private val userId: String) {
     /**
      * Updates step metrics and calculates progress percentage.
      */
+    // Overwrites step count + stepProgress % for the day (not incremental — steps are absolute totals)
     suspend fun updateStepMetrics(
         date: String,
         steps: Int,
@@ -162,6 +168,7 @@ class DailySummaryAggregator(private val userId: String) {
     /**
      * Updates sleep metrics.
      */
+    // Saves total sleep minutes for the night (overwrites previous value if called again)
     suspend fun updateSleepMetrics(
         date: String,
         sleepMinutes: Int
@@ -184,6 +191,7 @@ class DailySummaryAggregator(private val userId: String) {
     /**
      * Marks that mood was logged for the day.
      */
+    // Sets moodLogged = true for the day (used by gamification to check if user logged mood)
     suspend fun markMoodLogged(date: String) {
         val summaryRef = getDailySummaryRef(date)
         
@@ -203,6 +211,7 @@ class DailySummaryAggregator(private val userId: String) {
     /**
      * Marks that weight was logged for the day.
      */
+    // Sets weightLogged = true for the day (used by streak tracking logic)
     suspend fun markWeightLogged(date: String) {
         val summaryRef = getDailySummaryRef(date)
         
@@ -239,6 +248,7 @@ class DailySummaryAggregator(private val userId: String) {
     /**
      * Calculates progress percentage with cap at 100%.
      */
+    // Returns progress as integer percentage (0-100); caps at 100 even if actual exceeds target
     fun calculateProgressPercentage(actual: Int, target: Int): Int {
         if (target <= 0) return 0
         val percentage = (actual * 100) / target

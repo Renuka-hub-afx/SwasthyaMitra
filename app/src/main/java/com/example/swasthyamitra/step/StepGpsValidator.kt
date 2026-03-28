@@ -104,6 +104,7 @@ class StepGpsValidator {
         onValidationResult = listener
     }
 
+    // Derives initial stride length from user height (stride ≈ 0.415 × height in cm → metres)
     fun setUserHeight(heightCm: Double) {
         userHeightCm = heightCm
         // Rule of thumb: stride ≈ 0.415 × height (cm) converted to meters
@@ -114,7 +115,7 @@ class StepGpsValidator {
         }
     }
 
-    /** Called on each step detection event from HybridStepValidator / sensor */
+    // Main entry: runs incoming raw step count through Layers 3-5, then returns a ValidatedResult with confidence
     fun onStepsDetected(newRawSteps: Int, timestamp: Long): ValidatedResult {
         totalRawSteps = newRawSteps
 
@@ -147,7 +148,7 @@ class StepGpsValidator {
         return buildResult(null)
     }
 
-    /** Called from location callback in the service */
+    // Called by GPS callback in the service; feeds location data and triggers Layers 1 and 2 every 30 seconds
     fun onLocationUpdate(location: Location, timestamp: Long) {
         currentSpeedMs = if (location.hasSpeed()) location.speed.toDouble() else 0.0
 
@@ -220,7 +221,7 @@ class StepGpsValidator {
         lastConfidence = calculateConfidence()
     }
 
-    /** Called from Activity Recognition receiver */
+    // Notified by ActivityTransitionReceiver; updates current activity type and confidence for Layer 4 filtering
     fun onActivityDetected(activityType: Int, confidence: Int) {
         currentActivityType = activityType
         currentActivityConfidence = confidence
@@ -254,6 +255,7 @@ class StepGpsValidator {
 
     // ------- Private helpers -------
 
+    // Layer 4: Returns rejection reason if user is in a vehicle, on bicycle, or confirmed still; null = allow
     private fun checkActivityFilter(): String? {
         if (currentActivityConfidence < ACTIVITY_CONFIDENCE_THRESHOLD) {
             return null // Not confident enough to filter — allow steps
@@ -266,6 +268,7 @@ class StepGpsValidator {
         }
     }
 
+    // Layer 3: Computes current cadence (steps/min) from recent timestamps and checks it matches GPS speed
     private fun checkSpeedCadence(timestamp: Long): String? {
         if (currentSpeedMs < 0.1) return null // No speed data — skip this check
 
@@ -294,6 +297,7 @@ class StepGpsValidator {
         return null
     }
 
+    // Combines GPS availability, activity recognition match, stride calibration quality into a 0-100 score
     private fun calculateConfidence(): Double {
         var confidence = 50.0  // base
 
@@ -327,6 +331,7 @@ class StepGpsValidator {
         return confidence.coerceIn(0.0, 100.0)
     }
 
+    // Packages all current validator state into a single result object returned to the service
     private fun buildResult(rejectionReason: String?): ValidatedResult {
         return ValidatedResult(
             validatedSteps = totalValidatedSteps,

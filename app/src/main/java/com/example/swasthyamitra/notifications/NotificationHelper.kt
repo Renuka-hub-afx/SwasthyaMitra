@@ -16,6 +16,7 @@ import com.example.swasthyamitra.MainActivity
 import com.example.swasthyamitra.R
 import com.example.swasthyamitra.ui.hydration.HydrationActivity
 
+// Central helper that creates notification channels and shows Water/Meal/Event notifications
 class NotificationHelper(private val context: Context) {
 
     companion object {
@@ -29,9 +30,10 @@ class NotificationHelper(private val context: Context) {
     }
 
     init {
-        createNotificationChannels()
+        createNotificationChannels() // channels must be registered before any notification can show
     }
 
+    // Registers 3 notification channels required on Android 8+ (Water, Meals, Events)
     private fun createNotificationChannels() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val waterChannel = NotificationChannel(
@@ -65,6 +67,7 @@ class NotificationHelper(private val context: Context) {
         }
     }
 
+    // Builds and fires a notification; tapping it opens the relevant Activity (Water→HydrationActivity, Meal→AISmartDietActivity)
     fun showNotification(title: String, message: String, type: String) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             if (ActivityCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {

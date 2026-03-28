@@ -29,6 +29,8 @@ data class AvatarItem(
     val category: AvatarCategory
 )
 
+// Lets users choose a profile avatar from 13 preset illustrations or pick a photo from device gallery
+// Supports undo/redo history for avatar changes, then saves selection to Firestore and SharedPreferences
 class AvatarCustomizationActivity : AppCompatActivity() {
 
     // ImageViews
@@ -50,11 +52,11 @@ class AvatarCustomizationActivity : AppCompatActivity() {
     private lateinit var btnUndo: ImageButton
     private lateinit var btnRedo: ImageButton
 
-    // State
+    // State: current avatar selection (gallery URI takes priority over preset drawable)
     private var selectedGalleryUri: Uri? = null
-    private var currentAvatarResId: Int = R.drawable.avatar1 
-    
-    // History
+    private var currentAvatarResId: Int = R.drawable.avatar1
+
+    // Undo/redo history: stack of snapshots, pointer tracks current position
     data class AvatarState(val galleryUri: Uri?, val avatarResId: Int)
     private val historyStack = mutableListOf<AvatarState>()
     private var historyPointer = -1
@@ -84,7 +86,7 @@ class AvatarCustomizationActivity : AppCompatActivity() {
 
     private lateinit var adapter: AvatarAdapter
     
-    // Gallery Picker
+    // Photo picker result: persists URI permission, updates preview, switches to Gallery category, records history
     private val pickMedia = registerForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
         if (uri != null) {
             Log.d("PhotoPicker", "Selected URI: $uri")
@@ -114,6 +116,7 @@ class AvatarCustomizationActivity : AppCompatActivity() {
         }
     }
 
+    // Inflates layout, initialises AvatarManager, sets up RecyclerView, default to preset avatar mode
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_avatar_customization)
@@ -132,6 +135,7 @@ class AvatarCustomizationActivity : AppCompatActivity() {
         clickAvatarCategory()
     }
 
+    // Binds all ImageView, RecyclerView, category tab, and undo/redo button references
     private fun setupViews() {
         ivBase = findViewById(R.id.iv_base)
         ivHair = findViewById(R.id.iv_hair)
@@ -149,6 +153,7 @@ class AvatarCustomizationActivity : AppCompatActivity() {
         btnRedo = findViewById(R.id.btn_redo)
     }
 
+    // Configures horizontal RecyclerView and wires AvatarAdapter selection callback
     private fun setupRecyclerView() {
         recyclerItems.layoutManager = LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
         
@@ -158,6 +163,7 @@ class AvatarCustomizationActivity : AppCompatActivity() {
         recyclerItems.adapter = adapter
     }
     
+    // Applies the tapped avatar: clears gallery URI, sets new preset, shows preview, and pushes to history
     private fun applySelection(item: AvatarItem) {
         if (item.resId != null) {
             selectedGalleryUri = null
@@ -167,6 +173,7 @@ class AvatarCustomizationActivity : AppCompatActivity() {
         }
     }
     
+    // Truncates redo branch and pushes current state onto the history stack; ignores duplicate top entries
     private fun addToHistory() {
         // Remove future states if we are in the middle
         while (historyStack.size > historyPointer + 1) {
@@ -185,6 +192,7 @@ class AvatarCustomizationActivity : AppCompatActivity() {
         updateUndoRedoButtons()
     }
     
+    // Steps back one state in history and restores the previously saved avatar/gallery selection
     private fun undo() {
         if (historyPointer > 0) {
             historyPointer--
@@ -192,6 +200,7 @@ class AvatarCustomizationActivity : AppCompatActivity() {
         }
     }
     
+    // Steps forward one state in history (only available after an undo)
     private fun redo() {
         if (historyPointer < historyStack.size - 1) {
             historyPointer++
@@ -199,6 +208,7 @@ class AvatarCustomizationActivity : AppCompatActivity() {
         }
     }
     
+    // Reapplies a saved state (gallery or preset) and refreshes category tabs + adapter content
     private fun restoreState(state: AvatarState) {
         selectedGalleryUri = state.galleryUri
         currentAvatarResId = state.avatarResId
@@ -217,6 +227,7 @@ class AvatarCustomizationActivity : AppCompatActivity() {
         updateUndoRedoButtons()
     }
     
+    // Dims undo/redo icons when they are at the history boundary (nothing to undo/redo)
     private fun updateUndoRedoButtons() {
         btnUndo.isEnabled = historyPointer > 0
         btnUndo.alpha = if (btnUndo.isEnabled) 1.0f else 0.5f
@@ -225,7 +236,7 @@ class AvatarCustomizationActivity : AppCompatActivity() {
         btnRedo.alpha = if (btnRedo.isEnabled) 1.0f else 0.5f
     }
     
-    // Updated to show full avatar logic
+    // Shows a preset avatar on the base ImageView layer; hides the hair/eyes/outfit overlay layers
     private fun showFullAvatar(resId: Int) {
         ivBase.scaleType = ImageView.ScaleType.FIT_CENTER
         ivBase.imageTintList = null
@@ -240,6 +251,7 @@ class AvatarCustomizationActivity : AppCompatActivity() {
         ivOutfit.visibility = View.GONE
     }
     
+    // Displays a gallery URI image on the base layer, hides outline overlay layers
     private fun showGalleryImage(uri: Uri) {
         // Hide Layers
         ivHair.visibility = View.GONE
@@ -252,6 +264,7 @@ class AvatarCustomizationActivity : AppCompatActivity() {
         ivBase.visibility = View.VISIBLE
     }
 
+    // Wires back/reset/save buttons, gallery + avatar category tabs, and undo/redo buttons
     private fun setupListeners() {
         findViewById<View>(R.id.btn_back).setOnClickListener { finish() }
         
@@ -288,6 +301,7 @@ class AvatarCustomizationActivity : AppCompatActivity() {
         }
     }
 
+    // Highlights the active category tab with purple; dims the rest to grey
     private fun selectCategoryUIOnly(selectedView: TextView, title: String) {
         val allCats = listOf(catGallery, catAvatar)
         val inactiveColor = Color.parseColor("#757575")
@@ -304,6 +318,7 @@ class AvatarCustomizationActivity : AppCompatActivity() {
         tvCategoryTitle.text = title
     }
 
+    // Persists selection locally (AvatarManager) and syncs selected_avatar_id to Firestore (optimistic UI)
     private fun saveSelection() {
         val userId = authHelper.getCurrentUser()?.uid ?: return
 
@@ -332,6 +347,7 @@ class AvatarCustomizationActivity : AppCompatActivity() {
         finish()
     }
     
+    // Converts a drawable res ID to its entry name (e.g., R.drawable.avatar3 → "avatar3") for Firestore storage
     private fun getResName(resId: Int): String {
         return try { resources.getResourceEntryName(resId) } catch (e: Exception) { "" }
     }

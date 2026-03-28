@@ -1,25 +1,33 @@
 package com.example.swasthyamitra.ai
 
+// Android framework imports for context and image processing
 import android.content.Context
 import android.graphics.Bitmap
 import android.util.Log
+// Firebase AI (Gemini) imports for computer vision and recipe generation
 import com.google.firebase.Firebase
 import com.google.firebase.ai.ai
 import com.google.firebase.ai.type.GenerativeBackend
 import com.google.firebase.ai.type.content
 import com.google.firebase.ai.type.generationConfig
+// Kotlin coroutines for async AI operations
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+// JSON parsing for structured recipe data
 import org.json.JSONObject
 
+// AI service for analyzing pantry images and generating recipe suggestions using computer vision
 class AIPantryService private constructor(private val context: Context) {
 
+    // Logging tag for debugging pantry image analysis
     private val TAG = "AIPantryService"
 
+    // Singleton pattern implementation for memory efficiency
     companion object {
         @Volatile
         private var INSTANCE: AIPantryService? = null
 
+        // Get singleton instance with thread-safe initialization
         fun getInstance(context: Context): AIPantryService {
             return INSTANCE ?: synchronized(this) {
                 INSTANCE ?: AIPantryService(context.applicationContext).also { INSTANCE = it }
@@ -27,26 +35,29 @@ class AIPantryService private constructor(private val context: Context) {
         }
     }
 
+    // Data structure for AI-generated recipe results with nutritional information
     data class RecipeResult(
-        val title: String,
-        val calories: Int,
-        val protein: Int,
-        val carbs: Int,
-        val fat: Int,
-        val ingredientsDetected: List<String>,
-        val instructions: List<String>,
-        val reason: String
+        val title: String,                    // Recipe name/title
+        val calories: Int,                    // Total estimated calories per serving
+        val protein: Int,                     // Protein content in grams
+        val carbs: Int,                      // Carbohydrate content in grams
+        val fat: Int,                        // Fat content in grams
+        val ingredientsDetected: List<String>, // AI-identified ingredients from image
+        val instructions: List<String>,       // Step-by-step cooking instructions
+        val reason: String                    // AI explanation for recipe suggestion
     )
 
+    // Analyze pantry image and generate recipe suggestion using computer vision AI
     suspend fun generateRecipeFromImage(bitmap: Bitmap): Result<RecipeResult> = withContext(Dispatchers.IO) {
         try {
+            // Comprehensive prompt for Indian recipe generation from pantry ingredients
             val promptText = """
                 You are an expert Indian Chef for the SwasthyaMitra App.
-                
+
                 Look at this image of ingredients.
                 1. Identify the healthy ingredients available.
                 2. Suggest ONE healthy, home-cooked Indian recipe using these ingredients.
-                
+
                 Strictly return JSON format:
                 {
                   "title": "Recipe Name",

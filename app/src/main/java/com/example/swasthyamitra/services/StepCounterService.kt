@@ -23,6 +23,7 @@ import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.concurrent.fixedRateTimer
 
+// Foreground service: counts steps via accelerometer, syncs to Firestore every 5 min, broadcasts to UI via LiveData
 class StepCounterService : Service() {
 
     private var stepTracker: StepTracker? = null
@@ -39,15 +40,15 @@ class StepCounterService : Service() {
     companion object {
         private const val NOTIFICATION_ID = 1001
         private const val CHANNEL_ID = "step_counter_channel"
-        
-        // LiveData for broadcasting to UI
+
+        // LiveData observed by homepage, WorkoutDashboard, and BadgesActivity for real-time UI update
         val stepsLive = MutableLiveData<Int>()
         val caloriesLive = MutableLiveData<Int>()
         val isRunningLive = MutableLiveData<Boolean>()
-        
-        const val ACTION_START = "ACTION_START"
-        const val ACTION_STOP = "ACTION_STOP"
-        const val ACTION_UPDATE_STEPS = "com.example.swasthyamitra.step.UPDATE_STEPS"
+
+        const val ACTION_START = "ACTION_START"                                           // start step tracking
+        const val ACTION_STOP = "ACTION_STOP"                                            // stop and save
+        const val ACTION_UPDATE_STEPS = "com.example.swasthyamitra.step.UPDATE_STEPS"    // broadcast to TrackingService
     }
 
     override fun onCreate() {
@@ -64,6 +65,7 @@ class StepCounterService : Service() {
         return START_STICKY
     }
 
+    // Starts the foreground service, loads today's steps from Firestore as baseline, then begins sensor counting
     private fun startTracking() {
         if (stepTracker != null) {
             Log.d("StepCounterService", "Already tracking")
@@ -130,7 +132,7 @@ class StepCounterService : Service() {
         }
     }
     
-    // Fetch today's step data from Firestore
+    // Reads today's users/{uid}/daily_steps/{date} doc to resume from existing step count (handles app restarts)
     private fun fetchTodayStepsFromFirestore(callback: (Int, Int) -> Unit) {
         val userId = auth.currentUser?.uid
         if (userId == null) {
@@ -161,6 +163,7 @@ class StepCounterService : Service() {
             }
     }
 
+    // Saves final steps, cancels the save timer, unregisters sensor, and removes the foreground notification
     private fun stopTracking() {
         // Save final data to Firestore
         saveToFirestore()
@@ -182,8 +185,8 @@ class StepCounterService : Service() {
         Log.d("StepCounterService", "Step tracking stopped")
     }
 
+    // Schedules a background timer to persist steps to Firestore every 5 minutes (prevents data loss on crash)
     private fun startPeriodicSave() {
-        // Save to Firestore every 5 minutes
         saveTimer = fixedRateTimer("FirestoreSave", false, 5 * 60 * 1000L, 5 * 60 * 1000L) {
             saveToFirestore()
         }
@@ -216,6 +219,7 @@ class StepCounterService : Service() {
         saveToSharedPreferences()
     }
     
+    // Writes absolute step/calorie values to daily_steps/{date} and appends the session to a sessions array
     private fun saveForDate(userId: String, date: String, steps: Int, calories: Int) {
         val docRef = db.collection("users").document(userId)
             .collection("daily_steps").document(date)
@@ -279,6 +283,7 @@ class StepCounterService : Service() {
         }
     }
 
+    // Builds the persistent foreground notification showing live step count and calories
     private fun createNotification(): Notification {
         val intent = Intent(this, homepage::class.java)
         val pendingIntent = PendingIntent.getActivity(
@@ -295,6 +300,7 @@ class StepCounterService : Service() {
             .build()
     }
 
+    // Refreshes the foreground notification with the latest step and calorie numbers
     private fun updateNotification() {
         val notification = createNotification()
         val manager = getSystemService(NotificationManager::class.java)

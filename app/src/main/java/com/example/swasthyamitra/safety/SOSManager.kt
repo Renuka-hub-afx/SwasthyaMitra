@@ -9,10 +9,12 @@ import com.google.firebase.firestore.FirebaseFirestore
 import java.text.SimpleDateFormat
 import java.util.*
 
+// Sends an emergency SMS to the saved contact and logs the event to Firestore
 class SOSManager(private val context: Context) {
     private val firestore = FirebaseFirestore.getInstance()
     private val auth = FirebaseAuth.getInstance()
 
+    // Entry point: builds the SOS message with GPS link + battery %, sends SMS, and logs to Firebase
     fun sendSOS(contact: EmergencyContact, latitude: Double, longitude: Double, reason: String) {
         val batteryPercentage = getBatteryPercentage()
         val timestamp = SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(Date())
@@ -28,6 +30,7 @@ class SOSManager(private val context: Context) {
         logEmergencyToFirebase(latitude, longitude, reason, batteryPercentage)
     }
 
+    // Sends an SMS (splits into multipart if message > 160 chars) using system SmsManager
     private fun sendSMS(phoneNumber: String, message: String) {
         try {
             val smsManager = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
@@ -46,6 +49,7 @@ class SOSManager(private val context: Context) {
         }
     }
 
+    // Writes the emergency event (lat/lon, reason, battery) to 'emergency_events' collection for audit trail
     private fun logEmergencyToFirebase(lat: Double, lon: Double, reason: String, battery: Int) {
         val userId = auth.currentUser?.uid ?: return
         val event = mapOf(
@@ -64,6 +68,7 @@ class SOSManager(private val context: Context) {
             }
     }
 
+    // Reads the current battery charge level (0-100%) from BatteryManager
     private fun getBatteryPercentage(): Int {
         val bm = context.getSystemService(Context.BATTERY_SERVICE) as BatteryManager
         return bm.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY)

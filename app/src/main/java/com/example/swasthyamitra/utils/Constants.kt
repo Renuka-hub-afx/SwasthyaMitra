@@ -36,7 +36,7 @@ object Constants {
         const val AI_GENERATED_PLANS = "ai_generated_plans"
     }
     
-    // ========== Gamification XP Values ==========
+    // XP points awarded for each health action (used by XPManager and gamification screens)
     object XP {
         const val LOG_MEAL = 10
         const val LOG_WATER = 5
@@ -56,7 +56,7 @@ object Constants {
         const val MILESTONE_DAYS = 7
     }
     
-    // ========== XP Source Identifiers ==========
+    // Enum used to invoke XPManager.awardXP() with the correct point value without magic numbers
     enum class XPSource(val xpValue: Int) {
         LOG_MEAL(XP.LOG_MEAL),
         LOG_WATER(XP.LOG_WATER),
@@ -69,7 +69,7 @@ object Constants {
         AI_EXERCISE(XP.AI_EXERCISE)
     }
     
-    // ========== Health Goals & Limits ==========
+    // Medical/physiological thresholds used by WaterGoalCalculator and calorie target computation
     object Health {
         // Water intake
         const val WATER_BASE_ML_PER_KG = 33
@@ -125,7 +125,7 @@ object Constants {
             "https://swasthyamitra-ded44-default-rtdb.asia-southeast1.firebasedatabase.app"
     }
     
-    // ========== Shared Preferences Keys ==========
+    // Keys for SharedPreferences used across activities to persist user state between app launches
     object Prefs {
         const val USER_ID = "userId"
         const val USER_NAME = "userName"

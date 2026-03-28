@@ -1,5 +1,6 @@
 package com.example.swasthyamitra.fragments
 
+// Android framework imports for permissions, system services, and UI components
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -10,6 +11,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.core.app.ActivityCompat
 import androidx.fragment.app.Fragment
+// App-specific imports for resources, binding, and tracking services
 import com.example.swasthyamitra.R
 import com.example.swasthyamitra.databinding.FragmentLiveMapBinding
 import com.example.swasthyamitra.services.TrackingService
@@ -19,6 +21,7 @@ import com.example.swasthyamitra.services.TrackingService.Companion.pathPointsLi
 import com.example.swasthyamitra.services.TrackingService.Companion.distanceLive
 import com.example.swasthyamitra.services.TrackingService.Companion.paceLive
 import com.example.swasthyamitra.services.TrackingService.Companion.stepsLive
+// Google Maps SDK imports for map functionality and location visualization
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
@@ -26,27 +29,36 @@ import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.PolylineOptions
 
+// Fragment for displaying live GPS tracking with Google Maps integration and real-time metrics
 class LiveMapFragment : Fragment(), OnMapReadyCallback {
 
+    // View binding for type-safe access to layout elements
     private var _binding: FragmentLiveMapBinding? = null
-    private val binding get() = _binding!!
+    private val binding get() = _binding!! // Non-null assertion for binding lifecycle
+    // Google Maps instance for displaying location, route, and tracking visualization
     private var googleMap: GoogleMap? = null
 
+    // Fragment lifecycle method - create and return the view hierarchy
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
+        // Inflate layout using view binding for type-safe UI access
         _binding = FragmentLiveMapBinding.inflate(inflater, container, false)
         return binding.root
     }
 
+    // Fragment lifecycle method - called after view is created, setup map and listeners
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        
-        val mapFragment = childFragmentManager.findFragmentById(R.id.mapFragment) as SupportMapFragment?
-        mapFragment?.getMapAsync(this)
 
+        // Initialize Google Maps fragment and request map instance asynchronously
+        val mapFragment = childFragmentManager.findFragmentById(R.id.mapFragment) as SupportMapFragment?
+        mapFragment?.getMapAsync(this) // Callback will be onMapReady
+
+        // Setup button click listeners for tracking controls
         setupListeners()
+        // Setup observers for live tracking data from TrackingService
         observeData()
     }
 

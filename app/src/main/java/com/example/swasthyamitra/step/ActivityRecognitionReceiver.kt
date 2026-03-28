@@ -10,12 +10,13 @@ import com.google.android.gms.location.DetectedActivity
 /**
  * Broadcast receiver for Google Activity Recognition API updates
  */
+// BroadcastReceiver: receives Google Activity Recognition updates and exposes the most probable activity via a static callback
 class ActivityRecognitionReceiver : BroadcastReceiver() {
 
     companion object {
         private const val TAG = "ActivityRecognition"
-        var latestActivity: DetectedActivity? = null
-        var onActivityChanged: ((DetectedActivity) -> Unit)? = null
+        var latestActivity: DetectedActivity? = null              // last detected activity (static, shared across classes)
+        var onActivityChanged: ((DetectedActivity) -> Unit)? = null // callback invoked when activity type changes
     }
 
     override fun onReceive(context: Context?, intent: Intent?) {
@@ -33,6 +34,7 @@ class ActivityRecognitionReceiver : BroadcastReceiver() {
         }
     }
 
+    // Converts Google's activity type integer to a human-readable string for logging
     private fun getActivityName(activityType: Int): String {
         return when (activityType) {
             DetectedActivity.WALKING -> "WALKING"

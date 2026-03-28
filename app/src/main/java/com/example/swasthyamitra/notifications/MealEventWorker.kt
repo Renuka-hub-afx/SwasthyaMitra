@@ -13,14 +13,15 @@ import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
 
+// WorkManager worker: fires breakfast (7-9 AM), lunch (12-2 PM), dinner (7-9 PM) notifications once per day
 class MealEventWorker(
     appContext: Context,
     workerParams: WorkerParameters
 ) : CoroutineWorker(appContext, workerParams) {
 
-    private val notificationHelper = NotificationHelper(appContext)
-    private val authHelper = FirebaseAuthHelper(appContext)
-    private val sharedPrefs = appContext.getSharedPreferences("notification_prefs", Context.MODE_PRIVATE)
+    private val notificationHelper = NotificationHelper(appContext)          // shows the system notification
+    private val authHelper = FirebaseAuthHelper(appContext)                   // reads current user for event checks
+    private val sharedPrefs = appContext.getSharedPreferences("notification_prefs", Context.MODE_PRIVATE) // tracks which meal was already triggered today
 
     override suspend fun doWork(): Result {
         Log.d("MealWorker", "Checking meal schedules...")
@@ -54,6 +55,7 @@ class MealEventWorker(
         return Result.success()
     }
 
+    // Picks a random message from the list and shows it as a meal notification
     private fun sendMealNotification(type: String, messages: List<String>) {
         val message = messages.random()
         notificationHelper.showNotification(
@@ -97,11 +99,13 @@ class MealEventWorker(
         }
     }
 
+    // Returns true if this meal type was already notified today (prevents duplicate notifications)
     private fun isTriggeredDetails(type: String, date: String): Boolean {
         val lastDate = sharedPrefs.getString("last_trigger_$type", "")
         return lastDate == date
     }
 
+    // Saves today's date against the meal type so the same notification won't fire again today
     private fun markTriggered(type: String, date: String) {
         sharedPrefs.edit().putString("last_trigger_$type", date).apply()
     }

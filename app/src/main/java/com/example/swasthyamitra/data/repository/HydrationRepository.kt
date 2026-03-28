@@ -1,48 +1,59 @@
 package com.example.swasthyamitra.data.repository
 
+// Custom imports for data models, utilities, and gamification
 import com.example.swasthyamitra.data.model.WaterLog
 import com.example.swasthyamitra.utils.Constants
 import com.example.swasthyamitra.utils.DailySummaryAggregator
 import com.example.swasthyamitra.utils.WaterGoalCalculator
 import com.example.swasthyamitra.gamification.XPManager
+// Firebase Firestore for database operations
 import com.google.firebase.firestore.FirebaseFirestore
+// Kotlin coroutines for async database operations
 import kotlinx.coroutines.tasks.await
+// Java date utilities for date formatting
 import java.text.SimpleDateFormat
 import java.util.*
 
+// Repository class for managing hydration tracking, water intake logging, and goal management
 class HydrationRepository {
-    private val firestore = FirebaseFirestore.getInstance("renu") // Using RENU database instance
+    // Firestore database instance using custom "renu" database for user data storage
+    private val firestore = FirebaseFirestore.getInstance("renu")
 
+    // Get reference to user's water logs subcollection for database operations
     private fun getWaterLogsCollection(userId: String) = firestore.collection("users").document(userId).collection("waterLogs")
 
+    // Add new water intake entry with automatic daily summary updates and XP rewards
     suspend fun addWaterLog(userId: String, amountML: Int, targetDate: String? = null): Result<Unit> {
         return try {
+            // Use provided date or current date in YYYY-MM-DD format for daily tracking
             val dateStr = targetDate ?: SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date())
-            
+
+            // Create water log entry with user ID, amount, timestamp, and date
             val log = WaterLog(
-                userId = userId,
-                amountML = amountML,
-                timestamp = System.currentTimeMillis(),
-                date = dateStr
+                userId = userId,                        // Owner of this water log entry
+                amountML = amountML,                   // Water amount in milliliters
+                timestamp = System.currentTimeMillis(), // Unix timestamp for sorting
+                date = dateStr                         // Date string for daily aggregation
             )
-            
+
+            // Save water log to user's Firestore subcollection
             getWaterLogsCollection(userId).add(log).await()
-            
-            // Update DailySummary with water metrics
+
+            // Update user's daily summary with new water intake data
             try {
                 val aggregator = DailySummaryAggregator(userId)
-                // Calculate water goal (weight × 33ml, default to 2000ml if weight unknown)
+                // Calculate personalized water goal (should be weight × 33ml, default 2000ml)
                 val waterGoal = 2000 // Default goal, should be fetched from user profile
                 aggregator.updateWaterMetrics(
-                    date = dateStr,
-                    amountML = amountML,
-                    goalML = waterGoal
+                    date = dateStr,      // Date for daily aggregation
+                    amountML = amountML, // Water amount to add to daily total
+                    goalML = waterGoal   // Daily water goal for progress calculation
                 )
             } catch (e: Exception) {
                 android.util.Log.e("HydrationRepository", "Failed to update daily summary: ${e.message}")
             }
-            
-            // Award XP for logging water
+
+            // Award experience points for healthy habit of logging water intake
             try {
                 val xpManager = XPManager(userId)
                 xpManager.awardXP(Constants.XPSource.LOG_WATER) { leveledUp, newLevel ->

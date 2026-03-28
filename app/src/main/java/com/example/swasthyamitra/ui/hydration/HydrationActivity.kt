@@ -13,6 +13,7 @@ import com.example.swasthyamitra.utils.WaterGoalCalculator
 import kotlinx.coroutines.launch
 import java.util.Calendar
 
+// Displays daily water intake progress, lets users log/delete water entries, set goals, and toggle timed reminders
 class HydrationActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityHydrationBinding
@@ -31,6 +32,7 @@ class HydrationActivity : AppCompatActivity() {
     private var userSleepTime: String = "23:00"
     private val prefs by lazy { getSharedPreferences("HydrationPrefs", MODE_PRIVATE) }
 
+    // Inflates view binding, resolves userId, handles quick-log from notification, then sets up UI and loads data
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityHydrationBinding.inflate(layoutInflater)
@@ -59,6 +61,7 @@ class HydrationActivity : AppCompatActivity() {
         loadData()
     }
 
+    // Disables day navigation beyond today, wires quick-add buttons, initialises RecyclerView, and sets up reminder switch
     private fun setupUI() {
         binding.btnBack.setOnClickListener { finish() }
 
@@ -104,6 +107,7 @@ class HydrationActivity : AppCompatActivity() {
         }
     }
 
+    // Updates the date label and disables the "Next Day" button if today is already selected
     private fun updateDateDisplayUI() {
         binding.tvDisplayDate.text = displayFormat.format(selectedDate.time)
         // Disable "Next Day" if it's today
@@ -111,6 +115,7 @@ class HydrationActivity : AppCompatActivity() {
         binding.btnNextDay.isEnabled = selectedDate.before(today)
     }
 
+    // Fetches user weight, calculates water goal, loads day's intake total, and refreshes the log history list
     private fun loadData() {
         lifecycleScope.launch {
             // Load user weight for goal calculation
@@ -156,6 +161,7 @@ class HydrationActivity : AppCompatActivity() {
         }
     }
 
+    // Saves a water log to Firestore via HydrationRepository, then refreshes progress UI and history list
     private fun addWater(amount: Int) {
         val targetDateStr = dateFormat.format(selectedDate.time)
         lifecycleScope.launch {
@@ -172,6 +178,7 @@ class HydrationActivity : AppCompatActivity() {
         }
     }
 
+    // Re-fetches the water log list for the selected date and pushes updates to the RecyclerView adapter
     private fun loadHistory() {
         val dateStr = dateFormat.format(selectedDate.time)
         lifecycleScope.launch {
@@ -184,6 +191,7 @@ class HydrationActivity : AppCompatActivity() {
         }
     }
 
+    // Deletes a specific WaterLog doc from Firestore and subtracts its ml from the current intake display
     private fun deleteWaterLog(log: com.example.swasthyamitra.data.model.WaterLog) {
         lifecycleScope.launch {
             hydrationRepo.deleteWaterLog(userId, log.logId).onSuccess {
@@ -197,6 +205,7 @@ class HydrationActivity : AppCompatActivity() {
         }
     }
 
+    // Refreshes intake text, progress bar, and percentage label whenever intake or goal changes
     private fun updateProgressUI() {
         binding.tvCurrentIntake.text = "$currentIntake ml"
         binding.tvDailyGoal.text = "Goal: $dailyGoal ml"
@@ -246,6 +255,7 @@ class HydrationActivity : AppCompatActivity() {
     /**
      * Show goal calculation explanation dialog
      */
+    // Shows an AlertDialog explaining how the goal was calculated from weight, then lets user edit it
     private fun showGoalInfoDialog() {
         val explanation = WaterGoalCalculator.getGoalExplanation(userWeight, dailyGoal)
         val range = WaterGoalCalculator.getRecommendedIntakeRange(userWeight)
@@ -269,6 +279,7 @@ class HydrationActivity : AppCompatActivity() {
     /**
      * Setup water reminders
      */
+    // Persists wake/sleep schedule to Firestore and schedules AlarmManager-based reminder chain
     fun setupReminders(wakeTime: String = "07:00", sleepTime: String = "23:00") {
         lifecycleScope.launch {
             try {
@@ -295,6 +306,7 @@ class HydrationActivity : AppCompatActivity() {
     /**
      * Cancel all water reminders
      */
+    // Cancels all pending water reminder alarms via WaterReminderManager
     fun cancelReminders() {
         reminderManager.cancelAllReminders()
         Toast.makeText(this, "Reminders cancelled", Toast.LENGTH_SHORT).show()

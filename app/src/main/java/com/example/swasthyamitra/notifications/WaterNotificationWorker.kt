@@ -13,14 +13,15 @@ import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
 
+// WorkManager worker: checks every hour whether to send a water reminder (skips during sleep hours)
 class WaterNotificationWorker(
     appContext: Context,
     workerParams: WorkerParameters
 ) : CoroutineWorker(appContext, workerParams) {
 
-    private val notificationHelper = NotificationHelper(appContext)
-    private val authHelper = FirebaseAuthHelper(appContext)
-    private val firestore = FirebaseFirestore.getInstance("renu")
+    private val notificationHelper = NotificationHelper(appContext) // fires the push notification
+    private val authHelper = FirebaseAuthHelper(appContext)         // gets the current logged-in user
+    private val firestore = FirebaseFirestore.getInstance("renu")   // reads wake/sleep times from user doc
 
     override suspend fun doWork(): Result {
         Log.d("WaterWorker", "Checking hydration schedule...")
@@ -58,6 +59,7 @@ class WaterNotificationWorker(
         }
     }
 
+    // Returns true if current time is between the user's wake and sleep times (no alarms during sleep)
     private fun isWithInActiveHours(wakeStr: String, sleepStr: String): Boolean {
         return try {
             val format = SimpleDateFormat("hh:mm a", Locale.US)

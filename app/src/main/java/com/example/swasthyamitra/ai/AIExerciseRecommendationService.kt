@@ -1,30 +1,42 @@
 package com.example.swasthyamitra.ai
 
+// Android framework imports for context and logging
 import android.content.Context
 import android.util.Log
+// Firebase imports for authentication and database access
 import com.example.swasthyamitra.auth.FirebaseAuthHelper
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.Firebase
+// Firebase AI (Gemini) imports for intelligent exercise recommendations
 import com.google.firebase.ai.ai
 import com.google.firebase.ai.type.GenerativeBackend
 import com.google.firebase.ai.type.generationConfig
+// Kotlin coroutines for async operations
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+// JSON parsing for exercise data from local assets
 import org.json.JSONArray
 import org.json.JSONObject
+// File I/O for reading exercise datasets
 import java.io.BufferedReader
 import java.io.InputStreamReader
 
+// AI service for generating personalized exercise recommendations based on user profile, goals, and physical constraints
 class AIExerciseRecommendationService private constructor(private val context: Context) {
 
+    // Firebase authentication helper for user profile access
     private val authHelper = FirebaseAuthHelper(context)
-    private val firestore = FirebaseFirestore.getInstance("renu") // Added this line as per instruction
+    // Firestore database instance using custom "renu" database
+    private val firestore = FirebaseFirestore.getInstance("renu")
+    // Logging tag for debugging exercise recommendation generation
     private val TAG = "AIExerciseService"
 
+    // Singleton pattern implementation for memory efficiency and exercise data caching
     companion object {
         @Volatile
         private var INSTANCE: AIExerciseRecommendationService? = null
 
+        // Get singleton instance with thread-safe initialization
         fun getInstance(context: Context): AIExerciseRecommendationService {
             return INSTANCE ?: synchronized(this) {
                 INSTANCE ?: AIExerciseRecommendationService(context.applicationContext).also { INSTANCE = it }
@@ -32,40 +44,41 @@ class AIExerciseRecommendationService private constructor(private val context: C
         }
     }
 
+    // Comprehensive exercise recommendation data structure with detailed guidance
     data class ExerciseRec(
-        val name: String,
-        val targetMuscle: String,
-        val bodyPart: String,
-        val equipment: String,
-        val instructions: List<String>,
-        val reason: String,
-        val benefits: String = "", // Personalized benefits explanation
-        val gifUrl: String = "",
-        val ageExplanation: String = "",
-        val genderNote: String = "",
-        val motivationalMessage: String = "",
-        val estimatedCalories: Int = 0,
-        val recommendedDuration: String = "15 mins",
-        
-        // NEW: Enhanced fields for detailed explanations
-        val intensity: String = "light", // "light", "moderate", "high"
-        val goalAlignment: String = "", // How it helps their specific goal
-        val tips: List<String> = emptyList(), // Pro tips for better execution
-        val commonMistakes: List<String> = emptyList() // What to avoid
+        val name: String,                    // Exercise name (e.g., "Push-ups", "Downward Dog")
+        val targetMuscle: String,            // Primary muscle group targeted
+        val bodyPart: String,                // Body part category (Upper Body/Lower Body/Core)
+        val equipment: String,               // Required equipment (None/Dumbbells/Resistance Band)
+        val instructions: List<String>,      // Step-by-step exercise instructions
+        val reason: String,                  // AI explanation for why this exercise was recommended
+        val benefits: String = "",           // Personalized benefits explanation for user's goals
+        val gifUrl: String = "",             // Path to animated GIF demonstration
+        val ageExplanation: String = "",     // Age-specific modifications and considerations
+        val genderNote: String = "",         // Gender-specific guidance (especially for women)
+        val motivationalMessage: String = "", // Personalized encouragement message
+        val estimatedCalories: Int = 0,      // Estimated calories burned during exercise
+        val recommendedDuration: String = "15 mins", // Suggested exercise duration
+
+        // Enhanced fields for detailed exercise guidance and safety
+        val intensity: String = "light",     // Exercise intensity level ("light", "moderate", "high")
+        val goalAlignment: String = "",      // How exercise aligns with user's specific fitness goals
+        val tips: List<String> = emptyList(), // Pro tips for better exercise execution
+        val commonMistakes: List<String> = emptyList() // Common form mistakes to avoid
     )
-    
-    // Cache for exercise name -> GIF path mapping
+
+    // Memory cache for exercise name to GIF path mapping for quick access
     private var exerciseGifMap: Map<String, String> = emptyMap()
 
-
+    // Internal data structure for exercise datasets with metadata
     private data class ExerciseData(
-        val name: String,
-        val type: String, // "json", "folder", or "csv"
-        val path: String, // json gif path, folder path, or empty
-        val details: String, // instructions or metadata
-        val isPeriodSafe: Boolean = false, // Strict filtering flag
-        val genderTags: List<String> = emptyList(),  // e.g. ["female", "male", "all"]
-        val ageGroups: List<String> = emptyList()    // e.g. ["18-50", "over50", "all"]
+        val name: String,                    // Exercise name from dataset
+        val type: String,                    // Dataset type ("json", "folder", or "csv")
+        val path: String,                    // Path to exercise demonstration (GIF/image)
+        val details: String,                 // Exercise instructions or metadata
+        val isPeriodSafe: Boolean = false,   // Safe for menstruation (low-impact, gentle)
+        val genderTags: List<String> = emptyList(),  // Gender suitability tags
+        val ageGroups: List<String> = emptyList()    // Age group recommendations
     )
 
     /**

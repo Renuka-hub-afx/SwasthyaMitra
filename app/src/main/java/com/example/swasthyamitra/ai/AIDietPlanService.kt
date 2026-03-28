@@ -1,152 +1,172 @@
 package com.example.swasthyamitra.ai
 
+// Android framework imports for app context and logging
 import android.content.Context
 import android.util.Log
+// Firebase imports for authentication and database
 import com.example.swasthyamitra.auth.FirebaseAuthHelper
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.Firebase
+// Firebase AI (Gemini) imports for intelligent meal generation
 import com.google.firebase.ai.ai
 import com.google.firebase.ai.type.GenerativeBackend
 import com.google.firebase.ai.type.generationConfig
+// Kotlin coroutines for async AI operations
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.tasks.await
+// JSON parsing for AI response data
 import org.json.JSONObject
+// File I/O imports for reading local food datasets
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.util.*
 
+// Singleton service class for AI-powered personalized diet plan generation using Gemini API
 class AIDietPlanService private constructor(private val context: Context) {
 
+    // Firebase authentication helper for user verification and profile access
     private val authHelper = FirebaseAuthHelper(context)
+    // Firestore database instance using custom "renu" database
     private val firestore = FirebaseFirestore.getInstance("renu")
+    // Logging tag for debugging and performance monitoring
     private val TAG = "AIDietPlanService"
-    
-    // Memory Cache for Food Samples
+
+    // Memory cache for Indian food samples to avoid repeated CSV reads
     private var foodCache: Map<String, List<String>>? = null
+    // Memory cache for vegan food dataset to optimize AI prompts
     private var veganDatasetCache: List<String>? = null
-    
-    // Comprehensive Dietary Exclusion Lists
+
+    // Comprehensive list of foods excluded from vegan diet recommendations
     private val veganExclusions = listOf(
-        // Meat & Poultry
+        // Meat & Poultry items incompatible with vegan diet
         "Chicken", "Mutton", "Lamb", "Goat", "Beef", "Pork", "Meat", "Bacon", "Sausage",
         "Turkey", "Duck", "Quail",
-        // Fish & Seafood
+        // Fish & Seafood items incompatible with vegan diet
         "Fish", "Prawn", "Shrimp", "Crab", "Lobster", "Seafood", "Salmon", "Tuna",
         "Anchovy", "Sardine",
-        // Eggs
+        // Egg-based foods incompatible with vegan diet
         "Egg", "Omelette", "Scrambled", "Boiled Egg", "Anda", "Egg Curry",
-        // Dairy Products
+        // Dairy products incompatible with vegan diet
         "Milk", "Paneer", "Cheese", "Butter", "Ghee", "Cream", "Curd", "Yogurt", "Dahi",
         "Lassi", "Raita", "Kheer", "Kulfi", "Rabri", "Malai", "Makhani", "Shrikhand",
         "Buttermilk", "Whey", "Casein", "Lactose", "Condensed Milk",
-        // Honey & Animal-Derived
+        // Animal-derived ingredients incompatible with vegan diet
         "Honey", "Gelatin", "Lard", "Fish Sauce", "Oyster Sauce", "Bone Broth"
     )
-    
+
+    // List of foods excluded from vegetarian diet recommendations
     private val vegetarianExclusions = listOf(
-        // Meat & Poultry
+        // Meat & Poultry items incompatible with vegetarian diet
         "Chicken", "Mutton", "Lamb", "Goat", "Beef", "Pork", "Meat", "Bacon", "Sausage",
         "Turkey", "Duck", "Quail",
-        // Fish & Seafood
+        // Fish & Seafood items incompatible with vegetarian diet
         "Fish", "Prawn", "Shrimp", "Crab", "Lobster", "Seafood", "Salmon", "Tuna",
         "Anchovy", "Sardine",
-        // Eggs
+        // Egg-based foods typically excluded from Indian vegetarian diet
         "Egg", "Omelette", "Scrambled", "Boiled Egg", "Anda", "Egg Curry",
-        // Animal-Derived Ingredients
+        // Animal-derived cooking ingredients incompatible with vegetarian diet
         "Gelatin", "Lard", "Fish Sauce", "Oyster Sauce", "Bone Broth", "Meat Broth"
     )
 
+    // Singleton pattern implementation for memory efficiency and state preservation
     companion object {
+        // Thread-safe volatile variable for singleton instance
         @Volatile
         private var INSTANCE: AIDietPlanService? = null
 
+        // Get singleton instance with thread-safe double-checked locking pattern
         fun getInstance(context: Context): AIDietPlanService {
             return INSTANCE ?: synchronized(this) {
+                // Create new instance if none exists, using application context to prevent leaks
                 INSTANCE ?: AIDietPlanService(context.applicationContext).also { INSTANCE = it }
             }
         }
     }
 
-    /**
-     * MealPlan and MealRec data classes are now top-level for easier access
-     */
+    // Data class definitions for MealPlan and MealRec are defined as top-level classes for easier access
 
-    /**
-     * Core orchestration method to generate a personalized diet plan.
-     */
+    // Core orchestration method to generate personalized AI diet plan using user profile and preferences
     suspend fun generateSmartDietPlan(): Result<MealPlan> = withContext(Dispatchers.IO) {
         try {
+            // Verify user is authenticated before generating personalized recommendations
             val user = authHelper.getCurrentUser() ?: return@withContext Result.failure(Exception("User not logged in"))
             val userId = user.uid
 
-            // 1. Fetch Profile & Goals (Firestore)
+            // Step 1: Fetch user profile data and health goals from Firestore database
             val profile = authHelper.getUserData(userId).getOrThrow()
             val goal = authHelper.getUserGoal(userId).getOrThrow()
+            // Check menstrual cycle status for adjusted nutritional needs (iron, calories)
             val isOnPeriod = profile["isOnPeriod"] as? Boolean ?: false
 
+            // Extract physical statistics for metabolic calculations
             val age = (profile["age"] as? Number)?.toInt() ?: 25
             val weight = (profile["weight"] as? Number)?.toDouble() ?: 70.0
             val height = (profile["height"] as? Number)?.toDouble() ?: 170.0
             val gender = profile["gender"] as? String ?: "Male"
+            // Extract dietary preferences for meal filtering and AI prompt construction
             val dietaryPreference = profile["eatingPreference"] as? String ?: "Vegetarian"
             val allergies = (profile["allergies"] as? List<*>)?.joinToString(", ") ?: "None"
 
-            // 2. Tier 1: Local Metabolic Math
-            val bmr = calculateBMR(weight, height, age, gender)
+            // Step 2: Calculate metabolic requirements using scientific formulas
+            val bmr = calculateBMR(weight, height, age, gender)  // Basal Metabolic Rate calculation
             val activityLevel = goal["activityLevel"] as? String ?: "Sedentary"
-            val tdee = calculateTDEE(bmr, activityLevel)
+            val tdee = calculateTDEE(bmr, activityLevel)  // Total Daily Energy Expenditure
+            // Use user's target calories or calculated TDEE as fallback
             val targetCalories = (goal["dailyCalories"] as? Number)?.toInt() ?: tdee.toInt()
 
-            // 3. Dynamic Context (Logs)
-            val exerciseLogs = authHelper.getRecentExerciseLogs(userId, 3)
-            val weightLogs = authHelper.getRecentWeightLogs(userId, 14)
-            val recentMeals = authHelper.getRecentFoodLogs(userId, 7) // Fetch 7 days
-            
+            // Step 3: Collect dynamic context from recent user activity logs
+            val exerciseLogs = authHelper.getRecentExerciseLogs(userId, 3)  // Last 3 exercise sessions
+            val weightLogs = authHelper.getRecentWeightLogs(userId, 14)     // Last 14 days weight data
+            val recentMeals = authHelper.getRecentFoodLogs(userId, 7)       // Last 7 days food logs
+
             Log.d(TAG, "📊 Fetched ${recentMeals.size} food logs from last 7 days")
 
+            // Detect high-intensity training for increased protein/calorie recommendations
             val intensityFlag = if (exerciseLogs.any { it["intensity"] == "High" || it["type"] == "HIIT" }) "INTENSITY_HIGH" else "INTENSITY_NORMAL"
+            // Detect weight plateau for adjusted calorie cycling recommendations
             val plateauFlag = detectPlateau(weightLogs)
+            // Extract distinct meal names to avoid repetition in new recommendations
             val distinctMeals = recentMeals.map { it.foodName }.distinct()
             val pastMealsList = distinctMeals.joinToString(", ")
-            
+
             Log.d(TAG, "🍽️ Distinct meals to avoid (${distinctMeals.size}): ${distinctMeals.take(10).joinToString(", ")}${if (distinctMeals.size > 10) "..." else ""}")
 
-            // 4. Get user preferences (disliked foods)
+            // Step 4: Load user's food preferences and dislikes for personalization
             val dislikedFoods = getUserPreferences(userId)
 
-            // 5. Grounding Data - DISABLED for speed optimization
-            // The AI knows Indian foods well enough without explicit samples
-            // This was adding 1000+ tokens to each request, slowing generation significantly
+            // Step 5: Food grounding data - DISABLED for performance optimization
+            // The AI has sufficient knowledge of Indian foods without explicit examples
+            // Previous implementation added 1000+ tokens slowing generation significantly
             val foodSample = "" // Disabled: loadFoodSampleFromCsv or loadVeganDataset
 
-            // 6. Festival Check
+            // Step 6: Check for Indian festivals requiring special dietary considerations
             val festivalNote = getFestivalInstruction()
 
-            // 7. Gemini Prompt Construction
+            // Step 7: Build comprehensive AI prompt with all collected user context
             val promptText = buildPrompt(
                 age, gender, weight, height, targetCalories, dietaryPreference, allergies,
                 activityLevel, intensityFlag, plateauFlag, pastMealsList, dislikedFoods,
                 foodSample, festivalNote, isOnPeriod
             )
 
-            // 8. Execute Vertex AI (Gemini 2.0 Flash)
+            // Step 8: Execute AI meal generation using Google's Gemini 2.0 Flash model
             Log.d(TAG, "⏱️ Starting AI generation...")
             val startTime = System.currentTimeMillis()
-            val plan = callGeminiAPI(promptText)
+            val plan = callGeminiAPI(promptText)  // Main AI inference call
             val duration = (System.currentTimeMillis() - startTime) / 1000.0
             Log.d(TAG, "✅ AI generation completed in ${String.format("%.1f", duration)}s")
-            
-            // 8.5. Validate Dietary Compliance
+
+            // Step 8.5: Validate generated meals comply with user's dietary restrictions
             validateDietaryCompliance(plan, dietaryPreference).getOrElse {
                 Log.e(TAG, "Dietary compliance validation failed: ${it.message}")
                 throw it
             }
-            
-            // 9. Save plan to Firestore for history
+
+            // Step 9: Save generated plan to Firestore for user history and ML training
             savePlanToFirestore(userId, plan)
 
-            Result.success(plan)
+            Result.success(plan)  // Return successful meal plan generation
 
         } catch (e: Exception) {
             Log.e(TAG, "Error generating diet plan: ${e.message}", e)

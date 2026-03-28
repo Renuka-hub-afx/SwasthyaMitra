@@ -59,6 +59,8 @@ import kotlinx.coroutines.launch
  *  - Real-time speed, pace, distance, calorie calculation
  *  - Saves to Firestore default instance
  */
+// Unified foreground service: combines hardware step sensor + GPS + Activity Recognition + 5-layer StepGpsValidator
+// Replaces running StepCounterService + TrackingService together; cross-validates steps against GPS in real-time
 class UnifiedStepTrackingService : Service(), SensorEventListener {
 
     // ---------- Services ----------
@@ -72,12 +74,12 @@ class UnifiedStepTrackingService : Service(), SensorEventListener {
     private var accelerometerSensor: Sensor? = null
     private var useHardwareStepCounter = false
 
-    // Accelerometer-based step detection (fallback)
+    // Accelerometer fallback — used when hardware TYPE_STEP_COUNTER is absent
     private var lastAccelMagnitude = 0.0
     private var accelStepCount = 0
     private var lastAccelStepTime = 0L
-    private val ACCEL_STEP_THRESHOLD = 12.0
-    private val ACCEL_STEP_DEBOUNCE_MS = 300L
+    private val ACCEL_STEP_THRESHOLD = 12.0       // magnitude must exceed this to count as a step
+    private val ACCEL_STEP_DEBOUNCE_MS = 300L     // min ms between detected steps (prevents double-counting)
 
     // Hardware step counter baseline
     private var initialHwStepCount = -1f
@@ -114,25 +116,22 @@ class UnifiedStepTrackingService : Service(), SensorEventListener {
         private const val NOTIFICATION_ID = 1002
         private const val CHANNEL_ID = "unified_step_channel"
 
-        // Actions
-        const val ACTION_START = "UNIFIED_ACTION_START"
-        const val ACTION_STOP = "UNIFIED_ACTION_STOP"
+        const val ACTION_START = "UNIFIED_ACTION_START"  // intent action to begin tracking
+        const val ACTION_STOP = "UNIFIED_ACTION_STOP"    // intent action to stop and save session
+        const val ACTION_UPDATE = "com.example.swasthyamitra.unified.UPDATE" // broadcast with validated step data
 
-        // Broadcast
-        const val ACTION_UPDATE = "com.example.swasthyamitra.unified.UPDATE"
-
-        // LiveData — observed by MapActivity, WorkoutDashboard, homepage
+        // LiveData observed by MapActivity, WorkoutDashboard, homepage
         val stepsLive = MutableLiveData<Int>(0)
         val caloriesLive = MutableLiveData<Int>(0)
         val distanceLive = MutableLiveData<Double>(0.0)
         val speedLive = MutableLiveData<Double>(0.0)        // km/h
-        val paceLive = MutableLiveData<String>("0'00")
-        val strideLengthLive = MutableLiveData<Double>(0.72)
+        val paceLive = MutableLiveData<String>("0'00")      // min/km formatted string
+        val strideLengthLive = MutableLiveData<Double>(0.72) // dynamically calibrated from GPS
         val pathPointsLive = MutableLiveData<List<LatLng>>(emptyList())
-        val confidenceLive = MutableLiveData<Double>(0.0)
+        val confidenceLive = MutableLiveData<Double>(0.0)   // 0-100 step accuracy score
         val activityTypeLive = MutableLiveData<Int>(DetectedActivity.UNKNOWN)
         val isTrackingLive = MutableLiveData<Boolean>(false)
-        val rawStepsLive = MutableLiveData<Int>(0)
+        val rawStepsLive = MutableLiveData<Int>(0)           // unvalidated sensor steps
     }
 
     // ---------- Service lifecycle ----------
@@ -213,6 +212,7 @@ class UnifiedStepTrackingService : Service(), SensorEventListener {
         fetchUserDataAndStart()
     }
 
+    // Fetches today's existing step count and user height from Firestore, then starts all sensors
     private fun fetchUserDataAndStart() {
         val userId = auth.currentUser?.uid
         if (userId == null) {
@@ -242,6 +242,7 @@ class UnifiedStepTrackingService : Service(), SensorEventListener {
             .addOnFailureListener { initSensorsAndLocation(0, 0.0) }
     }
 
+    // Registers step sensor (or accelerometer fallback), starts GPS and activity recognition, starts save timer
     private fun initSensorsAndLocation(existingSteps: Int, heightCm: Double) {
         baselineStepsFromFirestore = existingSteps
         currentRawSteps = existingSteps
@@ -331,6 +332,7 @@ class UnifiedStepTrackingService : Service(), SensorEventListener {
 
     override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {}
 
+    // Hardware step counter: captures first reading as baseline then continuously adds session steps
     private fun handleHardwareStep(event: SensorEvent) {
         val totalDeviceSteps = event.values[0]
 
@@ -346,6 +348,7 @@ class UnifiedStepTrackingService : Service(), SensorEventListener {
         processStepUpdate(totalSteps)
     }
 
+    // Accelerometer fallback: detects steps by peak detection (magnitude crosses threshold with debounce)
     private fun handleAccelerometerStep(event: SensorEvent) {
         val x = event.values[0].toDouble()
         val y = event.values[1].toDouble()
@@ -368,6 +371,7 @@ class UnifiedStepTrackingService : Service(), SensorEventListener {
         lastAccelMagnitude = magnitude
     }
 
+    // Passes raw steps through StepGpsValidator, calculates MET-based calories, and updates all LiveData
     private fun processStepUpdate(totalSteps: Int) {
         val now = System.currentTimeMillis()
         currentRawSteps = totalSteps
@@ -551,6 +555,7 @@ class UnifiedStepTrackingService : Service(), SensorEventListener {
         Log.d(TAG, "Activity changed: $activityType")
     }
 
+    // Accumulates time spent in current activity type (walking/running/still) before switching
     private fun accumulateActivityTime() {
         val now = System.currentTimeMillis()
         val elapsed = (now - activityChangeTime) / 1000L
@@ -671,6 +676,7 @@ class UnifiedStepTrackingService : Service(), SensorEventListener {
         }
     }
 
+    // Saves the completed session as a StepSession doc to users/{uid}/step_sessions (includes route + confidence)
     private fun saveSessionToFirestore() {
         val userId = auth.currentUser?.uid ?: return
         val endTime = System.currentTimeMillis()

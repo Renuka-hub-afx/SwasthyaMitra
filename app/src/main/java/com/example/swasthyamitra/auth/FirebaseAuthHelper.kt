@@ -1,80 +1,87 @@
 package com.example.swasthyamitra.auth
 
+// Android framework imports for app context and logging
 import android.content.Context
 import android.util.Log
+// Custom model classes for health data structures
 import com.example.swasthyamitra.models.FoodLog
 import com.example.swasthyamitra.models.ExerciseLog
+// Utility classes for app constants and helper functions
 import com.example.swasthyamitra.utils.Constants
 import com.example.swasthyamitra.utils.DailySummaryAggregator
 import com.example.swasthyamitra.utils.DateTimeHelper
 import com.example.swasthyamitra.gamification.XPManager
+// Firebase imports for authentication and database operations
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.FirebaseFirestore
+// Kotlin coroutines for async Firebase operations
 import kotlinx.coroutines.tasks.await
 
+// Comprehensive Firebase authentication and user data management helper class
 class FirebaseAuthHelper(private val context: Context) {
 
+    // Firebase Authentication instance for user login/signup operations
     private val auth: FirebaseAuth = FirebaseAuth.getInstance()
+    // Firestore database instance with fallback - uses custom "renu" database or default
     private val firestore: FirebaseFirestore by lazy {
         try {
-            FirebaseFirestore.getInstance("renu") // Using RENU database instance
+            FirebaseFirestore.getInstance("renu") // Primary: Custom named database instance
         } catch (e: Exception) {
             Log.e("FirebaseAuthHelper", "Failed to initialize 'renu' database, using default: ${e.message}")
-            FirebaseFirestore.getInstance() // Fallback to default
+            FirebaseFirestore.getInstance() // Fallback: Default database instance
         }
     }
 
-    // Get current user
+    // Get currently authenticated Firebase user or null if not logged in
     fun getCurrentUser(): FirebaseUser? = auth.currentUser
 
-    // Get context
+    // Get Android application context for utility operations
     fun getContext(): Context = context
 
-    // Check if user is logged in
+    // Check authentication status - returns true if user is currently logged in
     fun isUserLoggedIn(): Boolean = auth.currentUser != null
 
-    /**
-     * Updates the lastActive timestamp for a user in Firestore.
-     * Called whenever user performs any action (logging food, water, exercise, etc.)
-     */
+    // Update user's last activity timestamp for engagement tracking and analytics
     suspend fun updateLastActive(userId: String) {
         try {
             firestore.collection("users")
                 .document(userId)
-                .update("lastActive", DateTimeHelper.currentISO8601())
+                .update("lastActive", DateTimeHelper.currentISO8601())  // ISO timestamp format
                 .await()
         } catch (e: Exception) {
             Log.e("FirebaseAuthHelper", "Failed to update lastActive: ${e.message}")
         }
     }
 
-    // Sign up with email and password
+    // Create new user account with email/password and store initial profile data
     suspend fun signUpWithEmail(
-        email: String,
-        password: String,
-        name: String,
-        phoneNumber: String,
-        age: Int
+        email: String,       // User's email address for authentication
+        password: String,    // User's chosen password
+        name: String,        // User's full name for personalization
+        phoneNumber: String, // Phone number for safety features and verification
+        age: Int            // Age for metabolic calculations and age-appropriate content
     ): Result<FirebaseUser> {
         return try {
+            // Create Firebase Authentication account
             val result = auth.createUserWithEmailAndPassword(email, password).await()
             val user = result.user
-            
+
             if (user != null) {
-                // Store user data in Firestore
+                // Create initial user profile document in Firestore with basic information
                 val userData = hashMapOf(
-                    "userId" to user.uid,
-                    "name" to name,
-                    "email" to email,
-                    "phoneNumber" to phoneNumber,
-                    "age" to age,
-                    "height" to 0.0,
-                    "weight" to 0.0,
-                    "gender" to "",
-                    "createdAt" to System.currentTimeMillis()
+                    "userId" to user.uid,                    // Firebase UID as primary key
+                    "name" to name,                          // Display name for personalization
+                    "email" to email,                        // Email for communication
+                    "phoneNumber" to phoneNumber,            // Phone for emergency features
+                    "age" to age,                           // Age for health calculations
+                    "height" to 0.0,                        // Placeholder - set during profile completion
+                    "weight" to 0.0,                        // Placeholder - set during profile completion
+                    "gender" to "",                         // Placeholder - set during profile completion
+                    "createdAt" to System.currentTimeMillis() // Account creation timestamp
                 )
-                
+
+                // Store user profile data in Firestore database
                 firestore.collection("users")
                     .document(user.uid)
                     .set(userData)

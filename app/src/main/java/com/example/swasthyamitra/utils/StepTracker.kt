@@ -8,6 +8,7 @@ import android.hardware.SensorManager
 import android.util.Log
 import kotlin.math.sqrt
 
+// Simple accelerometer-based step counter used by StepCounterService; counts peaks above threshold
 class StepTracker(private val context: Context, private val onStepUpdate: (Int) -> Unit) : SensorEventListener {
 
     private val sensorManager = context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
@@ -17,16 +18,18 @@ class StepTracker(private val context: Context, private val onStepUpdate: (Int) 
     private var lastStepTime = 0L
     
     // Tunable parameters
-    private val STEP_THRESHOLD = 12.0 // Movement strength needed to count as step
-    private val STEP_DELAY_MS = 250 // Minimum time between steps (ms)
+    private val STEP_THRESHOLD = 12.0 // acceleration vector magnitude needed to count as a step
+    private val STEP_DELAY_MS = 250   // minimum milliseconds between steps to debounce rapid vibration
 
     // Configurable calorie factor (approx .04 kcal per step)
     val caloriesPerStep = 0.04
 
+    // Returns false if the device has no accelerometer (service will shut down gracefully)
     fun isSensorAvailable(): Boolean {
         return accelerometer != null
     }
 
+    // Registers the accelerometer listener — service will start receiving sensor events
     fun start() {
         if (accelerometer != null) {
             sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_NORMAL)
@@ -36,6 +39,7 @@ class StepTracker(private val context: Context, private val onStepUpdate: (Int) 
         }
     }
 
+    // Unregisters the listener and resets counters (called on service stop or day reset)
     fun stop() {
         sensorManager.unregisterListener(this)
         currentSteps = 0
@@ -55,10 +59,10 @@ class StepTracker(private val context: Context, private val onStepUpdate: (Int) 
         val y = event.values[1]
         val z = event.values[2]
         
-        // Calculate movement magnitude
+        // Calculate 3D acceleration magnitude from x/y/z axes (removes direction bias)
         val magnitude = sqrt(x * x + y * y + z * z)
-        
-        // Detect shake/movement
+
+        // Count step only if magnitude exceeds threshold AND enough time has passed since last step
         if (magnitude > STEP_THRESHOLD) {
             val now = System.currentTimeMillis()
             

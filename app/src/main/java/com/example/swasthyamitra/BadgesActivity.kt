@@ -26,6 +26,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
+// Stage model: each badge has a status (LOCKED / ACTIVE / COMPLETED) based on real health metrics
 data class Stage(
     val id: Int,
     val title: String,
@@ -34,10 +35,12 @@ data class Stage(
     val status: StageStatus
 )
 
+// Stages unlock progressively — you must complete earlier stages before later ones become active
 enum class StageStatus {
     LOCKED, ACTIVE, COMPLETED
 }
 
+// Gamification screen: shows 6 progressive health stages and live progress fetched from RTDB + Firestore
 class BadgesActivity : AppCompatActivity() {
 
     private lateinit var stagesRecyclerView: RecyclerView
@@ -53,6 +56,7 @@ class BadgesActivity : AppCompatActivity() {
     private lateinit var journeyProgressBar: ProgressBar
     private lateinit var tvCurrentSteps: TextView
 
+    // Initialises helpers, binds views, sets up the grid RecyclerView, then fetches live stage data
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_badges)
@@ -65,6 +69,7 @@ class BadgesActivity : AppCompatActivity() {
         loadRealStageData()
     }
 
+    // Binds RecyclerView, progress bar, step count label, and back/quick-add button listeners
     private fun initViews() {
         stagesRecyclerView = findViewById(R.id.stagesRecyclerView)
         tvStageProgress = findViewById(R.id.tvStageProgress)
@@ -80,6 +85,7 @@ class BadgesActivity : AppCompatActivity() {
         }
     }
 
+    // Sets up a 2-column grid adapter; tapping a stage card shows its current status as a Toast
     private fun setupRecyclerView() {
         stageAdapter = StageAdapter(stages) { stage ->
             val statusMsg = when(stage.status) {
@@ -93,6 +99,8 @@ class BadgesActivity : AppCompatActivity() {
         stagesRecyclerView.adapter = stageAdapter
     }
     
+    // Fetches water total (HydrationRepo), food count (Firestore), sleep logs (Firestore),
+    // and steps/workouts (RTDB) in parallel, then builds the stage list from results
     private fun loadRealStageData() {
         val userId = authHelper.getCurrentUser()?.uid ?: return
         
@@ -170,9 +178,11 @@ class BadgesActivity : AppCompatActivity() {
         }
     }
 
+    // Converts the six boolean criteria into LOCKED/ACTIVE/COMPLETED stages using sequential-unlock logic
+    // (each stage only unlocks after the previous one is COMPLETED)
     private fun updateStagesList(
-        hydration: Boolean, 
-        steps: Boolean, 
+        hydration: Boolean,
+        steps: Boolean,
         sleep: Boolean,
         meditation: Boolean,
         nutrition: Boolean,
@@ -241,6 +251,7 @@ class BadgesActivity : AppCompatActivity() {
         tvCurrentSteps.text = String.format("%,d", stepCount)
     }
 
+    // Inner RecyclerView adapter: renders each stage card with status-themed colours, icons, and badges
     inner class StageAdapter(
         private val stages: List<Stage>,
         private val onItemClick: (Stage) -> Unit
